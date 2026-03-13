@@ -47,13 +47,23 @@ export default function Chat({ onLogParsed }: ChatProps) {
         parts: [{ text: m.text }],
       }));
 
+      console.log('Sending prompt to API...');
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: userText, history }),
       });
 
+      console.log('API Response Status:', res.status);
       const data = await res.json();
+      console.log('API Data received:', !!data.text);
+      
+      if (data.error) {
+        console.error('API Error:', data.error, data.details);
+        setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'model', text: `API Error: ${data.error}` }]);
+        return;
+      }
+
       if (data.text) {
         // Parse the dynamic state block if present
         const dataMatch = data.text.match(/\|\|\|DATA\n([\s\S]*?)\n\|\|\|/);

@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: 'AI-powered nutrition and fitness tracking application',
 };
 
+import { Providers } from '@/components/Providers';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -19,7 +21,9 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
