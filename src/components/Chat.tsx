@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { Send, Image as ImageIcon, Sparkles, Coffee, Dumbbell, Moon, Info, User } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -17,7 +18,7 @@ export default function Chat({ onLogParsed }: ChatProps) {
     {
       id: crypto.randomUUID(),
       role: 'model',
-      text: "Good morning! 👋 I'm your LiveFit AI — speak naturally to log anything.",
+      text: "Connection established. How can I assist you with your fitness goals today?",
     },
   ]);
   const [input, setInput] = useState('');
@@ -47,25 +48,20 @@ export default function Chat({ onLogParsed }: ChatProps) {
         parts: [{ text: m.text }],
       }));
 
-      console.log('Sending prompt to API...');
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: userText, history }),
       });
 
-      console.log('API Response Status:', res.status);
       const data = await res.json();
-      console.log('API Data received:', !!data.text);
       
       if (data.error) {
-        console.error('API Error:', data.error, data.details);
-        setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'model', text: `API Error: ${data.error}` }]);
+        setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'model', text: `Connection issue: ${data.error}` }]);
         return;
       }
 
       if (data.text) {
-        // Parse the dynamic state block if present
         const dataMatch = data.text.match(/\|\|\|DATA\n([\s\S]*?)\n\|\|\|/);
         let cleanText = data.text;
         
@@ -82,29 +78,31 @@ export default function Chat({ onLogParsed }: ChatProps) {
         setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'model', text: cleanText }]);
       }
     } catch (e) {
-      console.error('Chat handleSend error:', e);
-      setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'model', text: 'Connection error.' }]);
+      console.error('Chat connection error:', e);
+      setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'model', text: 'Unable to connect to AI service.' }]);
     } finally {
       setIsTyping(false);
     }
   };
 
   return (
-    <div className="flex-1 flex flex-col gap-5 min-h-0">
-      <div className="flex-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg flex flex-col min-h-[500px] shadow-[var(--shadow)] overflow-hidden transition-colors duration-250">
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 flex flex-col gap-4 scroll-behavior-smooth">
+    <div className="flex-1 flex flex-col gap-4 min-w-0">
+      <div className="flex-1 bg-[var(--surface)] border border-[var(--border)] rounded-[32px] flex flex-col min-h-[600px] shadow-2xl shadow-black/5 overflow-hidden transition-all duration-300">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 md:p-8 flex flex-col gap-6 scroll-smooth">
           {messages.map((msg) => (
-            <div key={msg.id} className={`flex gap-3 animate-[rise_0.2s_ease] min-w-0 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+            <div key={msg.id} className={`flex gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 min-w-0 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
               <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-medium flex-shrink-0 mt-[2px] ${
+                className={`w-9 h-9 rounded-2xl flex items-center justify-center text-[13px] font-bold flex-shrink-0 mt-0.5 shadow-md ${
                   msg.role === 'model' ? 'bg-[var(--accent)] text-[var(--accent-inv)]' : 'bg-[var(--surface2)] text-[var(--text)] border border-[var(--border)]'
                 }`}
               >
-                {msg.role === 'model' ? 'L' : '↑'}
+                {msg.role === 'model' ? <Sparkles className="w-5 h-5" /> : <User className="w-5 h-5" />}
               </div>
               <div
-                className={`max-w-[72%] min-w-0 px-4 py-3 rounded-[10px] text-[13.5px] leading-[1.65] font-light break-words overflow-wrap-anywhere whitespace-pre-wrap ${
-                  msg.role === 'model' ? 'bg-[var(--surface2)] border-bl-[3px]' : 'bg-[var(--accent)] text-[var(--accent-inv)] border-br-[3px]'
+                className={`max-w-[85%] md:max-w-[80%] min-w-0 px-6 py-4.5 rounded-[28px] text-[15px] leading-relaxed font-medium tracking-tight break-words overflow-wrap-anywhere whitespace-pre-wrap ${
+                  msg.role === 'model' 
+                    ? 'bg-[var(--surface2)]/50 text-[var(--text)] rounded-tl-none border border-[var(--border)]/20' 
+                    : 'bg-[var(--accent)] text-[var(--accent-inv)] rounded-tr-none shadow-lg shadow-[var(--accent)]/10'
                 }`}
               >
                 {msg.text}
@@ -112,51 +110,55 @@ export default function Chat({ onLogParsed }: ChatProps) {
             </div>
           ))}
           {isTyping && (
-            <div className="flex gap-3 animate-[rise_0.2s_ease] min-w-0">
-              <div className="w-7 h-7 rounded-full bg-[var(--accent)] text-[var(--accent-inv)] flex items-center justify-center text-[13px] font-medium flex-shrink-0 mt-[2px]">L</div>
-              <div className="max-w-[72%] min-w-0 px-4 py-3 rounded-[10px] bg-[var(--surface2)]">
-                <div className="flex gap-1.5 py-1 items-center">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-bounce" />
-                  <div className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-bounce [animation-delay:0.2s]" />
-                  <div className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-bounce [animation-delay:0.4s]" />
-                </div>
+            <div className="flex gap-4 animate-in fade-in duration-300">
+              <div className="w-9 h-9 rounded-2xl bg-[var(--accent)] text-[var(--accent-inv)] flex items-center justify-center flex-shrink-0 shadow-md">
+                <Sparkles className="w-5 h-5 animate-pulse" />
+              </div>
+              <div className="px-7 py-5 rounded-[28px] bg-[var(--surface2)]/50 flex gap-2 items-center border border-[var(--border)]/20">
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]/30 animate-bounce" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]/30 animate-bounce [animation-delay:0.2s]" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]/30 animate-bounce [animation-delay:0.4s]" />
               </div>
             </div>
           )}
           <div ref={chatEndRef} />
         </div>
 
-        <div className="flex flex-wrap gap-1.5 px-5 pb-3.5">
-          <QuickChip label="🍳 Breakfast" onClick={() => setInput('Log breakfast')} />
-          <QuickChip label="💪 Workout" onClick={() => setInput('Log workout')} />
-          <QuickChip label="😴 Sleep" onClick={() => setInput('Log sleep')} />
-          <QuickChip label="🥚 Protein left?" onClick={() => setInput('How much protein do I still need today?')} />
+        <div className="flex flex-wrap gap-2.5 px-6 pb-5 overflow-x-auto no-scrollbar">
+          <QuickChip icon={Coffee} label="Breakfast" onClick={() => setInput('Log my breakfast')} />
+          <QuickChip icon={Dumbbell} label="Workout" onClick={() => setInput('Record my training session')} />
+          <QuickChip icon={Moon} label="Sleep Stats" onClick={() => setInput('Show my sleep data')} />
+          <QuickChip icon={Info} label="Protein Check" onClick={() => setInput('How is my protein intake?')} />
         </div>
 
-        <div className="p-4 px-5 border-t border-[var(--border)] flex gap-2.5 items-end relative">
-          <button className="w-[38px] h-[38px] rounded-md bg-transparent border border-[var(--border)] cursor-pointer flex items-center justify-center text-lg text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--text)] hover:bg-[var(--surface2)] transition-all duration-150">
-            📷
-          </button>
-          <textarea
-            className="flex-1 border border-[var(--border)] rounded-md px-3.5 py-2.5 text-[13.5px] font-light resize-none outline-none bg-[var(--input-bg)] text-[var(--text)] min-h-[42px] max-h-[120px] transition-all duration-150 tracking-[0.01em] line-height-[1.5] overflow-y-auto"
-            rows={1}
-            placeholder="Tell me what you ate, your workout, sleep…"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-          />
-          <button
-            onClick={handleSend}
-            disabled={isTyping}
-            className="w-[38px] h-[38px] rounded-md bg-[var(--accent)] text-[var(--accent-inv)] border-none cursor-pointer flex items-center justify-center text-[17px] hover:opacity-75 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity duration-150 flex-shrink-0"
-          >
-            ↑
-          </button>
+        <div className="p-4 md:p-5 border-t border-[var(--border)] bg-[var(--surface)] relative">
+          <div className="flex gap-2.5 items-end max-w-4xl mx-auto">
+            <button className="w-11 h-11 flex-shrink-0 rounded-xl bg-[var(--surface2)] border border-[var(--border)]/50 cursor-pointer flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] hover:border-[var(--text-muted)] transition-all active:scale-95">
+              <ImageIcon className="w-5 h-5" />
+            </button>
+            <div className="flex-1 relative">
+              <textarea
+                className="w-full border border-[var(--border)]/50 rounded-2xl px-5 py-4 text-[15px] font-medium resize-none outline-none bg-[var(--surface2)]/30 text-[var(--text)] min-h-[52px] max-h-[150px] transition-all focus:border-[var(--accent)]/50 focus:bg-[var(--surface)] placeholder:text-[var(--text-muted)] placeholder:opacity-50"
+                rows={1}
+                placeholder="Message LiveFit..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+              />
+            </div>
+            <button
+              onClick={handleSend}
+              disabled={isTyping || !input.trim()}
+              className="w-11 h-11 flex-shrink-0 rounded-xl bg-[var(--accent)] text-[var(--accent-inv)] border-none cursor-pointer flex items-center justify-center shadow-lg shadow-[var(--accent)]/20 hover:opacity-90 disabled:opacity-30 disabled:grayscale transition-all active:scale-95"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -164,16 +166,18 @@ export default function Chat({ onLogParsed }: ChatProps) {
 }
 
 interface QuickChipProps {
+  readonly icon: any;
   readonly label: string;
   readonly onClick: () => void;
 }
 
-function QuickChip({ label, onClick }: QuickChipProps) {
+function QuickChip({ icon: Icon, label, onClick }: QuickChipProps) {
   return (
     <button
       onClick={onClick}
-      className="px-3 py-1.5 rounded-full border border-[var(--border)] bg-transparent text-[11px] font-normal tracking-[0.04em] cursor-pointer text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--text)] transition-all duration-150"
+      className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface2)]/50 text-[11px] font-bold tracking-tight cursor-pointer text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--surface)] transition-all whitespace-nowrap active:scale-95"
     >
+      <Icon className="w-3.5 h-3.5" />
       {label}
     </button>
   );
