@@ -1,0 +1,278 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f9f9f7;
+  --surface: #ffffff;
+  --surface2: #f3f3f0;
+  --border: #e5e5e0;
+  --text: #111110;
+  --text-muted: #888882;
+  --accent: #111110;
+  --accent-inv: #ffffff;
+  --green: #1a5c3a;
+  --green-bg: #eaf5ee;
+  --amber: #a0620a;
+  --amber-bg: #fef7ea;
+  --red: #b03030;
+  --red-bg: #fdf0f0;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --input-bg: #f3f3f0;
+}
+
+[data-theme='dark'] {
+  --bg: #0f0f0e;
+  --surface: #1a1a18;
+  --surface2: #262624;
+  --border: #333330;
+  --text: #e8e8e2;
+  --text-muted: #7a7a74;
+  --accent: #e8e8e2;
+  --accent-inv: #0f0f0e;
+  --green: #4caf7d;
+  --green-bg: #0f2a1c;
+  --amber: #d4a04a;
+  --amber-bg: #1f1506;
+  --red: #d46060;
+  --red-bg: #1f0a0a;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+  --input-bg: #1e1e1c;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  transition: background 0.25s, color 0.25s;
+}
+
+body {
+  font-family: 'Inter', sans-serif; /* Fallback to Inter if Work Sans not loaded */
+  font-weight: 300;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  letter-spacing: 0.01em;
+}
+
+/* ── REUSABLE COMPONENTS ── */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  transition: background 0.25s, border-color 0.25s;
+}
+
+.card-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 99px;
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.badge.ok {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+.badge.warn {
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+
+.badge.low {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+.progress-bar {
+  height: 2px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+  margin: 12px 0 4px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--text);
+  transition: width 0.5s ease;
+}
+
+.progress-fill.hit {
+  background: var(--green);
+}
+
+.progress-fill.near {
+  background: var(--amber);
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.stat-row:last-child {
+  border-bottom: none;
+}
+
+.stat-name {
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.stat-val {
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--text);
+}
+
+.stat-unit {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: 3px;
+}
+
+/* ── LOG ROWS ── */
+
+.log-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+}
+
+.log-row:last-child {
+  border-bottom: none;
+}
+
+.log-row-name {
+  font-weight: 300;
+}
+
+.log-row-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.log-row-val {
+  font-size: 16px;
+  font-weight: 300;
+  color: var(--text);
+  white-space: nowrap;
+  margin-left: 16px;
+}
+
+/* ── TABLES ── */
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.history-table th {
+  text-align: left;
+  padding: 8px 14px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.history-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 300;
+}
+
+.history-table tr:hover td {
+  background: var(--surface2);
+}
+
+/* ── INPUTS ── */
+
+.measure-input {
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 9px 11px;
+  font-size: 14px;
+  font-weight: 300;
+  background: var(--input-bg);
+  color: var(--text);
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+
+.measure-input:focus {
+  border-color: var(--text-muted);
+}
+
+.save-btn {
+  padding: 10px 24px;
+  background: var(--accent);
+  color: var(--accent-inv);
+  border: none;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.save-btn:hover {
+  opacity: 0.75;
+}
+
+/* ── SCROLLBAR ── */
+
+::-webkit-scrollbar {
+  width: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 99px;
+}
