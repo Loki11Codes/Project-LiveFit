@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 
 interface NavbarProps {
   readonly activeTab: string;
@@ -10,6 +11,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: NavbarProps) {
+  const { data: session } = useSession();
   const tabs = [
     { id: 'chat', label: '💬 Chat' },
     { id: 'log', label: '📋 Log' },
@@ -41,17 +43,18 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
       </div>
 
       <div className="flex items-center gap-3.5">
-        <span className="text-[11px] tracking-[0.1em] uppercase text-[var(--text-muted)]">
-          Day 1
-        </span>
-        <span className="text-[11px] tracking-[0.1em] uppercase text-[var(--text-muted)] hidden md:inline">
-          {new Date().toLocaleDateString('en-IN', {
-            weekday: 'short',
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-          })}
-        </span>
+        {session ? (
+          <span className="text-[11px] tracking-[0.1em] uppercase text-[var(--text-muted)] hidden md:inline">
+            {session.user?.name || 'User'}
+          </span>
+        ) : (
+          <Link 
+            href="/auth/signin"
+            className="text-[10px] tracking-[0.1em] uppercase bg-[var(--accent)] text-[var(--accent-inv)] px-3 py-1 rounded border-none cursor-pointer font-bold no-underline"
+          >
+            Sign In
+          </Link>
+        )}
         <div className="flex items-center gap-2">
           <span className="text-[11px] tracking-[0.08em] uppercase text-[var(--text-muted)]">
             {theme === 'light' ? 'Light' : 'Dark'}

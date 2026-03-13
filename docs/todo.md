@@ -1,25 +1,26 @@
 # Project LiveFit - Development Todo
 
 ## Phase 1: Environment & Setup
-- [ ] Initialize Next.js project inside `Project-LiveFit`
-- [ ] Configure Environment Variables(`.env`) for Gemini API
-- [ ] Setup Prisma & Database schema
+- [x] Initialize Next.js project inside `Project-LiveFit`
+- [x] Configure Environment Variables(`.env`) for Gemini API
+- [x] Setup Prisma & Database schema
 
 ## Phase 2: Core Infrastructure
-- [ ] Port CSS from original HTML to Next.js Global CSS
-- [ ] Create layout components (Navbar, Sidebar, Tabs)
-- [ ] Implement state management (Zustand or Context API)
+- [x] Port CSS from original HTML to Next.js Global CSS
+- [x] Create layout components (Navbar, Sidebar, Tabs)
+- [x] Implement state management (Zustand or Context API)
 
 ## Phase 3: AI Chat Integration
-- [ ] Create API route for Gemini API integration
-- [ ] Implement Chat UI component
-- [ ] Develop System Prompt for accurate parsing
+- [x] Create API route for Gemini API integration
+- [x] Implement Chat UI component
+- [x] Develop System Prompt for accurate parsing
+- [x] Multi-AI Provider Support (OpenRouter Fallback)
 
 ## Phase 4: Data Visualization & History
-- [ ] Build Log tab (Food, Workout, Sleep)
-- [ ] Build History tab (Tabular view)
-- [ ] Build Body measurements tab
-- [ ] Build Profile & Goals tab
+- [ ] Implement Data Persistence (Save food/workout logs to DB)
+- [ ] Build History tab (Tabular view with DB data)
+- [x] Build Body measurements tab [x]
+- [/] Build Profile & Goals tab [/]
 
 ## Phase 5: Polish & Deployment
 - [ ] Refine animations and transitions
