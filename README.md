@@ -25,15 +25,15 @@ Built by **Lokeshwaran V R**, maintained with Claude.
 
 ## 🚀 Getting Started
 
-### Prerequisites
-- A modern web browser (Chrome, Firefox, Edge, Safari)
-- A Claude.ai account (free or Pro) — the app calls the Claude API directly
+This project has evolved from a single-file prototype into a full **Next.js + Prisma** application.
 
-### Running Locally
-1. Download `LiveFit.html`
-2. Open it in your browser — that's it
+### Quick Start
+Please see [SETUP.md](./SETUP.md) for detailed, step-by-step developer setup instructions including:
+1. Environment configuration (`.env`).
+2. Local database initialization (`npx prisma migrate dev`).
+3. Running the local dev server.
 
-> **Note:** The AI chat requires a Claude API key to be available in the environment. When running inside Claude.ai artifacts, this is handled automatically. For standalone local use, you'll need to add your own API key to the fetch call in `sendMessage()`.
+---
 
 ---
 
