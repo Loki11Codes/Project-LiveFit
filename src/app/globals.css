@@ -284,6 +284,8 @@ body {
 
 .save-btn {
   padding: 16px 32px;
+  width: auto;
+  display: inline-block;
   background: var(--accent);
   color: var(--accent-inv);
   border: none;
