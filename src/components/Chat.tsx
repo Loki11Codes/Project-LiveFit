@@ -174,8 +174,8 @@ export default function Chat({ onLogParsed }: ChatProps) {
           <div ref={chatEndRef} />
         </div>
 
-        <div className="pb-10 pt-4 chat-viewport">
-          <div className="w-full flex flex-wrap gap-3 overflow-x-auto no-scrollbar chat-chip-row">
+        <div className="pb-6 pt-2 chat-viewport">
+          <div className="w-full flex flex-nowrap gap-3 overflow-x-auto no-scrollbar chat-chip-row">
             <QuickChip
               icon={Coffee}
               label="Breakfast"

@@ -74,11 +74,11 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
             })}
           </div>
 
-          <div className="flex items-center gap-6 flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 flex-shrink-0">
             {session ? (
-              <div className="hidden lg:flex flex-col items-end mr-1">
-                <span className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase opacity-40 mb-0.5">Connected</span>
-                <span className="text-xs font-black tracking-tighter text-[var(--text)] uppercase border-t border-[var(--accent)]/20 pt-1 leading-tight">
+              <div className="hidden sm:flex flex-col items-end mr-1">
+                <span className="text-[9px] lg:text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase opacity-40 mb-0.5">Connected</span>
+                <span className="text-[10px] lg:text-xs font-black tracking-tighter text-[var(--text)] uppercase border-t border-[var(--accent)]/20 pt-1 leading-tight">
                   {session.user?.name === 'akash' ? 'AKASH BHAT' : (session.user?.name || 'AKASH BHAT').toUpperCase()}
                 </span>
               </div>
@@ -110,7 +110,7 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
       </nav>
 
       {/* MOBILE BOTTOM NAV - INSTAGRAM STYLE */}
-      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[1001] w-[90%] max-w-[400px]">
+      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[1001] w-[90%] max-w-[400px] bottom-nav-z-guard">
         <div className="bg-[var(--surface)]/90 backdrop-blur-2xl border border-[var(--border)] p-2 rounded-[28px] shadow-2xl shadow-black/20 flex items-center justify-around gap-1">
           {tabs.map((tab) => {
             const Icon = tab.icon;

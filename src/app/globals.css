@@ -103,8 +103,8 @@ body {
 
 /* Chat Hyper-Inset System - V4 (Robust) */
 .chat-viewport {
-  padding-left: clamp(32px, 15vw, 200px) !important;
-  padding-right: clamp(32px, 15vw, 200px) !important;
+  padding-left: clamp(20px, 12vw, 200px) !important;
+  padding-right: clamp(20px, 12vw, 200px) !important;
 }
 
 .chat-content-v-inset {
@@ -383,15 +383,15 @@ body {
   }
 }
 
-/* ── SCROLLBAR ── */
+/* ── UTILITIES ── */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
-::-webkit-scrollbar {
-  width: 5px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 20px;
+.bottom-nav-z-guard {
+  z-index: 1001 !important;
 }
