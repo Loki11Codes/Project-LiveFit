@@ -35,7 +35,7 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
 
   return (
     <>
-      <nav className="bg-[var(--surface)]/80 backdrop-blur-md border-b border-[var(--border)] h-22 sticky top-0 z-[1000] transition-all duration-500 shadow-xl shadow-black/5">
+      <nav className="bg-[var(--surface)]/80 backdrop-blur-md border-b border-[var(--border)] h-22 sticky top-0 z-[1000] transition-all duration-500 shadow-xl shadow-black/5 w-full flex justify-center">
         <div className="navbar-inner">
           <Link href="/" className="flex items-center gap-3 group cursor-pointer transition-all duration-300 no-underline">
             <div className="w-10 h-10 bg-[var(--accent)] rounded-2xl flex items-center justify-center shadow-lg shadow-[var(--accent)]/10 transition-all duration-500 group-hover:shadow-[var(--accent)]/30">

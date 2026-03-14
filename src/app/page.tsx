@@ -148,7 +148,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col bg-[var(--bg)] w-full overflow-x-hidden">
+    <main className="min-h-screen flex flex-col items-center bg-[var(--bg)] w-full overflow-x-hidden">
       <Navbar
         activeTab={activeTab}
         setActiveTab={handleTabChange}
