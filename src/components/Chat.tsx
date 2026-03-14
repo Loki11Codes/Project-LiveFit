@@ -125,8 +125,8 @@ export default function Chat({ onLogParsed }: ChatProps) {
   return (
     <div className="flex-1 flex flex-col gap-4 min-w-0 h-[625px]">
       <div className="flex-1 bg-[var(--surface)] border border-[var(--border)] rounded-[32px] flex flex-col shadow-2xl shadow-black/5 overflow-hidden transition-all duration-300">
-        <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col scroll-smooth h-full no-scrollbar" style={{ paddingLeft: '80px', paddingRight: '80px' }}>
-          <div className="w-full flex flex-col gap-10 min-h-full pb-16" style={{ paddingTop: '100px' }}>
+        <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col scroll-smooth h-full no-scrollbar chat-viewport">
+          <div className="w-full flex flex-col gap-10 min-h-full chat-content-v-inset">
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -174,8 +174,8 @@ export default function Chat({ onLogParsed }: ChatProps) {
           <div ref={chatEndRef} />
         </div>
 
-        <div className="pb-10 pt-4" style={{ paddingLeft: '80px', paddingRight: '80px' }}>
-          <div className="w-full flex flex-wrap gap-3 overflow-x-auto no-scrollbar" style={{ paddingLeft: '60px' }}>
+        <div className="pb-10 pt-4 chat-viewport">
+          <div className="w-full flex flex-wrap gap-3 overflow-x-auto no-scrollbar chat-chip-row">
             <QuickChip
               icon={Coffee}
               label="Breakfast"
@@ -199,7 +199,7 @@ export default function Chat({ onLogParsed }: ChatProps) {
           </div>
         </div>
 
-        <div className="border-t border-[var(--border)] bg-[var(--surface)]/50 backdrop-blur-md relative" style={{ padding: '60px', paddingTop: '40px', paddingBottom: '80px' }}>
+        <div className="border-t border-[var(--border)] bg-[var(--surface)]/50 backdrop-blur-md relative chat-footer-inset">
           <div className="flex gap-4 items-center w-full bg-[var(--surface2)]/40 pr-2 md:pr-2.5 rounded-[30px] border border-[var(--border)]/50 shadow-sm overflow-hidden">
             <button className="w-11 h-11 flex-shrink-0 bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--surface2)]/50 transition-all active:scale-95 shadow-sm flex items-center justify-center border-none">
               <ImageIcon className="w-5 h-5" />

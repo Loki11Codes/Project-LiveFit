@@ -101,6 +101,27 @@ body {
   body .page-top-offset {
     padding-top: 25px;
   }
+
+  /* Chat Hyper-Inset System */
+  .chat-viewport {
+    padding-left: clamp(16px, 6vw, 80px);
+    padding-right: clamp(16px, 6vw, 80px);
+  }
+
+  .chat-content-v-inset {
+    padding-top: clamp(40px, 8vw, 100px);
+    padding-bottom: 64px;
+  }
+
+  .chat-footer-inset {
+    padding: clamp(20px, 5vw, 60px);
+    padding-top: 40px;
+    padding-bottom: clamp(40px, 7vw, 80px);
+  }
+
+  .chat-chip-row {
+    padding-left: clamp(20px, 5vw, 60px);
+  }
 }
 
 /* ── UTILITIES ── */
