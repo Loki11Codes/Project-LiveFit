@@ -126,7 +126,7 @@ body {
 
 /* ── UTILITIES ── */
 
-.glass {
+.glass, .card, .history-table td {
   background: var(--surface);
   backdrop-filter: blur(var(--blur));
   -webkit-backdrop-filter: blur(var(--blur));
@@ -156,14 +156,12 @@ body {
 /* ── REUSABLE COMPONENTS ── */
 
 .card {
-  background: var(--surface);
-  backdrop-filter: blur(var(--blur));
-  -webkit-backdrop-filter: blur(var(--blur));
-  border: 1px solid var(--border);
   border-radius: 28px;
   padding: 32px;
   box-shadow: var(--shadow-md);
-  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), 
+              box-shadow 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+              border-color 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .card:hover {
@@ -258,7 +256,7 @@ body {
   align-items: center;
   padding: 16px 12px;
   border-bottom: 1px solid var(--border);
-  transition: all 0.2s;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .log-row:hover {
@@ -353,7 +351,9 @@ body {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.3s ease;
 }
 
 .save-btn:hover {
