@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
@@ -13,8 +14,24 @@ import ProfileTab from '@/components/Tabs/ProfileTab';
 
 export default function Home() {
   const { data: session } = useSession();
-  const [activeTab, setActiveTab] = useState('chat');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'chat');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  // Sync state with URL
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    router.push(`/?tab=${tab}`, { scroll: false });
+  };
 
   const [protein, setProtein] = useState(0);
   const [calories, setCalories] = useState(0);
@@ -117,8 +134,12 @@ export default function Home() {
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
-    document.documentElement.dataset.theme = newTheme;
+    document.documentElement.setAttribute('data-theme', newTheme);
   };
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, []);
 
   const tabVariants = {
     initial: { opacity: 0, y: 10 },
@@ -127,15 +148,15 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col bg-[var(--background)]">
+    <main className="min-h-screen flex flex-col bg-[var(--bg)] w-full overflow-x-hidden">
       <Navbar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange}
         theme={theme}
         toggleTheme={toggleTheme}
       />
 
-      <div className="flex-1 main-layout pt-16 md:pt-28 pb-32 md:pb-12 transition-all duration-500">
+      <div className="flex-1 main-layout page-top-offset pb-32 md:pb-12 transition-all duration-500 w-full">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -186,8 +207,6 @@ export default function Home() {
             {activeTab === 'profile' && (
               <ProfileTab 
                 session={session}
-                signIn={() => {}} 
-                signOut={() => {}}
                 goals={goals}
                 setGoals={setGoals}
                 handleSaveGoals={handleSaveGoals}

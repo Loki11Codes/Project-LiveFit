@@ -2,11 +2,10 @@
 
 import React from 'react';
 import { User, Target, LogOut, Beef, Flame, Save, ShieldCheck, Mail, Settings } from 'lucide-react';
+import { signIn, signOut } from 'next-auth/react';
 
 interface ProfileTabProps {
   readonly session: any;
-  readonly signOut: () => void;
-  readonly signIn: () => void;
   readonly goals: { proteinTarget: number; kcalTarget: number };
   readonly setGoals: (g: any) => void;
   readonly handleSaveGoals: () => void;
@@ -14,8 +13,6 @@ interface ProfileTabProps {
 
 export default function ProfileTab({ 
   session, 
-  signOut, 
-  signIn, 
   goals, 
   setGoals, 
   handleSaveGoals 

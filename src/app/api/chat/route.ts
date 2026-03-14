@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { FoodItemSchema, WorkoutLogSchema, SleepLogSchema, MeasurementSchema } from '@/lib/validation';
+import { internalError } from '@/lib/api';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
@@ -136,58 +138,65 @@ async function persistLogData(text: string, userId: string) {
     if (match) {
       const parsed = JSON.parse(match[1]);
 
-      if (parsed.category === 'food' && parsed.data?.items) {
-        console.log('Saving food logs...');
-        await Promise.all(parsed.data.items.map((item: any) => 
-          prisma.foodLog.create({
+      await prisma.$transaction(async (tx) => {
+        if (parsed.category === 'food' && parsed.data?.items) {
+          console.log('Saving food logs...');
+          for (const item of parsed.data.items) {
+            const validated = FoodItemSchema.parse(item);
+            await tx.foodLog.create({
+              data: {
+                userId,
+                name: validated.name,
+                kcal: validated.kcal,
+                protein: validated.protein,
+                carbs: validated.carbs,
+                fats: validated.fats,
+                fiber: validated.fiber,
+              }
+            });
+          }
+        } else if (parsed.category === 'workout') {
+          console.log('Saving workout log...');
+          const validated = WorkoutLogSchema.parse(parsed.data);
+          await tx.workoutLog.create({
             data: {
               userId,
-              name: item.name,
-              kcal: item.kcal,
-              protein: item.protein,
-              carbs: item.carbs,
-              fats: item.fats,
-              fiber: item.fiber,
+              focus: validated.focus,
+              volume: validated.volume,
+              details: validated.details || JSON.stringify(parsed.data.prs || {}),
             }
-          })
-        ));
-      } else if (parsed.category === 'workout') {
-        console.log('Saving workout log...');
-        await prisma.workoutLog.create({
-          data: {
-            userId,
-            focus: parsed.data.focus,
-            volume: parsed.data.volume,
-            details: JSON.stringify(parsed.data.prs || {}),
-          }
-        });
-      } else if (parsed.category === 'sleep') {
-        console.log('Saving sleep log...');
-        await prisma.sleepLog.create({
-          data: {
-            userId,
-            hours: parsed.data.hours,
-            bedTime: parsed.data.bed,
-            wakeTime: parsed.data.wake,
-          }
-        });
-      } else if (parsed.category === 'measurement') {
-        console.log('Saving body measurement...');
-        await prisma.bodyMeasurement.create({
-          data: {
-            userId,
-            weight: parsed.data.weight,
-            waist: parsed.data.waist,
-            chest: parsed.data.chest,
-            arms: parsed.data.arms,
-            thighs: parsed.data.thighs,
-            hips: parsed.data.hips,
-          }
-        });
-      }
+          });
+        } else if (parsed.category === 'sleep') {
+          console.log('Saving sleep log...');
+          const validated = SleepLogSchema.parse(parsed.data);
+          await tx.sleepLog.create({
+            data: {
+              userId,
+              hours: validated.hours,
+              bedTime: validated.bedTime || parsed.data.bed,
+              wakeTime: validated.wakeTime || parsed.data.wake,
+            }
+          });
+        } else if (parsed.category === 'measurement') {
+          console.log('Saving body measurement...');
+          const validated = MeasurementSchema.parse(parsed.data);
+          await tx.bodyMeasurement.create({
+            data: {
+              userId,
+              weight: validated.weight,
+              waist: validated.waist,
+              chest: validated.chest,
+              arms: validated.arms,
+              thighs: validated.thighs,
+              hips: validated.hips,
+            }
+          });
+        }
+      });
     }
   } catch (dbError) {
-    console.error('Failed to save to database:', dbError);
+    console.error('Failed to save to database or validation failed:', dbError);
+    throw dbError; // Rethrow to allow standard error handling in POST
   }
 }
 
@@ -203,7 +212,7 @@ export async function POST(req: Request) {
     const openRouterKey = process.env.OPENROUTER_API_KEY && process.env.OPENROUTER_API_KEY !== 'your_openrouter_api_key_here' && process.env.OPENROUTER_API_KEY.trim() !== '' ? process.env.OPENROUTER_API_KEY : null;
 
     if (!geminiKey && !openRouterKey) {
-      return NextResponse.json({ error: 'No valid AI API Key provided' }, { status: 500 });
+      return internalError('No valid AI API Key provided');
     }
 
     let text = '';
@@ -223,7 +232,7 @@ export async function POST(req: Request) {
     if (!text) {
       throw new Error('All AI providers failed');
     }
-
+    
     if (session?.user) {
       await persistLogData(text, (session.user as any).id);
     }
@@ -232,6 +241,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ text });
   } catch (error: any) {
     console.error('Chat Route Error:', error.message || error);
-    return NextResponse.json({ error: 'Internal Server Error', details: error.message }, { status: 500 });
+    return internalError(error.message || 'Internal Server Error');
   }
 }

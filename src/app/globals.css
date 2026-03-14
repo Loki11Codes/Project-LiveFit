@@ -19,6 +19,7 @@
   --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.04);
   --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.06);
   --input-bg: #ffffff;
+  --background: #f7f7f4;
   --blur: 20px;
 }
 
@@ -41,6 +42,7 @@
   --shadow-md: 0 12px 36px rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 24px 72px rgba(0, 0, 0, 0.6);
   --input-bg: #0f0f0e;
+  --background: #070706;
   background-image: radial-gradient(circle at 50% -20%, #1a1a1a 0%, #070706 70%);
 }
 
@@ -69,15 +71,30 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── LAYOUT ── */
+@layer components {
+  .main-layout {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto !important;
+    padding-left: 24px;
+    padding-right: 24px;
+    display: block;
+  }
 
-.main-layout {
-  width: 100%;
-  max-width: 1240px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 20px;
-  padding-right: 20px;
+  .navbar-inner {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    padding: 0 24px;
+  }
+
+  .page-top-offset {
+    padding-top: 224px !important;
+  }
 }
 
 /* ── UTILITIES ── */

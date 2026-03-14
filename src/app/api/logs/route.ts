@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { unauthorized, internalError } from '@/lib/api';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   
   if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return unauthorized();
   }
 
   const userId = (session.user as any).id;
@@ -31,6 +32,6 @@ export async function GET() {
     return NextResponse.json({ food, workouts, sleep });
   } catch (error) {
     console.error('Failed to fetch logs:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return internalError();
   }
 }
