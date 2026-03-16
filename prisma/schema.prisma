@@ -53,6 +53,7 @@ model User {
   workoutLogs      WorkoutLog[]
   sleepLogs        SleepLog[]
   measurements     BodyMeasurement[]
+  dayTypeEntries   DayTypeEntry[]
   goals            Goal?
 }
 
@@ -117,4 +118,16 @@ model Goal {
   proteinTarget Float
   kcalTarget    Float
   user          User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DayTypeEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  dayKey    String
+  dayType   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dayKey])
 }

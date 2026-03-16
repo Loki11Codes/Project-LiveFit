@@ -1,13 +1,16 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
+import type { Session } from 'next-auth';
 import { User, Target, LogOut, Beef, Flame, Save, ShieldCheck, Mail, Settings } from 'lucide-react';
 import { signIn, signOut } from 'next-auth/react';
+import type { GoalsState } from '@/lib/types';
 
 interface ProfileTabProps {
-  readonly session: any;
-  readonly goals: { proteinTarget: number; kcalTarget: number };
-  readonly setGoals: (g: any) => void;
+  readonly session: Session | null;
+  readonly goals: GoalsState;
+  readonly setGoals: React.Dispatch<React.SetStateAction<GoalsState>>;
   readonly handleSaveGoals: () => void;
 }
 
@@ -45,9 +48,11 @@ export default function ProfileTab({
                <div className="flex items-center gap-5 p-4 bg-[var(--surface2)] rounded-2xl border border-[var(--border)]/30">
                 <div className="relative">
                   {session.user.image ? (
-                    <img 
+                    <Image 
                       src={session.user.image} 
                       alt="Profile" 
+                      width={80}
+                      height={80}
                       className="w-20 h-20 rounded-2xl border-2 border-[var(--bg)] shadow-md group-hover:scale-105 transition-transform duration-500" 
                     />
                   ) : (

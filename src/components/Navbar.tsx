@@ -14,18 +14,26 @@ import {
   LogIn, 
   Activity 
 } from 'lucide-react';
+import type { AppTheme, TabId } from '@/lib/types';
 
 interface NavbarProps {
-  readonly activeTab: string;
-  readonly setActiveTab: (tab: string) => void;
-  readonly theme: 'light' | 'dark';
+  readonly activeTab: TabId;
+  readonly setActiveTab: (tab: TabId) => void;
+  readonly theme: AppTheme;
   readonly toggleTheme: () => void;
 }
+
+type NavbarTab = {
+  id: TabId;
+  label: string;
+  icon: typeof MessageSquare;
+  color: string;
+};
 
 export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: NavbarProps) {
   const { data: session } = useSession();
   
-  const tabs = [
+  const tabs: NavbarTab[] = [
     { id: 'chat', label: 'Chat', icon: MessageSquare, color: 'var(--text)' },
     { id: 'log', label: 'Log', icon: ClipboardList, color: '#4db382' },
     { id: 'history', label: 'History', icon: BarChart3, color: '#c0392b' },

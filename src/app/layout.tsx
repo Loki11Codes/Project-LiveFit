@@ -1,12 +1,18 @@
 import type { Metadata } from 'next';
+import { Work_Sans } from 'next/font/google';
 import './globals.css';
+import { Providers } from '@/components/Providers';
+
+const workSans = Work_Sans({
+  subsets: ['latin'],
+  weight: ['200', '300', '400', '500', '600'],
+  style: ['normal', 'italic'],
+});
 
 export const metadata: Metadata = {
-  title: 'LiveFit — AI Fitness Tracker',
+  title: 'LiveFit - AI Fitness Tracker',
   description: 'AI-powered nutrition and fitness tracking application',
 };
-
-import { Providers } from '@/components/Providers';
 
 export default function RootLayout({
   children,
@@ -15,13 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,200;0,300;0,400;0,500;0,600;1,200&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body>
+      <body className={workSans.className}>
         <Providers>{children}</Providers>
       </body>
     </html>

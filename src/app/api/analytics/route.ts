@@ -11,7 +11,7 @@ export async function GET() {
     return unauthorized();
   }
 
-  const userId = (session.user as any).id;
+  const userId = session.user.id;
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -74,6 +74,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Analytics Fetch Error:', error);
-    return internalError();
+    return internalError('Unable to load analytics right now');
   }
 }

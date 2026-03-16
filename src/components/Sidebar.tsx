@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useSyncExternalStore } from 'react';
 import {
   Beef,
   Flame,
@@ -12,9 +12,9 @@ import {
   Droplets,
   Salad,
   Zap,
+  type LucideIcon,
 } from 'lucide-react';
-
-type DayType = 'Rest' | 'Training' | 'Lite';
+import type { DayType } from '@/lib/types';
 
 interface SidebarProps {
   readonly protein: number;
@@ -45,22 +45,27 @@ export default function Sidebar({
   dayType,
   setDayType,
 }: SidebarProps) {
+  const currentDateLabel = useSyncExternalStore(
+    subscribeToDateLabel,
+    getCurrentDateLabel,
+    getServerDateLabel
+  );
   const proteinPct = Math.min((protein / proteinTarget) * 100, 100);
   const caloriePct = Math.min((calories / calorieTarget) * 100, 100);
 
-  const dayTypes: { id: DayType; label: string; icon: any }[] = [
+  const dayTypes: Array<{ id: DayType; label: string; icon: LucideIcon }> = [
     { id: 'Rest', label: 'Rest', icon: Moon },
     { id: 'Training', label: 'Train', icon: Flame },
     { id: 'Lite', label: 'Lite', icon: Salad },
   ];
 
-  const getProteinRange = () => {
-    if (dayType === 'Rest') return '75–85g';
-    if (dayType === 'Training') return '100–120g';
-    return '60–75g';
-  };
-
-  const statsRows: { icon: any; label: string; value: string | number; unit: string; color: string }[] = [
+  const statsRows: Array<{
+    icon: LucideIcon;
+    label: string;
+    value: string | number;
+    unit: string;
+    color: string;
+  }> = [
     { icon: Scale, label: 'Weight', value: weight, unit: 'kg', color: '#a86b12' },
     { icon: Moon, label: 'Sleep', value: sleep, unit: 'hrs', color: '#6b7ea8' },
     { icon: Flame, label: 'Calories', value: calories, unit: 'kcal', color: '#c0392b' },
@@ -71,12 +76,7 @@ export default function Sidebar({
     {
       icon: Calendar,
       label: 'Date',
-      value: new Date().toLocaleDateString('en-US', {
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      }),
+      value: currentDateLabel,
       unit: '',
       color: '#7b5ea7',
     },
@@ -84,7 +84,6 @@ export default function Sidebar({
 
   return (
     <div className="sidebar-scroll-container">
-      {/* Protein Today */}
       <div className="sidebar-card">
         <div className="sidebar-card-header">
           <Beef className="sidebar-card-icon" style={{ color: '#8b4513' }} />
@@ -98,7 +97,9 @@ export default function Sidebar({
         </div>
         <div className="progress-bar mt-4">
           <div
-            className={`progress-fill transition-all duration-700 ease-out ${proteinPct >= 100 ? 'hit' : proteinPct >= 70 ? 'near' : ''}`}
+            className={`progress-fill transition-all duration-700 ease-out ${
+              proteinPct >= 100 ? 'hit' : proteinPct >= 70 ? 'near' : ''
+            }`}
             style={{ width: `${proteinPct}%` }}
           />
         </div>
@@ -108,7 +109,6 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* Calories Today */}
       <div className="sidebar-card">
         <div className="sidebar-card-header">
           <Flame className="sidebar-card-icon" style={{ color: '#e67e22' }} />
@@ -122,7 +122,9 @@ export default function Sidebar({
         </div>
         <div className="progress-bar mt-4">
           <div
-            className={`progress-fill transition-all duration-700 ease-out ${caloriePct >= 100 ? 'hit' : caloriePct >= 80 ? 'near' : ''}`}
+            className={`progress-fill transition-all duration-700 ease-out ${
+              caloriePct >= 100 ? 'hit' : caloriePct >= 80 ? 'near' : ''
+            }`}
             style={{ width: `${caloriePct}%` }}
           />
         </div>
@@ -132,14 +134,15 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* Nutrition & Measurements Chart */}
       <div className="sidebar-card">
-        {statsRows.map((row, i) => {
+        {statsRows.map((row, index) => {
           const Icon = row.icon;
           return (
             <div
               key={row.label}
-              className={`sidebar-stat-row ${i === statsRows.length - 1 ? 'border-none' : ''}`}
+              className={`sidebar-stat-row ${
+                index === statsRows.length - 1 ? 'border-none' : ''
+              }`}
             >
               <div className="sidebar-stat-left">
                 <Icon className="sidebar-stat-icon" style={{ color: row.color }} />
@@ -149,16 +152,13 @@ export default function Sidebar({
                 <span className="sidebar-stat-value" style={{ color: row.color }}>
                   {row.value}
                 </span>
-                {row.unit && (
-                  <span className="sidebar-stat-unit">{row.unit}</span>
-                )}
+                {row.unit && <span className="sidebar-stat-unit">{row.unit}</span>}
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Day Type Selection */}
       <div className="sidebar-card">
         <div className="sidebar-card-header">
           <Zap className="sidebar-card-icon" style={{ color: '#e6ac50' }} />
@@ -169,18 +169,60 @@ export default function Sidebar({
             <button
               key={id}
               onClick={() => setDayType(id)}
-              className={`sidebar-daytype-btn ${dayType === id ? 'sidebar-daytype-active' : 'sidebar-daytype-inactive'}`}
+              className={`sidebar-daytype-btn ${
+                dayType === id
+                  ? 'sidebar-daytype-active'
+                  : 'sidebar-daytype-inactive'
+              }`}
             >
-              <Icon className="w-3.5 h-3.5" style={{ color: dayType === id ? 'var(--accent-inv)' : '#a86b12' }} />
+              <Icon
+                className="w-3.5 h-3.5"
+                style={{
+                  color: dayType === id ? 'var(--accent-inv)' : '#a86b12',
+                }}
+              />
               <span>{label}</span>
             </button>
           ))}
         </div>
         <div className="sidebar-remaining">
           <Target className="w-3 h-3 opacity-50" style={{ color: '#4db382' }} />
-          Target: {getProteinRange()} protein
+          Target: {getProteinRange(dayType)} protein
         </div>
       </div>
     </div>
   );
+}
+
+function getProteinRange(dayType: DayType): string {
+  if (dayType === 'Rest') {
+    return '75-85g';
+  }
+
+  if (dayType === 'Training') {
+    return '100-120g';
+  }
+
+  return '60-75g';
+}
+
+function subscribeToDateLabel(): () => void {
+  return () => undefined;
+}
+
+function getCurrentDateLabel(): string {
+  return formatDateLabel(new Date());
+}
+
+function getServerDateLabel(): string {
+  return '--';
+}
+
+function formatDateLabel(value: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(value);
 }

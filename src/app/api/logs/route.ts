@@ -11,7 +11,7 @@ export async function GET() {
     return unauthorized();
   }
 
-  const userId = (session.user as any).id;
+  const userId = session.user.id;
 
   try {
     const [food, workouts, sleep] = await Promise.all([
@@ -32,6 +32,6 @@ export async function GET() {
     return NextResponse.json({ food, workouts, sleep });
   } catch (error) {
     console.error('Failed to fetch logs:', error);
-    return internalError();
+    return internalError('Unable to load logs right now');
   }
 }
