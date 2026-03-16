@@ -2,20 +2,22 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import {
-  Send,
-  Image as ImageIcon,
-  Sparkles,
+  ImageIcon,
   Coffee,
   Dumbbell,
   Moon,
   Info,
   User,
+  ArrowUp,
+  Activity,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Message {
   id: string;
   role: "user" | "model";
   text: string;
+  timestamp: string;
 }
 
 interface ChatProps {
@@ -25,15 +27,25 @@ interface ChatProps {
 export default function Chat({ onLogParsed }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: crypto.randomUUID(),
+      id: "welcome-msg",
       role: "model",
-      text: "Connection established. How can I assist you with your fitness goals today?",
+      text: "Good morning! 👋 I'm your LiveFit AI — speak naturally to log anything.\n\n🔍 \"Had 3 egg omelette and 150ml milk for breakfast\"\n💪 \"Finished chest day, 3200kg volume, 8 PRs\"\n😴 \"Slept 7.5h, bed at 11pm, woke at 6:30\"\n⚖️ \"Weight 70.5kg this morning\"",
+      timestamp: "",
     },
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const isInitialMount = useRef(true);
+
+  useEffect(() => {
+    // Populate the first message's timestamp on mount to avoid hydration mismatch
+    setMessages(prev => prev.map(m => 
+      m.id === "welcome-msg" && m.timestamp === "" 
+        ? { ...m, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) } 
+        : m
+    ));
+  }, []);
 
   const scrollToBottom = () => {
     if (isInitialMount.current) {
@@ -55,6 +67,7 @@ export default function Chat({ onLogParsed }: ChatProps) {
       id: crypto.randomUUID(),
       role: "user",
       text: userText,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
@@ -81,6 +94,7 @@ export default function Chat({ onLogParsed }: ChatProps) {
             id: crypto.randomUUID(),
             role: "model",
             text: `Connection issue: ${data.error}`,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           },
         ]);
         return;
@@ -104,7 +118,12 @@ export default function Chat({ onLogParsed }: ChatProps) {
 
         setMessages((prev) => [
           ...prev,
-          { id: crypto.randomUUID(), role: "model", text: cleanText },
+          { 
+            id: crypto.randomUUID(), 
+            role: "model", 
+            text: cleanText,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          },
         ]);
       }
     } catch (e) {
@@ -115,6 +134,7 @@ export default function Chat({ onLogParsed }: ChatProps) {
           id: crypto.randomUUID(),
           role: "model",
           text: "Unable to connect to AI service.",
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
     } finally {
@@ -123,110 +143,161 @@ export default function Chat({ onLogParsed }: ChatProps) {
   };
 
   return (
-    <div className="flex-1 flex flex-col gap-4 min-w-0 h-[625px]">
-      <div className="flex-1 bg-[var(--surface)] border border-[var(--border)] rounded-[32px] flex flex-col shadow-2xl shadow-black/5 overflow-hidden transition-all duration-300">
-        <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col scroll-smooth h-full no-scrollbar chat-viewport">
-          <div className="w-full flex flex-col gap-10 min-h-full chat-content-v-inset">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex gap-4 items-start animate-in fade-in slide-in-from-bottom-4 duration-500 min-w-0 ${
-                  msg.role === "user" ? "flex-row-reverse" : ""
-                }`}
-              >
-                <div
-                  className={`w-11 h-11 rounded-2xl flex items-center justify-center text-[13px] font-bold flex-shrink-0 mt-1 shadow-md ${
-                    msg.role === "model"
-                      ? "bg-[var(--accent)] text-[var(--accent-inv)]"
-                      : "bg-[var(--surface2)] text-[var(--text)] border border-[var(--border)]"
-                  }`}
+    <div className="flex-1 min-w-0 h-full bg-[var(--surface)] rounded-[32px] flex flex-col shadow-[0_0_0_1px_var(--border),var(--shadow-lg)] overflow-hidden transition-all duration-300">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col scroll-smooth h-full no-scrollbar chat-viewport">
+        <div className="w-full flex flex-col min-h-full chat-content-v-inset">
+          <AnimatePresence mode="popLayout">
+            {messages.map((msg, index) => {
+              const isFirstInGroup = index === 0 || messages[index - 1].role !== msg.role;
+              return (
+                <motion.div
+                  key={msg.id}
+                  layout
+                  initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                  className={`chat-msg-row ${msg.role === "user" ? "flex-row-reverse" : ""} ${isFirstInGroup ? "mt-6" : "mt-1"}`}
                 >
-                  {msg.role === "model" ? (
-                    <Sparkles className="w-5 h-5 transition-transform hover:scale-110" />
-                  ) : (
-                    <User className="w-5 h-5 transition-transform hover:scale-110" />
-                  )}
-                </div>
-                <div
-                  className={`max-w-[85%] md:max-w-[75%] min-w-0 w-fit px-6 py-4.5 rounded-[28px] text-[15px] leading-relaxed font-medium tracking-tight break-words overflow-wrap-anywhere whitespace-pre-wrap flex-shrink shadow-sm border ${
-                    msg.role === "model"
-                      ? "bg-[var(--surface2)]/40 text-[var(--text)] rounded-bl-none border-[var(--border)]/60"
-                      : "bg-[#1f2937] dark:bg-[var(--accent)] text-white dark:text-[var(--accent-inv)] rounded-br-none shadow-xl shadow-black/10 dark:shadow-[var(--accent)]/15 border-[#374151] dark:border-[var(--accent)]/10"
-                  }`}
-                >
-                  {msg.text}
-                </div>
-              </div>
-            ))}
-            {isTyping && (
-              <div className="flex gap-4 items-start animate-in fade-in duration-300">
-                <div className="w-11 h-11 rounded-2xl bg-[var(--accent)] text-[var(--accent-inv)] flex items-center justify-center flex-shrink-0 shadow-md">
-                  <Sparkles className="w-5 h-5 animate-pulse" />
-                </div>
-                <div className="px-6 py-4 rounded-[28px] bg-[var(--surface2)]/40 flex gap-2.5 items-center border border-[var(--border)]/60 flex-shrink-0 mt-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]/40 animate-bounce [animation-duration:1s]" />
-                  <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]/40 animate-bounce [animation-duration:1s] [animation-delay:0.2s]" />
-                  <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]/40 animate-bounce [animation-duration:1s] [animation-delay:0.4s]" />
-                </div>
-              </div>
-            )}
-          </div>
-          <div ref={chatEndRef} />
-        </div>
+                  <div className={`chat-avatar-container ${isFirstInGroup ? "" : "invisible opacity-0 h-0"}`}>
+                    <div
+                      className={`chat-avatar ${
+                        msg.role === "model"
+                          ? "bg-[var(--accent)] text-[var(--accent-inv)]"
+                          : "bg-[var(--surface2)] text-[var(--text)]"
+                      }`}
+                    >
+                      {msg.role === "model" ? (
+                        <Activity className="w-4.5 h-4.5 text-[var(--accent-inv)]" strokeWidth={3} />
+                      ) : (
+                        <User className="w-5 h-5" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-col max-w-[80%] group">
+                    <div
+                      className={`chat-msg-bubble relative ${
+                        msg.role === "model"
+                          ? "chat-bubble-model"
+                          : "chat-bubble-user"
+                      }`}
+                    >
+                      {msg.role === "model" && msg.text.includes("LiveFit AI") ? (
+                        <div>
+                          <p>
+                            Good morning! 👋 <span className="chat-accent-text">I&apos;m your LiveFit AI</span> — speak naturally to log anything.
+                          </p>
+                          <div className="chat-bullet-list">
+                            {[
+                              { id: 'search', icon: "🔍", text: '"Had 3 egg omelette and 150ml milk for breakfast"' },
+                              { id: 'work', icon: "💪", text: '"Finished chest day, 3200kg volume, 8 PRs"' },
+                              { id: 'sleep', icon: "😴", text: '"Slept 7.5h, bed at 11pm, woke at 6:30"' },
+                              { id: 'weight', icon: "⚖️", text: '"Weight 70.5kg this morning"' }
+                            ].map((item) => (
+                              <div key={item.id} className="chat-bullet-item">
+                                <span className="chat-bullet-icon">{item.icon}</span>
+                                <span className="chat-bullet-text">{item.text}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        msg.text
+                      )}
+                      
+                      {/* Ghost Timestamp */}
+                      <span className="chat-message-timestamp">
+                        {msg.timestamp}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
 
-        <div className="pb-6 pt-2 chat-viewport">
-          <div className="w-full flex flex-nowrap gap-3 overflow-x-auto no-scrollbar chat-chip-row">
-            <QuickChip
-              icon={Coffee}
-              label="Breakfast"
-              onClick={() => setInput("Log my breakfast")}
-            />
-            <QuickChip
-              icon={Dumbbell}
-              label="Workout"
-              onClick={() => setInput("Record my training session")}
-            />
-            <QuickChip
-              icon={Moon}
-              label="Sleep Stats"
-              onClick={() => setInput("Show my sleep data")}
-            />
-            <QuickChip
-              icon={Info}
-              label="Protein Check"
-              onClick={() => setInput("How is my protein intake?")}
-            />
-          </div>
-        </div>
-
-        <div className="border-t border-[var(--border)] bg-[var(--surface)]/50 backdrop-blur-md relative chat-footer-inset">
-          <div className="flex gap-4 items-center w-full bg-[var(--surface2)]/40 pr-2 md:pr-2.5 rounded-[30px] border border-[var(--border)]/50 shadow-sm overflow-hidden">
-            <button className="w-11 h-11 flex-shrink-0 bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--surface2)]/50 transition-all active:scale-95 shadow-sm flex items-center justify-center border-none">
-              <ImageIcon className="w-5 h-5" />
-            </button>
-            <div className="flex-1 relative group">
-              <textarea
-                className="w-full border-none px-3 py-3 text-[15px] font-medium resize-none outline-none bg-transparent text-[var(--text)] min-h-[44px] max-h-[150px] transition-all placeholder:text-[var(--text-muted)] placeholder:opacity-40 flex items-center"
-                rows={1}
-                placeholder="Message LiveFit..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                }}
-              />
-            </div>
-            <button
-              onClick={handleSend}
-              disabled={isTyping || !input.trim()}
-              className="w-11 h-11 flex-shrink-0 rounded-[22px] bg-[var(--accent)] text-[var(--accent-inv)] border-none cursor-pointer flex items-center justify-center shadow-lg shadow-[var(--accent)]/25 hover:scale-[1.05] hover:brightness-110 disabled:opacity-30 disabled:grayscale transition-all active:scale-95"
+          {isTyping && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="chat-msg-row mt-4"
             >
-              <Send className="w-5 h-5 translate-x-0.5" />
-            </button>
+              <div className="chat-avatar bg-[var(--accent)] text-[var(--accent-inv)]">
+                <Activity className="w-4.5 h-4.5 text-[var(--accent-inv)] animate-pulse" strokeWidth={3} />
+              </div>
+              <div className="chat-msg-bubble chat-bubble-model flex gap-2 items-center">
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]/40 animate-bounce [animation-duration:1s]" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]/40 animate-bounce [animation-duration:1s] [animation-delay:0.2s]" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]/40 animate-bounce [animation-duration:1s] [animation-delay:0.4s]" />
+              </div>
+            </motion.div>
+          )}
+        </div>
+        <div ref={chatEndRef} />
+      </div>
+
+      <div className="chat-footer-container chat-viewport">
+        <div className="chat-quick-chips-row no-scrollbar">
+          <QuickChip
+            icon={Coffee}
+            label="Breakfast"
+            onClick={() => setInput("Log my breakfast")}
+          />
+          <QuickChip
+            icon={Dumbbell}
+            label="Workout"
+            onClick={() => setInput("Record my training session")}
+          />
+          <QuickChip
+            icon={Moon}
+            label="Sleep"
+            onClick={() => setInput("Show my sleep data")}
+          />
+          <QuickChip
+            icon={Info}
+            label="Protein left?"
+            onClick={() => setInput("How is my protein intake?")}
+          />
+          <QuickChip
+            icon={ImageIcon}
+            label="Summary"
+            onClick={() => setInput("Give me a summary")}
+          />
+        </div>
+
+        <div className="chat-input-wrapper">
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="chat-photo-btn"
+          >
+            <ImageIcon className="w-5 h-5" />
+          </motion.button>
+          
+          <div className="chat-input-box">
+            <input
+              className="chat-input-field"
+              type="text"
+              placeholder="Tell me what you ate, your workout, sleep... or attach a photo 📷"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+            />
           </div>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleSend}
+            disabled={isTyping || !input.trim()}
+            className="chat-send-btn-square"
+          >
+            <ArrowUp className="w-5 h-5" />
+          </motion.button>
         </div>
       </div>
     </div>
@@ -241,12 +312,14 @@ interface QuickChipProps {
 
 function QuickChip({ icon: Icon, label, onClick }: QuickChipProps) {
   return (
-    <button
+    <motion.button
+      whileHover={{ scale: 1.05, translateY: -2 }}
+      whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface2)]/50 text-[11px] font-bold tracking-tight cursor-pointer text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--surface)] transition-all whitespace-nowrap active:scale-95"
+      className="chat-quick-chip"
     >
       <Icon className="w-3.5 h-3.5" />
       {label}
-    </button>
+    </motion.button>
   );
 }

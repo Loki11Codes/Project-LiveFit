@@ -1,15 +1,17 @@
 'use client';
 
 import React from 'react';
-import { 
-  Beef, 
-  Flame, 
-  Scale, 
-  Moon, 
-  Calendar, 
-  Layout, 
-  Info,
-  Target
+import {
+  Beef,
+  Flame,
+  Scale,
+  Moon,
+  Calendar,
+  Target,
+  Wheat,
+  Droplets,
+  Salad,
+  Zap,
 } from 'lucide-react';
 
 type DayType = 'Rest' | 'Training' | 'Lite';
@@ -19,6 +21,9 @@ interface SidebarProps {
   readonly proteinTarget: number;
   readonly calories: number;
   readonly calorieTarget: number;
+  readonly carbs: number;
+  readonly fats: number;
+  readonly fiber: number;
   readonly weight: number | string;
   readonly sleep: number | string;
   readonly day: number;
@@ -31,6 +36,9 @@ export default function Sidebar({
   proteinTarget,
   calories,
   calorieTarget,
+  carbs,
+  fats,
+  fiber,
   weight,
   sleep,
   day,
@@ -40,147 +48,138 @@ export default function Sidebar({
   const proteinPct = Math.min((protein / proteinTarget) * 100, 100);
   const caloriePct = Math.min((calories / calorieTarget) * 100, 100);
 
-  const getProteinFillClass = () => {
-    if (proteinPct >= 100) return 'progress-fill hit';
-    if (proteinPct >= 70) return 'progress-fill near';
-    return 'progress-fill';
-  };
-
-  const getCalorieFillClass = () => {
-    if (caloriePct >= 100) return 'progress-fill hit';
-    if (caloriePct >= 80) return 'progress-fill near';
-    return 'progress-fill';
-  };
-
-  const dayTypes: {id: DayType, label: string, icon: any}[] = [
+  const dayTypes: { id: DayType; label: string; icon: any }[] = [
     { id: 'Rest', label: 'Rest', icon: Moon },
     { id: 'Training', label: 'Train', icon: Flame },
-    { id: 'Lite', label: 'Lite', icon: Info }
+    { id: 'Lite', label: 'Lite', icon: Salad },
+  ];
+
+  const getProteinRange = () => {
+    if (dayType === 'Rest') return '75–85g';
+    if (dayType === 'Training') return '100–120g';
+    return '60–75g';
+  };
+
+  const statsRows: { icon: any; label: string; value: string | number; unit: string; color: string }[] = [
+    { icon: Scale, label: 'Weight', value: weight, unit: 'kg', color: '#a86b12' },
+    { icon: Moon, label: 'Sleep', value: sleep, unit: 'hrs', color: '#6b7ea8' },
+    { icon: Flame, label: 'Calories', value: calories, unit: 'kcal', color: '#c0392b' },
+    { icon: Wheat, label: 'Carbs', value: carbs.toFixed(1), unit: 'g', color: '#e6ac50' },
+    { icon: Droplets, label: 'Fats', value: fats.toFixed(1), unit: 'g', color: '#d4a23a' },
+    { icon: Salad, label: 'Fiber', value: fiber.toFixed(1), unit: 'g', color: '#4db382' },
+    { icon: Calendar, label: 'Day', value: day, unit: '', color: '#7b5ea7' },
+    {
+      icon: Calendar,
+      label: 'Date',
+      value: new Date().toLocaleDateString('en-US', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      }),
+      unit: '',
+      color: '#7b5ea7',
+    },
   ];
 
   return (
-    <div className="w-full lg:w-[280px] flex flex-col gap-5">
-      <div className="card shadow-lg border-[var(--border)] overflow-hidden relative group">
-        <div className="flex items-center gap-2 mb-4">
-          <Beef className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-          <div className="card-label mb-0">Protein Today</div>
+    <div className="sidebar-scroll-container">
+      {/* Protein Today */}
+      <div className="sidebar-card">
+        <div className="sidebar-card-header">
+          <Beef className="sidebar-card-icon" style={{ color: '#8b4513' }} />
+          <span className="sidebar-card-title">Protein Today</span>
         </div>
-        <div className="flex items-baseline gap-1">
-          <span className="text-[52px] font-extralight leading-none tracking-[-0.05em] text-[var(--text)]">
-            {protein}
-          </span>
-          <span className="text-[14px] text-[var(--text-muted)] font-medium">
-            g <span className="opacity-40">/</span> {proteinTarget}g
+        <div className="sidebar-big-value">
+          <span className="sidebar-big-number">{protein}</span>
+          <span className="sidebar-big-unit">
+            g of {proteinTarget}g
           </span>
         </div>
-        <div className="progress-bar mt-6 bg-[var(--surface2)]/50">
+        <div className="progress-bar mt-4">
           <div
-            className={`${getProteinFillClass()} transition-all duration-700 ease-out`}
+            className={`progress-fill transition-all duration-700 ease-out ${proteinPct >= 100 ? 'hit' : proteinPct >= 70 ? 'near' : ''}`}
             style={{ width: `${proteinPct}%` }}
           />
         </div>
-        <div className="text-[11px] text-[var(--text-muted)] tracking-wide mt-3 font-medium flex items-center gap-1">
+        <div className="sidebar-remaining">
           <Target className="w-3 h-3 opacity-50" />
           {Math.max(0, proteinTarget - protein)}g remaining
         </div>
-        <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
-          <Beef className="w-16 h-16" />
-        </div>
       </div>
 
-      <div className="card shadow-lg border-[var(--border)] overflow-hidden relative group">
-        <div className="flex items-center gap-2 mb-4">
-          <Flame className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-          <div className="card-label mb-0">Calories Today</div>
+      {/* Calories Today */}
+      <div className="sidebar-card">
+        <div className="sidebar-card-header">
+          <Flame className="sidebar-card-icon" style={{ color: '#e67e22' }} />
+          <span className="sidebar-card-title">Calories Today</span>
         </div>
-        <div className="flex items-baseline gap-1">
-          <span className="text-[52px] font-extralight leading-none tracking-[-0.05em] text-[var(--text)]">
-            {calories}
-          </span>
-          <span className="text-[14px] text-[var(--text-muted)] font-medium">
-            kcal <span className="opacity-40">/</span> {calorieTarget}
+        <div className="sidebar-big-value">
+          <span className="sidebar-big-number">{calories}</span>
+          <span className="sidebar-big-unit">
+            kcal of {calorieTarget}
           </span>
         </div>
-        <div className="progress-bar mt-6 bg-[var(--surface2)]/50">
+        <div className="progress-bar mt-4">
           <div
-            className={`${getCalorieFillClass()} transition-all duration-700 ease-out`}
+            className={`progress-fill transition-all duration-700 ease-out ${caloriePct >= 100 ? 'hit' : caloriePct >= 80 ? 'near' : ''}`}
             style={{ width: `${caloriePct}%` }}
           />
         </div>
-        <div className="text-[11px] text-[var(--text-muted)] tracking-wide mt-3 font-medium flex items-center gap-1">
+        <div className="sidebar-remaining">
           <Target className="w-3 h-3 opacity-50" />
           {Math.max(0, calorieTarget - calories)} kcal remaining
         </div>
-        <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
-          <Flame className="w-16 h-16" />
-        </div>
       </div>
 
-      <div className="card shadow-md border-[var(--border)] overflow-hidden">
-        <div className="space-y-0">
-          <StatRow icon={Scale} label="Weight" value={weight} unit="kg" />
-          <StatRow icon={Moon} label="Sleep" value={sleep} unit="hrs" />
-          <StatRow icon={Calendar} label="Day" value={day} />
-          <div className="stat-row border-none py-3.5 px-1">
-             <div className="flex items-center gap-2.5">
-               <Calendar className="w-3.5 h-3.5 text-[var(--text-muted)] opacity-40" />
-               <span className="stat-name">Current Date</span>
-             </div>
-             <span className="text-[11px] font-bold tracking-tight text-[var(--text)] opacity-80">
-               {new Date().toLocaleDateString('en-US', {
-                 weekday: 'short',
-                 day: 'numeric',
-                 month: 'short'
-               })}
-             </span>
-          </div>
-        </div>
+      {/* Nutrition & Measurements Chart */}
+      <div className="sidebar-card">
+        {statsRows.map((row, i) => {
+          const Icon = row.icon;
+          return (
+            <div
+              key={row.label}
+              className={`sidebar-stat-row ${i === statsRows.length - 1 ? 'border-none' : ''}`}
+            >
+              <div className="sidebar-stat-left">
+                <Icon className="sidebar-stat-icon" style={{ color: row.color }} />
+                <span className="sidebar-stat-label">{row.label}</span>
+              </div>
+              <div className="sidebar-stat-right">
+                <span className="sidebar-stat-value" style={{ color: row.color }}>
+                  {row.value}
+                </span>
+                {row.unit && (
+                  <span className="sidebar-stat-unit">{row.unit}</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      <div className="card shadow-md border-[var(--border)] relative overflow-hidden">
-        <div className="flex items-center gap-2 mb-4 relative z-10">
-          <Layout className="w-3.5 h-3.5 text-[var(--text-muted)] opacity-50" />
-          <div className="card-label mb-0">Selection</div>
+      {/* Day Type Selection */}
+      <div className="sidebar-card">
+        <div className="sidebar-card-header">
+          <Zap className="sidebar-card-icon" style={{ color: '#e6ac50' }} />
+          <span className="sidebar-card-title">Day Type</span>
         </div>
-        <div className="flex gap-1 p-1 bg-[var(--surface2)]/50 rounded-2xl relative z-10 border border-[var(--border)]/30">
-          {dayTypes.map(({id, label, icon: Icon}) => (
+        <div className="sidebar-daytype-pills">
+          {dayTypes.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               onClick={() => setDayType(id)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all duration-400 cursor-pointer border-none ${
-                dayType === id
-                  ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text)]'
-              }`}
+              className={`sidebar-daytype-btn ${dayType === id ? 'sidebar-daytype-active' : 'sidebar-daytype-inactive'}`}
             >
-              <Icon className={`w-3.5 h-3.5 ${dayType === id ? 'scale-110 opacity-100' : 'opacity-40'}`} />
-              <span className="text-[10px] font-bold tracking-widest uppercase">{label}</span>
+              <Icon className="w-3.5 h-3.5" style={{ color: dayType === id ? 'var(--accent-inv)' : '#a86b12' }} />
+              <span>{label}</span>
             </button>
           ))}
         </div>
-        <div className="absolute top-[-20%] right-[-10%] w-[40%] h-[40%] bg-[var(--accent)] opacity-[0.02] blur-[40px] rounded-full pointer-events-none" />
-      </div>
-    </div>
-  );
-}
-
-interface StatRowProps {
-  readonly icon: any;
-  readonly label: string;
-  readonly value: string | number;
-  readonly unit?: string;
-}
-
-function StatRow({ icon: Icon, label, value, unit }: StatRowProps) {
-  return (
-    <div className="stat-row py-3">
-      <div className="flex items-center gap-2">
-        <Icon className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-        <span className="stat-name">{label}</span>
-      </div>
-      <div className="flex items-baseline gap-0.5">
-        <span className="stat-val font-medium">{value}</span>
-        {unit && <span className="stat-unit text-[10px] uppercase font-bold opacity-60 ml-1">{unit}</span>}
+        <div className="sidebar-remaining">
+          <Target className="w-3 h-3 opacity-50" style={{ color: '#4db382' }} />
+          Target: {getProteinRange()} protein
+        </div>
       </div>
     </div>
   );

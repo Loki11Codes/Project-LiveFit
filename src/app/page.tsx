@@ -35,6 +35,9 @@ export default function Home() {
 
   const [protein, setProtein] = useState(0);
   const [calories, setCalories] = useState(0);
+  const [carbs, setCarbs] = useState(0);
+  const [fats, setFats] = useState(0);
+  const [fiber, setFiber] = useState(0);
   const [dayType, setDayType] = useState<'Rest' | 'Training' | 'Lite'>('Rest');
   const [foodLog, setFoodLog] = useState<any[]>([]);
   const [history, setHistory] = useState<any[]>([]);
@@ -64,6 +67,9 @@ export default function Home() {
         const todaysFood = logsData.food.filter((f: any) => new Date(f.time).toDateString() === today);
         setProtein(todaysFood.reduce((sum: number, f: any) => sum + (f.protein || 0), 0));
         setCalories(todaysFood.reduce((sum: number, f: any) => sum + (f.kcal || 0), 0));
+        setCarbs(todaysFood.reduce((sum: number, f: any) => sum + (f.carbs || 0), 0));
+        setFats(todaysFood.reduce((sum: number, f: any) => sum + (f.fats || 0), 0));
+        setFiber(todaysFood.reduce((sum: number, f: any) => sum + (f.fiber || 0), 0));
       }
 
       if (latestData && !latestData.error) {
@@ -156,25 +162,28 @@ export default function Home() {
         toggleTheme={toggleTheme}
       />
 
-      <div className="flex-1 main-layout page-top-offset pb-32 md:pb-12 transition-all duration-500 w-full">
+      <div className={`flex-1 main-layout page-top-offset transition-all duration-500 w-full ${activeTab === 'chat' ? 'single-screen-layout' : 'pb-32 md:pb-12'}`}>
         <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            variants={tabVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="h-full"
-          >
+            <motion.div
+              key={activeTab}
+              variants={tabVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="flex flex-col"
+            >
             {activeTab === 'chat' && (
-              <div className="flex flex-col lg:flex-row gap-6 h-full">
+              <div className="chat-sidebar-layout">
                 <Chat onLogParsed={handleLogParsed} />
                 <Sidebar
                   protein={protein}
                   proteinTarget={goals.proteinTarget}
                   calories={calories}
                   calorieTarget={goals.kcalTarget}
+                  carbs={carbs}
+                  fats={fats}
+                  fiber={fiber}
                   weight={latestMeasurement?.weight || '—'}
                   sleep={7.5}
                   day={1}
