@@ -1,178 +1,177 @@
-# LiveFit 🏋️
+# LiveFit
 
-A personal AI-powered fitness tracker that lives in a single HTML file. Log food, workouts, sleep, and body measurements by chatting naturally — no app install, no backend, no accounts.
+LiveFit is an AI-assisted fitness tracker built with Next.js, Prisma, and NextAuth.
+It lets a signed-in user log food, workouts, sleep, and body measurements through
+chat, then stores the structured data in a local SQLite database.
 
-Built by **Lokeshwaran V R**, maintained with Claude.
+## What It Does
 
----
+- Natural-language logging for food, workouts, sleep, and measurements
+- Image upload in chat for nutrition labels and food-photo analysis
+- Structured persistence for food logs, workout logs, sleep logs, body measurements, and goals
+- Daily dashboard totals for protein, calories, carbs, fats, and fiber
+- History table built from saved logs
+- Body measurement form plus latest measurement snapshot
+- Profile page with credentials/Google auth and daily goal management
+- Analytics API for 7-day nutrition and weight-trend data
 
-## ✨ Features
+## Tech Stack
 
-| Feature | Description |
-|---|---|
-| 💬 **AI Chat Logging** | Type naturally — *"had 3 eggs and 150ml milk"* — and the AI parses and logs everything |
-| 📷 **Image Analysis** | Attach nutrition labels or food photos; AI extracts all macros |
-| 🍽️ **Food Log** | Protein, calories, carbs, fats, fiber tracked per meal |
-| 💪 **Workout Log** | Volume, PRs, sets, duration, exercise focus |
-| 😴 **Sleep Log** | Hours, bed time, wake time |
-| 📊 **History Tab** | Per-day summary table — closes via "Close Day" button |
-| 📏 **Body Measurements** | Weight, waist, chest, arms, thighs, hips, calves, neck, body fat % |
-| 👤 **Profile** | Custom protein targets per day type (Training / Rest / Lite), workout split, sleep target |
-| 🌙 **Dark Mode** | Full light/dark theme toggle |
-| 💾 **Persistence** | All data survives page reload via artifact storage |
+- Next.js 16 App Router
+- React 19
+- Prisma + SQLite
+- NextAuth.js with Google and credentials providers
+- Gemini API for primary AI parsing and image analysis
+- OpenRouter fallback for text-only chat when configured
+- Tailwind CSS 4 + custom global CSS
+- TypeScript + Zod
 
----
+## Current Status
 
-## 🚀 Getting Started
+Implemented now:
 
-This project has evolved from a single-file prototype into a full **Next.js + Prisma** application.
+- Chat-based structured logging
+- Image attachments in chat
+- Database persistence for food, workouts, sleep, measurements, and goals
+- Typed dashboard aggregation and history generation
+- Auth-gated dashboard
 
-### Quick Start
-Please see [SETUP.md](./SETUP.md) for detailed, step-by-step developer setup instructions including:
-1. Environment configuration (`.env`).
-2. Local database initialization (`npx prisma migrate dev`).
-3. Running the local dev server.
+Still incomplete:
 
----
+- Analytics UI is not yet exposed in the frontend
+- Day type is not stored historically, so old history rows do not retain Rest/Training/Lite
+- README was refreshed, but `.env.example` still does not list every optional auth/provider variable
+- Local production builds can fail if a running dev server is holding `.next` open
 
----
+## Authentication
 
-## 🗂️ File Structure
+The dashboard routes are protected by middleware in
+[`src/proxy.ts`](./src/proxy.ts). Users can sign in with:
 
-Everything lives in `LiveFit.html`. The file is organized into clearly labeled sections:
+- Email + password credentials
+- Google OAuth
 
-```
-LiveFit.html
-├── <style>
-│   ├── CSS variables (light/dark theme)
-│   ├── Nav, chat, sidebar styles
-│   ├── Log, history, body, profile styles
-│   └── Dark mode overrides
-│
-├── <body>
-│   ├── <nav> — Logo, tab switcher, theme toggle
-│   ├── #panel-chat — AI chat + sidebar (protein, calories, stats, Close Day)
-│   ├── #panel-log — Food log, workout, sleep
-│   ├── #panel-history — Daily history table
-│   ├── #panel-body — Body measurements
-│   └── #panel-profile — Personal info, goals, workout split
-│
-└── <script>
-    ├── State & constants (S, TARGETS, KCAL_TARGETS, HIST)
-    ├── Storage: persist() / hydrate()          ← loki-v5-state + loki-v5-hist
-    ├── Theme: toggleTheme() / applyTheme()
-    ├── Navigation: switchTab() / setType()
-    ├── UI: updateUI()
-    ├── Image handling: handleFileSelect() etc.
-    ├── Chat: sendMessage() / appendMsg() / showTyping()
-    ├── AI parsing: parseState()               ← JSON-first, regex fallback
-    ├── Day management: closeDay()
-    ├── Render: renderLog() / renderHistory() / renderBody()
-    └── Profile: saveProfile() / renderProfile()
-    └── init()
-```
+The app uses JWT sessions with Prisma-backed user/account data.
 
----
+## Data Model
 
-## 🧠 How AI Parsing Works
+Prisma models live in [`prisma/schema.prisma`](./prisma/schema.prisma).
 
-When you send a message, the app:
+Main app entities:
 
-1. Sends your message + full day context to the Claude API
-2. The AI responds naturally AND appends a hidden structured JSON block:
-   ```
-   |||DATA
-   {"food":{"protein":21,"kcal":280,...},"sleep":{"hours":7.5,"bed":"11pm","wake":"6:30am"},...}
-   |||
-   ```
-3. `parseState()` extracts the JSON block first (reliable), strips it from the displayed reply, and updates the app state
-4. If the JSON block is missing, it falls back to regex parsing
+- `FoodLog`
+- `WorkoutLog`
+- `SleepLog`
+- `BodyMeasurement`
+- `Goal`
+- `User`, `Account`, `Session`, `VerificationToken` for auth
 
----
+## API Surface
 
-## 💾 Data Storage
+App routes currently implemented:
 
-All data is stored via `window.storage` (Claude artifact storage):
+- `POST /api/chat`: AI parsing, image analysis, and log persistence
+- `GET /api/logs`: fetch food, workout, and sleep logs
+- `GET /api/measurements`: fetch latest body measurement
+- `POST /api/measurements`: create a body measurement
+- `GET /api/goals`: fetch current daily goals
+- `POST /api/goals`: upsert daily goals
+- `GET /api/analytics`: 7-day nutrition averages and weight trend
+- `POST /api/auth/signup`: create a credentials user
 
-| Key | Contents |
-|---|---|
-| `loki-v5-state` | Full session: food log, workout, sleep, protein, calories, day, theme, profile, measurements |
-| `loki-v5-hist` | History array — one entry per closed day |
+## Project Structure
 
-> ⚠️ Storage is tied to the artifact environment. Data does not sync across devices or browsers.
-
----
-
-## 🤝 Contributing
-
-This project is maintained by Lokeshwaran and developed in collaboration with Claude.
-
-### Workflow
-```
-main branch → your changes via PR → review → merge
+```text
+.
+|- prisma/
+|  |- migrations/
+|  `- schema.prisma
+|- public/
+|- src/
+|  |- app/
+|  |  |- api/
+|  |  |- auth/
+|  |  |- globals.css
+|  |  |- layout.tsx
+|  |  `- page.tsx
+|  |- components/
+|  |  |- Tabs/
+|  |  |- Chat.tsx
+|  |  |- Navbar.tsx
+|  |  `- Sidebar.tsx
+|  |- lib/
+|  |  |- auth.ts
+|  |  |- dashboard.ts
+|  |  |- prisma.ts
+|  |  |- types.ts
+|  |  `- validation.ts
+|  `- proxy.ts
+|- README.md
+`- SETUP.md
 ```
 
-### To contribute:
-1. Fork or clone the repo
-2. Make your changes to `LiveFit.html`
-3. Open a PR with a clear description of what you changed and why
-4. Tag sections you changed (e.g. `[JS: parseState]`, `[CSS: dark mode]`, `[HTML: Log tab]`)
+## Setup
 
-### Ground rules
-- Keep it single-file for now — no separate JS/CSS files yet
-- Test your changes by reloading the page and verifying state persists
-- Don't commit personal data (your food logs, measurements, etc.)
-- Keep the section comments intact so we can navigate the file cleanly
+Use [`SETUP.md`](./SETUP.md) for the full local setup guide.
 
-### Areas open for contribution
-- [ ] Water intake tracker (target exists in profile, logging not yet wired)
-- [ ] Weight trend chart in Body tab
-- [ ] Weekly summary view
-- [ ] Export to CSV
-- [ ] Streak counter
-- [ ] Better workout exercise breakdown logging
+Quick version:
 
----
+```bash
+npm install
+cp .env.example .env
+npx prisma migrate dev
+npm run dev
+```
 
-## 🐛 Known Limitations
+## Environment Variables
 
-- **Chat history is not persisted** — the conversation resets on reload (daily logs are saved, but the chat transcript isn't)
-- **Single-user** — one profile per storage instance; no multi-account support yet
-- **No offline AI** — chat requires network access to the Claude API
-- **Storage is local to the artifact** — no cloud sync across devices
+Minimum local setup:
 
----
+```env
+DATABASE_URL="file:./dev.db"
+GEMINI_API_KEY=your_gemini_api_key_here
+NEXTAUTH_SECRET=replace_me
+```
 
-## 📋 Day Types & Protein Targets
+Optional:
 
-| Day Type | Protein Target | Calorie Target |
-|---|---|---|
-| 🛌 Rest | 75–85g | ~2,150 kcal |
-| 💪 Training | 95–105g | ~2,450 kcal |
-| 🌿 Lite | 50–65g | ~1,800 kcal |
+```env
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+```
 
-Targets are customizable via the Profile tab.
+Notes:
 
----
+- Image analysis currently requires `GEMINI_API_KEY`
+- OpenRouter fallback is only used for text chat, not image analysis
+- Google login requires both Google OAuth variables plus `NEXTAUTH_SECRET`
 
-## 📅 Changelog
+## Scripts
 
-### v5 (current)
-- Full session state persists across reloads (`loki-v5-state`)
-- History now persists and populates via "Close Day" button
-- `parseState()` upgraded: JSON-first parsing, regex fallback
-- Sleep bed time and wake time now parsed from chat
-- Log and Body tabs now populate correctly after reload
-- History tab label shows dynamic day count
-- Day-type button state restored on reload
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
+```
 
-### v4 (original)
-- Only theme, measurements, and profile were persisted
-- History was a static hardcoded array
-- Regex-only nutrient parsing
+## Known Limitations
 
----
+- Chat transcript is not persisted across reloads
+- Analytics data exists as an API, but there is no chart UI yet
+- Historical rows do not preserve day type
+- Image analysis depends on Gemini being configured
+- The app currently targets a single-user local SQLite workflow during development
 
-## 📄 License
+## Troubleshooting
 
-Personal project — feel free to fork and adapt for your own use.
+- If `npm run build` fails with `EPERM` on `.next\\trace`, stop any running
+  `next dev` process and remove the `.next` directory before retrying.
+- If chat fails immediately, check `GEMINI_API_KEY` and optionally `OPENROUTER_API_KEY`.
+- If auth fails, verify `NEXTAUTH_SECRET` and any Google OAuth environment variables.
+- If Prisma queries fail locally, rerun `npx prisma migrate dev`.
+
+## Next Work
+
+The current implementation backlog is tracked in [`todo.md`](./todo.md).
