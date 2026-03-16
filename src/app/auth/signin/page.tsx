@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -105,7 +106,8 @@ export default function SignIn() {
               onClick={() => signIn('google', { callbackUrl: '/' })}
               className="w-full bg-white text-black py-2.5 rounded-lg font-bold text-[12px] uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-gray-100 transition-colors border border-gray-200"
             >
-              <img src="https://www.google.com/favicon.ico" alt="" className="w-4 h-4" />Continue with Google
+              <Image src="/google.svg" alt="" width={16} height={16} />
+              Continue with Google
             </button>
           </div>
         </div>

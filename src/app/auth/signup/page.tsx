@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getClientErrorMessage, requestJson } from '@/lib/client-api';
 
 export default function SignUp() {
   const [name, setName] = useState('');
@@ -18,21 +19,15 @@ export default function SignUp() {
     setError('');
 
     try {
-      const res = await fetch('/api/auth/signup', {
+      await requestJson<{ message: string }>('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Something went wrong');
-      }
-
       router.push('/auth/signin?success=1');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (error) {
+      setError(getClientErrorMessage(error));
     } finally {
       setLoading(false);
     }

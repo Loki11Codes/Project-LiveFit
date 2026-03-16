@@ -34,7 +34,7 @@ export default function AppError({
         </h1>
         
         <p className="text-[var(--text-secondary)] mb-10 leading-relaxed font-medium">
-          The fitness engine encountered an unexpected hurdle. Don't worry, your progress is safe.
+          The fitness engine encountered an unexpected hurdle. Don&apos;t worry, your progress is safe.
         </p>
 
         <div className="flex flex-col gap-4">

@@ -4,6 +4,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/lib/prisma";
 import { NextAuthOptions } from "next-auth";
 import bcrypt from "bcryptjs";
+import { getErrorMessage } from '@/lib/dashboard';
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -50,8 +51,8 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             image: user.image,
           };
-        } catch (error: any) {
-          console.error('Auth check error:', error.message);
+        } catch (error) {
+          console.error('Auth check error:', getErrorMessage(error));
           throw error;
         }
       },
@@ -71,8 +72,8 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        (session.user as any).id = token.id;
+      if (session.user && token.id) {
+        session.user.id = token.id;
       }
       return session;
     },

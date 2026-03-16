@@ -1,21 +1,25 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { conflict, internalError, parseJsonBody } from '@/lib/api';
+import { SignupSchema } from '@/lib/validation';
 
 export async function POST(req: Request) {
-  try {
-    const { name, email, password } = await req.json();
+  const parsedBody = await parseJsonBody(req, SignupSchema);
+  if (!parsedBody.success) {
+    return parsedBody.response;
+  }
 
-    if (!email || !password || !name) {
-      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
-    }
+  try {
+    const { name, email, password } = parsedBody.data;
+    const normalizedEmail = email.toLowerCase();
 
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
-      return NextResponse.json({ error: 'User already exists' }, { status: 400 });
+      return conflict('An account with this email already exists');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -23,7 +27,7 @@ export async function POST(req: Request) {
     const user = await prisma.user.create({
       data: {
         name,
-        email,
+        email: normalizedEmail,
         password: hashedPassword,
       },
     });
@@ -31,6 +35,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: 'User created successfully', user: { id: user.id, email: user.email } });
   } catch (error) {
     console.error('Signup error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return internalError('Unable to create your account right now');
   }
 }
