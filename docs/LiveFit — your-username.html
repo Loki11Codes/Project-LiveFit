@@ -659,12 +659,12 @@ Respond concisely. Give clean item-by-item breakdown with all 5 nutrients. End w
 }
 
 function extractVolume(low, reply) {
-  const m = low.match(/(\d{3,5})\s*kg/) || reply.match(/(\d{3,5})\s*kg/);
+  const m = low.match(/(\d{3,5}) *kg/) || reply.match(/(\d{3,5}) *kg/);
   return m ? Number.parseInt(m[1], 10) : null;
 }
 
 function extractPRs(low, reply) {
-  const m = low.match(/(\d+)\s*pr/) || reply.match(/(\d+)\s*pr/i);
+  const m = low.match(/(\d+) *pr/) || reply.match(/(\d+) *pr/i);
   return m ? Number.parseInt(m[1], 10) : 0;
 }
 
@@ -689,11 +689,11 @@ function parseFoodLog(user, reply, totM) {
   const low = user.toLowerCase();
   const ks = ['ate', 'had', 'breakfast', 'lunch', 'dinner', 'snack', 'drank', 'consumed'];
   if (ks.some(k => low.includes(k))) {
-    const p = matchVal(reply, /(\d+\.?\d*)g\s+protein/i, 0) || 0;
-    const c = matchVal(reply, /(\d+\.?\d*)g\s+carb/i, 0);
-    const f = matchVal(reply, /(\d+\.?\d*)g\s+fat/i, 0);
-    const fi = matchVal(reply, /(\d+\.?\d*)g\s+fiber/i, 0);
-    const k = matchVal(reply, /(\d+)\s*kcal/i, 10);
+    const p = matchVal(reply, /(\d+(?:\.\d+)?)g +protein/i, 0) || 0;
+    const c = matchVal(reply, /(\d+(?:\.\d+)?)g +carb/i, 0);
+    const f = matchVal(reply, /(\d+(?:\.\d+)?)g +fat/i, 0);
+    const fi = matchVal(reply, /(\d+(?:\.\d+)?)g +fiber/i, 0);
+    const k = matchVal(reply, /(\d+) +kcal/i, 10);
 
     S.foodLog.push({
       name: user.slice(0, 70), protein: p, kcal: k, carbs: c, fats: f, fiber: fi,
@@ -709,10 +709,10 @@ function parseFoodLog(user, reply, totM) {
 }
 function parseState(user,reply){
   const low=user.toLowerCase();
-  const totM=reply.match(/(?:total|running total|so far)[:\s~]+(\d+\.?\d*)g/i);
+  const totM=reply.match(/(?:total|running total|so far)[: \t~]+(\d+(?:\.\d+)?)g/i);
   if(totM)S.protein=Number.parseFloat(totM[1]);
-  if(low.includes('weight')||low.includes('weigh')){const m=user.match(/(\d+\.?\d*)\s*kg/);if(m)S.weight=Number.parseFloat(m[1]);}
-  const slM=low.match(/slep?t?\s+(\d+\.?\d*)/);if(slM)S.sleep={...S.sleep,hours:Number.parseFloat(slM[1])};
+  if(low.includes('weight')||low.includes('weigh')){const m=user.match(/(\d+(?:\.\d+)?) *kg/);if(m)S.weight=Number.parseFloat(m[1]);}
+  const slM=low.match(/slep?t? +(\d+(?:\.\d+)?)/);if(slM)S.sleep={...S.sleep,hours:Number.parseFloat(slM[1])};
   parseFoodLog(user, reply, totM);
   parseWorkout(user, reply);
   updateUI();persist();
