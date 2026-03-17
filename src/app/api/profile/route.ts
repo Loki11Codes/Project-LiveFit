@@ -43,7 +43,12 @@ export async function POST(req: Request) {
     if (isGoalUpdate) {
       const parsed = GoalSchema.safeParse(body);
       if (!parsed.success) {
-        return NextResponse.json({ error: parsed.error.format() }, { status: 400 });
+        return NextResponse.json({ 
+          error: parsed.error.issues.map(issue => ({
+            path: issue.path,
+            message: issue.message
+          })) 
+        }, { status: 400 });
       }
 
       const goal = await prisma.goal.upsert({
@@ -58,7 +63,12 @@ export async function POST(req: Request) {
     } else {
       const parsed = UserProfileSchema.safeParse(body);
       if (!parsed.success) {
-        return NextResponse.json({ error: parsed.error.format() }, { status: 400 });
+        return NextResponse.json({ 
+          error: parsed.error.issues.map(issue => ({
+            path: issue.path,
+            message: issue.message
+          })) 
+        }, { status: 400 });
       }
 
       const profile = await prisma.userProfile.upsert({
