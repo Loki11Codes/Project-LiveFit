@@ -12,6 +12,8 @@ import {
   Droplets,
   Salad,
   Zap,
+  CheckCircle2,
+  AlertTriangle,
   type LucideIcon,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -99,7 +101,7 @@ export default function Sidebar({
 
   return (
     <div className="sidebar-scroll-container">
-      <div className="sidebar-card">
+      <div className={`sidebar-card ${protein >= proteinTarget ? 'protein-hit' : ''}`}>
         <div className="sidebar-card-header">
           <Beef className="sidebar-card-icon" style={{ color: '#8b4513' }} />
           <span className="sidebar-card-title">Protein Today</span>
@@ -118,13 +120,20 @@ export default function Sidebar({
             className={`progress-fill h-full rounded-[inherit] ${proteinStatus}`}
           />
         </div>
-        <div className="sidebar-remaining">
-          <Target className="w-3 h-3 opacity-50" />
-          {Math.max(0, proteinTarget - protein)}g remaining
-        </div>
+        {protein >= proteinTarget ? (
+          <div className="sidebar-remaining text-[#4db382]">
+            <CheckCircle2 className="w-3 h-3" />
+            Goal reached! Excellent work.
+          </div>
+        ) : (
+          <div className="sidebar-remaining">
+            <Target className="w-3 h-3" style={{ color: '#4db382' }} />
+            {Math.max(0, proteinTarget - protein)}g remaining
+          </div>
+        )}
       </div>
 
-      <div className="sidebar-card">
+      <div className={`sidebar-card ${calories > calorieTarget ? 'calorie-danger' : ''}`}>
         <div className="sidebar-card-header">
           <Flame className="sidebar-card-icon" style={{ color: '#e67e22' }} />
           <span className="sidebar-card-title">Calories Today</span>
@@ -143,8 +152,19 @@ export default function Sidebar({
             className={`progress-fill h-full rounded-[inherit] ${calorieStatus}`}
           />
         </div>
-        <div className="sidebar-remaining">
-          <Target className="w-3 h-3 opacity-50" />
+        {calories > calorieTarget ? (
+          <div className="sidebar-remaining text-[#c0392b] font-bold">
+            <AlertTriangle className="w-3 h-3 animate-pulse" />
+            Warning: Calories overshot
+          </div>
+        ) : (
+          <div className="sidebar-remaining text-[#4db382]">
+            <CheckCircle2 className="w-3 h-3" />
+            Great! Within calorie limit
+          </div>
+        )}
+        <div className="sidebar-remaining !mt-1">
+          <Target className="w-3 h-3" style={{ color: '#4db382' }} />
           {Math.max(0, calorieTarget - calories)} kcal remaining
         </div>
       </div>
@@ -201,7 +221,7 @@ export default function Sidebar({
           ))}
         </div>
         <div className="sidebar-remaining">
-          <Target className="w-3 h-3 opacity-50" style={{ color: '#4db382' }} />
+          <Target className="w-3 h-3" style={{ color: '#4db382' }} />
           Target: {getProteinRange(dayType)} protein
         </div>
       </div>

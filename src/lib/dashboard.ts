@@ -157,8 +157,8 @@ export function buildHistoryRows(
       type: dayTypesByDay[entry.dayKey] ?? '--',
       sleep: entry.sleep === null ? '--' : formatNumber(entry.sleep),
       protein: round(entry.protein),
-      target: goals.proteinTarget,
-      status: entry.protein >= goals.proteinTarget ? 'completed' : 'pending',
+      target: getProteinTarget(goals, (dayTypesByDay[entry.dayKey] ?? 'Rest') as DayType),
+      status: entry.protein >= getProteinTarget(goals, (dayTypesByDay[entry.dayKey] ?? 'Rest') as DayType) ? 'completed' : 'pending',
       kcal: round(entry.kcal),
       carbs: round(entry.carbs),
       fats: round(entry.fats),
@@ -187,6 +187,19 @@ export function buildDayTypeMap(entries: DayTypeEntryRecord[]): DayTypeMap {
 
 export function getCurrentDayType(dayTypesByDay: DayTypeMap): DayType {
   return dayTypesByDay[getLocalDateKey(new Date())] ?? 'Rest';
+}
+
+export function getProteinTarget(goals: GoalsState, dayType: DayType): number {
+  switch (dayType) {
+    case 'Training':
+      return goals.proteinTraining ?? goals.proteinTarget;
+    case 'Rest':
+      return goals.proteinRest ?? goals.proteinTarget;
+    case 'Lite':
+      return goals.proteinLite ?? goals.proteinTarget;
+    default:
+      return goals.proteinTarget;
+  }
 }
 
 function createDailySummary(value: Date | string): {

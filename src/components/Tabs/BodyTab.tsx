@@ -29,16 +29,17 @@ const measurementFields: Array<{
   label: string;
   unit: string;
   icon: LucideIcon;
+  color: string;
 }> = [
-  { key: 'weight', label: 'Weight', unit: 'kg', icon: Weight },
-  { key: 'waist', label: 'Waist', unit: 'cm', icon: Ruler },
-  { key: 'chest', label: 'Chest', unit: 'cm', icon: User },
-  { key: 'arms', label: 'Arms', unit: 'cm', icon: Activity },
-  { key: 'thighs', label: 'Thighs', unit: 'cm', icon: Activity },
-  { key: 'hips', label: 'Hips', unit: 'cm', icon: Activity },
-  { key: 'calves', label: 'Calves', unit: 'cm', icon: Activity },
-  { key: 'neck', label: 'Neck', unit: 'cm', icon: Activity },
-  { key: 'bodyFat', label: 'Body Fat', unit: '%', icon: Activity },
+  { key: 'weight', label: 'Weight', unit: 'kg', icon: Weight, color: '#a86b12' },
+  { key: 'waist', label: 'Waist', unit: 'cm', icon: Ruler, color: '#e6ac50' },
+  { key: 'chest', label: 'Chest', unit: 'cm', icon: User, color: '#7b5ea7' },
+  { key: 'arms', label: 'Arms', unit: 'cm', icon: Activity, color: '#e67e22' },
+  { key: 'thighs', label: 'Thighs', unit: 'cm', icon: Activity, color: '#e67e22' },
+  { key: 'hips', label: 'Hips', unit: 'cm', icon: Activity, color: '#e67e22' },
+  { key: 'calves', label: 'Calves', unit: 'cm', icon: Activity, color: '#e67e22' },
+  { key: 'neck', label: 'Neck', unit: 'cm', icon: Activity, color: '#e67e22' },
+  { key: 'bodyFat', label: 'Body Fat', unit: '%', icon: Activity, color: '#e67e22' },
 ];
 
 const cardVariants = {
@@ -96,7 +97,7 @@ export default function BodyTab({
         >
           <div className="flex items-center gap-3 mb-8">
             <div className="p-2 bg-[var(--surface2)] rounded-lg">
-              <Ruler className="w-5 h-5 text-[var(--text-muted)]" />
+              <Ruler className="w-5 h-5" style={{ color: '#e6ac50' }} />
             </div>
             <div>
               <div className="card-label mb-0">Log Measurements</div>
@@ -107,7 +108,7 @@ export default function BodyTab({
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
-            {measurementFields.map(({ key, label, unit, icon: Icon }, index) => (
+            {measurementFields.map(({ key, label, unit, icon: Icon, color }, index) => (
               <motion.div
                 key={key}
                 className="flex flex-col gap-2"
@@ -117,7 +118,7 @@ export default function BodyTab({
                 custom={index}
               >
                 <div className="flex items-center gap-1.5">
-                  <Icon className="w-3 h-3 text-[var(--text-muted)] opacity-50" />
+                  <Icon className="w-3 h-3 opacity-80" style={{ color }} />
                   <div className="text-[10px] tracking-[0.1em] uppercase text-[var(--text-muted)] font-bold">
                     {label}
                   </div>
@@ -145,14 +146,14 @@ export default function BodyTab({
           </div>
 
           <motion.button
-            className="save-btn mt-8 w-full flex items-center justify-center gap-2 group"
+            className="save-btn mt-8 w-full group"
             onClick={handleSaveMeasurements}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
           >
-            <Save className="w-4 h-4" />
+            <Save className="w-4 h-4" style={{ color: '#e6ac50' }} />
             Save Measurements
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" style={{ color: '#e6ac50' }} />
           </motion.button>
         </motion.div>
 
@@ -166,7 +167,7 @@ export default function BodyTab({
         >
           <div className="flex items-center gap-3 mb-8">
             <div className="p-2.5 bg-[var(--surface2)] rounded-xl">
-              <History className="w-5 h-5 text-[var(--text-muted)] opacity-50" />
+              <History className="w-5 h-5 opacity-80" style={{ color: '#c0392b' }} />
             </div>
             <div>
               <div className="card-label mb-0">Latest Stats</div>
@@ -178,7 +179,7 @@ export default function BodyTab({
 
           {latestMeasurement ? (
             <div className="space-y-1">
-              {measurementFields.map(({ key, label, unit, icon: Icon }, index) => {
+              {measurementFields.map(({ key, label, unit, icon: Icon, color }, index) => {
                 const val = latestMeasurement[key as keyof BodyMeasurement];
                 if (val === null || val === undefined) return null;
                 return (
@@ -192,8 +193,8 @@ export default function BodyTab({
                     whileHover={{ y: -1, transition: { duration: 0.2 } }}
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-8 h-8 rounded-lg bg-[var(--surface2)]/50 flex items-center justify-center text-[var(--text-muted)] group-hover:bg-[var(--accent)] group-hover:text-[var(--accent-inv)] transition-colors">
-                        <Icon className="w-4 h-4" />
+                      <div className="w-8 h-8 rounded-lg bg-[var(--surface2)]/50 flex items-center justify-center transition-colors">
+                        <Icon className="w-4 h-4" style={{ color }} />
                       </div>
                       <span className="text-[11px] uppercase tracking-widest font-black text-[var(--text-muted)]">
                         {label}
@@ -217,7 +218,7 @@ export default function BodyTab({
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
               >
-                <Calendar className="w-3.5 h-3.5 opacity-40" />
+                <Calendar className="w-3.5 h-3.5 opacity-80" style={{ color: '#7b5ea7' }} />
                 Updated:{' '}
                 {new Date(latestMeasurement.time).toLocaleDateString(undefined, {
                   month: 'short',
@@ -229,7 +230,7 @@ export default function BodyTab({
           ) : (
             <div className="empty text-center py-20 px-5 bg-[var(--surface2)]/10 rounded-2xl border border-dashed border-[var(--border)]">
               <motion.div animate={floatAnimation}>
-                <Ruler className="w-12 h-12 mx-auto mb-4 opacity-10" />
+                <Ruler className="w-12 h-12 mx-auto mb-4 opacity-40" style={{ color: '#e6ac50' }} />
               </motion.div>
               <div className="text-[13px] font-bold text-[var(--text-muted)] mb-1">
                 No data recorded
@@ -255,7 +256,7 @@ export default function BodyTab({
         >
           <div className="flex items-center gap-3 mb-8">
             <div className="p-2 bg-[var(--surface2)] rounded-lg">
-              <TableProperties className="w-5 h-5 text-[var(--text-muted)]" />
+              <TableProperties className="w-5 h-5" style={{ color: '#6b7ea8' }} />
             </div>
             <div>
               <div className="card-label mb-0">Measurement History</div>

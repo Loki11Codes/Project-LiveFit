@@ -32,6 +32,7 @@ interface Message {
 
 interface ChatProps {
   readonly onLogParsed: () => void;
+  readonly isNewUser?: boolean;
 }
 
 type ChatResponse = {
@@ -40,13 +41,14 @@ type ChatResponse = {
   warning?: string;
 };
 
-export default function Chat({ onLogParsed }: ChatProps) {
+export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome-msg",
       role: "model",
-      text:
-        "Good morning! 👋 I'm your LiveFit AI - speak naturally to log anything.\n\n🔍 \"Had 3 egg omelette and 150ml milk for breakfast\"\n💪 \"Finished chest day, 3200kg volume, 8 PRs\"\n😴 \"Slept 7.5h, bed at 11pm, woke at 6:30\"\n⚖️ \"Weight 70.5kg this morning\"",
+      text: isNewUser 
+        ? "Welcome to LiveFit! 👋 I'm your AI assistant. To help you set your targets, could you tell me your age, gender, height, and primary fitness goal?"
+        : "Good morning! 👋 I'm your LiveFit AI - speak naturally to log anything.\n\n🔍 \"Had 3 egg omelette and 150ml milk for breakfast\"\n💪 \"Finished chest day, 3200kg volume, 8 PRs\"\n😴 \"Slept 7.5h, bed at 11pm, woke at 6:30\"\n⚖️ \"Weight 70.5kg this morning\"",
       timestamp: "",
     },
   ]);
@@ -57,6 +59,7 @@ export default function Chat({ onLogParsed }: ChatProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textInputRef = useRef<HTMLInputElement>(null);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const isInitialMount = useRef(true);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -71,19 +74,37 @@ export default function Chat({ onLogParsed }: ChatProps) {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
   useEffect(() => {
-    setMessages((prev) =>
-      prev.map((message) =>
-        message.id === "welcome-msg" && message.timestamp === ""
-          ? {
-              ...message,
-              timestamp: new Date().toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
-            }
-          : message
-      )
-    );
+    async function fetchHistory() {
+      try {
+        const res = await fetch("/api/chat/history");
+        if (res.ok) {
+          const data = await res.json() as Message[];
+          if (data && data.length > 0) {
+            setMessages(data);
+          } else {
+            setMessages((prev) =>
+              prev.map((message) =>
+                message.id === "welcome-msg" && message.timestamp === ""
+                  ? {
+                      ...message,
+                      timestamp: new Date().toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }),
+                    }
+                  : message
+              )
+            );
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch chat history:", err);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    }
+    
+    void fetchHistory();
   }, []);
 
   useEffect(() => {
@@ -137,17 +158,24 @@ export default function Chat({ onLogParsed }: ChatProps) {
       });
 
       if (data.text) {
-        const dataMatch = /\|\|\|DATA\n([\s\S]*?)\n\|\|\|/.exec(data.text);
+        const regex = /\|\|\|DATA\s*([\s\S]*?)\|\|\|/g;
         let cleanText = data.text;
+        let match;
+        let hasData = false;
 
-        if (dataMatch) {
+        while ((match = regex.exec(data.text)) !== null) {
+          hasData = true;
           try {
-            JSON.parse(dataMatch[1]) as unknown;
-            onLogParsed();
-            cleanText = cleanText.replace(/\|\|\|DATA[\s\S]*?\|\|\|/, "").trim();
+            JSON.parse(match[1]);
           } catch (error) {
             console.error("Failed to parse log data:", error);
           }
+        }
+
+        if (hasData) {
+          console.log("AI Data block detected! Triggering UI refresh...");
+          onLogParsed();
+          cleanText = cleanText.replace(/\|\|\|DATA\s*[\s\S]*?\|\|\|/g, "").trim();
         }
 
         setMessages((prev) => [
@@ -236,8 +264,13 @@ export default function Chat({ onLogParsed }: ChatProps) {
         className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col scroll-smooth h-full no-scrollbar chat-viewport rounded-[inherit]"
       >
         <div className="w-full flex flex-col chat-content-v-inset">
-          <AnimatePresence mode="popLayout">
-            {messages.map((msg, index) => {
+          {isLoadingHistory ? (
+            <div className="flex justify-center py-6">
+              <Activity className="w-6 h-6 animate-pulse" style={{ color: "#e67e22" }} />
+            </div>
+          ) : (
+            <AnimatePresence mode="popLayout">
+              {messages.map((msg, index) => {
               const isFirstInGroup =
                 index === 0 || messages[index - 1].role !== msg.role;
 
@@ -270,7 +303,7 @@ export default function Chat({ onLogParsed }: ChatProps) {
                           strokeWidth={3}
                         />
                       ) : (
-                        <User className="w-5 h-5" />
+                        <User className="w-5 h-5" style={{ color: '#7b5ea7' }} />
                       )}
                     </div>
                   </div>
@@ -298,7 +331,7 @@ export default function Chat({ onLogParsed }: ChatProps) {
                         </div>
                       )}
 
-                      {msg.role === "model" && msg.text.includes("LiveFit AI") ? (
+                      {msg.role === "model" && msg.id === "welcome-msg" && !isNewUser ? (
                         <div>
                           <p>
                             Good morning! 👋{" "}
@@ -354,6 +387,7 @@ export default function Chat({ onLogParsed }: ChatProps) {
               );
             })}
           </AnimatePresence>
+          )}
 
           {isTyping && (
             <motion.div
@@ -507,7 +541,7 @@ export default function Chat({ onLogParsed }: ChatProps) {
             onClick={() => fileInputRef.current?.click()}
             aria-label="Attach images"
           >
-            <ImageIcon className="w-5 h-5" />
+            <ImageIcon className="w-5 h-5" style={{ color: '#7b5ea7' }} />
           </motion.button>
 
           <div className="chat-input-box">
@@ -535,7 +569,7 @@ export default function Chat({ onLogParsed }: ChatProps) {
             disabled={isTyping || (!input.trim() && pendingImages.length === 0)}
             className="chat-send-btn-square"
           >
-            <ArrowUp className="w-5 h-5" />
+            <ArrowUp className="w-5 h-5" style={{ color: 'var(--accent-inv)' }} />
           </motion.button>
         </div>
       </div>

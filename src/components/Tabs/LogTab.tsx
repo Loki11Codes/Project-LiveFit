@@ -63,7 +63,7 @@ export default function LogTab({
         >
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-2">
-              <Utensils className="w-5 h-5 text-[var(--text-muted)]" />
+              <Utensils className="w-5 h-5" style={{ color: '#e6ac50' }} />
               <div className="card-label mb-0">Food Log</div>
             </div>
             <span className="flex items-baseline gap-1.5">
@@ -94,26 +94,26 @@ export default function LogTab({
                     </div>
                     <div className="log-row-meta flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                       <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
+                        <Clock className="w-3 h-3" style={{ color: '#a86b12' }} />
                         {new Date(food.time).toLocaleTimeString([], {
                           hour: '2-digit',
                           minute: '2-digit',
                         })}
                       </span>
                       <span className="flex items-center gap-1">
-                        <Flame className="w-3 h-3" />
+                        <Flame className="w-3 h-3" style={{ color: '#e67e22' }} />
                         {food.kcal ?? '?'} kcal
                       </span>
                       <span className="flex items-center gap-1 text-[var(--amber)]">
-                        <Wheat className="w-3 h-3" />
+                        <Wheat className="w-3 h-3" style={{ color: '#e6ac50' }} />
                         {food.carbs ?? '?'}g
                       </span>
                       <span className="flex items-center gap-1 text-[var(--red)]">
-                        <Droplets className="w-3 h-3" />
+                        <Droplets className="w-3 h-3" style={{ color: '#d4a23a' }} />
                         {food.fats ?? '?'}g
                       </span>
                       <span className="flex items-center gap-1 text-[var(--green)]">
-                        <Leaf className="w-3 h-3" />
+                        <Leaf className="w-3 h-3" style={{ color: '#4db382' }} />
                         {food.fiber ?? '?'}g
                       </span>
                     </div>
@@ -131,7 +131,7 @@ export default function LogTab({
                 transition={{ delay: 0.2 }}
               >
                 <motion.div animate={floatAnimation}>
-                  <Utensils className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                  <Utensils className="w-8 h-8 mx-auto mb-3 opacity-40" style={{ color: '#e6ac50' }} />
                 </motion.div>
                 No food logged yet - use the Chat tab.
               </motion.div>
@@ -148,7 +148,7 @@ export default function LogTab({
           custom={1}
         >
           <div className="flex items-center gap-2 mb-6">
-            <Dumbbell className="w-5 h-5 text-[var(--text-muted)]" />
+            <Dumbbell className="w-5 h-5" style={{ color: '#c0392b' }} />
             <div className="card-label mb-0">Workout</div>
           </div>
           <div className="space-y-2">
@@ -170,14 +170,14 @@ export default function LogTab({
                     </div>
                     <div className="log-row-meta flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                       <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
+                        <Clock className="w-3 h-3" style={{ color: '#a86b12' }} />
                         {new Date(workout.time).toLocaleDateString([], {
                           month: 'short',
                           day: 'numeric',
                         })}
                       </span>
                       <span className="flex items-center gap-1">
-                        <Flame className="w-3 h-3" />
+                        <Flame className="w-3 h-3" style={{ color: '#e67e22' }} />
                         {workout.volume ?? '--'} kg
                       </span>
                     </div>
@@ -192,7 +192,7 @@ export default function LogTab({
                 transition={{ delay: 0.3 }}
               >
                 <motion.div animate={floatAnimation}>
-                  <Dumbbell className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                  <Dumbbell className="w-8 h-8 mx-auto mb-3 opacity-40" style={{ color: '#c0392b' }} />
                 </motion.div>
                 Nothing logged yet.
               </motion.div>
@@ -209,7 +209,7 @@ export default function LogTab({
           custom={2}
         >
           <div className="flex items-center gap-2 mb-6">
-            <Moon className="w-5 h-5 text-[var(--text-muted)]" />
+            <Moon className="w-5 h-5" style={{ color: '#6b7ea8' }} />
             <div className="card-label mb-0">Sleep</div>
           </div>
           <div className="space-y-2">
@@ -226,7 +226,7 @@ export default function LogTab({
                 >
                   <div>
                     <div className="log-row-name flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-[var(--text-muted)]" />
+                      <Clock className="w-4 h-4" style={{ color: '#a86b12' }} />
                       Duration
                     </div>
                     <div className="log-row-meta">
@@ -252,7 +252,7 @@ export default function LogTab({
                 transition={{ delay: 0.4 }}
               >
                 <motion.div animate={floatAnimation}>
-                  <Moon className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                  <Moon className="w-8 h-8 mx-auto mb-3 opacity-40" style={{ color: '#6b7ea8' }} />
                 </motion.div>
                 No sleep logged yet.
               </motion.div>

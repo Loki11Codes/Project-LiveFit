@@ -56,6 +56,7 @@ model User {
   dayTypeEntries   DayTypeEntry[]
   goals            Goal?
   profile          UserProfile?
+  chatMessages     ChatMessage[]
 }
 
 model VerificationToken {
@@ -156,4 +157,14 @@ model DayTypeEntry {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, dayKey])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  role      String   // "user" or "model"
+  text      String
+  images    String?  // JSON serialized array of ChatImageAttachment payload if provided
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

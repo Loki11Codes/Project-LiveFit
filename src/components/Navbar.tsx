@@ -120,7 +120,7 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
             ) : (
               <Link 
                 href="/auth/signin"
-                className="flex items-center gap-2 text-[10px] tracking-widest uppercase bg-[var(--accent)] text-[var(--accent-inv)] px-8 py-3 rounded-2xl border-none cursor-pointer font-black no-underline shadow-xl shadow-[var(--accent)]/20 transition-all duration-500 hover:shadow-[var(--accent)]/40 active:translate-y-0.5"
+                className="save-btn px-8"
               >
                 <LogIn className="w-4 h-4" />
                 <span className="hidden sm:inline">Sign In</span>

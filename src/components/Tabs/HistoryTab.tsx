@@ -90,7 +90,7 @@ export default function HistoryTab({ history, analytics }: HistoryTabProps) {
         <div className="flex items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-[var(--surface2)] rounded-lg">
-              <TrendingUp className="w-5 h-5 text-[var(--text-muted)]" />
+              <TrendingUp className="w-5 h-5" style={{ color: '#4db382' }} />
             </div>
             <div>
               <div className="card-label mb-0">7-Day Nutrition Trend</div>
@@ -145,7 +145,7 @@ export default function HistoryTab({ history, analytics }: HistoryTabProps) {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-[var(--surface2)] rounded-lg">
-              <Calendar className="w-5 h-5 text-[var(--text-muted)]" />
+              <Calendar className="w-5 h-5" style={{ color: '#7b5ea7' }} />
             </div>
             <div>
               <div className="card-label mb-0">Activity History</div>
@@ -164,51 +164,51 @@ export default function HistoryTab({ history, analytics }: HistoryTabProps) {
                   Day
                 </th>
                 <th className="py-3 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center flex items-center justify-center gap-1.5">
-                  <Layout className="w-3 h-3" /> Type
+                  <Layout className="w-3 h-3" style={{ color: '#e6ac50' }} /> Type
                 </th>
                 <th className="py-3 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center">
                   <span className="flex items-center justify-center gap-1.5">
-                    <Moon className="w-3 h-3" /> Sleep
+                    <Moon className="w-3 h-3" style={{ color: '#6b7ea8' }} /> Sleep
                   </span>
                 </th>
                 <th className="py-3 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center">
                   <span className="flex items-center justify-center gap-1.5">
-                    <Beef className="w-3 h-3" /> Protein
+                    <Beef className="w-3 h-3" style={{ color: '#8b4513' }} /> Protein
                   </span>
                 </th>
                 <th className="py-3 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center">
                   <span className="flex items-center justify-center gap-1.5">
-                    <Target className="w-3 h-3" /> Target
+                    <Target className="w-3 h-3" style={{ color: '#4db382' }} /> Target
                   </span>
                 </th>
                 <th className="py-3 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center">
                   <span className="flex items-center justify-center gap-1.5">
-                    <CheckCircle2 className="w-3 h-3" /> Status
+                    <CheckCircle2 className="w-3 h-3" style={{ color: '#4db382' }} /> Status
                   </span>
                 </th>
                 <th className="py-3 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center">
                   <span className="flex items-center justify-center gap-1.5">
-                    <Flame className="w-3 h-3" /> Calories
+                    <Flame className="w-3 h-3" style={{ color: '#e67e22' }} /> Calories
                   </span>
                 </th>
                 <th className="py-3 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center">
                   <span className="flex items-center justify-center gap-1.5">
-                    <Wheat className="w-3 h-3" /> Carbs
+                    <Wheat className="w-3 h-3" style={{ color: '#e6ac50' }} /> Carbs
                   </span>
                 </th>
                 <th className="py-3 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center">
                   <span className="flex items-center justify-center gap-1.5">
-                    <Droplets className="w-3 h-3" /> Fats
+                    <Droplets className="w-3 h-3" style={{ color: '#d4a23a' }} /> Fats
                   </span>
                 </th>
                 <th className="py-3 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center">
                   <span className="flex items-center justify-center gap-1.5">
-                    <Leaf className="w-3 h-3" /> Fiber
+                    <Leaf className="w-3 h-3" style={{ color: '#4db382' }} /> Fiber
                   </span>
                 </th>
                 <th className="py-3 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center">
                   <span className="flex items-center justify-center gap-1.5">
-                    <Dumbbell className="w-3 h-3" /> Workout
+                    <Dumbbell className="w-3 h-3" style={{ color: '#c0392b' }} /> Workout
                   </span>
                 </th>
               </tr>
@@ -272,7 +272,7 @@ export default function HistoryTab({ history, analytics }: HistoryTabProps) {
                 <tr>
                   <td colSpan={11} className="py-16 text-center text-[var(--text-muted)]">
                     <motion.div animate={floatAnimation}>
-                      <Calendar className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                      <Calendar className="w-8 h-8 mx-auto mb-3 opacity-40" style={{ color: '#7b5ea7' }} />
                     </motion.div>
                     No history logged yet.
                   </td>
@@ -342,7 +342,7 @@ function WeightTrendCard({
     <div className="card shadow-xl border-[var(--border)] h-full">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 bg-[var(--surface2)] rounded-lg">
-          <Scale className="w-5 h-5 text-[var(--text-muted)]" />
+          <Scale className="w-5 h-5" style={{ color: '#a86b12' }} />
         </div>
         <div>
           <div className="card-label mb-0">Weight Trend</div>

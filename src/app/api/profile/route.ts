@@ -20,13 +20,13 @@ export async function GET(req: Request) {
       return NextResponse.json(goal || {});
     }
 
-    const profile = await (prisma as any).userProfile.findUnique({
+    const profile = await prisma.userProfile.findUnique({
       where: { userId: session.user.id },
     });
     return NextResponse.json(profile || {});
   } catch (error) {
     console.error('Failed to fetch profile/goal:', error);
-    return internalError('Unable to load data right now');
+    return internalError(`Unable to load data: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 

@@ -42,7 +42,7 @@ export default function AppError({
             onClick={() => reset()}
             className="w-full h-14 bg-[var(--accent)] text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-[var(--accent)]/20"
           >
-            <RotateCcw className="w-5 h-5" />
+            <RotateCcw className="w-5 h-5" style={{ color: 'var(--accent-inv)' }} />
             Try Again
           </button>
           
@@ -50,7 +50,7 @@ export default function AppError({
             onClick={() => router.push('/')}
             className="w-full h-14 bg-[var(--surface-hover)] text-[var(--text-primary)] rounded-2xl font-bold border border-[var(--border)] flex items-center justify-center gap-2 hover:bg-[var(--border)] transition-all"
           >
-            <Home className="w-5 h-5" />
+            <Home className="w-5 h-5" style={{ color: '#7b5ea7' }} />
             Back to Home
           </button>
         </div>

@@ -18,6 +18,7 @@ import {
   getCurrentDayType,
   getLatestSleepLog,
   getLocalDateKey,
+  getProteinTarget,
   getTodayFoodLogs,
   getTrackedDayCount,
   parseTab,
@@ -357,10 +358,13 @@ export default function Home() {
               >
                 {activeTab === 'chat' && (
                   <div className="chat-sidebar-layout">
-                    <Chat onLogParsed={refreshDashboard} />
+                    <Chat 
+                      onLogParsed={refreshDashboard} 
+                      isNewUser={!dashboard.profile || !dashboard.profile.age || !dashboard.profile.height}
+                    />
                     <Sidebar
                       protein={nutrition.protein}
-                      proteinTarget={dashboard.goals.proteinTarget}
+                      proteinTarget={getProteinTarget(dashboard.goals, dashboard.dayType)}
                       calories={nutrition.calories}
                       calorieTarget={dashboard.goals.kcalTarget}
                       carbs={nutrition.carbs}
@@ -406,6 +410,8 @@ export default function Home() {
                     profile={dashboard.profile}
                     setProfile={updateProfile}
                     handleSaveProfile={handleSaveProfile}
+                    analytics={dashboard.analytics}
+                    trackedDayCount={trackedDayCount}
                   />
                 )}
               </motion.div>

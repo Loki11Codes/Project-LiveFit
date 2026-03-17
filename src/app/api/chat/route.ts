@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { internalError, parseJsonBody } from '@/lib/api';
-import { getErrorMessage } from '@/lib/dashboard';
+import { getErrorMessage, getLocalDateKey } from '@/lib/dashboard';
 import type { ChatImagePayload } from '@/lib/types';
 import {
   ChatRequestSchema,
@@ -12,6 +12,9 @@ import {
   MeasurementSchema,
   SleepLogSchema,
   WorkoutLogSchema,
+  UserProfileSchema,
+  GoalSchema,
+  DayTypeEntrySchema,
 } from '@/lib/validation';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
@@ -20,11 +23,14 @@ const SYSTEM_PROMPT = `
 You are the LiveFit AI - a concise fitness tracking assistant.
 Your goal is to parse user messages into structured log data.
 
+If the user is new or hasn't set their profile yet, proactively ask for their age, gender, height, and primary fitness goal.
+Once they provide this info, respond with a confirmation and include a "profile" or "goals" data block.
+
 NUTRITION REFERENCE:
 - Egg (large): 7g protein, 70kcal, 0g carb, 5g fat, 0g fiber
 - Milk (100ml): 3.1g protein, 58kcal, 4.7g carb, 3.2g fat, 0g fiber
 - Paneer (100g): 18g protein, 265kcal, 4g carb, 20g fat, 0g fiber
-- Dal cooked (100g): 9g protein, 116kcal, 20g carb, 0.4g fat, 4g fiber
+- Dal cooked (100g): 9g protein, 116kcal, 20g carb, 4g fat, 4g fiber
 - Rice cooked (100g): 2.7g protein, 130kcal, 28g carb, 0.3g fat, 0.4g fiber
 - Chapati (1): 3g protein, 120kcal, 20g carb, 3g fat, 2g fiber
 
@@ -49,12 +55,15 @@ Example:
 |||
 Logged 2 eggs for you! That's 14g of protein.
 
-Categories: food, workout, sleep, measurement.
+Categories: food, workout, sleep, measurement, profile, goals, dayType.
 Identify the category and provide relevant fields.
 For food: items (array of name, protein, kcal, carbs, fats, fiber), totals.
 For workout: focus, volume (kg), prs.
 For sleep: hours, bed, wake.
 For measurement: weight, waist, chest, etc.
+For profile: age, gender, height, primaryGoal.
+For goals: proteinTarget, kcalTarget, waterTarget, sleepTarget.
+For dayType: dayType (Rest, Training, Lite), dayKey (optional, YYYY-MM-DD).
 `;
 
 type ChatHistoryMessage = {
@@ -184,83 +193,158 @@ async function callOpenRouter(
 }
 
 async function persistLogData(text: string, userId: string) {
-  try {
-    const parsed = extractParsedLog(text);
-    if (!parsed?.category) {
-      return;
-    }
+  const envelopes = extractParsedLogs(text);
+  if (envelopes.length === 0) return;
 
-    await prisma.$transaction(async (tx) => {
-      if (parsed.category === 'food' && hasItemsArray(parsed.data)) {
-        console.log('Saving food logs...');
-        for (const item of parsed.data.items) {
-          const validated = FoodItemSchema.parse(item);
-          await tx.foodLog.create({
+  for (const parsed of envelopes) {
+    if (!parsed.category || !parsed.data) continue;
+
+    try {
+      await prisma.$transaction(async (tx) => {
+        // 1. Food Logs
+        if (parsed.category === 'food' && hasItemsArray(parsed.data)) {
+          console.log('Saving food logs...');
+          for (const item of parsed.data.items) {
+            const validated = FoodItemSchema.parse(item);
+            await tx.foodLog.create({
+              data: {
+                userId,
+                name: validated.name,
+                kcal: validated.kcal,
+                protein: validated.protein,
+                carbs: validated.carbs,
+                fats: validated.fats,
+                fiber: validated.fiber,
+              },
+            });
+          }
+        }
+
+        // 2. Workout Logs
+        else if (parsed.category === 'workout') {
+          console.log('Saving workout log...');
+          const validated = WorkoutLogSchema.parse(parsed.data);
+          const prs = getRecordValue(parsed.data, 'prs');
+          const detailsFallback = prs ? JSON.stringify(prs) : undefined;
+
+          await tx.workoutLog.create({
             data: {
               userId,
-              name: validated.name,
-              kcal: validated.kcal,
-              protein: validated.protein,
-              carbs: validated.carbs,
-              fats: validated.fats,
-              fiber: validated.fiber,
+              focus: validated.focus,
+              volume: validated.volume,
+              details: validated.details || detailsFallback,
             },
           });
         }
-        return;
-      }
 
-      if (parsed.category === 'workout') {
-        console.log('Saving workout log...');
-        const validated = WorkoutLogSchema.parse(parsed.data);
-        const detailsFallback = serializeJsonValue(getRecordValue(parsed.data, 'prs'));
+        // 3. Sleep Logs
+        else if (parsed.category === 'sleep') {
+          console.log('Saving sleep log...');
+          const validated = SleepLogSchema.parse(parsed.data);
 
-        await tx.workoutLog.create({
-          data: {
-            userId,
-            focus: validated.focus,
-            volume: validated.volume,
-            details: validated.details || detailsFallback,
-          },
-        });
-        return;
-      }
+          await tx.sleepLog.create({
+            data: {
+              userId,
+              hours: validated.hours,
+              bedTime: validated.bedTime || getStringValue(parsed.data, 'bed'),
+              wakeTime: validated.wakeTime || getStringValue(parsed.data, 'wake'),
+            },
+          });
+        }
 
-      if (parsed.category === 'sleep') {
-        console.log('Saving sleep log...');
-        const validated = SleepLogSchema.parse(parsed.data);
+        // 4. Measurements
+        else if (parsed.category === 'measurement') {
+          console.log('Saving body measurement...');
+          const validated = MeasurementSchema.parse(parsed.data);
 
-        await tx.sleepLog.create({
-          data: {
-            userId,
-            hours: validated.hours,
-            bedTime: validated.bedTime || getStringValue(parsed.data, 'bed'),
-            wakeTime: validated.wakeTime || getStringValue(parsed.data, 'wake'),
-          },
-        });
-        return;
-      }
+          await tx.bodyMeasurement.create({
+            data: {
+              userId,
+              weight: validated.weight,
+              waist: validated.waist,
+              chest: validated.chest,
+              arms: validated.arms,
+              thighs: validated.thighs,
+              hips: validated.hips,
+            },
+          });
+        }
 
-      if (parsed.category === 'measurement') {
-        console.log('Saving body measurement...');
-        const validated = MeasurementSchema.parse(parsed.data);
+        // 5. Profile Updates
+        else if (parsed.category === 'profile') {
+          console.log('Updating user profile via AI...');
+          const raw = parsed.data as any;
+          // Coerce to numbers as AI often sends strings
+          const data = {
+            ...raw,
+            age: raw.age ? Number.parseInt(raw.age, 10) : undefined,
+            height: raw.height ? Number.parseFloat(raw.height) : undefined,
+          };
+          const validated = UserProfileSchema.parse(data);
+          await (tx as any).userProfile.upsert({
+            where: { userId },
+            create: { userId, ...validated },
+            update: validated,
+          });
+        }
 
-        await tx.bodyMeasurement.create({
-          data: {
-            userId,
-            weight: validated.weight,
-            waist: validated.waist,
-            chest: validated.chest,
-            arms: validated.arms,
-            thighs: validated.thighs,
-            hips: validated.hips,
-          },
-        });
-      }
-    });
-  } catch (error) {
-    console.error('Failed to save to database or validation failed:', getErrorMessage(error));
-    throw error;
+        // 6. Goal Updates
+        else if (parsed.category === 'goals') {
+          console.log('Updating user goals via AI...');
+          const raw = parsed.data as any;
+          const data = {
+            ...raw,
+            proteinTarget: raw.proteinTarget ? Number.parseFloat(raw.proteinTarget) : undefined,
+            kcalTarget: raw.kcalTarget ? Number.parseFloat(raw.kcalTarget) : undefined,
+            waterTarget: raw.waterTarget ? Number.parseFloat(raw.waterTarget) : undefined,
+            sleepTarget: raw.sleepTarget ? Number.parseFloat(raw.sleepTarget) : undefined,
+          };
+          const validated = GoalSchema.parse(data);
+          await tx.goal.upsert({
+            where: { userId },
+            create: { userId, ...validated },
+            update: validated,
+          });
+        }
+
+        // 7. Day Type Updates
+        else if (parsed.category === 'dayType') {
+          console.log('Updating day type via AI...', parsed.data);
+          const raw = parsed.data as any;
+          const today = getLocalDateKey(new Date());
+          const dayKey = raw.dayKey || today;
+          
+          let dayType = raw.dayType || '';
+          // Normalize case and common variations
+          if (dayType.toLowerCase().includes('train')) dayType = 'Training';
+          else if (dayType.toLowerCase().includes('rest')) dayType = 'Rest';
+          else if (dayType.toLowerCase().includes('lite')) dayType = 'Lite';
+
+          console.log(`Resolved DayType: ${dayType} for ${dayKey}`);
+
+          await tx.dayTypeEntry.upsert({
+            where: {
+              userId_dayKey: {
+                userId,
+                dayKey,
+              },
+            },
+            update: {
+              dayType,
+            },
+            create: {
+              userId,
+              dayKey,
+              dayType,
+            },
+          });
+          console.log('Day type upserted successfully.');
+        }
+      });
+    } catch (error) {
+      console.error(`Persistence failed for ${parsed.category}:`, getErrorMessage(error));
+      throw error;
+    }
   }
 }
 
@@ -327,10 +411,33 @@ export async function POST(req: Request) {
 
     if (session?.user) {
       try {
+        // Save user message
+        const serializedImages = body.images.length > 0 ? JSON.stringify(body.images) : null;
+        await (prisma as any).chatMessage.create({
+          data: {
+            userId: session.user.id,
+            role: 'user',
+            text: body.prompt || (body.images.length > 0 ? 'Image attached' : ''),
+            images: serializedImages,
+          }
+        });
+
+        // Try extracting and running logs
         await persistLogData(text, session.user.id);
+
+        const cleanText = text.replace(/\|\|\|DATA[\s\S]*?\|\|\|/, "").trim();
+
+        // Finally, save AI response
+        await (prisma as any).chatMessage.create({
+          data: {
+            userId: session.user.id,
+            role: 'model',
+            text: cleanText,
+          }
+        });
       } catch (error) {
         console.error('Chat log persistence failed:', getErrorMessage(error));
-        warning = 'Reply generated, but this entry could not be saved to your dashboard.';
+        warning = 'Reply generated, but it could not be saved to your history completely.';
       }
     }
 
@@ -367,13 +474,21 @@ function buildGeminiPromptParts(
   return parts;
 }
 
-function extractParsedLog(text: string): ParsedLogEnvelope | null {
-  const match = /\|\|\|DATA\s*([\s\S]*?)\|\|\|/.exec(text);
-  if (!match) {
-    return null;
+function extractParsedLogs(text: string): ParsedLogEnvelope[] {
+  const regex = /\|\|\|DATA\s*([\s\S]*?)\|\|\|/g;
+  const logs: ParsedLogEnvelope[] = [];
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    try {
+      const parsed = JSON.parse(match[1]) as ParsedLogEnvelope;
+      if (parsed) logs.push(parsed);
+    } catch (e) {
+      console.warn('Failed to parse a DATA block from AI:', e);
+    }
   }
 
-  return JSON.parse(match[1]) as ParsedLogEnvelope;
+  return logs;
 }
 
 function hasItemsArray(value: unknown): value is { items: unknown[] } {
