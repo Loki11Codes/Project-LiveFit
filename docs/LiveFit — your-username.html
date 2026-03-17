@@ -740,9 +740,7 @@ function renderLog(){
   }
 
   const wo=document.getElementById('workout-today');
-  if (!S.workout) {
-    wo.innerHTML = '<div class="empty">🏋️ No workout logged yet.</div>';
-  } else {
+  if (S.workout) {
     const d = S.workout.duration ? `<div class="log-row"><div>⏱️ Duration</div><div class="log-row-val">${S.workout.duration} min</div></div>` : '';
     const v = S.workout.volume ? `<div class="log-row"><div>🏋️ Volume</div><div class="log-row-val">${S.workout.volume} kg</div></div>` : '';
     const s = S.workout.sets ? `<div class="log-row"><div>📋 Sets</div><div class="log-row-val">${S.workout.sets}</div></div>` : '';
@@ -750,6 +748,8 @@ function renderLog(){
     wo.innerHTML = `
       <div class="log-row"><div class="log-row-name">${S.workout.focus}</div></div>
       ${d}${v}${s}${p}${renderExercises(S.workout)}`;
+  } else {
+    wo.innerHTML = '<div class="empty">🏋️ No workout logged yet.</div>';
   }
 
   // Sleep
