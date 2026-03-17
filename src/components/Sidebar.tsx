@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useSyncExternalStore } from 'react';
+import React, { useSyncExternalStore, useState, useEffect } from 'react';
 import {
   Beef,
   Flame,
@@ -48,11 +48,19 @@ export default function Sidebar({
   dayType,
   setDayType,
 }: SidebarProps) {
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const currentDateLabel = useSyncExternalStore(
     subscribeToDateLabel,
     getCurrentDateLabel,
     getServerDateLabel
   );
+
+  // Stable display for hydration pass
+  const stableDateLabel = isMounted ? currentDateLabel : getServerDateLabel();
   const proteinPct = Math.min((protein / proteinTarget) * 100, 100);
   const caloriePct = Math.min((calories / calorieTarget) * 100, 100);
 
@@ -93,7 +101,7 @@ export default function Sidebar({
     {
       icon: Calendar,
       label: 'Date',
-      value: currentDateLabel,
+      value: stableDateLabel,
       unit: '',
       color: '#7b5ea7',
     },
@@ -209,6 +217,7 @@ export default function Sidebar({
                   ? 'sidebar-daytype-active'
                   : 'sidebar-daytype-inactive'
               }`}
+              suppressHydrationWarning
             >
               <Icon
                 className="w-3.5 h-3.5"

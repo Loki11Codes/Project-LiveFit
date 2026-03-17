@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={workSans.className}>
+      <body className={workSans.className} suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

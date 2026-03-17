@@ -486,6 +486,7 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
             }`}
             onClick={() => fileInputRef.current?.click()}
             aria-label="Attach images"
+            suppressHydrationWarning
           >
             <ImageIcon className="w-5 h-5" style={{ color: '#7b5ea7' }} />
           </motion.button>
@@ -504,6 +505,7 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
                   void handleSend();
                 }
               }}
+              suppressHydrationWarning
             />
           </div>
 
@@ -514,6 +516,7 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
             onClick={() => void handleSend()}
             disabled={isTyping || (!input.trim() && pendingImages.length === 0)}
             className="chat-send-btn-square"
+            suppressHydrationWarning
           >
             <ArrowUp className="w-5 h-5" style={{ color: 'var(--accent-inv)' }} />
           </motion.button>
@@ -537,6 +540,7 @@ function QuickChip({ icon: Icon, label, color, onClick }: QuickChipProps) {
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
       className="chat-quick-chip"
+      suppressHydrationWarning
     >
       <Icon className="w-3.5 h-3.5" style={{ color }} />
       {label}
