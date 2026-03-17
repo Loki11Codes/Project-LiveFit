@@ -208,9 +208,21 @@ export async function POST(req: Request) {
       return internalError('Image analysis is temporarily unavailable');
     }
 
-
-    if (body.images.length > 0 && !geminiKey) {
-      return internalError('Image analysis is temporarily unavailable');
+    // Save user message
+    if (session?.user) {
+      const serializedImages = body.images.length > 0 ? JSON.stringify(body.images) : null;
+      try {
+        await (prisma.chatMessage as any).create({
+          data: {
+            userId: session.user.id,
+            role: 'user',
+            text: body.prompt || (body.images.length > 0 ? '' : '...'),
+            images: serializedImages,
+          },
+        });
+      } catch (e) {
+        console.error('Failed to save user message:', e);
+      }
     }
 
     const text = await getAIResponse(body, geminiKey, openRouterKey);
@@ -295,11 +307,12 @@ async function handleUserResponse(text: string, body: any, userId: string): Prom
     cleanText = cleanText.trim();
 
     // Finally, save AI response
-    await (prisma as any).chatMessage.create({
+    await (prisma.chatMessage as any).create({
       data: {
         userId,
         role: 'model',
         text: cleanText,
+        images: null,
       },
     });
     return undefined;

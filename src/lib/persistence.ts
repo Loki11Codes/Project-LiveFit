@@ -171,7 +171,7 @@ async function persistDayTypeUpdate(tx: Prisma.TransactionClient, raw: any, user
   // Normalize case and common variations
   if (dayType.toLowerCase().includes('train')) dayType = 'Training';
   else if (dayType.toLowerCase().includes('rest')) dayType = 'Rest';
-  else if (dayType.toLowerCase().includes('lite')) dayType = 'Lite';
+  else if (dayType.toLowerCase().includes('lite') || dayType.toLowerCase().includes('light')) dayType = 'Lite';
 
   console.log(`Resolved DayType: ${dayType} for ${dayKey}`);
 
