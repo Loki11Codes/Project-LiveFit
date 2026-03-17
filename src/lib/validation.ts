@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const finiteNumber = z.number().finite();
+const finiteNumber = z.number().refine((n) => Number.isFinite(n), { message: "Must be a finite number" });
 const optionalFiniteNumber = finiteNumber.optional();
 const optionalNullableFiniteNumber = finiteNumber.nullable().optional();
 const trimmedString = z.string().trim();
@@ -53,6 +53,8 @@ export const MeasurementSchema = z.object({
   calves: optionalNullableFiniteNumber,
   neck: optionalNullableFiniteNumber,
   bodyFat: optionalNullableFiniteNumber,
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  update: z.boolean().optional(),
 });
 export type MeasurementInput = z.infer<typeof MeasurementSchema>;
 
@@ -64,6 +66,8 @@ export const FoodItemSchema = z.object({
   carbs: optionalFiniteNumber,
   fats: optionalFiniteNumber,
   fiber: optionalFiniteNumber,
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  update: z.boolean().optional(),
 });
 export type FoodItemInput = z.infer<typeof FoodItemSchema>;
 
@@ -72,6 +76,8 @@ export const WorkoutLogSchema = z.object({
   focus: trimmedString.min(1).max(120),
   volume: optionalFiniteNumber,
   details: trimmedString.max(2000).optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  update: z.boolean().optional(),
 });
 export type WorkoutLogInput = z.infer<typeof WorkoutLogSchema>;
 
@@ -80,6 +86,8 @@ export const SleepLogSchema = z.object({
   hours: finiteNumber.min(0).max(24),
   bedTime: trimmedString.max(40).optional(),
   wakeTime: trimmedString.max(40).optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  update: z.boolean().optional(),
 });
 export type SleepLogInput = z.infer<typeof SleepLogSchema>;
 
@@ -106,11 +114,13 @@ export const ChatRequestSchema = z
     prompt: z.string().max(4000),
     history: z.array(ChatHistoryMessageSchema).max(50),
     images: z.array(ChatImagePayloadSchema).max(6),
+    clientDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    clientTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
   })
   .superRefine((value, ctx) => {
     if (!value.prompt.trim() && value.images.length === 0) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: 'A prompt or at least one image is required.',
         path: ['prompt'],
       });
@@ -120,7 +130,7 @@ export type ChatRequestInput = z.infer<typeof ChatRequestSchema>;
 
 export const SignupSchema = z.object({
   name: trimmedString.min(1).max(80),
-  email: trimmedString.email().max(160),
+  email: z.string().trim().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Invalid email address").max(160),
   password: z.string().min(6).max(72),
 });
 export type SignupInput = z.infer<typeof SignupSchema>;

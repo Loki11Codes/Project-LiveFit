@@ -13,21 +13,27 @@ import {
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-const getSystemPrompt = () => {
+const getSystemPrompt = (clientDate?: string, clientTime?: string) => {
   const now = new Date();
-  const dateStr = now.toISOString().split('T')[0];
-  const timeStr = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+  const dateStr = clientDate || now.toISOString().split('T')[0];
+  const timeStr = clientTime || now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
 
   return `
 You are the LiveFit AI - a concise fitness tracking assistant.
-Your goal is to parse user messages into structured log data.
+Your goal is to parse user messages into structured log data and provide a helpful, natural response.
 
 CURRENT CONTEXT:
 - Today's Date: ${dateStr}
 - Current Time: ${timeStr}
 
-If the user is new or hasn't set their profile yet, proactively ask for their age, gender, height, and primary fitness goal.
-Once they provide this info, respond with a confirmation and include a "profile" or "goals" data block.
+PROACTIVE FEEDBACK:
+- If a user provides incomplete information (e.g., "I had chicken" without quantity, or "I worked out" without details), proactively ask a clarifying question in your natural language response (e.g., "How much chicken did you have?" or "Which exercises did you focus on today?").
+- You can still provide a partial log entry if you have enough info to guess, but prioritize getting the missing details if they are essential for accuracy.
+
+SMART UPDATES:
+- If the user is correcting, refining, or adding to a log entry they just mentioned (e.g., "Actually it was 200g" or "I also did some cardio"), include \`"update": true\` in the |||DATA block.
+- Ensure the \`name\` (for food) or \`focus\` (for workout) exactly matches the previous entry you want to update.
+- The backend uses (name/focus + date) to identify which entry to update.
 
 NUTRITION REFERENCE:
 - Egg (large): 7g protein, 70kcal, 0g carb, 5g fat, 0g fiber
@@ -37,36 +43,24 @@ NUTRITION REFERENCE:
 - Rice cooked (100g): 2.7g protein, 130kcal, 28g carb, 0.3g fat, 0.4g fiber
 - Chapati (1): 3g protein, 120kcal, 20g carb, 3g fat, 2g fiber
 
-IMAGE HANDLING:
-- For nutrition labels, extract protein, calories, carbs, fats, and fiber exactly.
-- For food photos, identify the dish and estimate the same five nutrients.
-- For workout screenshots, extract the relevant workout stats if visible.
-
 RESPONSE FORMAT:
 Your response must be a JSON object followed by a natural language message.
 The JSON block should be between |||DATA and |||.
 
-Example for dayType:
+Example for correction/update:
 |||DATA
 {
-  "category": "dayType",
-  "dayType": "Training",
-  "dayKey": "${dateStr}"
+  "category": "food",
+  "items": [{ "name": "Chicken Breast", "protein": 62, "kcal": 330, "update": true }],
+  "totals": { "protein": 62, "kcal": 330 }
 }
 |||
-Got it! I've set today as a Training day.
+Got it! I've updated your Chicken Breast log to 200g (62g protein).
 
-CRITICAL: You MUST include the |||DATA block for every loggable action (food, workout, dayType, etc.). If you are just answering a question, no block is needed. But for logging or status changes, the block is MANDATORY.
+CRITICAL: You MUST include the |||DATA block for every loggable action. If you are asking a clarifying question for missing data, you can either omit the block OR include a partial block if you've already saved the draft.
 
 Categories: food, workout, sleep, measurement, profile, goals, dayType.
-Identify the category and provide relevant fields.
-For food: items (array of name, protein, kcal, carbs, fats, fiber), totals.
-For workout: focus, volume (kg), prs.
-For sleep: hours, bed, wake.
-For measurement: weight, waist, chest, etc.
-For profile: age, gender, height, primaryGoal.
-For goals: proteinTarget, kcalTarget, waterTarget, sleepTarget.
-For dayType: dayType (Rest, Training, Lite), dayKey (optional, defaults to today).
+Identify the category and provide relevant fields (including optional "date" YYYY-MM-DD and "update" boolean).
 `;
 };
 
@@ -95,7 +89,9 @@ type GeminiPart =
 async function callGemini(
   prompt: string,
   history: ChatHistoryMessage[],
-  images: ChatImagePayload[]
+  images: ChatImagePayload[],
+  clientDate?: string,
+  clientTime?: string
 ) {
   console.log('Using Gemini...');
   const modelsToTry = [
@@ -109,7 +105,7 @@ async function callGemini(
 
   for (const modelId of modelsToTry) {
     try {
-      const systemPrompt = getSystemPrompt();
+      const systemPrompt = getSystemPrompt(clientDate, clientTime);
       const model = genAI.getGenerativeModel({ model: modelId });
       const result = await model.generateContent({
         contents: [
@@ -142,7 +138,9 @@ async function callGemini(
 async function callOpenRouter(
   prompt: string,
   history: ChatHistoryMessage[],
-  openRouterKey: string
+  openRouterKey: string,
+  clientDate?: string,
+  clientTime?: string
 ) {
   console.log('Using OpenRouter...');
 
@@ -167,7 +165,7 @@ async function callOpenRouter(
         body: JSON.stringify({
           model: modelId,
           messages: [
-            { role: 'system', content: getSystemPrompt() },
+            { role: 'system', content: getSystemPrompt(clientDate, clientTime) },
             ...history.map((message) => ({
               role: message.role === 'model' ? 'assistant' : 'user',
               content: message.parts[0]?.text ?? '',
@@ -244,7 +242,7 @@ export async function POST(req: Request) {
 
     let warning: string | undefined;
     if (session?.user) {
-      warning = await handleUserResponse(text, body, session.user.id);
+      warning = await handleUserResponse(text, body, session.user.id, body.clientDate);
     }
 
     console.log('AI Response:', `${text.substring(0, 50)}...`);
@@ -274,12 +272,13 @@ function getAIKeys() {
 
 async function getAIResponse(body: any, geminiKey: string | null, openRouterKey: string | null) {
   let text = '';
+  const { prompt, history, images, clientDate, clientTime } = body;
 
   if (geminiKey) {
     try {
-      text = await callGemini(body.prompt, body.history, body.images);
+      text = await callGemini(prompt, history, images, clientDate, clientTime);
     } catch (error) {
-      if (body.images.length > 0) {
+      if (images.length > 0) {
         throw error;
       }
       console.error(
@@ -289,18 +288,18 @@ async function getAIResponse(body: any, geminiKey: string | null, openRouterKey:
     }
   }
 
-  if (!text && openRouterKey && body.images.length === 0) {
-    text = (await callOpenRouter(body.prompt, body.history, openRouterKey)) || '';
+  if (!text && openRouterKey && images.length === 0) {
+    text = (await callOpenRouter(prompt, history, openRouterKey, clientDate, clientTime)) || '';
   }
 
   return text;
 }
 
-async function handleUserResponse(text: string, body: any, userId: string): Promise<string | undefined> {
+async function handleUserResponse(text: string, body: any, userId: string, clientDate?: string): Promise<string | undefined> {
   try {
     // Try extracting and running logs
     const envelopes = extractParsedLogs(text);
-    await persistLogData(envelopes, userId);
+    await persistLogData(envelopes, userId, clientDate);
 
     // Clean text by removing all |||DATA ... ||| blocks without using a vulnerable regex
     let cleanText = text;

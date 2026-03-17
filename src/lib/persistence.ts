@@ -21,7 +21,7 @@ export type ParsedLogEnvelope = {
   data?: any;
 };
 
-export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: string) {
+export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: string, clientDate?: string) {
   if (envelopes.length === 0) return;
 
   for (const envelope of envelopes) {
@@ -56,7 +56,7 @@ export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: str
             await persistGoalUpdate(tx, logData, userId);
             break;
           case 'dayType':
-            await persistDayTypeUpdate(tx, logData, userId);
+            await persistDayTypeUpdate(tx, logData, userId, clientDate);
             break;
           default:
             console.warn(`Unknown category: ${category}`);
@@ -73,6 +73,43 @@ async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInpu
   console.log('Saving food logs...');
   for (const item of items) {
     const validated = FoodItemSchema.parse(item);
+    const logDate = (validated as any).date ? new Date((validated as any).date) : new Date();
+    
+    if (validated.update) {
+      // Semantic update: find Most recent entry with same name on this day
+      const startOfDay = new Date(logDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(logDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const existing = await tx.foodLog.findFirst({
+        where: {
+          userId,
+          name: { equals: validated.name },
+          time: {
+            gte: startOfDay,
+            lte: endOfDay,
+          },
+        },
+        orderBy: { time: 'desc' },
+      });
+
+      if (existing) {
+        console.log(`Updating existing food log: ${validated.name}`);
+        await tx.foodLog.update({
+          where: { id: existing.id },
+          data: {
+            kcal: validated.kcal,
+            protein: validated.protein,
+            carbs: validated.carbs,
+            fats: validated.fats,
+            fiber: validated.fiber,
+          },
+        });
+        continue;
+      }
+    }
+
     await tx.foodLog.create({
       data: {
         userId,
@@ -82,6 +119,7 @@ async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInpu
         carbs: validated.carbs,
         fats: validated.fats,
         fiber: validated.fiber,
+        time: (validated as any).date ? new Date((validated as any).date) : undefined,
       },
     });
   }
@@ -90,8 +128,40 @@ async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInpu
 async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogInput, userId: string) {
   console.log('Saving workout log...');
   const validated = WorkoutLogSchema.parse(data);
+  const logDate = (validated as any).date ? new Date((validated as any).date) : new Date();
   const prs = getRecordValue(data, 'prs');
   const detailsFallback = prs ? JSON.stringify(prs) : undefined;
+
+  if (validated.update) {
+    const startOfDay = new Date(logDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(logDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const existing = await tx.workoutLog.findFirst({
+      where: {
+        userId,
+        focus: { equals: validated.focus },
+        time: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+      orderBy: { time: 'desc' },
+    });
+
+    if (existing) {
+      console.log(`Updating existing workout log: ${validated.focus}`);
+      await tx.workoutLog.update({
+        where: { id: existing.id },
+        data: {
+          volume: validated.volume,
+          details: validated.details || detailsFallback,
+        },
+      });
+      return;
+    }
+  }
 
   await tx.workoutLog.create({
     data: {
@@ -99,6 +169,7 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
       focus: validated.focus,
       volume: validated.volume,
       details: validated.details || detailsFallback,
+      time: (validated as any).date ? new Date((validated as any).date) : undefined,
     },
   });
 }
@@ -106,6 +177,38 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
 async function persistSleepLog(tx: Prisma.TransactionClient, data: SleepLogInput, userId: string) {
   console.log('Saving sleep log...');
   const validated = SleepLogSchema.parse(data);
+  const logDate = (validated as any).date ? new Date((validated as any).date) : new Date();
+
+  if (validated.update) {
+    const startOfDay = new Date(logDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(logDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const existing = await tx.sleepLog.findFirst({
+      where: {
+        userId,
+        time: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+      orderBy: { time: 'desc' },
+    });
+
+    if (existing) {
+      console.log('Updating existing sleep log');
+      await tx.sleepLog.update({
+        where: { id: existing.id },
+        data: {
+          hours: validated.hours,
+          bedTime: validated.bedTime || getStringValue(data, 'bed'),
+          wakeTime: validated.wakeTime || getStringValue(data, 'wake'),
+        },
+      });
+      return;
+    }
+  }
 
   await tx.sleepLog.create({
     data: {
@@ -113,6 +216,7 @@ async function persistSleepLog(tx: Prisma.TransactionClient, data: SleepLogInput
       hours: validated.hours,
       bedTime: validated.bedTime || getStringValue(data, 'bed'),
       wakeTime: validated.wakeTime || getStringValue(data, 'wake'),
+      time: (validated as any).date ? new Date((validated as any).date) : undefined,
     },
   });
 }
@@ -120,6 +224,44 @@ async function persistSleepLog(tx: Prisma.TransactionClient, data: SleepLogInput
 async function persistMeasurement(tx: Prisma.TransactionClient, data: MeasurementInput, userId: string) {
   console.log('Saving body measurement...');
   const validated = MeasurementSchema.parse(data);
+  const logDate = (validated as any).date ? new Date((validated as any).date) : new Date();
+
+  if (validated.update) {
+    const startOfDay = new Date(logDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(logDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const existing = await tx.bodyMeasurement.findFirst({
+      where: {
+        userId,
+        time: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+      orderBy: { time: 'desc' },
+    });
+
+    if (existing) {
+      console.log('Updating existing body measurement');
+      await tx.bodyMeasurement.update({
+        where: { id: existing.id },
+        data: {
+          weight: validated.weight,
+          waist: validated.waist,
+          chest: validated.chest,
+          arms: validated.arms,
+          thighs: validated.thighs,
+          hips: validated.hips,
+          calves: validated.calves,
+          neck: validated.neck,
+          bodyFat: validated.bodyFat,
+        },
+      });
+      return;
+    }
+  }
 
   await tx.bodyMeasurement.create({
     data: {
@@ -130,6 +272,10 @@ async function persistMeasurement(tx: Prisma.TransactionClient, data: Measuremen
       arms: validated.arms,
       thighs: validated.thighs,
       hips: validated.hips,
+      calves: validated.calves,
+      neck: validated.neck,
+      bodyFat: validated.bodyFat,
+      time: (validated as any).date ? new Date((validated as any).date) : undefined,
     },
   });
 }
@@ -167,9 +313,9 @@ async function persistGoalUpdate(tx: Prisma.TransactionClient, raw: GoalInput, u
   });
 }
 
-async function persistDayTypeUpdate(tx: Prisma.TransactionClient, raw: any, userId: string) {
+async function persistDayTypeUpdate(tx: Prisma.TransactionClient, raw: any, userId: string, clientDate?: string) {
   console.log('Updating day type via AI...', raw);
-  const today = getLocalDateKey(new Date());
+  const today = clientDate || getLocalDateKey(new Date());
   const dayKey = raw.dayKey || today;
   
   let dayType = raw.dayType || '';

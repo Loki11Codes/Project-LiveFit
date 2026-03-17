@@ -123,6 +123,10 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
         parts: [{ text: m.text }],
       }));
 
+      const now = new Date();
+      const clientDate = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+      const clientTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
       const data = await requestJson<ChatResponse>("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -130,6 +134,8 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
           prompt: userText,
           history,
           images: attachedImages.map(toPayload),
+          clientDate,
+          clientTime,
         }),
       });
 
