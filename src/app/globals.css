@@ -144,6 +144,8 @@ body {
     padding-right: 6px;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
+    display: flex;
+    flex-direction: column;
   }
 
   .sidebar-scroll-container::-webkit-scrollbar {
@@ -193,6 +195,10 @@ body {
   overflow: hidden;
   mask-image: linear-gradient(#fff, #fff);
   -webkit-mask-image: linear-gradient(#fff, #fff);
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .sidebar-card:hover {
