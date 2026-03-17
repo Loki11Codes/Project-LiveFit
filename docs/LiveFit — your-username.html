@@ -122,7 +122,7 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28
 .msg-img{width:200px;max-width:100%;border-radius:8px;margin-bottom:6px;display:block;border:1px solid var(--border);}
 
 .img-menu{position:absolute;bottom:60px;left:20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);overflow:hidden;z-index:50;animation:rise .15s ease;}
-.img-menu-item{display:flex;align-items:center;gap:10px;padding:11px 18px;font-size:13px;font-weight:300;cursor:pointer;color:var(--text);transition:background .12s;white-space:nowrap;}
+.img-menu-item{display:flex;align-items:center;gap:10px;padding:11px 18px;font-size:13px;font-weight:300;cursor:pointer;color:var(--text);transition:background .12s;white-space:nowrap;width:100%;border:none;background:transparent;text-align:left;font-family:inherit;}
 .img-menu-item:hover{background:var(--surface2);}
 .img-menu-item span{font-size:17px;}
 [data-theme="dark"] .img-menu{background:#1a1a18;border-color:#333330;}
@@ -188,11 +188,11 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28
 <nav>
   <div class="nav-logo">Live<em>Fit</em></div>
   <div class="nav-center">
-    <button class="nav-tab active" onclick="switchTab(&#39;chat&#39;,this)">💬 Chat</button>
-    <button class="nav-tab" onclick="switchTab(&#39;log&#39;,this)">📋 Log</button>
-    <button class="nav-tab" onclick="switchTab(&#39;history&#39;,this)">📊 History</button>
-    <button class="nav-tab" onclick="switchTab(&#39;body&#39;,this)">📏 Body</button>
-    <button class="nav-tab" onclick="switchTab(&#39;profile&#39;,this)">👤 Profile</button>
+    <button class="nav-tab active" onclick="switchTab('chat',this)">💬 Chat</button>
+    <button class="nav-tab" onclick="switchTab('log',this)">📋 Log</button>
+    <button class="nav-tab" onclick="switchTab('history',this)">📊 History</button>
+    <button class="nav-tab" onclick="switchTab('body',this)">📏 Body</button>
+    <button class="nav-tab" onclick="switchTab('profile',this)">👤 Profile</button>
   </div>
   <div class="nav-right">
     <span class="nav-day" id="nav-day">Day 1</span>
@@ -227,16 +227,16 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28
           </div>
           <div class="img-preview-wrap" id="img-preview-wrap"></div>
           <div class="quick-chips">
-            <button class="chip" onclick="quickLog(&#39;Log breakfast&#39;)">🍳 Breakfast</button>
-            <button class="chip" onclick="quickLog(&#39;Log workout&#39;)">💪 Workout</button>
-            <button class="chip" onclick="quickLog(&#39;Log sleep&#39;)">😴 Sleep</button>
-            <button class="chip" onclick="quickLog(&#39;How much protein do I still need today?&#39;)">🥚 Protein left?</button>
-            <button class="chip" onclick="quickLog(&#39;Give me today\&#39;s full summary&#39;)">📊 Summary</button>
+            <button class="chip" onclick="quickLog('Log breakfast')">🍳 Breakfast</button>
+            <button class="chip" onclick="quickLog('Log workout')">💪 Workout</button>
+            <button class="chip" onclick="quickLog('Log sleep')">😴 Sleep</button>
+            <button class="chip" onclick="quickLog('How much protein do I still need today?')">🥚 Protein left?</button>
+            <button class="chip" onclick="quickLog('Give me today\'s full summary')">📊 Summary</button>
           </div>
           <div class="chat-input-area" style="position:relative;">
             <div id="img-menu" class="img-menu" style="display:none;">
-              <div class="img-menu-item" onclick="triggerCamera()"><span>📷</span> Take Photo</div>
-              <div class="img-menu-item" onclick="triggerUpload()"><span>🖼️</span> Upload Image / Screenshot</div>
+              <button class="img-menu-item" onclick="triggerCamera()"><span>📷</span> Take Photo</button>
+              <button class="img-menu-item" onclick="triggerUpload()"><span>🖼️</span> Upload Image / Screenshot</button>
             </div>
             <button class="img-btn" id="img-attach-btn" onclick="toggleImgMenu(event)" title="Attach image">📷</button>
             <input type="file" id="file-upload" accept="image/*" style="display:none" onchange="handleFileSelect(event)">
@@ -276,9 +276,9 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28
         <div class="card">
           <div class="card-label">🏷️ Day Type</div>
           <div class="type-btns">
-            <button class="type-btn active" onclick="setType(&#39;Rest&#39;,this)">🛌 Rest</button>
-            <button class="type-btn" onclick="setType(&#39;Training&#39;,this)">💪 Train</button>
-            <button class="type-btn" onclick="setType(&#39;Lite&#39;,this)">🌿 Lite</button>
+            <button class="type-btn active" onclick="setType('Rest',this)">🛌 Rest</button>
+            <button class="type-btn" onclick="setType('Training',this)">💪 Train</button>
+            <button class="type-btn" onclick="setType('Lite',this)">🌿 Lite</button>
           </div>
           <div style="margin-top:12px;font-size:11px;color:var(--text-muted);letter-spacing:.04em;" id="type-hint">Target: 75–85g protein</div>
         </div>
@@ -454,11 +454,11 @@ const HIST=[
   // [1,'Training',7.5,'Chest+Arms',98,100,'✅',2800,2,2200,210,65,18],
 ];
 
-async function persist(){try{await window.storage.set('loki-v4',JSON.stringify({theme:S.theme,measurements:S.measurements,profile:S.profile}));}catch(e){}}
-async function hydrate(){try{const r=await window.storage.get('loki-v4');if(r?.value){const saved=JSON.parse(r.value);if(saved.theme)S.theme=saved.theme;if(saved.measurements)S.measurements=saved.measurements;if(saved.profile)S.profile=saved.profile;}}catch(e){}}
+async function persist(){try{await globalThis.storage.set('loki-v4',JSON.stringify({theme:S.theme,measurements:S.measurements,profile:S.profile}));}catch(e){console.error('Persist failed', e);}}
+async function hydrate(){try{const r=await globalThis.storage.get('loki-v4');if(r?.value){const saved=JSON.parse(r.value);if(saved.theme)S.theme=saved.theme;if(saved.measurements)S.measurements=saved.measurements;if(saved.profile)S.profile=saved.profile;}}catch(e){console.error('Hydrate failed', e);}}
 
 function toggleTheme(){S.theme=S.theme==='light'?'dark':'light';applyTheme();persist();}
-function applyTheme(){document.documentElement.setAttribute('data-theme',S.theme);document.getElementById('theme-lbl').textContent=S.theme==='light'?'Light':'Dark';}
+function applyTheme(){document.documentElement.dataset.theme=S.theme;document.getElementById('theme-lbl').textContent=S.theme==='light'?'Light':'Dark';}
 
 function switchTab(tab,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
@@ -485,7 +485,10 @@ function updateUI(){
   const pct=Math.min((p/tgt)*100,100);
   const bar=document.getElementById('pbar');
   bar.style.width=pct+'%';
-  bar.className='progress-fill'+(pct>=100?' hit':pct>=70?' near':'');
+  let pClass = 'progress-fill';
+  if (pct >= 100) pClass += ' hit';
+  else if (pct >= 70) pClass += ' near';
+  bar.className = pClass;
   document.getElementById('pnow').textContent=p;
   document.getElementById('ptgt').textContent=tgt;
   document.getElementById('premain').textContent='🎯 '+Math.max(0,tgt-p)+'g remaining';
@@ -494,7 +497,10 @@ function updateUI(){
   const kpct=Math.min((kcal/ktgt)*100,100);
   const cbar=document.getElementById('cbar');
   cbar.style.width=kpct+'%';
-  cbar.className='progress-fill'+(kpct>=100?' hit':kpct>=80?' near':'');
+  let kClass = 'progress-fill';
+  if (kpct >= 100) kClass += ' hit';
+  else if (kpct >= 80) kClass += ' near';
+  cbar.className = kClass;
   document.getElementById('cnow').textContent=kcal;
   document.getElementById('ctgt').textContent=ktgt;
   document.getElementById('cremain').textContent='🎯 '+Math.max(0,ktgt-kcal)+' kcal remaining';
@@ -578,10 +584,7 @@ function appendMsg(role, html, images=[]){
   // Use textContent for actual text to respect pre-wrap and prevent overflow
   if(role === 'ai'){
     // For AI messages, preserve line breaks and escape HTML
-    const escaped = html.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    bubble.innerHTML += escaped;
-  } else {
-    const escaped = html.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const escaped = html.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
     bubble.innerHTML += escaped;
   }
   d.innerHTML = `<div class="msg-avatar">${role==='ai'?'L':'↑'}</div>`;
@@ -639,22 +642,26 @@ Respond concisely. Give clean item-by-item breakdown with all 5 nutrients. End w
     const data=await res.json();removeTyping();
     if(data.content?.[0]){const reply=data.content[0].text;appendMsg('ai',reply);parseState(txt,reply);}
     else appendMsg('ai','Something went wrong — please try again.');
-  }catch(e){removeTyping();appendMsg('ai','Connection error.');}
+  }catch(e){console.error('Message failed', e);removeTyping();appendMsg('ai','Connection error.');}
   document.getElementById('send-btn').disabled=false;inp.focus();
 }
 
-function parseState(user,reply){
-  const low=user.toLowerCase();
-  const totM=reply.match(/(?:total|running total|so far)[:\s~]+(\d+\.?\d*)g/i);
-  if(totM)S.protein=parseFloat(totM[1]);
-  if(low.includes('weight')||low.includes('weigh')){const m=user.match(/(\d+\.?\d*)\s*kg/);if(m)S.weight=parseFloat(m[1]);}
-  const slM=low.match(/slep?t?\s+(\d+\.?\d*)/);if(slM)S.sleep={...S.sleep,hours:parseFloat(slM[1])};
+function parseWorkout(user, reply) {
+  const low = user.toLowerCase();
+  if(['workout', 'gym', 'chest', 'legs', 'back', 'shoulders', 'cardio', 'trained'].some(k=>low.includes(k))){
+    const vm=low.match(/(\d{3,5})\s*kg/)||reply.match(/(\d{3,5})\s*kg/);
+    const pm2=low.match(/(\d+)\s*pr/)||reply.match(/(\d+)\s*pr/i);
+    S.workout={focus:user.slice(0,60),volume:vm?Number.parseInt(vm[1], 10):null,prs:pm2?Number.parseInt(pm2[1], 10):0};
+  }
+}
+function parseFoodLog(user, reply, totM) {
+  const low = user.toLowerCase();
   if(['ate','had','breakfast','lunch','dinner','snack','drank','consumed'].some(k=>low.includes(k))){
-    const pm=reply.match(/(\d+\.?\d*)g\s+protein/i),p=pm?parseFloat(pm[1]):0;
-    const cm=reply.match(/(\d+\.?\d*)g\s+carb/i),c=cm?parseFloat(cm[1]):null;
-    const fm=reply.match(/(\d+\.?\d*)g\s+fat/i),f=fm?parseFloat(fm[1]):null;
-    const fim=reply.match(/(\d+\.?\d*)g\s+fiber/i),fi=fim?parseFloat(fim[1]):null;
-    const km=reply.match(/(\d+)\s*kcal/i),k=km?parseInt(km[1]):null;
+    const pm=reply.match(/(\d+\.?\d*)g\s+protein/i),p=pm?Number.parseFloat(pm[1]):0;
+    const cm=reply.match(/(\d+\.?\d*)g\s+carb/i),c=cm?Number.parseFloat(cm[1]):null;
+    const fm=reply.match(/(\d+\.?\d*)g\s+fat/i),f=fm?Number.parseFloat(fm[1]):null;
+    const fim=reply.match(/(\d+\.?\d*)g\s+fiber/i),fi=fim?Number.parseFloat(fim[1]):null;
+    const km=reply.match(/(\d+)\s*kcal/i),k=km?Number.parseInt(km[1], 10):null;
     S.foodLog.push({name:user.slice(0,70),protein:p,kcal:k,carbs:c,fats:f,fiber:fi,time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});
     if(p>0&&!totM)S.protein+=p;
     if(k)S.calories=(S.calories||0)+k;
@@ -662,11 +669,15 @@ function parseState(user,reply){
     if(f)S.fats=(S.fats||0)+f;
     if(fi)S.fiber=(S.fiber||0)+fi;
   }
-  if(['workout','gym','chest','legs','back','shoulders','cardio','trained'].some(k=>low.includes(k))){
-    const vm=low.match(/(\d{3,5})\s*kg/)||reply.match(/(\d{3,5})\s*kg/);
-    const pm2=low.match(/(\d+)\s*pr/)||reply.match(/(\d+)\s*pr/i);
-    S.workout={focus:user.slice(0,60),volume:vm?parseInt(vm[1]):null,prs:pm2?parseInt(pm2[1]):0};
-  }
+}
+function parseState(user,reply){
+  const low=user.toLowerCase();
+  const totM=reply.match(/(?:total|running total|so far)[:\s~]+(\d+\.?\d*)g/i);
+  if(totM)S.protein=Number.parseFloat(totM[1]);
+  if(low.includes('weight')||low.includes('weigh')){const m=user.match(/(\d+\.?\d*)\s*kg/);if(m)S.weight=Number.parseFloat(m[1]);}
+  const slM=low.match(/slep?t?\s+(\d+\.?\d*)/);if(slM)S.sleep={...S.sleep,hours:Number.parseFloat(slM[1])};
+  parseFoodLog(user, reply, totM);
+  parseWorkout(user, reply);
   updateUI();persist();
 }
 
@@ -688,7 +699,7 @@ function renderLog(){
     ${S.workout.volume?`<div class="log-row"><div>🏋️ Volume</div><div class="log-row-val">${S.workout.volume} kg</div></div>`:''}
     ${S.workout.sets?`<div class="log-row"><div>📋 Sets</div><div class="log-row-val">${S.workout.sets}</div></div>`:''}
     ${S.workout.prs?`<div class="log-row"><div>🏆 PRs</div><div class="log-row-val">${S.workout.prs}</div></div>`:''}
-    ${S.workout.exercises?`<div class="log-row" style="border-bottom:none;"><div><div class="log-row-name">Exercises</div><div class="log-row-meta" style="font-size:11px;line-height:1.6;">${S.workout.exercises.split(', ').join('<br>')}</div></div></div>`:''}`
+    ${renderExercises(S.workout)}`
   :'<div class="empty">🏋️ No workout logged yet.</div>';
 
   // Sleep
@@ -708,14 +719,14 @@ function renderHistory(){
     <td>${d}</td><td>${typeIcon(t)} ${t}</td><td>😴 ${sl}h</td>
     <td>${p}g</td><td>${tgt}g</td><td>${badge(st)}</td>
     <td>${kcal??'—'} kcal</td><td>${carbs??'—'}g</td><td>${fats??'—'}g</td><td>${fiber??'—'}g</td>
-    <td>${w!=='—'?'🏋️ '+w:w}</td><td>${vol>0?'🏋️ '+vol+' kg':'—'}</td><td>${pr>0?'🏆 '+pr:'—'}</td>
+    <td>${w === '—' ? w : '🏋️ ' + w}</td><td>${vol>0?'🏋️ '+vol+' kg':'—'}</td><td>${pr>0?'🏆 '+pr:'—'}</td>
   </tr>`).join('');
 }
 
 function saveMeasurements(){
   const keys=['weight','waist','chest','arms','thighs','hips','calves','neck','bf'];
   const entry={day:S.day,date:new Date().toLocaleDateString('en-IN')};
-  keys.forEach(k=>{const v=document.getElementById('m-'+k).value;if(v)entry[k]=parseFloat(v);});
+  keys.forEach(k=>{const v=document.getElementById('m-'+k).value;if(v)entry[k]=Number.parseFloat(v);});
   if(!S.measurements)S.measurements=[];
   const i=S.measurements.findIndex(m=>m.day===S.day);
   if(i>=0)S.measurements[i]={...S.measurements[i],...entry};else S.measurements.push(entry);
@@ -759,9 +770,9 @@ function saveProfile(){
     split: [1,2,3,4,5,6].map(i => document.getElementById('ws-'+i).value || S.profile?.split?.[i-1] || DEFAULT_PROFILE.split[i-1])
   };
   // Update protein targets from profile
-  TARGETS.Training = parseInt(S.profile.protTrain) || 100;
-  TARGETS.Rest     = parseInt(S.profile.protRest)  || 80;
-  TARGETS.Lite     = parseInt(S.profile.protLite)  || 57;
+  TARGETS.Training = Number.parseInt(S.profile.protTrain, 10) || 100;
+  TARGETS.Rest     = Number.parseInt(S.profile.protRest, 10)  || 80;
+  TARGETS.Lite     = Number.parseInt(S.profile.protLite, 10)  || 57;
   renderProfile();
   updateUI();
   persist();
@@ -786,6 +797,11 @@ async function init(){
   applyTheme();
   updateUI();
   renderProfile();
+}
+function renderExercises(workout) {
+  if (!workout || !workout.exercises) return '';
+  const ex = workout.exercises.split(', ').join('<br>');
+  return `<div class="log-row" style="border-bottom:none;"><div><div class="log-row-name">Exercises</div><div class="log-row-meta" style="font-size:11px;line-height:1.6;">${ex}</div></div></div>`;
 }
 init();
 </script>
