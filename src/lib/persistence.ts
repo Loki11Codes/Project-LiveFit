@@ -24,41 +24,46 @@ export type ParsedLogEnvelope = {
 export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: string) {
   if (envelopes.length === 0) return;
 
-  for (const parsed of envelopes) {
-    if (!parsed.category || !parsed.data) continue;
+  for (const envelope of envelopes) {
+    if (!envelope.category) continue;
+
+    // AI might send { category: '...', data: { ... } } OR { category: '...', field1: '...', field2: '...' }
+    // We handle the "flat" case by using the envelope itself as data if 'data' property is missing.
+    const category = envelope.category;
+    const logData = envelope.data || envelope;
 
     try {
       await prisma.$transaction(async (tx) => {
-        switch (parsed.category) {
+        switch (category) {
           case 'food':
-            if (hasItemsArray(parsed.data)) {
-              await persistFoodLogs(tx, parsed.data.items as FoodItemInput[], userId);
+            if (hasItemsArray(logData)) {
+              await persistFoodLogs(tx, logData.items as FoodItemInput[], userId);
             }
             break;
           case 'workout':
-            await persistWorkoutLog(tx, parsed.data, userId);
+            await persistWorkoutLog(tx, logData, userId);
             break;
           case 'sleep':
-            await persistSleepLog(tx, parsed.data, userId);
+            await persistSleepLog(tx, logData, userId);
             break;
           case 'measurement':
-            await persistMeasurement(tx, parsed.data, userId);
+            await persistMeasurement(tx, logData, userId);
             break;
           case 'profile':
-            await persistProfileUpdate(tx, parsed.data, userId);
+            await persistProfileUpdate(tx, logData, userId);
             break;
           case 'goals':
-            await persistGoalUpdate(tx, parsed.data, userId);
+            await persistGoalUpdate(tx, logData, userId);
             break;
           case 'dayType':
-            await persistDayTypeUpdate(tx, parsed.data, userId);
+            await persistDayTypeUpdate(tx, logData, userId);
             break;
           default:
-            console.warn(`Unknown category: ${parsed.category}`);
+            console.warn(`Unknown category: ${category}`);
         }
       });
     } catch (error) {
-      console.error(`Persistence failed for ${parsed.category}:`, getErrorMessage(error));
+      console.error(`Persistence failed for ${category}:`, getErrorMessage(error));
       throw error;
     }
   }

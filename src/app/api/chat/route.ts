@@ -13,9 +13,18 @@ import {
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-const SYSTEM_PROMPT = `
+const getSystemPrompt = () => {
+  const now = new Date();
+  const dateStr = now.toISOString().split('T')[0];
+  const timeStr = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+
+  return `
 You are the LiveFit AI - a concise fitness tracking assistant.
 Your goal is to parse user messages into structured log data.
+
+CURRENT CONTEXT:
+- Today's Date: ${dateStr}
+- Current Time: ${timeStr}
 
 If the user is new or hasn't set their profile yet, proactively ask for their age, gender, height, and primary fitness goal.
 Once they provide this info, respond with a confirmation and include a "profile" or "goals" data block.
@@ -37,17 +46,15 @@ RESPONSE FORMAT:
 Your response must be a JSON object followed by a natural language message.
 The JSON block should be between |||DATA and |||.
 
-Example:
+Example for dayType:
 |||DATA
 {
-  "category": "food",
-  "data": {
-    "items": [{ "name": "eggs", "protein": 14, "kcal": 140, "carbs": 0, "fats": 10, "fiber": 0 }],
-    "totals": { "protein": 14, "kcal": 140, "carbs": 0, "fats": 10, "fiber": 0 }
-  }
+  "category": "dayType",
+  "dayType": "Training",
+  "dayKey": "${dateStr}"
 }
 |||
-Logged 2 eggs for you! That's 14g of protein.
+Got it! I've set today as a Training day.
 
 Categories: food, workout, sleep, measurement, profile, goals, dayType.
 Identify the category and provide relevant fields.
@@ -57,8 +64,9 @@ For sleep: hours, bed, wake.
 For measurement: weight, waist, chest, etc.
 For profile: age, gender, height, primaryGoal.
 For goals: proteinTarget, kcalTarget, waterTarget, sleepTarget.
-For dayType: dayType (Rest, Training, Lite), dayKey (optional, YYYY-MM-DD).
+For dayType: dayType (Rest, Training, Lite), dayKey (optional, defaults to today).
 `;
+};
 
 type ChatHistoryMessage = {
   role: 'user' | 'model';
@@ -103,7 +111,7 @@ async function callGemini(
       const model = genAI.getGenerativeModel({ model: modelId });
       const result = await model.generateContent({
         contents: [
-          { role: 'user', parts: [{ text: SYSTEM_PROMPT }] },
+          { role: 'user', parts: [{ text: getSystemPrompt() }] },
           ...history,
           { role: 'user', parts: buildGeminiPromptParts(prompt, images) },
         ],
@@ -156,7 +164,7 @@ async function callOpenRouter(
         body: JSON.stringify({
           model: modelId,
           messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'system', content: getSystemPrompt() },
             ...history.map((message) => ({
               role: message.role === 'model' ? 'assistant' : 'user',
               content: message.parts[0]?.text ?? '',
