@@ -282,10 +282,10 @@ async function handleUserResponse(text: string, body: any, userId: string): Prom
     // Clean text by removing all |||DATA ... ||| blocks without using a vulnerable regex
     let cleanText = text;
     let startIdx = cleanText.indexOf('|||DATA');
-    while (startIdx !== -1) {
+    while (startIdx >= 0) {
       const endMarker = '|||';
       const endIdx = cleanText.indexOf(endMarker, startIdx + 7); // Skip the initial marker
-      if (endIdx !== -1) {
+      if (endIdx >= 0) {
         cleanText = cleanText.substring(0, startIdx) + cleanText.substring(endIdx + endMarker.length);
         startIdx = cleanText.indexOf('|||DATA'); // Search again from start in cleaned text
       } else {
