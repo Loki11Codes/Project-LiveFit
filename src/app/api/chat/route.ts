@@ -279,7 +279,20 @@ async function handleUserResponse(text: string, body: any, userId: string): Prom
     const envelopes = extractParsedLogs(text);
     await persistLogData(envelopes, userId);
 
-    const cleanText = text.replace(/\|\|\|DATA[\s\S]*?\|\|\|/, '').trim();
+    // Clean text by removing all |||DATA ... ||| blocks without using a vulnerable regex
+    let cleanText = text;
+    let startIdx = cleanText.indexOf('|||DATA');
+    while (startIdx !== -1) {
+      const endMarker = '|||';
+      const endIdx = cleanText.indexOf(endMarker, startIdx + 7); // Skip the initial marker
+      if (endIdx !== -1) {
+        cleanText = cleanText.substring(0, startIdx) + cleanText.substring(endIdx + endMarker.length);
+        startIdx = cleanText.indexOf('|||DATA'); // Search again from start in cleaned text
+      } else {
+        break; // Malformed block, stop cleaning
+      }
+    }
+    cleanText = cleanText.trim();
 
     // Finally, save AI response
     await (prisma as any).chatMessage.create({
@@ -321,17 +334,31 @@ function buildGeminiPromptParts(
 }
 
 function extractParsedLogs(text: string): ParsedLogEnvelope[] {
-  const regex = /\|\|\|DATA\s*([\s\S]*?)\|\|\|/g;
   const logs: ParsedLogEnvelope[] = [];
-  let match;
-
-  while ((match = regex.exec(text)) !== null) {
+  const startMarker = '|||DATA';
+  const endMarker = '|||';
+  
+  let currentPos = 0;
+  
+  while (true) {
+    const startIdx = text.indexOf(startMarker, currentPos);
+    if (startIdx === -1) break;
+    
+    const contentStart = startIdx + startMarker.length;
+    const endIdx = text.indexOf(endMarker, contentStart);
+    if (endIdx === -1) break;
+    
+    const jsonText = text.substring(contentStart, endIdx).trim();
     try {
-      const parsed = JSON.parse(match[1]) as ParsedLogEnvelope;
-      if (parsed) logs.push(parsed);
+      if (jsonText) {
+        const parsed = JSON.parse(jsonText) as ParsedLogEnvelope;
+        if (parsed) logs.push(parsed);
+      }
     } catch (e) {
       console.warn('Failed to parse a DATA block from AI:', e);
     }
+    
+    currentPos = endIdx + endMarker.length;
   }
 
   return logs;
