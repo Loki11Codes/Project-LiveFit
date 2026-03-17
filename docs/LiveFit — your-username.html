@@ -439,7 +439,7 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28
 
 </div>
 
-<script>
+<script type="module">
 let S = {
   day:1, dayType:'Rest', protein:0, calories:0, carbs:0, fats:0, fiber:0, weight:0,
   sleep:{hours:0, bed:'—', wake:'—'},
@@ -455,7 +455,19 @@ const HIST=[
 ];
 
 async function persist(){try{await globalThis.storage.set('loki-v4',JSON.stringify({theme:S.theme,measurements:S.measurements,profile:S.profile}));}catch(e){console.error('Persist failed', e);}}
-async function hydrate(){try{const r=await globalThis.storage.get('loki-v4');if(r?.value){const saved=JSON.parse(r.value);if(saved.theme)S.theme=saved.theme;if(saved.measurements)S.measurements=saved.measurements;if(saved.profile)S.profile=saved.profile;}}catch(e){console.error('Hydrate failed', e);}}
+async function hydrate() {
+  try {
+    const r = await globalThis.storage.get('loki-v4');
+    if (r?.value) {
+      const saved = JSON.parse(r.value);
+      if (saved.theme) { S.theme = saved.theme; }
+      if (saved.measurements) { S.measurements = saved.measurements; }
+      if (saved.profile) { S.profile = saved.profile; }
+    }
+  } catch (e) {
+    console.error('Hydrate failed', e);
+  }
+}
 
 function toggleTheme(){S.theme=S.theme==='light'?'dark':'light';applyTheme();persist();}
 function applyTheme(){document.documentElement.dataset.theme=S.theme;document.getElementById('theme-lbl').textContent=S.theme==='light'?'Light':'Dark';}
@@ -646,28 +658,53 @@ Respond concisely. Give clean item-by-item breakdown with all 5 nutrients. End w
   document.getElementById('send-btn').disabled=false;inp.focus();
 }
 
+function extractVolume(low, reply) {
+  const m = low.match(/(\d{3,5})\s*kg/) || reply.match(/(\d{3,5})\s*kg/);
+  return m ? Number.parseInt(m[1], 10) : null;
+}
+
+function extractPRs(low, reply) {
+  const m = low.match(/(\d+)\s*pr/) || reply.match(/(\d+)\s*pr/i);
+  return m ? Number.parseInt(m[1], 10) : 0;
+}
+
 function parseWorkout(user, reply) {
   const low = user.toLowerCase();
-  if(['workout', 'gym', 'chest', 'legs', 'back', 'shoulders', 'cardio', 'trained'].some(k=>low.includes(k))){
-    const vm=low.match(/(\d{3,5})\s*kg/)||reply.match(/(\d{3,5})\s*kg/);
-    const pm2=low.match(/(\d+)\s*pr/)||reply.match(/(\d+)\s*pr/i);
-    S.workout={focus:user.slice(0,60),volume:vm?Number.parseInt(vm[1], 10):null,prs:pm2?Number.parseInt(pm2[1], 10):0};
+  const keys = ['workout', 'gym', 'chest', 'legs', 'back', 'shoulders', 'cardio', 'trained'];
+  if (keys.some(k => low.includes(k))) {
+    S.workout = {
+      focus: user.slice(0, 60),
+      volume: extractVolume(low, reply),
+      prs: extractPRs(low, reply)
+    };
   }
 }
+function matchVal(str, regex, base) {
+  const m = str.match(regex);
+  if (!m) return null;
+  return base === 10 ? Number.parseInt(m[1], 10) : Number.parseFloat(m[1]);
+}
+
 function parseFoodLog(user, reply, totM) {
   const low = user.toLowerCase();
-  if(['ate','had','breakfast','lunch','dinner','snack','drank','consumed'].some(k=>low.includes(k))){
-    const pm=reply.match(/(\d+\.?\d*)g\s+protein/i),p=pm?Number.parseFloat(pm[1]):0;
-    const cm=reply.match(/(\d+\.?\d*)g\s+carb/i),c=cm?Number.parseFloat(cm[1]):null;
-    const fm=reply.match(/(\d+\.?\d*)g\s+fat/i),f=fm?Number.parseFloat(fm[1]):null;
-    const fim=reply.match(/(\d+\.?\d*)g\s+fiber/i),fi=fim?Number.parseFloat(fim[1]):null;
-    const km=reply.match(/(\d+)\s*kcal/i),k=km?Number.parseInt(km[1], 10):null;
-    S.foodLog.push({name:user.slice(0,70),protein:p,kcal:k,carbs:c,fats:f,fiber:fi,time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});
-    if(p>0&&!totM)S.protein+=p;
-    if(k)S.calories=(S.calories||0)+k;
-    if(c)S.carbs=(S.carbs||0)+c;
-    if(f)S.fats=(S.fats||0)+f;
-    if(fi)S.fiber=(S.fiber||0)+fi;
+  const ks = ['ate', 'had', 'breakfast', 'lunch', 'dinner', 'snack', 'drank', 'consumed'];
+  if (ks.some(k => low.includes(k))) {
+    const p = matchVal(reply, /(\d+\.?\d*)g\s+protein/i, 0) || 0;
+    const c = matchVal(reply, /(\d+\.?\d*)g\s+carb/i, 0);
+    const f = matchVal(reply, /(\d+\.?\d*)g\s+fat/i, 0);
+    const fi = matchVal(reply, /(\d+\.?\d*)g\s+fiber/i, 0);
+    const k = matchVal(reply, /(\d+)\s*kcal/i, 10);
+
+    S.foodLog.push({
+      name: user.slice(0, 70), protein: p, kcal: k, carbs: c, fats: f, fiber: fi,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    });
+
+    if (p > 0 && totM === null) { S.protein += p; }
+    if (k !== null) { S.calories = (S.calories || 0) + k; }
+    if (c !== null) { S.carbs = (S.carbs || 0) + c; }
+    if (f !== null) { S.fats = (S.fats || 0) + f; }
+    if (fi !== null) { S.fiber = (S.fiber || 0) + fi; }
   }
 }
 function parseState(user,reply){
@@ -683,24 +720,37 @@ function parseState(user,reply){
 
 function renderLog(){
   const fl=document.getElementById('food-list');
-  fl.innerHTML=S.foodLog.length?S.foodLog.map(f=>`
-    <div class="log-row">
-      <div style="flex:1;">
-        <div class="log-row-name">🍽️ ${f.name}</div>
-        <div class="log-row-meta">🕐 ${f.time||''} &nbsp;·&nbsp; 🔥${f.kcal??'?'}kcal &nbsp;·&nbsp; 🍞${f.carbs??'?'}g &nbsp;·&nbsp; 🧈${f.fats??'?'}g &nbsp;·&nbsp; 🌾${f.fiber??'?'}g</div>
-      </div>
-      <div class="log-row-val" style="white-space:nowrap;">🫘 ${f.protein}g</div>
-    </div>`).join(''):'<div class="empty">🍽️ No food logged yet.</div>';
+  if (S.foodLog.length > 0) {
+    fl.innerHTML = S.foodLog.map(f => {
+      const kcal = f.kcal ?? '?';
+      const carbs = f.carbs ?? '?';
+      const fats = f.fats ?? '?';
+      const fiber = f.fiber ?? '?';
+      return `
+        <div class="log-row">
+          <div style="flex:1;">
+            <div class="log-row-name">🍽️ ${f.name}</div>
+            <div class="log-row-meta">🕐 ${f.time || ''} &nbsp;·&nbsp; 🔥${kcal}kcal &nbsp;·&nbsp; 🍞${carbs}g &nbsp;·&nbsp; 🧈${fats}g &nbsp;·&nbsp; 🌾${fiber}g</div>
+          </div>
+          <div class="log-row-val" style="white-space:nowrap;">🫘 ${f.protein}g</div>
+        </div>`;
+    }).join('');
+  } else {
+    fl.innerHTML = '<div class="empty">🍽️ No food logged yet.</div>';
+  }
 
   const wo=document.getElementById('workout-today');
-  wo.innerHTML=S.workout?`
-    <div class="log-row"><div class="log-row-name">${S.workout.focus}</div></div>
-    ${S.workout.duration?`<div class="log-row"><div>⏱️ Duration</div><div class="log-row-val">${S.workout.duration} min</div></div>`:''}
-    ${S.workout.volume?`<div class="log-row"><div>🏋️ Volume</div><div class="log-row-val">${S.workout.volume} kg</div></div>`:''}
-    ${S.workout.sets?`<div class="log-row"><div>📋 Sets</div><div class="log-row-val">${S.workout.sets}</div></div>`:''}
-    ${S.workout.prs?`<div class="log-row"><div>🏆 PRs</div><div class="log-row-val">${S.workout.prs}</div></div>`:''}
-    ${renderExercises(S.workout)}`
-  :'<div class="empty">🏋️ No workout logged yet.</div>';
+  if (!S.workout) {
+    wo.innerHTML = '<div class="empty">🏋️ No workout logged yet.</div>';
+  } else {
+    const d = S.workout.duration ? `<div class="log-row"><div>⏱️ Duration</div><div class="log-row-val">${S.workout.duration} min</div></div>` : '';
+    const v = S.workout.volume ? `<div class="log-row"><div>🏋️ Volume</div><div class="log-row-val">${S.workout.volume} kg</div></div>` : '';
+    const s = S.workout.sets ? `<div class="log-row"><div>📋 Sets</div><div class="log-row-val">${S.workout.sets}</div></div>` : '';
+    const p = S.workout.prs ? `<div class="log-row"><div>🏆 PRs</div><div class="log-row-val">${S.workout.prs}</div></div>` : '';
+    wo.innerHTML = `
+      <div class="log-row"><div class="log-row-name">${S.workout.focus}</div></div>
+      ${d}${v}${s}${p}${renderExercises(S.workout)}`;
+  }
 
   // Sleep
   document.getElementById('sl-hours').textContent = (S.sleep?.hours||'—') + ' hrs';
@@ -712,15 +762,42 @@ function renderLog(){
   else { noteRow.style.display='none'; }
 }
 
+function getBadge(status) {
+  if (status === '✅') { return '<span class="badge ok">✅ On target</span>'; }
+  if (status === '⚠') { return '<span class="badge warn">⚠️ Slightly low</span>'; }
+  return '<span class="badge low">❌ Low</span>';
+}
+
+function getTypeIcon(type) {
+  if (type.includes('Training')) { return '💪'; }
+  if (type.includes('Rest')) { return '🛌'; }
+  if (type.includes('Cardio')) { return '🏃'; }
+  return '🌿';
+}
+
 function renderHistory(){
-  const badge=s=>s==='✅'?'<span class="badge ok">✅ On target</span>':s==='⚠'?'<span class="badge warn">⚠️ Slightly low</span>':'<span class="badge low">❌ Low</span>';
-  const typeIcon=t=>t.includes('Training')?'💪':t.includes('Rest')?'🛌':t.includes('Cardio')?'🏃':'🌿';
-  document.getElementById('hist-body').innerHTML=HIST.map(([d,t,sl,w,p,tgt,st,vol,pr,kcal,carbs,fats,fiber])=>`<tr>
-    <td>${d}</td><td>${typeIcon(t)} ${t}</td><td>😴 ${sl}h</td>
-    <td>${p}g</td><td>${tgt}g</td><td>${badge(st)}</td>
-    <td>${kcal??'—'} kcal</td><td>${carbs??'—'}g</td><td>${fats??'—'}g</td><td>${fiber??'—'}g</td>
-    <td>${w === '—' ? w : '🏋️ ' + w}</td><td>${vol>0?'🏋️ '+vol+' kg':'—'}</td><td>${pr>0?'🏆 '+pr:'—'}</td>
-  </tr>`).join('');
+  const body = document.getElementById('hist-body');
+  if (HIST === null || HIST.length === 0) {
+    body.innerHTML = '<tr><td colspan="13" class="empty">No history logs yet.</td></tr>';
+    return;
+  }
+  body.innerHTML = HIST.map(([d,t,sl,w,p,tgt,st,vol,pr,kcal,carbs,fats,fiber]) => {
+    const icon = getTypeIcon(t);
+    const badge = getBadge(st);
+    const kcalStr = kcal ?? '—';
+    const carbsStr = carbs ?? '—';
+    const fatsStr = fats ?? '—';
+    const fiberStr = fiber ?? '—';
+    const workoutStr = w === '—' ? w : '🏋️ ' + w;
+    const volStr = vol > 0 ? '🏋️ ' + vol + ' kg' : '—';
+    const prStr = pr > 0 ? '🏆 ' + pr : '—';
+    return `<tr>
+      <td>${d}</td><td>${icon} ${t}</td><td>😴 ${sl}h</td>
+      <td>${p}g</td><td>${tgt}g</td><td>${badge}</td>
+      <td>${kcalStr} kcal</td><td>${carbsStr}g</td><td>${fatsStr}g</td><td>${fiberStr}g</td>
+      <td>${workoutStr}</td><td>${volStr}</td><td>${prStr}</td>
+    </tr>`;
+  }).join('');
 }
 
 function saveMeasurements(){
@@ -792,18 +869,14 @@ function renderProfile(){
   document.getElementById('dp-sleep').textContent  = (p.sleepTarget||DEFAULT_PROFILE.sleepTarget) + ' hrs';
 }
 
-async function init(){
+async function init() {
   await hydrate();
   applyTheme();
   updateUI();
   renderProfile();
 }
-function renderExercises(workout) {
-  if (!workout || !workout.exercises) return '';
-  const ex = workout.exercises.split(', ').join('<br>');
-  return `<div class="log-row" style="border-bottom:none;"><div><div class="log-row-name">Exercises</div><div class="log-row-meta" style="font-size:11px;line-height:1.6;">${ex}</div></div></div>`;
-}
-init();
+// Use top-level await pattern
+await init();
 </script>
 
 
