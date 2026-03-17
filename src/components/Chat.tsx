@@ -148,6 +148,14 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
       if (hasData) {
         console.log("AI Data block detected! Triggering UI refresh...");
         onLogParsed();
+      } else {
+        // Safety Fallback: AI sometimes forgets the DATA block but confirms in text.
+        const stateKeywords = ["training", "lite", "light", "rest", "logged", "recorded", "saved"];
+        const lowerText = cleanText.toLowerCase();
+        if (stateKeywords.some(kw => lowerText.includes(kw))) {
+          console.log("State keyword detected without data block. Triggering fallback refresh.");
+          onLogParsed();
+        }
       }
 
       const modelMsg = createChatMessage("model", cleanText);

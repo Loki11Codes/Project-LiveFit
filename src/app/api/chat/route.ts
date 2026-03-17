@@ -56,6 +56,8 @@ Example for dayType:
 |||
 Got it! I've set today as a Training day.
 
+CRITICAL: You MUST include the |||DATA block for every loggable action (food, workout, dayType, etc.). If you are just answering a question, no block is needed. But for logging or status changes, the block is MANDATORY.
+
 Categories: food, workout, sleep, measurement, profile, goals, dayType.
 Identify the category and provide relevant fields.
 For food: items (array of name, protein, kcal, carbs, fats, fiber), totals.
@@ -107,17 +109,18 @@ async function callGemini(
 
   for (const modelId of modelsToTry) {
     try {
-      console.log(`Trying Gemini model: ${modelId}...`);
+      const systemPrompt = getSystemPrompt();
       const model = genAI.getGenerativeModel({ model: modelId });
       const result = await model.generateContent({
         contents: [
-          { role: 'user', parts: [{ text: getSystemPrompt() }] },
+          { role: 'user', parts: [{ text: systemPrompt }] },
           ...history,
           { role: 'user', parts: buildGeminiPromptParts(prompt, images) },
         ],
       });
+      const responseText = result.response.text();
       console.log(`Success with Gemini model: ${modelId}`);
-      return result.response.text();
+      return responseText;
     } catch (error) {
       const message = getErrorMessage(error);
       console.warn(`Gemini model ${modelId} failed:`, message);
