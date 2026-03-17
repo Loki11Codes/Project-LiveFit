@@ -55,6 +55,7 @@ model User {
   measurements     BodyMeasurement[]
   dayTypeEntries   DayTypeEntry[]
   goals            Goal?
+  profile          UserProfile?
 }
 
 model VerificationToken {
@@ -108,16 +109,41 @@ model BodyMeasurement {
   arms      Float?
   thighs    Float?
   hips      Float?
+  calves    Float?
+  neck      Float?
+  bodyFat   Float?
   time      DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Goal {
-  id            String @id @default(cuid())
-  userId        String @unique
-  proteinTarget Float
-  kcalTarget    Float
-  user          User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String @id @default(cuid())
+  userId          String @unique
+  proteinTarget   Float
+  kcalTarget      Float
+  proteinTraining Float?
+  proteinRest     Float?
+  proteinLite     Float?
+  waterTarget     Float?
+  sleepTarget     Float?
+  user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserProfile {
+  id          String  @id @default(cuid())
+  userId      String  @unique
+  age         Int?
+  gender      String?
+  height      Float?
+  startDay    Int?
+  primaryGoal String?
+  day1        String?
+  day2        String?
+  day3        String?
+  day4        String?
+  day5        String?
+  day6        String?
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model DayTypeEntry {

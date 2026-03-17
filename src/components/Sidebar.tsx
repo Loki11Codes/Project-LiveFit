@@ -14,6 +14,7 @@ import {
   Zap,
   type LucideIcon,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import type { DayType } from '@/lib/types';
 
 interface SidebarProps {
@@ -109,10 +110,12 @@ export default function Sidebar({
             g of {proteinTarget}g
           </span>
         </div>
-        <div className="progress-bar mt-4 rounded-[inherit]">
-          <div
-            className={`progress-fill transition-all duration-700 ease-out rounded-[inherit] ${proteinStatus}`}
-            style={{ width: `${proteinPct}%` }}
+        <div className="progress-bar mt-4 rounded-[inherit] overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${proteinPct}%` }}
+            transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+            className={`progress-fill h-full rounded-[inherit] ${proteinStatus}`}
           />
         </div>
         <div className="sidebar-remaining">
@@ -132,10 +135,12 @@ export default function Sidebar({
             kcal of {calorieTarget}
           </span>
         </div>
-        <div className="progress-bar mt-4 rounded-[inherit]">
-          <div
-            className={`progress-fill transition-all duration-700 ease-out rounded-[inherit] ${calorieStatus}`}
-            style={{ width: `${caloriePct}%` }}
+        <div className="progress-bar mt-4 rounded-[inherit] overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${caloriePct}%` }}
+            transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+            className={`progress-fill h-full rounded-[inherit] ${calorieStatus}`}
           />
         </div>
         <div className="sidebar-remaining">

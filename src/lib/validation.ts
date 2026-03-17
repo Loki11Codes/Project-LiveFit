@@ -18,8 +18,29 @@ export type DayTypeEntryInput = z.infer<typeof DayTypeEntrySchema>;
 export const GoalSchema = z.object({
   proteinTarget: finiteNumber.min(0).max(500),
   kcalTarget: finiteNumber.min(0).max(10000),
+  proteinTraining: optionalNullableFiniteNumber,
+  proteinRest: optionalNullableFiniteNumber,
+  proteinLite: optionalNullableFiniteNumber,
+  waterTarget: optionalNullableFiniteNumber,
+  sleepTarget: optionalNullableFiniteNumber,
 });
 export type GoalInput = z.infer<typeof GoalSchema>;
+
+// User Profile Validation
+export const UserProfileSchema = z.object({
+  age: z.number().int().min(0).max(150).nullable().optional(),
+  gender: z.string().max(20).nullable().optional(),
+  height: optionalNullableFiniteNumber,
+  startDay: z.number().int().min(1).nullable().optional(),
+  primaryGoal: z.string().max(100).nullable().optional(),
+  day1: z.string().max(200).nullable().optional(),
+  day2: z.string().max(200).nullable().optional(),
+  day3: z.string().max(200).nullable().optional(),
+  day4: z.string().max(200).nullable().optional(),
+  day5: z.string().max(200).nullable().optional(),
+  day6: z.string().max(200).nullable().optional(),
+});
+export type UserProfileInput = z.infer<typeof UserProfileSchema>;
 
 // Measurements Validation
 export const MeasurementSchema = z.object({
@@ -29,6 +50,9 @@ export const MeasurementSchema = z.object({
   arms: optionalNullableFiniteNumber,
   thighs: optionalNullableFiniteNumber,
   hips: optionalNullableFiniteNumber,
+  calves: optionalNullableFiniteNumber,
+  neck: optionalNullableFiniteNumber,
+  bodyFat: optionalNullableFiniteNumber,
 });
 export type MeasurementInput = z.infer<typeof MeasurementSchema>;
 

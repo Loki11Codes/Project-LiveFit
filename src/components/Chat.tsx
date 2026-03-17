@@ -394,15 +394,24 @@ export default function Chat({ onLogParsed }: ChatProps) {
       </AnimatePresence>
 
       <div className="chat-footer-container">
-        {notice && (
-          <div
-            className={`notice-banner notice-banner-${notice.tone} chat-notice`}
-            role="status"
-            aria-live="polite"
-          >
-            {notice.message}
-          </div>
-        )}
+        <AnimatePresence>
+          {notice && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div
+                className={`notice-banner notice-banner-${notice.tone} chat-notice`}
+                role="status"
+                aria-live="polite"
+              >
+                {notice.message}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="chat-quick-chips-row no-scrollbar">
           <QuickChip

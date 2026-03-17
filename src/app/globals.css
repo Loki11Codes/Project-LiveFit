@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #f7f7f4;
-  --surface: rgba(255, 255, 255, 0.9);
-  --surface2: rgba(241, 241, 236, 0.7);
-  --border: rgba(220, 220, 215, 0.6);
-  --text: #111110;
-  --text-muted: #82827a;
-  --accent: #111110;
+  --bg: #fafafa;
+  --surface: rgba(255, 255, 255, 0.95);
+  --surface2: rgba(244, 244, 244, 0.7);
+  --border: rgba(0, 0, 0, 0.06);
+  --text: #0a0a09;
+  --text-muted: #71716a;
+  --accent: #000000;
   --accent-inv: #ffffff;
   --green: #1a633c;
   --green-bg: #eaf6ee;
@@ -183,9 +183,9 @@ body {
   backdrop-filter: blur(var(--blur));
   -webkit-backdrop-filter: blur(var(--blur));
   border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 12px;
-  box-shadow: var(--shadow-md);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: var(--shadow-sm);
   min-width: 0;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   transform: translateZ(0); /* Anti-aliasing fix */
@@ -230,7 +230,7 @@ body {
 }
 
 .sidebar-big-number {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 200;
   line-height: 1;
   letter-spacing: -0.04em;
@@ -389,22 +389,26 @@ body {
 }
 
 .nav-profile-status {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.15em;
+  font-size: 9.5px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-muted);
-  opacity: 0.5;
-  margin-bottom: 2px;
+  color: #10b981;
+  opacity: 1;
+  margin-bottom: 0px;
+  display: flex;
+  align-items: center;
+  height: 10px; /* Force height for alignment with heart */
 }
 
 .nav-profile-name {
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  font-size: 14px;
+  font-weight: 950; /* Ultra-bold for premium feel */
+  letter-spacing: -0.02em;
   text-transform: uppercase;
   color: var(--text);
-  line-height: 1.1;
+  line-height: 1;
+  font-family: var(--font-outfit), sans-serif; /* Ensuring a bold, modern font if available */
 }
 
 .theme-toggle-btn {
@@ -647,10 +651,10 @@ body {
 }
 
 .chat-msg-bubble {
-  max-width: 90%;
-  padding: 14px 18px;
-  border-radius: 20px;
-  font-size: 14.5px;
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 13.5px;
   line-height: 1.55;
   font-weight: 500;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03), 0 0 0 0.5px var(--border);
@@ -717,7 +721,7 @@ body {
 }
 
 .chat-footer-container {
-  padding: 24px 24px 36px;
+  padding: 16px 20px 24px;
   background: transparent !important;
   backdrop-filter: none !important;
   border: 0 !important;
@@ -985,30 +989,30 @@ body {
 /* ── REUSABLE COMPONENTS ── */
 
 .card {
-  border-radius: 28px;
-  padding: 32px;
-  box-shadow: var(--shadow-md);
-  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), 
-              box-shadow 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
-              border-color 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 8px 12px rgba(0,0,0,0.03);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .card:hover {
-  box-shadow: var(--shadow-lg);
-  border-color: var(--text-muted);
-  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03), 0 12px 24px rgba(0,0,0,0.05);
+  border-color: rgba(0,0,0,0.1);
+  transform: translateY(-1px);
 }
 
 .card-label {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.15em;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-muted);
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .badge {

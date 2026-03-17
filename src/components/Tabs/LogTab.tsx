@@ -12,6 +12,7 @@ import {
   Droplets,
   Leaf,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface LogTabProps {
   readonly foodLog: FoodLog[];
@@ -19,6 +20,29 @@ interface LogTabProps {
   readonly workouts: WorkoutLog[];
   readonly sleepLogs: SleepLog[];
 }
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (index: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: index * 0.1, type: 'spring' as const, damping: 20, stiffness: 100 },
+  }),
+};
+
+const rowVariants = {
+  hidden: { opacity: 0, x: -12 },
+  visible: (index: number) => ({
+    opacity: 1,
+    x: 0,
+    transition: { delay: 0.15 + index * 0.05, type: 'spring' as const, damping: 20, stiffness: 120 },
+  }),
+};
+
+const floatAnimation = {
+  y: [0, -6, 0],
+  transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' as const },
+};
 
 export default function LogTab({
   foodLog,
@@ -29,14 +53,21 @@ export default function LogTab({
   return (
     <div className="flex flex-col gap-5">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="card md:col-span-2 lg:col-span-2">
+        {/* Food Log Card */}
+        <motion.div
+          className="card md:col-span-2 lg:col-span-2"
+          variants={cardVariants}
+          initial="hidden"
+          animate="visible"
+          custom={0}
+        >
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-2">
               <Utensils className="w-5 h-5 text-[var(--text-muted)]" />
               <div className="card-label mb-0">Food Log</div>
             </div>
             <span className="flex items-baseline gap-1.5">
-              <span className="text-[28px] font-extralight tracking-tighter text-[var(--text)]">
+              <span className="text-[24px] font-extralight tracking-tighter text-[var(--text)]">
                 {protein}g
               </span>
               <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
@@ -46,8 +77,16 @@ export default function LogTab({
           </div>
           <div id="food-list" className="space-y-1">
             {foodLog.length > 0 ? (
-              foodLog.map((food) => (
-                <div key={food.id} className="log-row">
+              foodLog.map((food, index) => (
+                <motion.div
+                  key={food.id}
+                  className="log-row"
+                  variants={rowVariants}
+                  initial="hidden"
+                  animate="visible"
+                  custom={index}
+                  whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                >
                   <div className="flex-1">
                     <div className="log-row-name flex items-center gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] opacity-40" />
@@ -79,29 +118,51 @@ export default function LogTab({
                       </span>
                     </div>
                   </div>
-                  <div className="log-row-val whitespace-nowrap text-[22px] font-extralight tracking-tighter text-[var(--text)]">
+                  <div className="log-row-val whitespace-nowrap text-[18px] font-extralight tracking-tighter text-[var(--text)]">
                     {food.protein}g
                   </div>
-                </div>
+                </motion.div>
               ))
             ) : (
-              <div className="empty text-center py-12 px-5 text-[var(--text-muted)] text-[12px] tracking-[0.04em] border border-dashed border-[var(--border)] rounded-lg">
-                <Utensils className="w-8 h-8 mx-auto mb-3 opacity-20" />
+              <motion.div
+                className="empty text-center py-12 px-5 text-[var(--text-muted)] text-[12px] tracking-[0.04em] border border-dashed border-[var(--border)] rounded-lg"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <motion.div animate={floatAnimation}>
+                  <Utensils className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                </motion.div>
                 No food logged yet - use the Chat tab.
-              </div>
+              </motion.div>
             )}
           </div>
-        </div>
+        </motion.div>
 
-        <div className="card">
+        {/* Workout Card */}
+        <motion.div
+          className="card"
+          variants={cardVariants}
+          initial="hidden"
+          animate="visible"
+          custom={1}
+        >
           <div className="flex items-center gap-2 mb-6">
             <Dumbbell className="w-5 h-5 text-[var(--text-muted)]" />
             <div className="card-label mb-0">Workout</div>
           </div>
           <div className="space-y-2">
             {workouts.length > 0 ? (
-              workouts.slice(0, 4).map((workout) => (
-                <div key={workout.id} className="log-row">
+              workouts.slice(0, 4).map((workout, index) => (
+                <motion.div
+                  key={workout.id}
+                  className="log-row"
+                  variants={rowVariants}
+                  initial="hidden"
+                  animate="visible"
+                  custom={index}
+                  whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                >
                   <div className="flex-1">
                     <div className="log-row-name flex items-center gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] opacity-40" />
@@ -121,26 +182,48 @@ export default function LogTab({
                       </span>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))
             ) : (
-              <div className="empty text-center py-12 px-5 text-[var(--text-muted)] text-[12px] border border-dashed border-[var(--border)] rounded-lg">
-                <Dumbbell className="w-8 h-8 mx-auto mb-3 opacity-20" />
+              <motion.div
+                className="empty text-center py-12 px-5 text-[var(--text-muted)] text-[12px] border border-dashed border-[var(--border)] rounded-lg"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <motion.div animate={floatAnimation}>
+                  <Dumbbell className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                </motion.div>
                 Nothing logged yet.
-              </div>
+              </motion.div>
             )}
           </div>
-        </div>
+        </motion.div>
 
-        <div className="card">
+        {/* Sleep Card */}
+        <motion.div
+          className="card"
+          variants={cardVariants}
+          initial="hidden"
+          animate="visible"
+          custom={2}
+        >
           <div className="flex items-center gap-2 mb-6">
             <Moon className="w-5 h-5 text-[var(--text-muted)]" />
             <div className="card-label mb-0">Sleep</div>
           </div>
           <div className="space-y-2">
             {sleepLogs.length > 0 ? (
-              sleepLogs.slice(0, 3).map((sleep) => (
-                <div key={sleep.id} className="log-row border-none hover:bg-transparent">
+              sleepLogs.slice(0, 3).map((sleep, index) => (
+                <motion.div
+                  key={sleep.id}
+                  className="log-row border-none hover:bg-transparent"
+                  variants={rowVariants}
+                  initial="hidden"
+                  animate="visible"
+                  custom={index}
+                  whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                >
                   <div>
                     <div className="log-row-name flex items-center gap-2">
                       <Clock className="w-4 h-4 text-[var(--text-muted)]" />
@@ -155,20 +238,27 @@ export default function LogTab({
                         ` | ${sleep.bedTime ?? '--'} to ${sleep.wakeTime ?? '--'}`}
                     </div>
                   </div>
-                  <div className="log-row-val text-[18px]">
+                  <div className="log-row-val text-[16px]">
                     {sleep.hours}
                     <span className="text-[12px]"> hrs</span>
                   </div>
-                </div>
+                </motion.div>
               ))
             ) : (
-              <div className="empty text-center py-12 px-5 text-[var(--text-muted)] text-[12px] border border-dashed border-[var(--border)] rounded-lg">
-                <Moon className="w-8 h-8 mx-auto mb-3 opacity-20" />
+              <motion.div
+                className="empty text-center py-12 px-5 text-[var(--text-muted)] text-[12px] border border-dashed border-[var(--border)] rounded-lg"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+              >
+                <motion.div animate={floatAnimation}>
+                  <Moon className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                </motion.div>
                 No sleep logged yet.
-              </div>
+              </motion.div>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

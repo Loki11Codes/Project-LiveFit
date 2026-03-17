@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import type { BodyMeasurement } from '@prisma/client';
 import {
   Ruler,
@@ -12,7 +12,9 @@ import {
   Save,
   Calendar,
   type LucideIcon,
+  TableProperties,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import type { MeasurementForm, MeasurementFormField } from '@/lib/types';
 
 interface BodyTabProps {
@@ -34,7 +36,33 @@ const measurementFields: Array<{
   { key: 'arms', label: 'Arms', unit: 'cm', icon: Activity },
   { key: 'thighs', label: 'Thighs', unit: 'cm', icon: Activity },
   { key: 'hips', label: 'Hips', unit: 'cm', icon: Activity },
+  { key: 'calves', label: 'Calves', unit: 'cm', icon: Activity },
+  { key: 'neck', label: 'Neck', unit: 'cm', icon: Activity },
+  { key: 'bodyFat', label: 'Body Fat', unit: '%', icon: Activity },
 ];
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (index: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: index * 0.12, type: 'spring' as const, damping: 20, stiffness: 100 },
+  }),
+};
+
+const rowVariants = {
+  hidden: { opacity: 0, x: -10 },
+  visible: (index: number) => ({
+    opacity: 1,
+    x: 0,
+    transition: { delay: 0.15 + index * 0.05, type: 'spring' as const, damping: 20, stiffness: 120 },
+  }),
+};
+
+const floatAnimation = {
+  y: [0, -6, 0],
+  transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' as const },
+};
 
 export default function BodyTab({
   measurements,
@@ -42,10 +70,30 @@ export default function BodyTab({
   handleSaveMeasurements,
   latestMeasurement,
 }: BodyTabProps) {
+  const [measurementHistory, setMeasurementHistory] = useState<BodyMeasurement[]>([]);
+
+  useEffect(() => {
+    fetch('/api/measurements?all=true')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setMeasurementHistory(data);
+        }
+      })
+      .catch(() => {});
+  }, [latestMeasurement]);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card shadow-lg border-[var(--border)] transition-all">
+        {/* Log Measurements Card */}
+        <motion.div
+          className="card shadow-lg border-[var(--border)] transition-all"
+          variants={cardVariants}
+          initial="hidden"
+          animate="visible"
+          custom={0}
+        >
           <div className="flex items-center gap-3 mb-8">
             <div className="p-2 bg-[var(--surface2)] rounded-lg">
               <Ruler className="w-5 h-5 text-[var(--text-muted)]" />
@@ -59,8 +107,15 @@ export default function BodyTab({
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
-            {measurementFields.map(({ key, label, unit, icon: Icon }) => (
-              <div key={key} className="flex flex-col gap-2">
+            {measurementFields.map(({ key, label, unit, icon: Icon }, index) => (
+              <motion.div
+                key={key}
+                className="flex flex-col gap-2"
+                variants={rowVariants}
+                initial="hidden"
+                animate="visible"
+                custom={index}
+              >
                 <div className="flex items-center gap-1.5">
                   <Icon className="w-3 h-3 text-[var(--text-muted)] opacity-50" />
                   <div className="text-[10px] tracking-[0.1em] uppercase text-[var(--text-muted)] font-bold">
@@ -85,21 +140,30 @@ export default function BodyTab({
                     {unit}
                   </span>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
 
-          <button
+          <motion.button
             className="save-btn mt-8 w-full flex items-center justify-center gap-2 group"
             onClick={handleSaveMeasurements}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
             <Save className="w-4 h-4" />
             Save Measurements
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
 
-        <div className="card shadow-lg border-[var(--border)] overflow-hidden relative">
+        {/* Latest Stats Card */}
+        <motion.div
+          className="card shadow-lg border-[var(--border)] overflow-hidden relative"
+          variants={cardVariants}
+          initial="hidden"
+          animate="visible"
+          custom={1}
+        >
           <div className="flex items-center gap-3 mb-8">
             <div className="p-2.5 bg-[var(--surface2)] rounded-xl">
               <History className="w-5 h-5 text-[var(--text-muted)] opacity-50" />
@@ -114,31 +178,45 @@ export default function BodyTab({
 
           {latestMeasurement ? (
             <div className="space-y-1">
-              {measurementFields.slice(0, 4).map(({ key, label, unit, icon: Icon }) => (
-                <div
-                  key={key}
-                  className="flex items-center justify-between py-4 px-2 border-b border-[var(--border)]/30 last:border-0 group hover:bg-[var(--surface2)]/30 transition-all rounded-xl"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-8 h-8 rounded-lg bg-[var(--surface2)]/50 flex items-center justify-center text-[var(--text-muted)] group-hover:bg-[var(--accent)] group-hover:text-[var(--accent-inv)] transition-colors">
-                      <Icon className="w-4 h-4" />
+              {measurementFields.map(({ key, label, unit, icon: Icon }, index) => {
+                const val = latestMeasurement[key as keyof BodyMeasurement];
+                if (val === null || val === undefined) return null;
+                return (
+                  <motion.div
+                    key={key}
+                    className="flex items-center justify-between py-3 px-2 border-b border-[var(--border)]/30 last:border-0 group hover:bg-[var(--surface2)]/30 transition-all rounded-xl"
+                    variants={rowVariants}
+                    initial="hidden"
+                    animate="visible"
+                    custom={index}
+                    whileHover={{ y: -1, transition: { duration: 0.2 } }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-8 h-8 rounded-lg bg-[var(--surface2)]/50 flex items-center justify-center text-[var(--text-muted)] group-hover:bg-[var(--accent)] group-hover:text-[var(--accent-inv)] transition-colors">
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <span className="text-[11px] uppercase tracking-widest font-black text-[var(--text-muted)]">
+                        {label}
+                      </span>
                     </div>
-                    <span className="text-[11px] uppercase tracking-widest font-black text-[var(--text-muted)]">
-                      {label}
-                    </span>
-                  </div>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-[28px] font-extralight tracking-tighter text-[var(--text)]">
-                      {latestMeasurement[key] ?? '--'}
-                    </span>
-                    <span className="text-[11px] text-[var(--text-muted)] font-black uppercase tracking-widest">
-                      {unit}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-[24px] font-extralight tracking-tighter text-[var(--text)]">
+                        {val as number}
+                      </span>
+                      <span className="text-[11px] text-[var(--text-muted)] font-black uppercase tracking-widest">
+                        {unit}
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
 
-              <div className="mt-8 flex items-center gap-2.5 text-[10px] text-[var(--text-muted)] font-black uppercase tracking-[0.1em] bg-[var(--surface2)]/30 p-4 rounded-xl border border-[var(--border)]/20">
+              <motion.div
+                className="mt-6 flex items-center gap-2.5 text-[10px] text-[var(--text-muted)] font-black uppercase tracking-[0.1em] bg-[var(--surface2)]/30 p-3 rounded-xl border border-[var(--border)]/20"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+              >
                 <Calendar className="w-3.5 h-3.5 opacity-40" />
                 Updated:{' '}
                 {new Date(latestMeasurement.time).toLocaleDateString(undefined, {
@@ -146,11 +224,13 @@ export default function BodyTab({
                   day: 'numeric',
                   year: 'numeric',
                 })}
-              </div>
+              </motion.div>
             </div>
           ) : (
             <div className="empty text-center py-20 px-5 bg-[var(--surface2)]/10 rounded-2xl border border-dashed border-[var(--border)]">
-              <Ruler className="w-12 h-12 mx-auto mb-4 opacity-10" />
+              <motion.div animate={floatAnimation}>
+                <Ruler className="w-12 h-12 mx-auto mb-4 opacity-10" />
+              </motion.div>
               <div className="text-[13px] font-bold text-[var(--text-muted)] mb-1">
                 No data recorded
               </div>
@@ -161,8 +241,75 @@ export default function BodyTab({
           )}
 
           <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[var(--accent)] opacity-[0.01] blur-[80px] rounded-full pointer-events-none" />
-        </div>
+        </motion.div>
       </div>
+
+      {/* Measurement History Table */}
+      {measurementHistory.length > 0 && (
+        <motion.div
+          className="card shadow-lg border-[var(--border)]"
+          variants={cardVariants}
+          initial="hidden"
+          animate="visible"
+          custom={2}
+        >
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-2 bg-[var(--surface2)] rounded-lg">
+              <TableProperties className="w-5 h-5 text-[var(--text-muted)]" />
+            </div>
+            <div>
+              <div className="card-label mb-0">Measurement History</div>
+              <div className="text-[11px] text-[var(--text-muted)] mt-0.5 uppercase tracking-wider">
+                {measurementHistory.length} records
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
+            <table className="history-table w-full border-collapse">
+              <thead>
+                <tr className="bg-[var(--surface2)]">
+                  <th className="py-4 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase">Date</th>
+                  <th className="py-4 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center">Weight</th>
+                  <th className="py-4 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center">Waist</th>
+                  <th className="py-4 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center">Chest</th>
+                  <th className="py-4 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center">Arms</th>
+                  <th className="py-4 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center">Thighs</th>
+                  <th className="py-4 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center">Hips</th>
+                  <th className="py-4 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center">Calves</th>
+                  <th className="py-4 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center">Neck</th>
+                  <th className="py-4 px-4 border-none font-bold text-[10px] tracking-widest text-[var(--text-muted)] uppercase text-center">BF%</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border)]">
+                {measurementHistory.map((m, index) => (
+                  <motion.tr
+                    key={m.id}
+                    className="hover:bg-[var(--surface2)]/50 transition-colors"
+                    variants={rowVariants}
+                    initial="hidden"
+                    animate="visible"
+                    custom={index}
+                  >
+                    <td className="py-3 px-4 text-[12px] font-medium whitespace-nowrap">
+                      {new Date(m.time).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </td>
+                    <td className="py-3 px-4 text-[16px] font-extralight tracking-tighter text-center">{m.weight ?? '—'}</td>
+                    <td className="py-3 px-4 text-[14px] font-extralight text-center text-[var(--text-muted)]">{m.waist ?? '—'}</td>
+                    <td className="py-3 px-4 text-[14px] font-extralight text-center text-[var(--text-muted)]">{m.chest ?? '—'}</td>
+                    <td className="py-3 px-4 text-[14px] font-extralight text-center text-[var(--text-muted)]">{m.arms ?? '—'}</td>
+                    <td className="py-3 px-4 text-[14px] font-extralight text-center text-[var(--text-muted)]">{m.thighs ?? '—'}</td>
+                    <td className="py-3 px-4 text-[14px] font-extralight text-center text-[var(--text-muted)]">{m.hips ?? '—'}</td>
+                    <td className="py-3 px-4 text-[14px] font-extralight text-center text-[var(--text-muted)]">{(m as any).calves ?? '—'}</td>
+                    <td className="py-3 px-4 text-[14px] font-extralight text-center text-[var(--text-muted)]">{(m as any).neck ?? '—'}</td>
+                    <td className="py-3 px-4 text-[14px] font-extralight text-center text-[var(--text-muted)]">{(m as any).bodyFat ?? '—'}</td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

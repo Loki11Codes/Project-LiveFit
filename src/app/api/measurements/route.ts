@@ -5,18 +5,31 @@ import { authOptions } from '@/lib/auth';
 import { MeasurementSchema } from '@/lib/validation';
 import { parseJsonBody, unauthorized, internalError } from '@/lib/api';
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return unauthorized();
 
+  const { searchParams } = new URL(req.url);
+  const all = searchParams.get('all');
+
   try {
+    if (all === 'true') {
+      // Return all measurements for history table
+      const measurements = await prisma.bodyMeasurement.findMany({
+        where: { userId: session.user.id },
+        orderBy: { time: 'desc' },
+      });
+      return NextResponse.json(measurements);
+    }
+    
+    // Default: return latest only
     const latest = await prisma.bodyMeasurement.findFirst({
       where: { userId: session.user.id },
       orderBy: { time: 'desc' },
     });
     return NextResponse.json(latest || {});
   } catch (error) {
-    console.error('Failed to fetch latest measurement:', error);
+    console.error('Failed to fetch measurements:', error);
     return internalError('Unable to load measurements right now');
   }
 }
@@ -41,6 +54,9 @@ export async function POST(req: Request) {
         arms: data.arms ?? null,
         thighs: data.thighs ?? null,
         hips: data.hips ?? null,
+        calves: data.calves ?? null,
+        neck: data.neck ?? null,
+        bodyFat: data.bodyFat ?? null,
       },
     });
     return NextResponse.json(measurement);

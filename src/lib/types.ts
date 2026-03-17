@@ -10,7 +10,29 @@ export type AppTheme = 'light' | 'dark';
 export type DayType = 'Rest' | 'Training' | 'Lite';
 export type TabId = 'chat' | 'log' | 'history' | 'body' | 'profile';
 
-export type GoalsState = Pick<Goal, 'proteinTarget' | 'kcalTarget'>;
+export type GoalsState = {
+  proteinTarget: number;
+  kcalTarget: number;
+  proteinTraining?: number | null;
+  proteinRest?: number | null;
+  proteinLite?: number | null;
+  waterTarget?: number | null;
+  sleepTarget?: number | null;
+};
+
+export type UserProfile = {
+  age?: number | null;
+  gender?: string | null;
+  height?: number | null;
+  startDay?: number | null;
+  primaryGoal?: string | null;
+  day1?: string | null;
+  day2?: string | null;
+  day3?: string | null;
+  day4?: string | null;
+  day5?: string | null;
+  day6?: string | null;
+};
 
 export type MeasurementFormField =
   | 'weight'
@@ -18,7 +40,10 @@ export type MeasurementFormField =
   | 'chest'
   | 'arms'
   | 'thighs'
-  | 'hips';
+  | 'hips'
+  | 'calves'
+  | 'neck'
+  | 'bodyFat';
 
 export type MeasurementForm = Record<MeasurementFormField, string>;
 export type MeasurementPayload = Record<MeasurementFormField, number | null>;
@@ -85,6 +110,9 @@ export type HistoryRow = {
   target: number;
   status: 'completed' | 'pending';
   kcal: number;
+  carbs: number;
+  fats: number;
+  fiber: number;
   workout: string;
 };
 
@@ -93,6 +121,7 @@ export type DashboardState = {
   latestMeasurement: BodyMeasurement | null;
   measurements: MeasurementForm;
   goals: GoalsState;
+  profile: UserProfile | null;
   analytics: AnalyticsResponse | null;
   dayType: DayType;
   dayTypesByDay: DayTypeMap;
@@ -101,6 +130,11 @@ export type DashboardState = {
 export const DEFAULT_GOALS: GoalsState = {
   proteinTarget: 100,
   kcalTarget: 2200,
+  proteinTraining: 100,
+  proteinRest: 80,
+  proteinLite: 57,
+  waterTarget: 5.5,
+  sleepTarget: 7.5,
 };
 
 export const EMPTY_MEASUREMENT_FORM: MeasurementForm = {
@@ -110,6 +144,9 @@ export const EMPTY_MEASUREMENT_FORM: MeasurementForm = {
   arms: '',
   thighs: '',
   hips: '',
+  calves: '',
+  neck: '',
+  bodyFat: '',
 };
 
 export const EMPTY_LOGS: LogsResponse = {

@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageSquare, 
   ClipboardList, 
@@ -12,7 +12,8 @@ import {
   Sun, 
   Moon, 
   LogIn, 
-  Activity 
+  Activity,
+  Heart
 } from 'lucide-react';
 import type { AppTheme, TabId } from '@/lib/types';
 
@@ -46,8 +47,21 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
       <nav className="nav-bar-wrapper">
         <div className="navbar-inner">
           <Link href="/" className="flex items-center gap-3 group cursor-pointer transition-all duration-300 no-underline">
-            <div className="w-10 h-10 bg-[var(--accent)] rounded-2xl flex items-center justify-center shadow-lg shadow-[var(--accent)]/10 transition-all duration-500 group-hover:shadow-[var(--accent)]/30">
-              <Activity className="w-5.5 h-5.5 text-[var(--accent-inv)] transition-transform duration-500 group-hover:scale-110" strokeWidth={2.8} />
+            <div className="w-10 h-10 bg-[var(--accent)] rounded-2xl flex items-center justify-center shadow-lg shadow-[var(--accent)]/10 transition-all duration-500 group-hover:shadow-[var(--accent)]/30 overflow-hidden">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={theme}
+                  initial={{ rotate: -180, opacity: 0, scale: 0.5 }}
+                  animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                  exit={{ rotate: 180, opacity: 0, scale: 0.5 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                >
+                  <Activity 
+                    className="w-5.5 h-5.5 text-[var(--accent-inv)] transition-transform duration-500 group-hover:scale-110" 
+                    strokeWidth={2.8} 
+                  />
+                </motion.div>
+              </AnimatePresence>
             </div>
             <div className="text-2xl tracking-tight text-[var(--text)] hidden lg:block ml-2">
               <span className="font-bold">Live</span>
@@ -88,8 +102,17 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
 
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             {session ? (
-              <div className="hidden sm:flex nav-profile-card">
-                <span className="nav-profile-status">Connected</span>
+              <div className="hidden sm:flex nav-profile-card items-center gap-1.5">
+                <div className="flex items-center gap-1.5 mb-0.5 leading-none">
+                  <span className="nav-profile-status">Online</span>
+                  <motion.div
+                    animate={{ scale: [1, 1.25, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    className="flex items-center justify-center"
+                  >
+                    <Heart className="w-2.5 h-2.5 fill-red-500 text-red-500" />
+                  </motion.div>
+                </div>
                 <span className="nav-profile-name">
                   {session.user?.name === 'akash' ? 'AKASH BHAT' : (session.user?.name || 'AKASH BHAT').toUpperCase()}
                 </span>
@@ -109,7 +132,18 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
               className="theme-toggle-btn"
               aria-label="Toggle theme"
             >
-              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={theme}
+                  initial={{ rotate: 90, opacity: 0, scale: 0.5 }}
+                  animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                  exit={{ rotate: -90, opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  className="flex items-center justify-center"
+                >
+                  {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                </motion.div>
+              </AnimatePresence>
             </button>
           </div>
         </div>

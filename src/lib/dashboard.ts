@@ -36,6 +36,9 @@ export function toMeasurementForm(
     arms: toInputValue(measurement.arms),
     thighs: toInputValue(measurement.thighs),
     hips: toInputValue(measurement.hips),
+    calves: toInputValue(measurement.calves),
+    neck: toInputValue(measurement.neck),
+    bodyFat: toInputValue(measurement.bodyFat),
   };
 }
 
@@ -47,6 +50,9 @@ export function toMeasurementPayload(form: MeasurementForm): MeasurementPayload 
     arms: toNullableNumber(form.arms),
     thighs: toNullableNumber(form.thighs),
     hips: toNullableNumber(form.hips),
+    calves: toNullableNumber(form.calves),
+    neck: toNullableNumber(form.neck),
+    bodyFat: toNullableNumber(form.bodyFat),
   };
 }
 
@@ -107,6 +113,9 @@ export function buildHistoryRows(
     date: Date;
     protein: number;
     kcal: number;
+    carbs: number;
+    fats: number;
+    fiber: number;
     sleep: number | null;
     workoutFocuses: Set<string>;
   };
@@ -119,6 +128,9 @@ export function buildHistoryRows(
 
     entry.protein += log.protein;
     entry.kcal += log.kcal;
+    entry.carbs += log.carbs ?? 0;
+    entry.fats += log.fats ?? 0;
+    entry.fiber += log.fiber ?? 0;
     grouped.set(key, entry);
   }
 
@@ -148,6 +160,9 @@ export function buildHistoryRows(
       target: goals.proteinTarget,
       status: entry.protein >= goals.proteinTarget ? 'completed' : 'pending',
       kcal: round(entry.kcal),
+      carbs: round(entry.carbs),
+      fats: round(entry.fats),
+      fiber: round(entry.fiber),
       workout:
         entry.workoutFocuses.size > 0
           ? Array.from(entry.workoutFocuses).join(', ')
@@ -179,6 +194,9 @@ function createDailySummary(value: Date | string): {
   date: Date;
   protein: number;
   kcal: number;
+  carbs: number;
+  fats: number;
+  fiber: number;
   sleep: number | null;
   workoutFocuses: Set<string>;
 } {
@@ -187,6 +205,9 @@ function createDailySummary(value: Date | string): {
     date: new Date(value),
     protein: 0,
     kcal: 0,
+    carbs: 0,
+    fats: 0,
+    fiber: 0,
     sleep: null,
     workoutFocuses: new Set<string>(),
   };

@@ -49,6 +49,7 @@ const INITIAL_DASHBOARD_STATE: DashboardState = {
   latestMeasurement: null,
   measurements: EMPTY_MEASUREMENT_FORM,
   goals: DEFAULT_GOALS,
+  profile: null,
   analytics: EMPTY_ANALYTICS,
   dayType: 'Rest',
   dayTypesByDay: EMPTY_DAY_TYPES_BY_DAY,
@@ -92,6 +93,15 @@ export default function Home() {
     setDashboard((current) => ({
       ...current,
       goals: typeof value === 'function' ? value(current.goals) : value,
+    }));
+  };
+
+  const updateProfile: React.Dispatch<React.SetStateAction<DashboardState['profile']>> = (
+    value
+  ) => {
+    setDashboard((current) => ({
+      ...current,
+      profile: typeof value === 'function' ? value(current.profile) : value,
     }));
   };
 
@@ -231,7 +241,7 @@ export default function Home() {
 
   const handleSaveGoals = async () => {
     try {
-      const goals = await requestJson<GoalsState>('/api/goals', {
+      const goals = await requestJson<GoalsState>('/api/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dashboard.goals),
@@ -249,6 +259,33 @@ export default function Home() {
     } catch (error) {
       const message = getClientErrorMessage(error);
       console.error('Failed to save goals:', message);
+      setNotice({
+        tone: 'error',
+        message,
+      });
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      const profile = await requestJson<DashboardState['profile']>('/api/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dashboard.profile),
+      });
+      setNotice({
+        tone: 'success',
+        message: 'Profile details updated.',
+      });
+      startTransition(() => {
+        setDashboard((current) => ({
+          ...current,
+          profile,
+        }));
+      });
+    } catch (error) {
+      const message = getClientErrorMessage(error);
+      console.error('Failed to save profile:', message);
       setNotice({
         tone: 'error',
         message,
@@ -275,17 +312,24 @@ export default function Home() {
         toggleTheme={toggleTheme}
       />
 
-      {notice && (
-        <div className="main-status-wrap shrink-0">
-          <div
-            className={`notice-banner notice-banner-${notice.tone}`}
-            role="status"
-            aria-live="polite"
+      <AnimatePresence>
+        {notice && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+            className="main-status-wrap shrink-0"
           >
-            {notice.message}
-          </div>
-        </div>
-      )}
+            <div
+              className={`notice-banner notice-banner-${notice.tone}`}
+              role="status"
+              aria-live="polite"
+            >
+              {notice.message}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div
         className={`flex-1 min-h-0 w-full main-layout transition-all duration-500 ${
@@ -300,58 +344,72 @@ export default function Home() {
             animate="animate"
             exit="exit"
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="flex flex-col flex-1 h-full min-h-0"
+            className="flex flex-col flex-1 h-full min-h-0 relative"
           >
-            {activeTab === 'chat' && (
-              <div className="chat-sidebar-layout">
-                <Chat onLogParsed={refreshDashboard} />
-                <Sidebar
-                  protein={nutrition.protein}
-                  proteinTarget={dashboard.goals.proteinTarget}
-                  calories={nutrition.calories}
-                  calorieTarget={dashboard.goals.kcalTarget}
-                  carbs={nutrition.carbs}
-                  fats={nutrition.fats}
-                  fiber={nutrition.fiber}
-                  weight={dashboard.latestMeasurement?.weight ?? '--'}
-                  sleep={latestSleep?.hours ?? '--'}
-                  day={trackedDayCount || 1}
-                  dayType={dashboard.dayType}
-                  setDayType={handleDayTypeChange}
-                />
-              </div>
-            )}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, x: 10, scale: 0.995 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -10, scale: 0.995 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                className="flex flex-col flex-1 h-full min-h-0"
+              >
+                {activeTab === 'chat' && (
+                  <div className="chat-sidebar-layout">
+                    <Chat onLogParsed={refreshDashboard} />
+                    <Sidebar
+                      protein={nutrition.protein}
+                      proteinTarget={dashboard.goals.proteinTarget}
+                      calories={nutrition.calories}
+                      calorieTarget={dashboard.goals.kcalTarget}
+                      carbs={nutrition.carbs}
+                      fats={nutrition.fats}
+                      fiber={nutrition.fiber}
+                      weight={dashboard.latestMeasurement?.weight ?? '--'}
+                      sleep={latestSleep?.hours ?? '--'}
+                      day={trackedDayCount || 1}
+                      dayType={dashboard.dayType}
+                      setDayType={handleDayTypeChange}
+                    />
+                  </div>
+                )}
 
-            {activeTab === 'log' && (
-              <LogTab
-                foodLog={dashboard.logs.food}
-                protein={nutrition.protein}
-                workouts={dashboard.logs.workouts}
-                sleepLogs={dashboard.logs.sleep}
-              />
-            )}
+                {activeTab === 'log' && (
+                  <LogTab
+                    foodLog={dashboard.logs.food}
+                    protein={nutrition.protein}
+                    workouts={dashboard.logs.workouts}
+                    sleepLogs={dashboard.logs.sleep}
+                  />
+                )}
 
-            {activeTab === 'history' && (
-              <HistoryTab history={history} analytics={dashboard.analytics} />
-            )}
+                {activeTab === 'history' && (
+                  <HistoryTab history={history} analytics={dashboard.analytics} />
+                )}
 
-            {activeTab === 'body' && (
-              <BodyTab
-                measurements={dashboard.measurements}
-                setMeasurements={updateMeasurements}
-                handleSaveMeasurements={handleSaveMeasurements}
-                latestMeasurement={dashboard.latestMeasurement}
-              />
-            )}
+                {activeTab === 'body' && (
+                  <BodyTab
+                    measurements={dashboard.measurements}
+                    setMeasurements={updateMeasurements}
+                    handleSaveMeasurements={handleSaveMeasurements}
+                    latestMeasurement={dashboard.latestMeasurement}
+                  />
+                )}
 
-            {activeTab === 'profile' && (
-              <ProfileTab
-                session={session}
-                goals={dashboard.goals}
-                setGoals={updateGoals}
-                handleSaveGoals={handleSaveGoals}
-              />
-            )}
+                {activeTab === 'profile' && (
+                  <ProfileTab
+                    session={session}
+                    goals={dashboard.goals}
+                    setGoals={updateGoals}
+                    handleSaveGoals={handleSaveGoals}
+                    profile={dashboard.profile}
+                    setProfile={updateProfile}
+                    handleSaveProfile={handleSaveProfile}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
           </motion.div>
         </AnimatePresence>
       </div>
@@ -366,12 +424,14 @@ async function fetchDashboardData(): Promise<DashboardState> {
     goalsResponse,
     analyticsResponse,
     dayTypesResponse,
+    profileResponse,
   ] = await Promise.all([
     requestJson<LogsResponse>('/api/logs'),
     requestJson<unknown>('/api/measurements'),
-    requestJson<unknown>('/api/goals'),
+    requestJson<unknown>('/api/profile?type=goals'), // We'll use the profile route for goals now
     requestJson<unknown>('/api/analytics'),
     requestJson<unknown>('/api/day-types'),
+    requestJson<unknown>('/api/profile'),
   ]);
 
   const latestMeasurement = isBodyMeasurement(latestMeasurementResponse)
@@ -385,16 +445,26 @@ async function fetchDashboardData(): Promise<DashboardState> {
     ? dayTypesResponse
     : [];
   const dayTypesByDay = buildDayTypeMap(dayTypeEntries);
+  const profile = isUserProfile(profileResponse) ? profileResponse : null;
 
   return {
     logs,
     latestMeasurement,
     measurements: toMeasurementForm(latestMeasurement),
     goals,
+    profile,
     analytics,
     dayType: getCurrentDayType(dayTypesByDay),
     dayTypesByDay,
   };
+}
+
+function isUserProfile(value: unknown): value is DashboardState['profile'] {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (!('error' in value) || Object.keys(value).length > 1)
+  );
 }
 
 function isBodyMeasurement(value: unknown): value is BodyMeasurement {
