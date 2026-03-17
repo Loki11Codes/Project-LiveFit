@@ -12,15 +12,21 @@ export async function GET() {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const messages = await prisma.chatMessage.findMany({
+    const messages = (await prisma.chatMessage.findMany({
       where: {
         userId: session.user.id,
       },
       orderBy: {
         createdAt: 'asc',
       },
-      take: 100, // Limit to last 100 messages to prevent massive payloads
-    });
+      take: 100,
+    })) as unknown as Array<{
+      id: string;
+      role: string;
+      text: string;
+      createdAt: Date;
+      images: string | null;
+    }>;
 
     const formattedMessages = messages.map((msg) => {
       let images = [];

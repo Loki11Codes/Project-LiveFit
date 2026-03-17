@@ -403,8 +403,8 @@ export default function ProfileTab({
                 <input 
                   className="measure-input w-full" 
                   type="text" 
-                  value={(p as any)[`day${num}`] || ''} 
-                  onChange={(e) => updateProfileField(`day${num}` as any, e.target.value)}
+                  value={(p as any)[`day${num}` as keyof UserProfile] || ''} 
+                  onChange={(e) => updateProfileField(`day${num}` as keyof UserProfile, e.target.value)}
                 />
               </div>
             ))}

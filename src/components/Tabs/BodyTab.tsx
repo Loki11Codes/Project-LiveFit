@@ -301,9 +301,9 @@ export default function BodyTab({
                     <td className="py-3 px-4 text-[14px] font-extralight text-center text-[var(--text-muted)]">{m.arms ?? '—'}</td>
                     <td className="py-3 px-4 text-[14px] font-extralight text-center text-[var(--text-muted)]">{m.thighs ?? '—'}</td>
                     <td className="py-3 px-4 text-[14px] font-extralight text-center text-[var(--text-muted)]">{m.hips ?? '—'}</td>
-                    <td className="py-3 px-4 text-[14px] font-extralight text-center text-[var(--text-muted)]">{(m as any).calves ?? '—'}</td>
-                    <td className="py-3 px-4 text-[14px] font-extralight text-center text-[var(--text-muted)]">{(m as any).neck ?? '—'}</td>
-                    <td className="py-3 px-4 text-[14px] font-extralight text-center text-[var(--text-muted)]">{(m as any).bodyFat ?? '—'}</td>
+                    <td className="py-3 px-4 text-[14px] font-extralight text-center text-[var(--text-muted)]">{m.calves ?? '—'}</td>
+                    <td className="py-3 px-4 text-[14px] font-extralight text-center text-[var(--text-muted)]">{m.neck ?? '—'}</td>
+                    <td className="py-3 px-4 text-[14px] font-extralight text-center text-[var(--text-muted)]">{m.bodyFat ?? '—'}</td>
                   </motion.tr>
                 ))}
               </tbody>

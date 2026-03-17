@@ -61,7 +61,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: parsed.error.format() }, { status: 400 });
       }
 
-      const profile = await (prisma as any).userProfile.upsert({
+      const profile = await prisma.userProfile.upsert({
         where: { userId: session.user.id },
         create: {
           userId: session.user.id,

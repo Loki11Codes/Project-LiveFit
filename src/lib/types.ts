@@ -1,7 +1,6 @@
 import type {
   BodyMeasurement,
   FoodLog,
-  Goal,
   SleepLog,
   WorkoutLog,
 } from '@prisma/client';

@@ -4,17 +4,11 @@ import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { internalError, parseJsonBody } from '@/lib/api';
-import { getErrorMessage, getLocalDateKey } from '@/lib/dashboard';
+import { persistLogData } from '@/lib/persistence';
+import { getErrorMessage } from '@/lib/dashboard';
 import type { ChatImagePayload } from '@/lib/types';
 import {
   ChatRequestSchema,
-  FoodItemSchema,
-  MeasurementSchema,
-  SleepLogSchema,
-  WorkoutLogSchema,
-  UserProfileSchema,
-  GoalSchema,
-  DayTypeEntrySchema,
 } from '@/lib/validation';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
@@ -192,161 +186,6 @@ async function callOpenRouter(
   return null;
 }
 
-async function persistLogData(text: string, userId: string) {
-  const envelopes = extractParsedLogs(text);
-  if (envelopes.length === 0) return;
-
-  for (const parsed of envelopes) {
-    if (!parsed.category || !parsed.data) continue;
-
-    try {
-      await prisma.$transaction(async (tx) => {
-        // 1. Food Logs
-        if (parsed.category === 'food' && hasItemsArray(parsed.data)) {
-          console.log('Saving food logs...');
-          for (const item of parsed.data.items) {
-            const validated = FoodItemSchema.parse(item);
-            await tx.foodLog.create({
-              data: {
-                userId,
-                name: validated.name,
-                kcal: validated.kcal,
-                protein: validated.protein,
-                carbs: validated.carbs,
-                fats: validated.fats,
-                fiber: validated.fiber,
-              },
-            });
-          }
-        }
-
-        // 2. Workout Logs
-        else if (parsed.category === 'workout') {
-          console.log('Saving workout log...');
-          const validated = WorkoutLogSchema.parse(parsed.data);
-          const prs = getRecordValue(parsed.data, 'prs');
-          const detailsFallback = prs ? JSON.stringify(prs) : undefined;
-
-          await tx.workoutLog.create({
-            data: {
-              userId,
-              focus: validated.focus,
-              volume: validated.volume,
-              details: validated.details || detailsFallback,
-            },
-          });
-        }
-
-        // 3. Sleep Logs
-        else if (parsed.category === 'sleep') {
-          console.log('Saving sleep log...');
-          const validated = SleepLogSchema.parse(parsed.data);
-
-          await tx.sleepLog.create({
-            data: {
-              userId,
-              hours: validated.hours,
-              bedTime: validated.bedTime || getStringValue(parsed.data, 'bed'),
-              wakeTime: validated.wakeTime || getStringValue(parsed.data, 'wake'),
-            },
-          });
-        }
-
-        // 4. Measurements
-        else if (parsed.category === 'measurement') {
-          console.log('Saving body measurement...');
-          const validated = MeasurementSchema.parse(parsed.data);
-
-          await tx.bodyMeasurement.create({
-            data: {
-              userId,
-              weight: validated.weight,
-              waist: validated.waist,
-              chest: validated.chest,
-              arms: validated.arms,
-              thighs: validated.thighs,
-              hips: validated.hips,
-            },
-          });
-        }
-
-        // 5. Profile Updates
-        else if (parsed.category === 'profile') {
-          console.log('Updating user profile via AI...');
-          const raw = parsed.data as any;
-          // Coerce to numbers as AI often sends strings
-          const data = {
-            ...raw,
-            age: raw.age ? Number.parseInt(raw.age, 10) : undefined,
-            height: raw.height ? Number.parseFloat(raw.height) : undefined,
-          };
-          const validated = UserProfileSchema.parse(data);
-          await (tx as any).userProfile.upsert({
-            where: { userId },
-            create: { userId, ...validated },
-            update: validated,
-          });
-        }
-
-        // 6. Goal Updates
-        else if (parsed.category === 'goals') {
-          console.log('Updating user goals via AI...');
-          const raw = parsed.data as any;
-          const data = {
-            ...raw,
-            proteinTarget: raw.proteinTarget ? Number.parseFloat(raw.proteinTarget) : undefined,
-            kcalTarget: raw.kcalTarget ? Number.parseFloat(raw.kcalTarget) : undefined,
-            waterTarget: raw.waterTarget ? Number.parseFloat(raw.waterTarget) : undefined,
-            sleepTarget: raw.sleepTarget ? Number.parseFloat(raw.sleepTarget) : undefined,
-          };
-          const validated = GoalSchema.parse(data);
-          await tx.goal.upsert({
-            where: { userId },
-            create: { userId, ...validated },
-            update: validated,
-          });
-        }
-
-        // 7. Day Type Updates
-        else if (parsed.category === 'dayType') {
-          console.log('Updating day type via AI...', parsed.data);
-          const raw = parsed.data as any;
-          const today = getLocalDateKey(new Date());
-          const dayKey = raw.dayKey || today;
-          
-          let dayType = raw.dayType || '';
-          // Normalize case and common variations
-          if (dayType.toLowerCase().includes('train')) dayType = 'Training';
-          else if (dayType.toLowerCase().includes('rest')) dayType = 'Rest';
-          else if (dayType.toLowerCase().includes('lite')) dayType = 'Lite';
-
-          console.log(`Resolved DayType: ${dayType} for ${dayKey}`);
-
-          await tx.dayTypeEntry.upsert({
-            where: {
-              userId_dayKey: {
-                userId,
-                dayKey,
-              },
-            },
-            update: {
-              dayType,
-            },
-            create: {
-              userId,
-              dayKey,
-              dayType,
-            },
-          });
-          console.log('Day type upserted successfully.');
-        }
-      });
-    } catch (error) {
-      console.error(`Persistence failed for ${parsed.category}:`, getErrorMessage(error));
-      throw error;
-    }
-  }
-}
 
 export async function POST(req: Request) {
   const parsedBody = await parseJsonBody(req, ChatRequestSchema);
@@ -359,21 +198,7 @@ export async function POST(req: Request) {
 
     const session = await getServerSession(authOptions);
 
-    console.log('--- Chat Request ---');
-    console.log('User:', session?.user?.email || 'Guest');
-
-    const geminiKey =
-      process.env.GEMINI_API_KEY &&
-      process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here' &&
-      process.env.GEMINI_API_KEY.trim() !== ''
-        ? process.env.GEMINI_API_KEY
-        : null;
-    const openRouterKey =
-      process.env.OPENROUTER_API_KEY &&
-      process.env.OPENROUTER_API_KEY !== 'your_openrouter_api_key_here' &&
-      process.env.OPENROUTER_API_KEY.trim() !== ''
-        ? process.env.OPENROUTER_API_KEY
-        : null;
+    const { geminiKey, openRouterKey } = getAIKeys();
 
     if (!geminiKey && !openRouterKey) {
       return internalError('AI providers are not configured right now');
@@ -383,62 +208,20 @@ export async function POST(req: Request) {
       return internalError('Image analysis is temporarily unavailable');
     }
 
-    let text = '';
-    let warning: string | undefined;
 
-    if (geminiKey) {
-      try {
-        text = await callGemini(body.prompt, body.history, body.images);
-      } catch (error) {
-        if (body.images.length > 0) {
-          throw error;
-        }
-
-        console.error(
-          'Gemini failed completely, failing over to OpenRouter...',
-          getErrorMessage(error)
-        );
-      }
+    if (body.images.length > 0 && !geminiKey) {
+      return internalError('Image analysis is temporarily unavailable');
     }
 
-    if (!text && openRouterKey && body.images.length === 0) {
-      text = (await callOpenRouter(body.prompt, body.history, openRouterKey)) || '';
-    }
+    const text = await getAIResponse(body, geminiKey, openRouterKey);
 
     if (!text) {
       throw new Error('All AI providers failed');
     }
 
+    let warning: string | undefined;
     if (session?.user) {
-      try {
-        // Save user message
-        const serializedImages = body.images.length > 0 ? JSON.stringify(body.images) : null;
-        await (prisma as any).chatMessage.create({
-          data: {
-            userId: session.user.id,
-            role: 'user',
-            text: body.prompt || (body.images.length > 0 ? 'Image attached' : ''),
-            images: serializedImages,
-          }
-        });
-
-        // Try extracting and running logs
-        await persistLogData(text, session.user.id);
-
-        const cleanText = text.replace(/\|\|\|DATA[\s\S]*?\|\|\|/, "").trim();
-
-        // Finally, save AI response
-        await (prisma as any).chatMessage.create({
-          data: {
-            userId: session.user.id,
-            role: 'model',
-            text: cleanText,
-          }
-        });
-      } catch (error) {
-        console.error('Chat log persistence failed:', getErrorMessage(error));
-        warning = 'Reply generated, but it could not be saved to your history completely.';
-      }
+      warning = await handleUserResponse(text, body, session.user.id);
     }
 
     console.log('AI Response:', `${text.substring(0, 50)}...`);
@@ -447,6 +230,69 @@ export async function POST(req: Request) {
     const message = getErrorMessage(error);
     console.error('Chat Route Error:', message);
     return internalError('The AI service is unavailable right now. Please try again.');
+  }
+}
+
+function getAIKeys() {
+  const geminiKey =
+    process.env.GEMINI_API_KEY &&
+    process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here' &&
+    process.env.GEMINI_API_KEY.trim() !== ''
+      ? process.env.GEMINI_API_KEY
+      : null;
+  const openRouterKey =
+    process.env.OPENROUTER_API_KEY &&
+    process.env.OPENROUTER_API_KEY !== 'your_openrouter_api_key_here' &&
+    process.env.OPENROUTER_API_KEY.trim() !== ''
+      ? process.env.OPENROUTER_API_KEY
+      : null;
+  return { geminiKey, openRouterKey };
+}
+
+async function getAIResponse(body: any, geminiKey: string | null, openRouterKey: string | null) {
+  let text = '';
+
+  if (geminiKey) {
+    try {
+      text = await callGemini(body.prompt, body.history, body.images);
+    } catch (error) {
+      if (body.images.length > 0) {
+        throw error;
+      }
+      console.error(
+        'Gemini failed completely, failing over to OpenRouter...',
+        getErrorMessage(error)
+      );
+    }
+  }
+
+  if (!text && openRouterKey && body.images.length === 0) {
+    text = (await callOpenRouter(body.prompt, body.history, openRouterKey)) || '';
+  }
+
+  return text;
+}
+
+async function handleUserResponse(text: string, body: any, userId: string): Promise<string | undefined> {
+  try {
+    // Try extracting and running logs
+    const envelopes = extractParsedLogs(text);
+    await persistLogData(envelopes, userId);
+
+    const cleanText = text.replace(/\|\|\|DATA[\s\S]*?\|\|\|/, '').trim();
+
+    // Finally, save AI response
+    await (prisma as any).chatMessage.create({
+      data: {
+        userId,
+        role: 'model',
+        text: cleanText,
+      },
+    });
+    return undefined;
+  } catch (error) {
+    console.error('Chat log persistence failed:', getErrorMessage(error));
+    return 'Reply generated, but it could not be saved to your history completely.';
   }
 }
 
@@ -491,34 +337,7 @@ function extractParsedLogs(text: string): ParsedLogEnvelope[] {
   return logs;
 }
 
-function hasItemsArray(value: unknown): value is { items: unknown[] } {
-  return isRecord(value) && Array.isArray(value.items);
-}
 
-function getStringValue(value: unknown, key: string): string | undefined {
-  if (!isRecord(value)) {
-    return undefined;
-  }
-
-  const nestedValue = value[key];
-  return typeof nestedValue === 'string' ? nestedValue : undefined;
-}
-
-function getRecordValue(value: unknown, key: string): unknown {
-  if (!isRecord(value)) {
-    return undefined;
-  }
-
-  return value[key];
-}
-
-function serializeJsonValue(value: unknown): string | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-
-  return JSON.stringify(value);
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
