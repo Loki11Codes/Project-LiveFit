@@ -77,25 +77,13 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
     async function fetchHistory() {
       try {
         const res = await fetch("/api/chat/history");
-        if (res.ok) {
-          const data = await res.json() as Message[];
-          if (data && data.length > 0) {
-            setMessages(data);
-          } else {
-            setMessages((prev) =>
-              prev.map((message) =>
-                message.id === "welcome-msg" && message.timestamp === ""
-                  ? {
-                      ...message,
-                      timestamp: new Date().toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }),
-                    }
-                  : message
-              )
-            );
-          }
+        if (!res.ok) return;
+
+        const data = (await res.json()) as Message[];
+        if (data && data.length > 0) {
+          setMessages(data);
+        } else {
+          setMessages((prev) => updateWelcomeMessageTimestamp(prev));
         }
       } catch (err) {
         console.error("Failed to fetch chat history:", err);
@@ -120,21 +108,9 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
     const userText = input.trim();
     const attachedImages = [...pendingImages];
 
-    if ((!userText && attachedImages.length === 0) || isTyping) {
-      return;
-    }
+    if ((!userText && attachedImages.length === 0) || isTyping) return;
 
-    const userMsg: Message = {
-      id: crypto.randomUUID(),
-      role: "user",
-      text: userText || "Image attached",
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      images: attachedImages,
-    };
-
+    const userMsg = createChatMessage("user", userText || "Image attached", attachedImages);
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setPendingImages([]);
@@ -142,9 +118,9 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
     setNotice(null);
 
     try {
-      const history = messages.map((message) => ({
-        role: message.role,
-        parts: [{ text: message.text }],
+      const history = messages.map((m) => ({
+        role: m.role,
+        parts: [{ text: m.text }],
       }));
 
       const data = await requestJson<ChatResponse>("/api/chat", {
@@ -157,69 +133,39 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
         }),
       });
 
-      if (data.text) {
-        const regex = /\|\|\|DATA\s*([\s\S]*?)\|\|\|/g;
-        let cleanText = data.text;
-        let match;
-        let hasData = false;
-
-        while ((match = regex.exec(data.text)) !== null) {
-          hasData = true;
-          try {
-            JSON.parse(match[1]);
-          } catch (error) {
-            console.error("Failed to parse log data:", error);
-          }
-        }
-
-        if (hasData) {
-          console.log("AI Data block detected! Triggering UI refresh...");
-          onLogParsed();
-          cleanText = cleanText.replace(/\|\|\|DATA\s*[\s\S]*?\|\|\|/g, "").trim();
-        }
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            role: "model",
-            text: cleanText,
-            timestamp: new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-          },
-        ]);
-      }
-
-      if (data.warning) {
-        setNotice({
-          tone: "warning",
-          message: data.warning,
-        });
-      }
+      processChatResponse(data);
     } catch (error) {
-      const message = getClientErrorMessage(error);
-      console.error("Chat connection error:", message);
-      setNotice({
-        tone: "error",
-        message,
-      });
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: "model",
-          text: `Unable to connect to AI service. ${message}`,
-          timestamp: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        },
-      ]);
+      handleChatError(error);
     } finally {
       setIsTyping(false);
     }
+  };
+
+  const processChatResponse = (data: ChatResponse) => {
+    if (data.text) {
+      const { hasData, cleanText } = extractAndCleanData(data.text);
+
+      if (hasData) {
+        console.log("AI Data block detected! Triggering UI refresh...");
+        onLogParsed();
+      }
+
+      const modelMsg = createChatMessage("model", cleanText);
+      setMessages((prev) => [...prev, modelMsg]);
+    }
+
+    if (data.warning) {
+      setNotice({ tone: "warning", message: data.warning });
+    }
+  };
+
+  const handleChatError = (error: unknown) => {
+    const message = getClientErrorMessage(error);
+    console.error("Chat connection error:", message);
+    setNotice({ tone: "error", message });
+    
+    const errorMsg = createChatMessage("model", `Unable to connect to AI service. ${message}`);
+    setMessages((prev) => [...prev, errorMsg]);
   };
 
   const handleFileSelection = async (
@@ -596,6 +542,78 @@ function QuickChip({ icon: Icon, label, color, onClick }: QuickChipProps) {
       {label}
     </motion.button>
   );
+}
+
+function updateWelcomeMessageTimestamp(prev: Message[]): Message[] {
+  return prev.map((msg) =>
+    msg.id === "welcome-msg" && msg.timestamp === ""
+      ? {
+          ...msg,
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        }
+      : msg
+  );
+}
+
+function createChatMessage(
+  role: "user" | "model",
+  text: string,
+  images?: ChatImageAttachment[]
+): Message {
+  return {
+    id: crypto.randomUUID(),
+    role,
+    text,
+    timestamp: new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    images,
+  };
+}
+
+function extractAndCleanData(text: string): { hasData: boolean; cleanText: string } {
+  const startMarker = "|||DATA";
+  const endMarker = "|||";
+  let hasData = false;
+  let currentPos = 0;
+
+  // Detect
+  while (true) {
+    const s = text.indexOf(startMarker, currentPos);
+    if (s === -1) break;
+    const c = s + startMarker.length;
+    const e = text.indexOf(endMarker, c);
+    if (e === -1) break;
+
+    hasData = true;
+    const json = text.substring(c, e).trim();
+    try {
+      if (json) JSON.parse(json);
+    } catch (err) {
+      console.error("Failed to parse log data:", err);
+    }
+    currentPos = e + endMarker.length;
+  }
+
+  // Clean
+  let cleanText = text;
+  let sIdx = cleanText.indexOf(startMarker);
+  while (sIdx >= 0) {
+    const eIdx = cleanText.indexOf(endMarker, sIdx + startMarker.length);
+    if (eIdx >= 0) {
+      cleanText =
+        cleanText.substring(0, sIdx) + cleanText.substring(eIdx + endMarker.length);
+      sIdx = cleanText.indexOf(startMarker);
+    } else {
+      break;
+    }
+  }
+
+  return { hasData, cleanText: cleanText.trim() };
 }
 
 function toPayload(image: ChatImageAttachment): ChatImagePayload {
