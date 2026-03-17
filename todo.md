@@ -1,7 +1,7 @@
 # LiveFit Implementation Todo
 
 ## In Progress
-- [ ] Clear the local `.next` lock so production builds can run again.
+- [x] Clear the local `.next` lock so production builds can run again.
 
 ## Next
 

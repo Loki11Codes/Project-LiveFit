@@ -56,8 +56,20 @@ export default function Chat({ onLogParsed }: ChatProps) {
   const [notice, setNotice] = useState<InlineNotice | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textInputRef = useRef<HTMLInputElement>(null);
   const isInitialMount = useRef(true);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const viewportRef = useRef<HTMLDivElement>(null);
 
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
+    setShowScrollBottom(!isAtBottom);
+  };
+
+  const scrollToBottom = () => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
   useEffect(() => {
     setMessages((prev) =>
       prev.map((message) =>
@@ -125,7 +137,7 @@ export default function Chat({ onLogParsed }: ChatProps) {
       });
 
       if (data.text) {
-        const dataMatch = data.text.match(/\|\|\|DATA\n([\s\S]*?)\n\|\|\|/);
+        const dataMatch = /\|\|\|DATA\n([\s\S]*?)\n\|\|\|/.exec(data.text);
         let cleanText = data.text;
 
         if (dataMatch) {
@@ -213,9 +225,17 @@ export default function Chat({ onLogParsed }: ChatProps) {
   };
 
   return (
-    <div className="flex-1 min-w-0 h-full bg-[var(--surface)] rounded-[32px] flex flex-col shadow-[0_0_0_1px_var(--border),var(--shadow-lg)] overflow-hidden transition-all duration-300">
-      <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col scroll-smooth h-full no-scrollbar chat-viewport">
-        <div className="w-full flex flex-col min-h-full chat-content-v-inset">
+    <div className="flex-1 min-w-0 h-full bg-[var(--surface)] rounded-[32px] flex flex-col border border-[var(--border)] shadow-[var(--shadow-lg)] overflow-hidden transition-all duration-300 [background-clip:padding-box] [transform:translateZ(0)] [mask-image:linear-gradient(#fff,#fff)] relative"
+      role="log"
+      aria-label="Chat history"
+      aria-live="polite"
+    >
+      <div 
+        ref={viewportRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col scroll-smooth h-full no-scrollbar chat-viewport rounded-[inherit]"
+      >
+        <div className="w-full flex flex-col chat-content-v-inset">
           <AnimatePresence mode="popLayout">
             {messages.map((msg, index) => {
               const isFirstInGroup =
@@ -358,7 +378,22 @@ export default function Chat({ onLogParsed }: ChatProps) {
         <div ref={chatEndRef} />
       </div>
 
-      <div className="chat-footer-container chat-viewport">
+      <AnimatePresence>
+        {showScrollBottom && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 10 }}
+            onClick={scrollToBottom}
+            className="absolute bottom-40 right-8 z-50 w-10 h-10 rounded-full bg-[var(--accent)] text-[var(--accent-inv)] shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
+            aria-label="Scroll to bottom"
+          >
+            <ArrowUp className="w-5 h-5 rotate-180" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      <div className="chat-footer-container">
         {notice && (
           <div
             className={`notice-banner notice-banner-${notice.tone} chat-notice`}
@@ -373,27 +408,47 @@ export default function Chat({ onLogParsed }: ChatProps) {
           <QuickChip
             icon={Coffee}
             label="Breakfast"
-            onClick={() => setInput("Log my breakfast")}
+            color="#e6ac50"
+            onClick={() => {
+              setInput("Log my breakfast");
+              textInputRef.current?.focus();
+            }}
           />
           <QuickChip
             icon={Dumbbell}
             label="Workout"
-            onClick={() => setInput("Record my training session")}
+            color="#c0392b"
+            onClick={() => {
+              setInput("Record my training session");
+              textInputRef.current?.focus();
+            }}
           />
           <QuickChip
             icon={Moon}
             label="Sleep"
-            onClick={() => setInput("Show my sleep data")}
+            color="#6b7ea8"
+            onClick={() => {
+              setInput("Show my sleep data");
+              textInputRef.current?.focus();
+            }}
           />
           <QuickChip
             icon={Info}
             label="Protein left?"
-            onClick={() => setInput("How is my protein intake?")}
+            color="#4db382"
+            onClick={() => {
+              setInput("How is my protein intake?");
+              textInputRef.current?.focus();
+            }}
           />
           <QuickChip
             icon={ImageIcon}
             label="Summary"
-            onClick={() => setInput("Give me a summary")}
+            color="#7b5ea7"
+            onClick={() => {
+              setInput("Give me a summary");
+              textInputRef.current?.focus();
+            }}
           />
         </div>
 
@@ -448,6 +503,7 @@ export default function Chat({ onLogParsed }: ChatProps) {
 
           <div className="chat-input-box">
             <input
+              ref={textInputRef}
               className="chat-input-field"
               type="text"
               placeholder="Tell me what you ate, your workout, sleep... or attach a photo 📷"
@@ -481,10 +537,11 @@ export default function Chat({ onLogParsed }: ChatProps) {
 interface QuickChipProps {
   readonly icon: LucideIcon;
   readonly label: string;
+  readonly color?: string;
   readonly onClick: () => void;
 }
 
-function QuickChip({ icon: Icon, label, onClick }: QuickChipProps) {
+function QuickChip({ icon: Icon, label, color, onClick }: QuickChipProps) {
   return (
     <motion.button
       whileHover={{ scale: 1.05, translateY: -2 }}
@@ -492,7 +549,7 @@ function QuickChip({ icon: Icon, label, onClick }: QuickChipProps) {
       onClick={onClick}
       className="chat-quick-chip"
     >
-      <Icon className="w-3.5 h-3.5" />
+      <Icon className="w-3.5 h-3.5" style={{ color }} />
       {label}
     </motion.button>
   );

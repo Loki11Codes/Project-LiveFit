@@ -86,19 +86,24 @@ body {
 .main-layout {
   width: 100%;
   max-width: 1280px;
-  display: block;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 /* ── CHAT + SIDEBAR LAYOUT ── */
 
 .single-screen-layout {
-  height: fit-content;
+  flex: 1;
   min-height: 0;
-  max-height: calc(100vh - 96px);
-  overflow: hidden;
+  height: auto !important; /* Override hardcoded vh */
+  margin-top: 0;
+  overflow: hidden; /* STRICT CONTAINMENT */
   display: flex;
   flex-direction: column;
   position: relative;
+  padding: 16px;
 }
 
 .chat-sidebar-layout {
@@ -115,12 +120,10 @@ body {
     display: grid;
     grid-template-columns: 1fr 280px;
     align-items: stretch;
-    height: fit-content;
-    max-height: 100%;
+    height: 100%; /* Fill the single-screen-layout */
     gap: 16px;
-    flex: 1;
     min-height: 0;
-    overflow: hidden;
+    overflow: hidden; /* Prevent grid parent from growing */
   }
 }
 
@@ -136,7 +139,7 @@ body {
   .sidebar-scroll-container {
     width: 280px;
     flex-shrink: 0;
-    height: fit-content;
+    height: 100%; /* Fill the grid parent */
     overflow-y: auto;
     padding-right: 6px;
     scrollbar-width: thin;
@@ -165,6 +168,8 @@ body {
   border: 1px solid var(--border);
   border-radius: 32px;
   box-shadow: var(--shadow-md);
+  background-clip: padding-box;
+  transform: translateZ(0);
   overflow: hidden;
   height: 100%;
   display: flex;
@@ -183,6 +188,11 @@ body {
   box-shadow: var(--shadow-md);
   min-width: 0;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transform: translateZ(0); /* Anti-aliasing fix */
+  background-clip: padding-box;
+  overflow: hidden;
+  mask-image: linear-gradient(#fff, #fff);
+  -webkit-mask-image: linear-gradient(#fff, #fff);
 }
 
 .sidebar-card:hover {
@@ -632,6 +642,8 @@ body {
   font-size: 14px;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border);
+  background-clip: padding-box;
+  transform: translateZ(0);
 }
 
 .chat-msg-bubble {
@@ -641,9 +653,10 @@ body {
   font-size: 14.5px;
   line-height: 1.55;
   font-weight: 500;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03), 0 0 0 0.5px var(--border);
   border: 1px solid var(--border);
+  background-clip: padding-box;
+  transform: translateZ(0);
 }
 
 .chat-bubble-model {
@@ -692,6 +705,17 @@ body {
   border-color: var(--accent);
 }
 
+.chat-message-timestamp {
+  display: block;
+  font-size: 10px;
+  opacity: 0.5;
+  margin-top: 4px;
+  font-weight: 600;
+  text-align: right;
+  width: 100%;
+  letter-spacing: 0.02em;
+}
+
 .chat-footer-container {
   padding: 24px 24px 36px;
   background: transparent !important;
@@ -703,7 +727,6 @@ body {
   gap: 20px;
   position: relative;
   z-index: 10;
-  margin-top: -1px; /* Structural overlap to hide any rendering seams */
 }
 
 .chat-input-wrapper {
@@ -847,7 +870,8 @@ body {
   display: flex;
   gap: 10px;
   overflow-x: auto;
-  padding-bottom: 2px;
+  padding: 12px 20px; /* Vertical room plus Horizontal buffer */
+  margin: -12px -20px 0; /* Negate padding to maintain visual alignment */
 }
 
 .chat-msg-image-grid {
@@ -873,7 +897,7 @@ body {
 .chat-quick-chip {
   padding: 8px 18px;
   border-radius: 99px;
-  border: 0 !important;
+  border: 1px solid var(--border);
   outline: none !important;
   background: var(--surface2);
   color: var(--text-muted);
@@ -885,8 +909,8 @@ body {
   cursor: pointer;
   position: relative;
   z-index: 1;
-  /* Zero Borders - Fixes 'bracket' artifacts by removing the line entirely */
-  box-shadow: none !important;
+  background-clip: padding-box;
+  transform: translateZ(0);
   transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -907,6 +931,9 @@ body {
 .chat-viewport {
   padding-left: clamp(24px, 5vw, 60px) !important;
   padding-right: clamp(24px, 5vw, 60px) !important;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .chat-content-v-inset {
@@ -931,6 +958,8 @@ body {
   backdrop-filter: blur(var(--blur));
   -webkit-backdrop-filter: blur(var(--blur));
   border: 1px solid var(--border);
+  background-clip: padding-box;
+  transform: translateZ(0);
 }
 
 .shimmer {

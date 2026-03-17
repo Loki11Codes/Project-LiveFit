@@ -59,6 +59,20 @@ export default function Sidebar({
     { id: 'Lite', label: 'Lite', icon: Salad },
   ];
 
+  let proteinStatus = '';
+  if (proteinPct >= 100) {
+    proteinStatus = 'hit';
+  } else if (proteinPct >= 70) {
+    proteinStatus = 'near';
+  }
+
+  let calorieStatus = '';
+  if (caloriePct >= 100) {
+    calorieStatus = 'hit';
+  } else if (caloriePct >= 80) {
+    calorieStatus = 'near';
+  }
+
   const statsRows: Array<{
     icon: LucideIcon;
     label: string;
@@ -68,7 +82,7 @@ export default function Sidebar({
   }> = [
     { icon: Scale, label: 'Weight', value: weight, unit: 'kg', color: '#a86b12' },
     { icon: Moon, label: 'Sleep', value: sleep, unit: 'hrs', color: '#6b7ea8' },
-    { icon: Flame, label: 'Calories', value: calories, unit: 'kcal', color: '#c0392b' },
+    { icon: Flame, label: 'Calories', value: calories, unit: 'kcal', color: '#e67e22' },
     { icon: Wheat, label: 'Carbs', value: carbs.toFixed(1), unit: 'g', color: '#e6ac50' },
     { icon: Droplets, label: 'Fats', value: fats.toFixed(1), unit: 'g', color: '#d4a23a' },
     { icon: Salad, label: 'Fiber', value: fiber.toFixed(1), unit: 'g', color: '#4db382' },
@@ -95,11 +109,9 @@ export default function Sidebar({
             g of {proteinTarget}g
           </span>
         </div>
-        <div className="progress-bar mt-4">
+        <div className="progress-bar mt-4 rounded-[inherit]">
           <div
-            className={`progress-fill transition-all duration-700 ease-out ${
-              proteinPct >= 100 ? 'hit' : proteinPct >= 70 ? 'near' : ''
-            }`}
+            className={`progress-fill transition-all duration-700 ease-out rounded-[inherit] ${proteinStatus}`}
             style={{ width: `${proteinPct}%` }}
           />
         </div>
@@ -120,11 +132,9 @@ export default function Sidebar({
             kcal of {calorieTarget}
           </span>
         </div>
-        <div className="progress-bar mt-4">
+        <div className="progress-bar mt-4 rounded-[inherit]">
           <div
-            className={`progress-fill transition-all duration-700 ease-out ${
-              caloriePct >= 100 ? 'hit' : caloriePct >= 80 ? 'near' : ''
-            }`}
+            className={`progress-fill transition-all duration-700 ease-out rounded-[inherit] ${calorieStatus}`}
             style={{ width: `${caloriePct}%` }}
           />
         </div>

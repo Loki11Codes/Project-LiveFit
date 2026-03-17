@@ -99,34 +99,24 @@ export default function Home() {
     const dayKey = getLocalDateKey(new Date());
     const previousDayType = dashboard.dayType;
 
-    startTransition(() => {
+    const updateLocalState = (type: DayType) => {
       setDashboard((current) => ({
         ...current,
-        dayType: nextDayType,
+        dayType: type,
         dayTypesByDay: {
           ...current.dayTypesByDay,
-          [dayKey]: nextDayType,
+          [dayKey]: type,
         },
       }));
-    });
+    };
+
+    startTransition(() => updateLocalState(nextDayType));
 
     void persistDayType(dayKey, nextDayType).catch((error) => {
       const message = getClientErrorMessage(error);
       console.error('Failed to persist day type:', message);
-      setNotice({
-        tone: 'error',
-        message,
-      });
-      startTransition(() => {
-        setDashboard((current) => ({
-          ...current,
-          dayType: previousDayType,
-          dayTypesByDay: {
-            ...current.dayTypesByDay,
-            [dayKey]: previousDayType,
-          },
-        }));
-      });
+      setNotice({ tone: 'error', message });
+      startTransition(() => updateLocalState(previousDayType));
     });
   };
 
@@ -181,12 +171,12 @@ export default function Home() {
       return;
     }
 
-    const timeoutId = window.setTimeout(() => {
+    const timeoutId = globalThis.setTimeout(() => {
       setNotice(null);
     }, 4000);
 
     return () => {
-      window.clearTimeout(timeoutId);
+      globalThis.clearTimeout(timeoutId);
     };
   }, [notice]);
 
@@ -277,7 +267,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center bg-[var(--bg)] w-full overflow-x-hidden">
+    <main className={`flex flex-col items-center bg-[var(--bg)] w-full overflow-x-hidden ${activeTab === 'chat' ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
       <Navbar
         activeTab={activeTab}
         setActiveTab={handleTabChange}
@@ -286,7 +276,7 @@ export default function Home() {
       />
 
       {notice && (
-        <div className="main-status-wrap">
+        <div className="main-status-wrap shrink-0">
           <div
             className={`notice-banner notice-banner-${notice.tone}`}
             role="status"
@@ -298,8 +288,8 @@ export default function Home() {
       )}
 
       <div
-        className={`flex-1 main-layout page-top-offset transition-all duration-500 w-full ${
-          activeTab === 'chat' ? 'single-screen-layout' : 'pb-32 md:pb-12'
+        className={`flex-1 min-h-0 w-full main-layout transition-all duration-500 ${
+          activeTab === 'chat' ? 'single-screen-layout' : 'page-top-offset pb-32 md:pb-12'
         }`}
       >
         <AnimatePresence mode="wait">
@@ -310,7 +300,7 @@ export default function Home() {
             animate="animate"
             exit="exit"
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="flex flex-col"
+            className="flex flex-col flex-1 h-full min-h-0"
           >
             {activeTab === 'chat' && (
               <div className="chat-sidebar-layout">
