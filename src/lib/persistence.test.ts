@@ -45,7 +45,7 @@ describe('Persistence Layer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Setup transaction mock to call the callback with our mockTx
-    vi.mocked(prisma.$transaction).mockImplementation((cb: (tx: any) => Promise<any>) => cb(mockTx));
+    vi.mocked(prisma.$transaction).mockImplementation((cb: (tx: unknown) => Promise<unknown>) => cb(mockTx));
   });
 
   it('persists food logs (create new)', async () => {
