@@ -65,7 +65,7 @@ export default function ProfileTab({
   analytics,
   trackedDayCount
 }: ProfileTabProps) {
-  const p = profile as UserProfile || {} as UserProfile;
+  const p = profile ?? ({} as UserProfile);
   const updateProfileField = (field: keyof UserProfile, value: string | number | null) => {
     setProfile(curr => ({
       ...curr,
@@ -403,8 +403,8 @@ export default function ProfileTab({
                 <input 
                   className="measure-input w-full" 
                   type="text" 
-                  value={(p as any)[`day${num}` as keyof UserProfile] || ''} 
-                  onChange={(e) => updateProfileField(`day${num}` as keyof UserProfile, e.target.value)}
+                  value={p[`day${num as 1|2|3|4|5|6}`] || ''} 
+                  onChange={(e) => updateProfileField(`day${num as 1|2|3|4|5|6}`, e.target.value)}
                 />
               </div>
             ))}
