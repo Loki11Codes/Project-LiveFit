@@ -222,7 +222,7 @@ export async function POST(req: Request) {
     if (session?.user) {
       const serializedImages = body.images.length > 0 ? JSON.stringify(body.images) : null;
       try {
-        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (prisma.chatMessage as any).create({
           data: {
             userId: session.user.id,
@@ -319,6 +319,7 @@ async function handleUserResponse(text: string, body: z.infer<typeof ChatRequest
     cleanText = cleanText.trim();
 
     // Finally, save AI response
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (prisma.chatMessage as any).create({
       data: {
         userId,
