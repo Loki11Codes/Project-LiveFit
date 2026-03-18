@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
 import { ArrowLeft, CheckCircle2, Sparkles } from "lucide-react";
+import { FitnessIllustration } from "./FitnessIllustration";
 
 interface AuthShellProps {
   badge: string;
@@ -54,10 +55,12 @@ export function AuthShell({
   bottomLinkHref,
 }: Readonly<AuthShellProps>) {
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_8%_0%,#ffe7b8,transparent_33%),radial-gradient(circle_at_100%_100%,#baf2ef,transparent_38%),linear-gradient(180deg,#fffef8,#f7fbff_58%,#ecfeff)] text-(--text)">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.04)_1px,transparent_1px)] bg-size-[34px_34px] opacity-45" />
-      <div className="pointer-events-none absolute -left-20 top-8 h-80 w-80 rounded-full bg-amber-300/35 blur-[110px]" />
-      <div className="pointer-events-none absolute -bottom-14 -right-20 h-96 w-96 rounded-full bg-cyan-300/35 blur-[120px]" />
+    <div className="relative w-full text-(--text)">
+      {/* Fixed Background Layers */}
+      <div className="fixed inset-0 z-0 bg-[radial-gradient(circle_at_8%_0%,#ffe7b8,transparent_33%),radial-gradient(circle_at_100%_100%,#baf2ef,transparent_38%),linear-gradient(180deg,#fffef8,#f7fbff_58%,#ecfeff)]" />
+      <div className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.04)_1px,transparent_1px)] bg-size-[34px_34px] opacity-45" />
+      <div className="pointer-events-none fixed -left-20 top-8 z-0 h-80 w-80 rounded-full bg-amber-300/35 blur-[110px]" />
+      <div className="pointer-events-none fixed -bottom-14 -right-20 z-0 h-96 w-96 rounded-full bg-cyan-300/35 blur-[120px]" />
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[85rem] flex-col justify-center px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <Link
@@ -86,8 +89,12 @@ export function AuthShell({
                 <Sparkles size={14} className="text-amber-500" />
                 {badge}
               </span>
+              
+              <div className="mt-8">
+                <FitnessIllustration />
+              </div>
 
-              <h2 className="mt-6 max-w-md text-3xl font-semibold leading-tight tracking-tight text-zinc-900 sm:text-4xl lg:text-[2.25rem]">
+              <h2 className="max-w-md text-3xl font-semibold leading-tight tracking-tight text-zinc-900 sm:text-4xl lg:text-[2.25rem]">
                 {panelTitle}
               </h2>
               <p className="mt-4 max-w-md text-[15px] leading-relaxed text-zinc-600 sm:text-base">
