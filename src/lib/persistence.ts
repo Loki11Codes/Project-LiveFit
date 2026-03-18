@@ -282,12 +282,7 @@ async function persistMeasurement(tx: Prisma.TransactionClient, data: Measuremen
 
 async function persistProfileUpdate(tx: Prisma.TransactionClient, raw: UserProfileInput, userId: string) {
   console.log('Updating user profile via AI...');
-  // Coerce to numbers as AI often sends strings
-  const validated = UserProfileSchema.parse({
-    ...raw,
-    age: raw.age ? Number.parseInt(String(raw.age), 10) : undefined,
-    height: raw.height ? Number.parseFloat(String(raw.height)) : undefined,
-  });
+  const validated = UserProfileSchema.parse(raw);
   await tx.userProfile.upsert({
     where: { userId },
     create: { userId, ...validated },
@@ -297,13 +292,7 @@ async function persistProfileUpdate(tx: Prisma.TransactionClient, raw: UserProfi
 
 async function persistGoalUpdate(tx: Prisma.TransactionClient, raw: GoalInput, userId: string) {
   console.log('Updating user goals via AI...');
-  const validated = GoalSchema.parse({
-    ...raw,
-    proteinTarget: raw.proteinTarget ? Number.parseFloat(String(raw.proteinTarget)) : undefined,
-    kcalTarget: raw.kcalTarget ? Number.parseFloat(String(raw.kcalTarget)) : undefined,
-    waterTarget: raw.waterTarget ? Number.parseFloat(String(raw.waterTarget)) : undefined,
-    sleepTarget: raw.sleepTarget ? Number.parseFloat(String(raw.sleepTarget)) : undefined,
-  });
+  const validated = GoalSchema.parse(raw);
   await tx.goal.upsert({
     where: { userId },
     create: { userId, ...validated },
