@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test, expect } from 'vitest';
 import type { FoodLog, SleepLog, WorkoutLog } from '@prisma/client';
 import {
   buildHistoryRows,
@@ -41,8 +40,8 @@ test('buildHistoryRows aggregates daily logs, applies day types, and sorts newes
 
   const history = buildHistoryRows(logs, goals, dayTypesByDay);
 
-  assert.equal(history.length, 2);
-  assert.deepEqual(history[0], {
+  expect(history.length).toBe(2);
+  expect(history[0]).toEqual({
     day: 'Mar 16, 2026',
     type: 'Training',
     sleep: '7.5',
@@ -50,9 +49,12 @@ test('buildHistoryRows aggregates daily logs, applies day types, and sorts newes
     target: 45,
     status: 'completed',
     kcal: 900,
+    carbs: 0,
+    fats: 0,
+    fiber: 0,
     workout: 'Push, Legs',
   });
-  assert.deepEqual(history[1], {
+  expect(history[1]).toEqual({
     day: 'Mar 15, 2026',
     type: 'Rest',
     sleep: '6',
@@ -60,6 +62,9 @@ test('buildHistoryRows aggregates daily logs, applies day types, and sorts newes
     target: 45,
     status: 'pending',
     kcal: 600,
+    carbs: 0,
+    fats: 0,
+    fiber: 0,
     workout: '--',
   });
 });
@@ -78,7 +83,7 @@ test('getTrackedDayCount counts unique logged days across categories', () => {
     ],
   };
 
-  assert.equal(getTrackedDayCount(logs), 3);
+  expect(getTrackedDayCount(logs)).toBe(3);
 });
 
 test('sumNutrition totals optional macros and getCurrentDayType falls back to Rest', () => {
@@ -96,7 +101,7 @@ test('sumNutrition totals optional macros and getCurrentDayType falls back to Re
     }),
   ];
 
-  assert.deepEqual(sumNutrition(foodLogs), {
+  expect(sumNutrition(foodLogs)).toEqual({
     protein: 40,
     calories: 600,
     carbs: 18,
@@ -104,11 +109,10 @@ test('sumNutrition totals optional macros and getCurrentDayType falls back to Re
     fiber: 4,
   });
 
-  assert.equal(getCurrentDayType({}), 'Rest');
-  assert.equal(
-    getCurrentDayType({ [getLocalDateKey(new Date())]: 'Lite' }),
-    'Lite'
-  );
+  expect(getCurrentDayType({})).toBe('Rest');
+  expect(
+    getCurrentDayType({ [getLocalDateKey(new Date())]: 'Lite' })
+  ).toBe('Lite');
 });
 
 function createFoodLog(

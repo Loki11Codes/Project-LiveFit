@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test, expect, vi } from 'vitest';
 import {
   ApiClientError,
   getClientErrorMessage,
@@ -7,59 +6,58 @@ import {
 } from './client-api';
 
 test('requestJson returns parsed JSON for successful responses', async () => {
-  const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () =>
+  const mockFetch = vi.fn().mockResolvedValue(
     new Response(JSON.stringify({ ok: true, count: 2 }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
       },
-    });
+    })
+  );
+  vi.stubGlobal('fetch', mockFetch);
 
-  try {
-    const data = await requestJson<{ ok: boolean; count: number }>(
-      'http://localhost/test'
-    );
+  const data = await requestJson<{ ok: boolean; count: number }>(
+    'http://localhost/test'
+  );
 
-    assert.deepEqual(data, { ok: true, count: 2 });
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
+  expect(data).toEqual({ ok: true, count: 2 });
+  vi.unstubAllGlobals();
 });
 
 test('requestJson throws ApiClientError with API message for JSON error responses', async () => {
-  const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () =>
-    new Response(
-      JSON.stringify({
-        error: 'Unable to load analytics right now',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+  const mockFetch = vi.fn().mockImplementation(() =>
+    Promise.resolve(
+      new Response(
+        JSON.stringify({
+          error: 'Unable to load analytics right now',
+        }),
+        {
+          status: 500,
+          headers: new Headers({
+            'Content-Type': 'application/json',
+          }),
+        }
+      )
+    )
+  );
+  vi.stubGlobal('fetch', mockFetch);
+
+  await expect(requestJson('http://localhost/test')).rejects.toThrow(
+    ApiClientError
+  );
 
   try {
-    await assert.rejects(
-      requestJson('http://localhost/test'),
-      (error: unknown) => {
-        assert.ok(error instanceof ApiClientError);
-        assert.equal(error.status, 500);
-        assert.equal(error.message, 'Unable to load analytics right now');
-        return true;
-      }
-    );
-  } finally {
-    globalThis.fetch = originalFetch;
+    await requestJson('http://localhost/test');
+  } catch (error: any) {
+    expect(error.status).toBe(500);
+    expect(error.message).toBe('Unable to load analytics right now');
   }
+
+  vi.unstubAllGlobals();
 });
 
 test('getClientErrorMessage falls back to a generic message for unknown errors', () => {
-  assert.equal(
-    getClientErrorMessage({ nope: true }),
+  expect(getClientErrorMessage({ nope: true })).toBe(
     'Something went wrong. Please try again.'
   );
 });

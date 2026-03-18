@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test, expect } from 'vitest';
 import { parseJsonBody } from './api';
 import { GoalSchema } from './validation';
 
@@ -17,9 +16,9 @@ test('parseJsonBody returns parsed data for a valid JSON request body', async ()
 
   const result = await parseJsonBody(request, GoalSchema);
 
-  assert.equal(result.success, true);
+  expect(result.success).toBe(true);
   if (result.success) {
-    assert.deepEqual(result.data, {
+    expect(result.data).toEqual({
       proteinTarget: 160,
       kcalTarget: 2400,
     });
@@ -37,10 +36,10 @@ test('parseJsonBody returns a 400 response when the body is malformed JSON', asy
 
   const result = await parseJsonBody(request, GoalSchema);
 
-  assert.equal(result.success, false);
+  expect(result.success).toBe(false);
   if (!result.success) {
-    assert.equal(result.response.status, 400);
-    assert.deepEqual(await result.response.json(), {
+    expect(result.response.status).toBe(400);
+    expect(await result.response.json()).toEqual({
       error: 'Request body must be valid JSON',
     });
   }
@@ -60,9 +59,9 @@ test('parseJsonBody returns validation details for invalid payloads', async () =
 
   const result = await parseJsonBody(request, GoalSchema);
 
-  assert.equal(result.success, false);
+  expect(result.success).toBe(false);
   if (!result.success) {
-    assert.equal(result.response.status, 400);
+    expect(result.response.status).toBe(400);
 
     const payload = (await result.response.json()) as {
       error: string;
@@ -71,11 +70,11 @@ test('parseJsonBody returns validation details for invalid payloads', async () =
       };
     };
 
-    assert.equal(payload.error, 'Invalid request body');
-    assert.deepEqual(payload.details?.fieldErrors?.proteinTarget, [
+    expect(payload.error).toBe('Invalid request body');
+    expect(payload.details?.fieldErrors?.proteinTarget).toEqual([
       'Too small: expected number to be >=0',
     ]);
-    assert.deepEqual(payload.details?.fieldErrors?.kcalTarget, [
+    expect(payload.details?.fieldErrors?.kcalTarget).toEqual([
       'Invalid input: expected number, received string',
     ]);
   }
