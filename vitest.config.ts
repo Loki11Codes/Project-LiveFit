@@ -12,6 +12,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov', 'clover'],
       reportsDirectory: './coverage',
+      include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'node_modules/**',
         '.next/**',
@@ -21,6 +22,9 @@ export default defineConfig({
         'next.config.ts',
         'postcss.config.mjs',
         'tailwind.config.ts',
+        '**/*.test.ts',
+        '**/*.test.tsx',
+        'src/test/**',
       ],
     },
   },
