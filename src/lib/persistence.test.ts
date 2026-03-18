@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { persistLogData } from './persistence';
+import { persistLogData, type ParsedLogEnvelope } from './persistence';
 import prisma from './prisma';
 
 // Mock the prisma client
@@ -45,8 +45,8 @@ describe('Persistence Layer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Setup transaction mock to call the callback with our mockTx
-    // @ts-ignore - Mocking prisma transaction
-    vi.mocked(prisma.$transaction).mockImplementation((cb: any) => cb(mockTx));
+    // @ts-expect-error - Mocking prisma transaction
+    vi.mocked(prisma.$transaction).mockImplementation((cb: (tx: any) => Promise<any>) => cb(mockTx));
   });
 
   it('persists food logs (create new)', async () => {
@@ -214,7 +214,7 @@ describe('Persistence Layer', () => {
     const envelopes = [{ category: 'food', data: { items: [{ name: 'Rice', protein: 5, kcal: 100 }] } }];
     
     // Setup transaction mock to throw
-    // @ts-ignore
+    // @ts-expect-error
     vi.mocked(prisma.$transaction).mockRejectedValueOnce(new Error('DB Error'));
 
     await expect(persistLogData(envelopes, userId)).rejects.toThrow('DB Error');
@@ -222,7 +222,7 @@ describe('Persistence Layer', () => {
 
   it('skips unknown categories', async () => {
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    await persistLogData([{ category: 'unknown' } as any], 'user-1');
+    await persistLogData([{ category: 'unknown' } as unknown as ParsedLogEnvelope], 'user-1');
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown category'));
   });
 
@@ -236,7 +236,7 @@ describe('Persistence Layer', () => {
       }
     ];
 
-    await persistLogData(envelopes as any, userId);
+    await persistLogData(envelopes as unknown as ParsedLogEnvelope[], userId);
 
     expect(mockTx.sleepLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ hours: 8, bedTime: '23:00' })

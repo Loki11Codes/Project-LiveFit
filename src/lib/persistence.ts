@@ -18,7 +18,7 @@ import { getErrorMessage, getLocalDateKey } from './dashboard';
 
 export type ParsedLogEnvelope = {
   category?: string;
-  data?: any;
+  data?: unknown;
 };
 
 export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: string, clientDate?: string) {
@@ -41,19 +41,19 @@ export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: str
             }
             break;
           case 'workout':
-            await persistWorkoutLog(tx, logData, userId);
+            await persistWorkoutLog(tx, logData as WorkoutLogInput, userId);
             break;
           case 'sleep':
-            await persistSleepLog(tx, logData, userId);
+            await persistSleepLog(tx, logData as SleepLogInput, userId);
             break;
           case 'measurement':
-            await persistMeasurement(tx, logData, userId);
+            await persistMeasurement(tx, logData as MeasurementInput, userId);
             break;
           case 'profile':
-            await persistProfileUpdate(tx, logData, userId);
+            await persistProfileUpdate(tx, logData as UserProfileInput, userId);
             break;
           case 'goals':
-            await persistGoalUpdate(tx, logData, userId);
+            await persistGoalUpdate(tx, logData as GoalInput, userId);
             break;
           case 'dayType':
             await persistDayTypeUpdate(tx, logData, userId, clientDate);
@@ -73,7 +73,7 @@ async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInpu
   console.log('Saving food logs...');
   for (const item of items) {
     const validated = FoodItemSchema.parse(item);
-    const logDate = (validated as any).date ? new Date((validated as any).date) : new Date();
+    const logDate = validated.date ? new Date(validated.date) : new Date();
     
     if (validated.update) {
       // Semantic update: find Most recent entry with same name on this day
@@ -119,7 +119,7 @@ async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInpu
         carbs: validated.carbs,
         fats: validated.fats,
         fiber: validated.fiber,
-        time: (validated as any).date ? new Date((validated as any).date) : undefined,
+        time: validated.date ? new Date(validated.date) : undefined,
       },
     });
   }
@@ -283,12 +283,11 @@ async function persistMeasurement(tx: Prisma.TransactionClient, data: Measuremen
 async function persistProfileUpdate(tx: Prisma.TransactionClient, raw: UserProfileInput, userId: string) {
   console.log('Updating user profile via AI...');
   // Coerce to numbers as AI often sends strings
-  const data = {
+  const validated = UserProfileSchema.parse({
     ...raw,
-    age: (raw as any).age ? Number.parseInt(String((raw as any).age), 10) : undefined,
-    height: (raw as any).height ? Number.parseFloat(String((raw as any).height)) : undefined,
-  };
-  const validated = UserProfileSchema.parse(data);
+    age: raw.age ? Number.parseInt(String(raw.age), 10) : undefined,
+    height: raw.height ? Number.parseFloat(String(raw.height)) : undefined,
+  });
   await tx.userProfile.upsert({
     where: { userId },
     create: { userId, ...validated },
@@ -298,14 +297,13 @@ async function persistProfileUpdate(tx: Prisma.TransactionClient, raw: UserProfi
 
 async function persistGoalUpdate(tx: Prisma.TransactionClient, raw: GoalInput, userId: string) {
   console.log('Updating user goals via AI...');
-  const data = {
+  const validated = GoalSchema.parse({
     ...raw,
-    proteinTarget: (raw as any).proteinTarget ? Number.parseFloat(String((raw as any).proteinTarget)) : undefined,
-    kcalTarget: (raw as any).kcalTarget ? Number.parseFloat(String((raw as any).kcalTarget)) : undefined,
-    waterTarget: (raw as any).waterTarget ? Number.parseFloat(String((raw as any).waterTarget)) : undefined,
-    sleepTarget: (raw as any).sleepTarget ? Number.parseFloat(String((raw as any).sleepTarget)) : undefined,
-  };
-  const validated = GoalSchema.parse(data);
+    proteinTarget: raw.proteinTarget ? Number.parseFloat(String(raw.proteinTarget)) : undefined,
+    kcalTarget: raw.kcalTarget ? Number.parseFloat(String(raw.kcalTarget)) : undefined,
+    waterTarget: raw.waterTarget ? Number.parseFloat(String(raw.waterTarget)) : undefined,
+    sleepTarget: raw.sleepTarget ? Number.parseFloat(String(raw.sleepTarget)) : undefined,
+  });
   await tx.goal.upsert({
     where: { userId },
     create: { userId, ...validated },
@@ -313,12 +311,12 @@ async function persistGoalUpdate(tx: Prisma.TransactionClient, raw: GoalInput, u
   });
 }
 
-async function persistDayTypeUpdate(tx: Prisma.TransactionClient, raw: any, userId: string, clientDate?: string) {
+async function persistDayTypeUpdate(tx: Prisma.TransactionClient, raw: unknown, userId: string, clientDate?: string) {
   console.log('Updating day type via AI...', raw);
-  const today = clientDate || getLocalDateKey(new Date());
-  const dayKey = raw.dayKey || today;
+  const data = raw as Record<string, unknown>;
+  const dayKey = (data.dayKey as string) || clientDate || getLocalDateKey(new Date());
   
-  let dayType = raw.dayType || raw.type || '';
+  let dayType = (data.dayType as string) || (data.type as string) || '';
   // Normalize case and common variations
   const searchVal = dayType.toLowerCase();
   if (searchVal.includes('train')) dayType = 'Training';
