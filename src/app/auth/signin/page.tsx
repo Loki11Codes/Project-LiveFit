@@ -8,7 +8,6 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { GoogleMark } from "@/components/auth/GoogleMark";
 import { FitnessIllustration } from "@/components/auth/FitnessIllustration";
 
-interface SignInProps {}
 
 export default function SignIn() {
   const [email, setEmail] = useState("");

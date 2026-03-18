@@ -221,6 +221,7 @@ export async function POST(req: Request) {
     if (session?.user) {
       const serializedImages = body.images.length > 0 ? JSON.stringify(body.images) : null;
       try {
+        // @ts-ignore
         await (prisma.chatMessage as any).create({
           data: {
             userId: session.user.id,
@@ -270,7 +271,7 @@ function getAIKeys() {
   return { geminiKey, openRouterKey };
 }
 
-async function getAIResponse(body: any, geminiKey: string | null, openRouterKey: string | null) {
+async function getAIResponse(body: z.infer<typeof ChatRequestSchema>, geminiKey: string | null, openRouterKey: string | null) {
   let text = '';
   const { prompt, history, images, clientDate, clientTime } = body;
 
@@ -295,7 +296,7 @@ async function getAIResponse(body: any, geminiKey: string | null, openRouterKey:
   return text;
 }
 
-async function handleUserResponse(text: string, body: any, userId: string, clientDate?: string): Promise<string | undefined> {
+async function handleUserResponse(text: string, body: z.infer<typeof ChatRequestSchema>, userId: string, clientDate?: string): Promise<string | undefined> {
   try {
     // Try extracting and running logs
     const envelopes = extractParsedLogs(text);
@@ -389,6 +390,3 @@ function extractParsedLogs(text: string): ParsedLogEnvelope[] {
 
 
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}

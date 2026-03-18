@@ -19,7 +19,6 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { GoogleMark } from "@/components/auth/GoogleMark";
 import { NutritionIllustration } from "@/components/auth/NutritionIllustration";
 
-interface SignUpProps {}
 
 export default function SignUp() {
   const [name, setName] = useState("");

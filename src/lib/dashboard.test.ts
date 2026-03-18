@@ -159,7 +159,7 @@ test('toMeasurementPayload handles empty and numeric strings', () => {
 
 test('getProteinTarget falls back to default goals', () => {
   const goals: GoalsState = { proteinTarget: 100, kcalTarget: 2000 };
-  expect(getProteinTarget(goals, 'Unknown' as any)).toBe(100);
+  expect(getProteinTarget(goals, 'Unknown' as import('./types').DayType)).toBe(100);
 });
 
 test('buildHistoryRows handles complex training rows', () => {

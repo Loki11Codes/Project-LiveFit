@@ -31,8 +31,10 @@ test('requestJson throws ApiClientError for error responses', async () => {
   await expect(requestJson('http://localhost/test')).rejects.toThrow(ApiClientError);
   try {
     await requestJson('http://localhost/test');
-  } catch (e: any) {
-    expect(e.message).toBe('API Error');
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      expect(e.message).toBe('API Error');
+    }
   }
   vi.unstubAllGlobals();
 });
