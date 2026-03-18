@@ -318,11 +318,16 @@ async function persistDayTypeUpdate(tx: Prisma.TransactionClient, raw: any, user
   const today = clientDate || getLocalDateKey(new Date());
   const dayKey = raw.dayKey || today;
   
-  let dayType = raw.dayType || '';
+  let dayType = raw.dayType || raw.type || '';
   // Normalize case and common variations
-  if (dayType.toLowerCase().includes('train')) dayType = 'Training';
-  else if (dayType.toLowerCase().includes('rest')) dayType = 'Rest';
-  else if (dayType.toLowerCase().includes('lite') || dayType.toLowerCase().includes('light')) dayType = 'Lite';
+  const searchVal = dayType.toLowerCase();
+  if (searchVal.includes('train')) dayType = 'Training';
+  else if (searchVal.includes('rest')) dayType = 'Rest';
+  else if (searchVal.includes('lite') || searchVal.includes('light')) dayType = 'Lite';
+  else {
+    console.warn(`[PERSISTENCE] Invalid DayType received: "${dayType}". Defaulting to Rest.`);
+    dayType = 'Rest';
+  }
 
   console.log(`Resolved DayType: ${dayType} for ${dayKey}`);
 

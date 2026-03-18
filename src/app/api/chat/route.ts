@@ -47,17 +47,17 @@ RESPONSE FORMAT:
 Your response must be a JSON object followed by a natural language message.
 The JSON block should be between |||DATA and |||.
 
-Example for correction/update:
+Example for dayType update:
 |||DATA
 {
-  "category": "food",
-  "items": [{ "name": "Chicken Breast", "protein": 62, "kcal": 330, "update": true }],
-  "totals": { "protein": 62, "kcal": 330 }
+  "category": "dayType",
+  "dayType": "Training",
+  "date": "2026-03-18"
 }
 |||
-Got it! I've updated your Chicken Breast log to 200g (62g protein).
+Confirmed! I've set today as a training day for you.
 
-CRITICAL: You MUST include the |||DATA block for every loggable action. If you are asking a clarifying question for missing data, you can either omit the block OR include a partial block if you've already saved the draft.
+CRITICAL: You MUST include the |||DATA block for every loggable action. 
 
 Categories: food, workout, sleep, measurement, profile, goals, dayType.
 Identify the category and provide relevant fields (including optional "date" YYYY-MM-DD and "update" boolean).
