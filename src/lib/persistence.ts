@@ -128,7 +128,7 @@ async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInpu
 async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogInput, userId: string) {
   console.log('Saving workout log...');
   const validated = WorkoutLogSchema.parse(data);
-  const logDate = (validated as any).date ? new Date((validated as any).date) : new Date();
+  const logDate = validated.date ? new Date(validated.date) : new Date();
   const prs = getRecordValue(data, 'prs');
   const detailsFallback = prs ? JSON.stringify(prs) : undefined;
 
@@ -169,7 +169,7 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
       focus: validated.focus,
       volume: validated.volume,
       details: validated.details || detailsFallback,
-      time: (validated as any).date ? new Date((validated as any).date) : undefined,
+      time: validated.date ? new Date(validated.date) : undefined,
     },
   });
 }
@@ -177,7 +177,7 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
 async function persistSleepLog(tx: Prisma.TransactionClient, data: SleepLogInput, userId: string) {
   console.log('Saving sleep log...');
   const validated = SleepLogSchema.parse(data);
-  const logDate = (validated as any).date ? new Date((validated as any).date) : new Date();
+  const logDate = validated.date ? new Date(validated.date) : new Date();
 
   if (validated.update) {
     const startOfDay = new Date(logDate);
@@ -216,7 +216,7 @@ async function persistSleepLog(tx: Prisma.TransactionClient, data: SleepLogInput
       hours: validated.hours,
       bedTime: validated.bedTime || getStringValue(data, 'bed'),
       wakeTime: validated.wakeTime || getStringValue(data, 'wake'),
-      time: (validated as any).date ? new Date((validated as any).date) : undefined,
+      time: validated.date ? new Date(validated.date) : undefined,
     },
   });
 }
@@ -224,7 +224,7 @@ async function persistSleepLog(tx: Prisma.TransactionClient, data: SleepLogInput
 async function persistMeasurement(tx: Prisma.TransactionClient, data: MeasurementInput, userId: string) {
   console.log('Saving body measurement...');
   const validated = MeasurementSchema.parse(data);
-  const logDate = (validated as any).date ? new Date((validated as any).date) : new Date();
+  const logDate = validated.date ? new Date(validated.date) : new Date();
 
   if (validated.update) {
     const startOfDay = new Date(logDate);
@@ -275,7 +275,7 @@ async function persistMeasurement(tx: Prisma.TransactionClient, data: Measuremen
       calves: validated.calves,
       neck: validated.neck,
       bodyFat: validated.bodyFat,
-      time: (validated as any).date ? new Date((validated as any).date) : undefined,
+      time: validated.date ? new Date(validated.date) : undefined,
     },
   });
 }
