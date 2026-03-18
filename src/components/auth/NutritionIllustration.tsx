@@ -72,9 +72,9 @@ export function NutritionIllustration() {
           { x: 140, y: 40, color: "#06b6d4", delay: 1.3 },
           { x: 80, y: 75, color: "#10b981", delay: 1.6 },
           { x: 120, y: 20, color: "#ef4444", delay: 1.9 },
-        ].map((p, i) => (
+        ].map((p) => (
           <motion.circle
-            key={i}
+            key={`${p.x}-${p.y}-${p.color}`}
             cx={p.x}
             cy={p.y}
             r="2"

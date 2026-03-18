@@ -181,6 +181,7 @@ export default function SignUp() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                suppressHydrationWarning
                 className="absolute right-4 text-zinc-400 hover:text-zinc-600 transition-colors"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -220,6 +221,7 @@ export default function SignUp() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  suppressHydrationWarning
                   className="text-zinc-400 hover:text-zinc-600 transition-colors"
                 >
                   {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}

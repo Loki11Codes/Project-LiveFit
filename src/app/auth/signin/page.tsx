@@ -127,6 +127,7 @@ export default function SignIn() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
+              suppressHydrationWarning
               className="absolute right-4 text-zinc-400 hover:text-zinc-600 transition-colors"
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
