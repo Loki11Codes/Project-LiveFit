@@ -128,9 +128,15 @@ export const ChatRequestSchema = z
   });
 export type ChatRequestInput = z.infer<typeof ChatRequestSchema>;
 
-export const SignupSchema = z.object({
-  name: trimmedString.min(1).max(80),
-  email: z.string().trim().regex(/^[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9.-]{1,191}\.[a-zA-Z]{2,8}$/, "Invalid email address").max(160),
-  password: z.string().min(6).max(72),
-});
+export const SignupSchema = z
+  .object({
+    name: trimmedString.min(1).max(80),
+    email: z.string().trim().regex(/^[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9.-]{1,191}\.[a-zA-Z]{2,8}$/, "Invalid email address").max(160),
+    password: z.string().min(6).max(72),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 export type SignupInput = z.infer<typeof SignupSchema>;
