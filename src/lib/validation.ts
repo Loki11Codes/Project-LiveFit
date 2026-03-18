@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const finiteNumber = z.number().refine((n) => Number.isFinite(n), { message: "Must be a finite number" });
+const finiteNumber = z.coerce.number().refine((n) => Number.isFinite(n), { message: "Must be a finite number" });
 const optionalFiniteNumber = finiteNumber.optional();
 const optionalNullableFiniteNumber = finiteNumber.nullable().optional();
 const trimmedString = z.string().trim();
@@ -28,7 +28,7 @@ export type GoalInput = z.infer<typeof GoalSchema>;
 
 // User Profile Validation
 export const UserProfileSchema = z.object({
-  age: z.number().int().min(0).max(150).nullable().optional(),
+  age: z.coerce.number().int().min(0).max(150).nullable().optional(),
   gender: z.string().max(20).nullable().optional(),
   height: optionalNullableFiniteNumber,
   startDay: z.number().int().min(1).nullable().optional(),
