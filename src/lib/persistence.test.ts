@@ -45,7 +45,6 @@ describe('Persistence Layer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Setup transaction mock to call the callback with our mockTx
-    // @ts-expect-error - Mocking prisma transaction
     vi.mocked(prisma.$transaction).mockImplementation((cb: (tx: any) => Promise<any>) => cb(mockTx));
   });
 
@@ -214,7 +213,6 @@ describe('Persistence Layer', () => {
     const envelopes = [{ category: 'food', data: { items: [{ name: 'Rice', protein: 5, kcal: 100 }] } }];
     
     // Setup transaction mock to throw
-    // @ts-expect-error
     vi.mocked(prisma.$transaction).mockRejectedValueOnce(new Error('DB Error'));
 
     await expect(persistLogData(envelopes, userId)).rejects.toThrow('DB Error');
