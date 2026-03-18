@@ -88,6 +88,9 @@ CREATE TABLE "BodyMeasurement" (
     "thighs" REAL,
     "hips" REAL,
     "time" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "bodyFat" REAL,
+    "calves" REAL,
+    "neck" REAL,
     CONSTRAINT "BodyMeasurement_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -97,7 +100,52 @@ CREATE TABLE "Goal" (
     "userId" TEXT NOT NULL,
     "proteinTarget" REAL NOT NULL,
     "kcalTarget" REAL NOT NULL,
+    "proteinLite" REAL,
+    "proteinRest" REAL,
+    "proteinTraining" REAL,
+    "sleepTarget" REAL,
+    "waterTarget" REAL,
     CONSTRAINT "Goal_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "UserProfile" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "userId" TEXT NOT NULL,
+    "age" INTEGER,
+    "gender" TEXT,
+    "height" REAL,
+    "startDay" INTEGER,
+    "primaryGoal" TEXT,
+    "day1" TEXT,
+    "day2" TEXT,
+    "day3" TEXT,
+    "day4" TEXT,
+    "day5" TEXT,
+    "day6" TEXT,
+    CONSTRAINT "UserProfile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "DayTypeEntry" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "userId" TEXT NOT NULL,
+    "dayKey" TEXT NOT NULL,
+    "dayType" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "DayTypeEntry_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "ChatMessage" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "userId" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
+    "text" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "images" TEXT,
+    CONSTRAINT "ChatMessage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateIndex
@@ -117,3 +165,9 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Goal_userId_key" ON "Goal"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "UserProfile_userId_key" ON "UserProfile"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "DayTypeEntry_userId_dayKey_key" ON "DayTypeEntry"("userId", "dayKey");
