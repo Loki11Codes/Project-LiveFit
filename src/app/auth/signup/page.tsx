@@ -17,6 +17,7 @@ import { motion } from "framer-motion";
 import { getClientErrorMessage, requestJson } from "@/lib/client-api";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { GoogleMark } from "@/components/auth/GoogleMark";
+import { NutritionIllustration } from "@/components/auth/NutritionIllustration";
 
 interface SignUpProps {}
 
@@ -90,6 +91,7 @@ export default function SignUp() {
       bottomText="Already have an account?"
       bottomLinkLabel="Sign in"
       bottomLinkHref="/auth/signin"
+      illustration={<NutritionIllustration />}
     >
       <form onSubmit={handleSubmit} className="space-y-4 mt-2">
         <div className="flex flex-col gap-2">

@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
 import { ArrowLeft, CheckCircle2, Sparkles } from "lucide-react";
-import { FitnessIllustration } from "./FitnessIllustration";
 
 interface AuthShellProps {
   badge: string;
@@ -14,6 +13,7 @@ interface AuthShellProps {
   panelDescription: string;
   panelPoints: string[];
   children: ReactNode;
+  illustration?: ReactNode;
   bottomText: string;
   bottomLinkLabel: string;
   bottomLinkHref: string;
@@ -50,6 +50,7 @@ export function AuthShell({
   panelDescription,
   panelPoints,
   children,
+  illustration,
   bottomText,
   bottomLinkLabel,
   bottomLinkHref,
@@ -90,9 +91,11 @@ export function AuthShell({
                 {badge}
               </span>
               
-              <div className="mt-8">
-                <FitnessIllustration />
-              </div>
+              {illustration && (
+                <div className="mt-8">
+                  {illustration}
+                </div>
+              )}
 
               <h2 className="max-w-md text-3xl font-semibold leading-tight tracking-tight text-zinc-900 sm:text-4xl lg:text-[2.25rem]">
                 {panelTitle}

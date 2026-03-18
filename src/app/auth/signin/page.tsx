@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Lock, LogIn, Mail, Eye, EyeOff } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { GoogleMark } from "@/components/auth/GoogleMark";
+import { FitnessIllustration } from "@/components/auth/FitnessIllustration";
 
 interface SignInProps {}
 
@@ -60,6 +61,7 @@ export default function SignIn() {
       bottomText="Need a new account?"
       bottomLinkLabel="Create one"
       bottomLinkHref="/auth/signup"
+      illustration={<FitnessIllustration />}
     >
       {success && (
         <div className="mb-6 rounded-2xl border border-emerald-500/25 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
