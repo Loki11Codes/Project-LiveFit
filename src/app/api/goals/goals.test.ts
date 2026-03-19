@@ -22,20 +22,20 @@ describe('Goals API Route', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (getServerSession as any).mockResolvedValue(mockSession);
+    vi.mocked(getServerSession).mockResolvedValue(mockSession);
   });
 
   it('returns 401 if not authenticated', async () => {
-    (getServerSession as any).mockResolvedValueOnce(null);
-    const res = await GET(new NextRequest('http://localhost/api/goals'));
+    vi.mocked(getServerSession).mockResolvedValueOnce(null);
+    const res = await GET();
     expect(res.status).toBe(401);
   });
 
   it('returns goals for the current user', async () => {
     const mockGoal = { proteinTarget: 150, kcalTarget: 2500 };
-    (prisma.goal.findUnique as any).mockResolvedValueOnce(mockGoal);
+    vi.mocked(prisma.goal.findUnique).mockResolvedValueOnce(mockGoal as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
-    const res = await GET(new NextRequest('http://localhost/api/goals'));
+    const res = await GET();
     const data = await res.json();
 
     expect(res.status).toBe(200);
@@ -44,7 +44,7 @@ describe('Goals API Route', () => {
 
   it('creates or updates goals on POST', async () => {
     const goalData = { proteinTarget: 160, kcalTarget: 2600 };
-    (prisma.goal.upsert as any).mockResolvedValueOnce(goalData);
+    vi.mocked(prisma.goal.upsert).mockResolvedValueOnce(goalData as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
     const req = new NextRequest('http://localhost/api/goals', {
       method: 'POST',
@@ -73,8 +73,8 @@ describe('Goals API Route', () => {
   });
 
   it('returns 500 if database fails', async () => {
-    (prisma.goal.findUnique as any).mockRejectedValueOnce(new Error('DB Error'));
-    const res = await GET(new NextRequest('http://localhost/api/goals'));
+    vi.mocked(prisma.goal.findUnique).mockRejectedValueOnce(new Error('DB Error'));
+    const res = await GET();
     expect(res.status).toBe(500);
   });
 });

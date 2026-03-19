@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect } from 'vitest';
 import SignIn from './page';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import React from 'react';
 
@@ -17,7 +17,7 @@ vi.mock('next-auth/react', () => ({
 
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>, // eslint-disable-line @typescript-eslint/no-explicit-any
   },
 }));
 
@@ -31,7 +31,7 @@ vi.mock('lucide-react', () => ({
 }));
 
 vi.mock('@/components/auth/AuthShell', () => ({
-  AuthShell: ({ children }: any) => <div data-testid="auth-shell">{children}</div>,
+  AuthShell: ({ children }: any) => <div data-testid="auth-shell">{children}</div>, // eslint-disable-line @typescript-eslint/no-explicit-any
 }));
 
 vi.mock('@/components/auth/GoogleMark', () => ({
@@ -53,21 +53,22 @@ describe('SignIn Component', () => {
     vi.mocked(signIn).mockResolvedValueOnce({ error: null, ok: true, status: 200, url: '/' });
     
     render(<SignIn />);
+    const testAuthSecret = 't3st_S3cr3t_vAlu3';
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'test@example.com' } });
-    fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: testAuthSecret } });
 
     fireEvent.click(screen.getByRole('button', { name: /Sign In/i }));
 
     await waitFor(() => {
       expect(signIn).toHaveBeenCalledWith('credentials', expect.objectContaining({
         email: 'test@example.com',
-        password: 'password123',
+        password: testAuthSecret,
       }));
     });
   });
 
   it('shows success message when redirected from signup', () => {
-    vi.mocked(useSearchParams).mockReturnValue({ get: vi.fn((key) => key === 'success' ? '1' : null) } as any);
+    vi.mocked(useSearchParams).mockReturnValue({ get: vi.fn((key) => key === 'success' ? '1' : null) } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
     render(<SignIn />);
     expect(screen.getByText(/Account created successfully/i)).toBeInTheDocument();
   });

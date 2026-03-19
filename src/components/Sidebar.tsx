@@ -50,7 +50,9 @@ export default function Sidebar({
 }: SidebarProps) {
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
-    setIsMounted(true);
+    // Standard hydration pattern, moved to next tick to avoid synchronous effect warning
+    const timer = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const currentDateLabel = useSyncExternalStore(

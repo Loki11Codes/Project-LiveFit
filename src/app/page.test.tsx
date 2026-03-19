@@ -8,8 +8,8 @@ import React from 'react';
 
 // STUBS
 if (typeof globalThis !== 'undefined') {
-  (globalThis as any).HTMLElement.prototype.scrollIntoView = vi.fn();
-  (globalThis as any).scrollTo = vi.fn();
+  (globalThis as any).HTMLElement.prototype.scrollIntoView = vi.fn(); // eslint-disable-line @typescript-eslint/no-explicit-any
+  (globalThis as any).scrollTo = vi.fn(); // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 // MOCKS
@@ -27,15 +27,15 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>, // eslint-disable-line @typescript-eslint/no-explicit-any
+    button: ({ children, ...props }: any) => <button {...props}>{children}</button>, // eslint-disable-line @typescript-eslint/no-explicit-any
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>
+  AnimatePresence: ({ children }: any) => <>{children}</> // eslint-disable-line @typescript-eslint/no-explicit-any
 }));
 
 // Mock sub-components to isolate Dashboard logic
 vi.mock('@/components/Navbar', () => ({
-  default: ({ activeTab, setActiveTab, toggleTheme }: any) => (
+  default: ({ activeTab, setActiveTab, toggleTheme }: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
     <nav data-testid="navbar">
       <button onClick={() => setActiveTab('profile')}>Profile Link</button>
       <button aria-label="Toggle theme" onClick={toggleTheme}>Theme Toggle</button>
@@ -49,14 +49,14 @@ vi.mock('@/components/Chat', () => ({ default: () => <div data-testid="chat-comp
 vi.mock('@/components/Tabs/LogTab', () => ({ default: () => <div data-testid="log-tab" /> }));
 vi.mock('@/components/Tabs/HistoryTab', () => ({ default: () => <div data-testid="history-tab" /> }));
 vi.mock('@/components/Tabs/BodyTab', () => ({ 
-  default: ({ handleSaveMeasurements }: any) => (
+  default: ({ handleSaveMeasurements }: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
     <div data-testid="body-tab">
       <button onClick={handleSaveMeasurements}>Save Measurements</button>
     </div>
   )
 }));
 vi.mock('@/components/Tabs/ProfileTab', () => ({ 
-  default: ({ handleSaveProfile, handleSaveGoals }: any) => (
+  default: ({ handleSaveProfile, handleSaveGoals }: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
     <div data-testid="profile-tab">
       <button onClick={handleSaveProfile}>Save Profile</button>
       <button onClick={handleSaveGoals}>Save Goals</button>
@@ -80,12 +80,12 @@ describe('Home (Dashboard) Orchestration', () => {
     vi.stubGlobal('location', { href: 'http://localhost/' });
     vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve([]) })));
 
-    (useSession as any).mockReturnValue({ data: { user: { id: 'test-user' } }, status: 'authenticated' });
-    (useRouter as any).mockReturnValue(mockRouter);
-    (useSearchParams as any).mockReturnValue(mockSearchParams);
+    (useSession as any).mockReturnValue({ data: { user: { id: 'test-user' } }, status: 'authenticated' }); // eslint-disable-line @typescript-eslint/no-explicit-any
+    (useRouter as any).mockReturnValue(mockRouter); // eslint-disable-line @typescript-eslint/no-explicit-any
+    (useSearchParams as any).mockReturnValue(mockSearchParams); // eslint-disable-line @typescript-eslint/no-explicit-any
     
     // Dashboard data mock
-    (clientApi.requestJson as any).mockImplementation((url: string) => {
+    (clientApi.requestJson as any).mockImplementation((url: string) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (url === '/api/logs') return Promise.resolve({ food: [], workouts: [], sleep: [] });
       if (url === '/api/profile') return Promise.resolve({ age: 30 });
       if (url === '/api/goals') return Promise.resolve({ proteinTarget: 150 });
@@ -113,7 +113,7 @@ describe('Home (Dashboard) Orchestration', () => {
   });
 
   it('renders specific tab from search params', async () => {
-    (useSearchParams as any).mockReturnValue(new URLSearchParams('tab=body'));
+    (useSearchParams as any).mockReturnValue(new URLSearchParams('tab=body')); // eslint-disable-line @typescript-eslint/no-explicit-any
     render(<Home />);
     await waitFor(() => {
       expect(screen.getByTestId('body-tab')).toBeDefined();
@@ -140,11 +140,11 @@ describe('Home (Dashboard) Orchestration', () => {
   });
 
   it('processes measurement saves with notifications', async () => {
-    (useSearchParams as any).mockReturnValue(new URLSearchParams('tab=body'));
+    (useSearchParams as any).mockReturnValue(new URLSearchParams('tab=body')); // eslint-disable-line @typescript-eslint/no-explicit-any
     render(<Home />);
     
     const saveBtn = await screen.findByText(/Save Measurements/i);
-    (clientApi.requestJson as any).mockResolvedValueOnce({ id: 'm1' });
+    (clientApi.requestJson as any).mockResolvedValueOnce({ id: 'm1' }); // eslint-disable-line @typescript-eslint/no-explicit-any
 
     await act(async () => {
       fireEvent.click(saveBtn);
@@ -155,20 +155,20 @@ describe('Home (Dashboard) Orchestration', () => {
   });
 
   it('handles profile saving success and failure', async () => {
-    (useSearchParams as any).mockReturnValue(new URLSearchParams('tab=profile'));
+    (useSearchParams as any).mockReturnValue(new URLSearchParams('tab=profile')); // eslint-disable-line @typescript-eslint/no-explicit-any
     render(<Home />);
     
     const saveBtn = await screen.findByText(/Save Profile/i);
     
     // Success
-    (clientApi.requestJson as any).mockResolvedValueOnce({ age: 31 });
+    (clientApi.requestJson as any).mockResolvedValueOnce({ age: 31 }); // eslint-disable-line @typescript-eslint/no-explicit-any
     await act(async () => {
       fireEvent.click(saveBtn);
     });
     expect(await screen.findByText(/Profile details updated/i)).toBeDefined();
 
     // Failure
-    (clientApi.requestJson as any).mockRejectedValueOnce(new Error('Save failed'));
+    (clientApi.requestJson as any).mockRejectedValueOnce(new Error('Save failed')); // eslint-disable-line @typescript-eslint/no-explicit-any
     await act(async () => {
       fireEvent.click(saveBtn);
     });
@@ -176,11 +176,11 @@ describe('Home (Dashboard) Orchestration', () => {
   });
 
   it('handles goal saving failure', async () => {
-    (useSearchParams as any).mockReturnValue(new URLSearchParams('tab=profile'));
+    (useSearchParams as any).mockReturnValue(new URLSearchParams('tab=profile')); // eslint-disable-line @typescript-eslint/no-explicit-any
     render(<Home />);
     
     const saveBtn = await screen.findByText(/Save Goals/i);
-    (clientApi.requestJson as any).mockRejectedValueOnce(new Error('Goal error'));
+    (clientApi.requestJson as any).mockRejectedValueOnce(new Error('Goal error')); // eslint-disable-line @typescript-eslint/no-explicit-any
     
     await act(async () => {
       fireEvent.click(saveBtn);
@@ -195,7 +195,7 @@ describe('Home (Dashboard) Orchestration', () => {
     expect(screen.getByTestId('navbar')).toBeDefined();
 
     // Session loss
-    (useSession as any).mockReturnValue({ data: null, status: 'unauthenticated' });
+    (useSession as any).mockReturnValue({ data: null, status: 'unauthenticated' }); // eslint-disable-line @typescript-eslint/no-explicit-any
     
     act(() => {
       rerender(<Home />);

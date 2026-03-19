@@ -36,8 +36,8 @@ describe('Analytics API Route', () => {
       { id: 'm1', time: new Date('2026-03-18T08:00:00Z'), weight: 70 },
     ];
 
-    vi.mocked(prisma.foodLog.findMany).mockResolvedValue(mockFood as any);
-    vi.mocked(prisma.bodyMeasurement.findMany).mockResolvedValue(mockMeasurements as any);
+    vi.mocked(prisma.foodLog.findMany).mockResolvedValue(mockFood as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    vi.mocked(prisma.bodyMeasurement.findMany).mockResolvedValue(mockMeasurements as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
     const res = await GET();
     const data = await res.json();

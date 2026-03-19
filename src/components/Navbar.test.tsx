@@ -11,9 +11,9 @@ vi.mock('next-auth/react', () => ({
 // Mock framer-motion to avoid animation issues in tests
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>, // eslint-disable-line @typescript-eslint/no-explicit-any
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: any) => <>{children}</>, // eslint-disable-line @typescript-eslint/no-explicit-any
 }));
 
 describe('Navbar Component', () => {
@@ -29,7 +29,7 @@ describe('Navbar Component', () => {
   });
 
   it('renders all navigation tabs', () => {
-    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as any);
+    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
     
     render(
       <Navbar 
@@ -48,7 +48,7 @@ describe('Navbar Component', () => {
   });
 
   it('calls setActiveTab when a tab is clicked', () => {
-    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as any);
+    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
     
     render(
       <Navbar 
@@ -69,7 +69,7 @@ describe('Navbar Component', () => {
     vi.mocked(useSession).mockReturnValue({
       data: { user: { name: 'Akash' } },
       status: 'authenticated',
-    } as any);
+    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
     render(
       <Navbar 
@@ -85,7 +85,7 @@ describe('Navbar Component', () => {
   });
 
   it('shows Sign In button when unauthenticated', () => {
-    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as any);
+    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
     render(
       <Navbar 
@@ -100,7 +100,7 @@ describe('Navbar Component', () => {
   });
 
   it('calls toggleTheme when theme button is clicked', () => {
-    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as any);
+    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
     render(
       <Navbar 

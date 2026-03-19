@@ -5,26 +5,26 @@ import HistoryTab from './HistoryTab';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    tr: ({ children, ...props }: any) => <tr {...props}>{children}</tr>,
+    div: ({ children, ...props }: Record<string, unknown>) => <div {...props}>{children as React.ReactNode}</div>,
+    tr: ({ children, ...props }: Record<string, unknown>) => <tr {...props}>{children as React.ReactNode}</tr>,
   },
 }));
 
 describe('HistoryTab Component', () => {
   const defaultProps = {
     history: [
-      { day: 'Mon', type: 'Training', sleep: 8, protein: 120, target: 100, status: 'completed' as const, kcal: 2500, carbs: 300, fats: 80, fiber: 35, workout: 'Push' },
-      { day: 'Tue', type: 'Rest', sleep: 7.5, protein: 85, target: 80, status: 'completed' as const, kcal: 2000, carbs: 200, fats: 70, fiber: 30, workout: '--' },
+      { day: 'Mon', date: '2026-03-16', type: 'Training', sleep: '8', protein: 120, target: 100, status: 'completed' as const, kcal: 2500, carbs: 300, fats: 80, fiber: 35, workout: 'Push' },
+      { day: 'Tue', date: '2026-03-17', type: 'Rest', sleep: '7.5', protein: 85, target: 80, status: 'completed' as const, kcal: 2000, carbs: 200, fats: 70, fiber: 30, workout: '--' },
     ],
     analytics: {
       averages: { protein: 102.5, kcal: 2250 },
       nutritionStats: [
-        { day: 'Mon', protein: 120, kcal: 2500 },
-        { day: 'Tue', protein: 85, kcal: 2000 },
+        { day: 'Mon', protein: 120, kcal: 2500, date: '2026-03-16' },
+        { day: 'Tue', protein: 85, kcal: 2000, date: '2026-03-17' },
       ],
       weightTrend: [
-        { day: 'Mon', weight: 75 },
-        { day: 'Tue', weight: 74.8 },
+        { day: 'Mon', weight: 75, date: '2026-03-18' },
+        { day: 'Tue', weight: 74.8, date: '2026-03-19' },
       ],
       meta: { period: '7d', logCount: 14, measurementCount: 2 }
     },

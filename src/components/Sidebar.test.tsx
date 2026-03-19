@@ -5,7 +5,7 @@ import Sidebar from './Sidebar';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, style, ...props }: any) => <div {...props} style={style}>{children}</div>,
+    div: ({ children, style, ...props }: any) => <div {...props} style={style}>{children}</div>, // eslint-disable-line @typescript-eslint/no-explicit-any
   },
 }));
 

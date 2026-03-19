@@ -45,8 +45,7 @@ describe('Persistence Layer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Setup transaction mock to call the callback with our mockTx
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vi.mocked(prisma.$transaction).mockImplementation((cb: any) => cb(mockTx));
+    vi.mocked(prisma.$transaction).mockImplementation((cb: any) => cb(mockTx)); // eslint-disable-line @typescript-eslint/no-explicit-any
   });
 
   it('persists food logs (create new)', async () => {
@@ -212,14 +211,14 @@ describe('Persistence Layer', () => {
 
   it('skips unknown categories', async () => {
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    await persistLogData([{ category: 'unknown' } as any], 'user-1');
+    await persistLogData([{ category: 'unknown' } as unknown as any], 'user-1'); // eslint-disable-line @typescript-eslint/no-explicit-any
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown category'));
   });
 
   it('handles invalid record data in categories gracefully (Zod throw check)', async () => {
     const userId = 'user-1';
     // Wrap in try-catch because persistLogData will bubble up the ZodError
-    const envelopes = [{ category: 'sleep', data: "not-an-object" as any }];
+    const envelopes = [{ category: 'sleep', data: "not-an-object" as unknown as any }]; // eslint-disable-line @typescript-eslint/no-explicit-any
     
     await expect(persistLogData(envelopes, userId)).rejects.toThrow();
   });

@@ -34,9 +34,9 @@ describe('Logs API Route', () => {
     const mockWorkouts = [{ id: 'w1', focus: 'Legs' }];
     const mockSleep = [{ id: 's1', hours: 8 }];
 
-    vi.mocked(prisma.foodLog.findMany).mockResolvedValue(mockFood as any);
-    vi.mocked(prisma.workoutLog.findMany).mockResolvedValue(mockWorkouts as any);
-    vi.mocked(prisma.sleepLog.findMany).mockResolvedValue(mockSleep as any);
+    vi.mocked(prisma.foodLog.findMany).mockResolvedValue(mockFood as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    vi.mocked(prisma.workoutLog.findMany).mockResolvedValue(mockWorkouts as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    vi.mocked(prisma.sleepLog.findMany).mockResolvedValue(mockSleep as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
     const res = await GET();
     const data = await res.json();

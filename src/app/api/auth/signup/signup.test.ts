@@ -15,9 +15,13 @@ vi.mock('@/lib/prisma', () => ({
 
 vi.mock('bcryptjs', () => ({
   default: {
-    hash: vi.fn(() => Promise.resolve('hashed_password')),
+    hash: vi.fn(() => Promise.resolve(mockHash)),
   },
 }));
+
+const testAuthSecret = 'SECURE_AUTH_TOKEN_01';
+const mismatchSecret = 'SECURE_AUTH_TOKEN_02';
+const mockHash = 'HASHED_DATA_BLOB_01';
 
 describe('Signup API Route', () => {
   beforeEach(() => {
@@ -28,12 +32,19 @@ describe('Signup API Route', () => {
     const payload = {
       name: 'Test User',
       email: 'test@example.com',
-      password: 'password123',
-      confirmPassword: 'password123',
+      password: testAuthSecret,
+      confirmPassword: testAuthSecret,
     };
 
     vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
-    vi.mocked(prisma.user.create).mockResolvedValue({ id: 'u1', email: payload.email } as any);
+    vi.mocked(prisma.user.create).mockResolvedValue({
+      id: 'u1',
+      name: payload.name,
+      email: payload.email,
+      emailVerified: null,
+      image: null,
+      password: mockHash,
+    });
 
     const req = new NextRequest('http://localhost/api/auth/signup', {
       method: 'POST',
@@ -45,7 +56,7 @@ describe('Signup API Route', () => {
 
     expect(res.status).toBe(200);
     expect(data.message).toContain('User created');
-    expect(bcrypt.hash).toHaveBeenCalledWith('password123', 10);
+    expect(bcrypt.hash).toHaveBeenCalledWith(testAuthSecret, 10);
     expect(prisma.user.create).toHaveBeenCalled();
   });
 
@@ -53,11 +64,18 @@ describe('Signup API Route', () => {
     const payload = {
       name: 'Test User',
       email: 'existing@example.com',
-      password: 'password123',
-      confirmPassword: 'password123',
+      password: testAuthSecret,
+      confirmPassword: testAuthSecret,
     };
 
-    vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: 'existing' } as any);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      id: 'existing',
+      name: 'Existing User',
+      email: payload.email,
+      emailVerified: null,
+      image: null,
+      password: mockHash,
+    });
 
     const req = new NextRequest('http://localhost/api/auth/signup', {
       method: 'POST',
@@ -75,8 +93,8 @@ describe('Signup API Route', () => {
     const payload = {
       name: 'Test User',
       email: 'test@example.com',
-      password: 'password123',
-      confirmPassword: 'mismatch',
+      password: testAuthSecret,
+      confirmPassword: mismatchSecret,
     };
 
     const req = new NextRequest('http://localhost/api/auth/signup', {
@@ -92,8 +110,8 @@ describe('Signup API Route', () => {
     const payload = {
       name: 'Test User',
       email: 'test@example.com',
-      password: 'password123',
-      confirmPassword: 'password123',
+      password: testAuthSecret,
+      confirmPassword: testAuthSecret,
     };
 
     vi.mocked(prisma.user.findUnique).mockRejectedValueOnce(new Error('DB Error'));

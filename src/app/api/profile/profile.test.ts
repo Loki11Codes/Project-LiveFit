@@ -41,7 +41,7 @@ describe('Profile API Route', () => {
       vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
       
       const mockProfile = { userId: 'user-1', age: 30, gender: 'Male' };
-      vi.mocked(prisma.userProfile.findUnique).mockResolvedValue(mockProfile as any);
+      vi.mocked(prisma.userProfile.findUnique).mockResolvedValue(mockProfile as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const req = new Request('http://localhost/api/profile');
       const res = await GET(req);
@@ -59,7 +59,7 @@ describe('Profile API Route', () => {
       vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
       
       const mockGoal = { userId: 'user-1', proteinTarget: 150 };
-      vi.mocked(prisma.goal.findUnique).mockResolvedValue(mockGoal as any);
+      vi.mocked(prisma.goal.findUnique).mockResolvedValue(mockGoal as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const req = new Request('http://localhost/api/profile?type=goals');
       const res = await GET(req);
@@ -86,7 +86,7 @@ describe('Profile API Route', () => {
       vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
       
       const updateData = { age: 31, gender: 'Male', name: 'New Name' };
-      vi.mocked(prisma.userProfile.upsert).mockResolvedValue({ userId: 'user-1', ...updateData } as any);
+      vi.mocked(prisma.userProfile.upsert).mockResolvedValue({ userId: 'user-1', ...updateData } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const req = new Request('http://localhost/api/profile', {
         method: 'POST',
@@ -108,7 +108,7 @@ describe('Profile API Route', () => {
       vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
       
       const goalData = { proteinTarget: 180, kcalTarget: 2500 };
-      vi.mocked(prisma.goal.upsert).mockResolvedValue({ userId: 'user-1', ...goalData } as any);
+      vi.mocked(prisma.goal.upsert).mockResolvedValue({ userId: 'user-1', ...goalData } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const req = new Request('http://localhost/api/profile', {
         method: 'POST',
