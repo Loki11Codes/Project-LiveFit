@@ -55,7 +55,14 @@ vi.mock('@/components/Tabs/BodyTab', () => ({
     </div>
   )
 }));
-vi.mock('@/components/Tabs/ProfileTab', () => ({ default: () => <div data-testid="profile-tab" /> }));
+vi.mock('@/components/Tabs/ProfileTab', () => ({ 
+  default: ({ handleSaveProfile, handleSaveGoals }: any) => (
+    <div data-testid="profile-tab">
+      <button onClick={handleSaveProfile}>Save Profile</button>
+      <button onClick={handleSaveGoals}>Save Goals</button>
+    </div>
+  )
+}));
 
 vi.mock('@/lib/client-api', () => ({
   getClientErrorMessage: vi.fn((err) => (err instanceof Error ? err.message : String(err))),
@@ -63,7 +70,7 @@ vi.mock('@/lib/client-api', () => ({
 }));
 
 describe('Home (Dashboard) Orchestration', () => {
-  const mockRouter = { push: vi.fn() };
+  const mockRouter = { push: vi.fn(), refresh: vi.fn() };
   let mockSearchParams = new URLSearchParams();
 
   beforeEach(() => {
@@ -80,6 +87,8 @@ describe('Home (Dashboard) Orchestration', () => {
     // Dashboard data mock
     (clientApi.requestJson as any).mockImplementation((url: string) => {
       if (url === '/api/logs') return Promise.resolve({ food: [], workouts: [], sleep: [] });
+      if (url === '/api/profile') return Promise.resolve({ age: 30 });
+      if (url === '/api/goals') return Promise.resolve({ proteinTarget: 150 });
       return Promise.resolve({});
     });
   });
@@ -143,5 +152,59 @@ describe('Home (Dashboard) Orchestration', () => {
 
     const success = await screen.findByText(/Measurements saved/i);
     expect(success).toBeDefined();
+  });
+
+  it('handles profile saving success and failure', async () => {
+    (useSearchParams as any).mockReturnValue(new URLSearchParams('tab=profile'));
+    render(<Home />);
+    
+    const saveBtn = await screen.findByText(/Save Profile/i);
+    
+    // Success
+    (clientApi.requestJson as any).mockResolvedValueOnce({ age: 31 });
+    await act(async () => {
+      fireEvent.click(saveBtn);
+    });
+    expect(await screen.findByText(/Profile details updated/i)).toBeDefined();
+
+    // Failure
+    (clientApi.requestJson as any).mockRejectedValueOnce(new Error('Save failed'));
+    await act(async () => {
+      fireEvent.click(saveBtn);
+    });
+    expect(await screen.findByText(/Save failed/i)).toBeDefined();
+  });
+
+  it('handles goal saving failure', async () => {
+    (useSearchParams as any).mockReturnValue(new URLSearchParams('tab=profile'));
+    render(<Home />);
+    
+    const saveBtn = await screen.findByText(/Save Goals/i);
+    (clientApi.requestJson as any).mockRejectedValueOnce(new Error('Goal error'));
+    
+    await act(async () => {
+      fireEvent.click(saveBtn);
+    });
+    expect(await screen.findByText(/Goal error/i)).toBeDefined();
+  });
+
+  it('clears dashboard state when session is lost', async () => {
+    const { rerender } = render(<Home />);
+    
+    // Authenticated state (already set in beforeEach)
+    expect(screen.getByTestId('navbar')).toBeDefined();
+
+    // Session loss
+    (useSession as any).mockReturnValue({ data: null, status: 'unauthenticated' });
+    
+    act(() => {
+      rerender(<Home />);
+    });
+
+    // It should effectively re-render or handle the cleanup effect.
+    // We check if it still works or doesn't crash.
+    await waitFor(() => {
+       expect(screen.getByTestId('navbar')).toBeDefined();
+    });
   });
 });

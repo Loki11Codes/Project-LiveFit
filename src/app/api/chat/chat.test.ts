@@ -81,4 +81,31 @@ describe('Chat API Route', () => {
     const res = await POST(req);
     expect(res.status).toBe(500);
   });
+
+  it('falls back to OpenRouter if Gemini fails', async () => {
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
+    process.env.OPENROUTER_API_KEY = 'open-key';
+    
+    // Gemini fails
+    mockGenerateContent.mockRejectedValue(new Error('Gemini Error'));
+    
+    // OpenRouter succeeds
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({
+        choices: [{ message: { content: 'OpenRouter response' } }]
+      })
+    }));
+
+    const req = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ prompt: 'hello', history: [], images: [] }),
+    });
+
+    const res = await POST(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data.text).toBe('OpenRouter response');
+  });
 });

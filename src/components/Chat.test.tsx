@@ -173,11 +173,20 @@ describe('Chat Component', () => {
     render(<Chat onLogParsed={mockOnLogParsed} />);
     await waitForLoader();
 
-    const breakfastChip = screen.getByText('Breakfast');
-    fireEvent.click(breakfastChip);
-    
-    const input = screen.getByTestId('chat-input') as HTMLInputElement;
-    expect(input.value).toBe('Log my breakfast');
+    const chips = [
+      { text: 'Breakfast', expected: 'Log my breakfast' },
+      { text: 'Workout', expected: 'Record my training session' },
+      { text: 'Sleep', expected: 'Show my sleep data' },
+      { text: 'Protein left?', expected: 'How is my protein intake?' },
+      { text: 'Summary', expected: 'Give me a summary' },
+    ];
+
+    for (const chip of chips) {
+      const chipBtn = screen.getByText(chip.text);
+      fireEvent.click(chipBtn);
+      const input = screen.getByTestId('chat-input') as HTMLInputElement;
+      expect(input.value).toBe(chip.expected);
+    }
   });
 
   it('handles image attachments', async () => {
