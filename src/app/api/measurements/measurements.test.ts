@@ -81,5 +81,19 @@ describe('Measurements API Route', () => {
       const res = await POST(req);
       expect(res.status).toBe(400);
     });
+
+    it('returns 500 if database fails on GET', async () => {
+      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
+      vi.mocked(prisma.bodyMeasurement.findFirst).mockRejectedValueOnce(new Error('DB Error'));
+      const res = await GET(new Request('http://localhost/api/measurements'));
+      expect(res.status).toBe(500);
+    });
+
+    it('returns 500 if database fails on POST', async () => {
+      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
+      vi.mocked(prisma.bodyMeasurement.create).mockRejectedValueOnce(new Error('DB Error'));
+      const res = await POST(new Request('http://localhost/api/measurements', { method: 'POST', body: JSON.stringify({ weight: 70 }) }));
+      expect(res.status).toBe(500);
+    });
   });
 });
