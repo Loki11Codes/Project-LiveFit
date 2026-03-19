@@ -93,7 +93,7 @@ describe('Profile API Route', () => {
         body: JSON.stringify(updateData),
       });
       const res = await POST(req);
-      const data = await res.json();
+      await res.json();
 
       expect(res.status).toBe(200);
       expect(prisma.userProfile.upsert).toHaveBeenCalled();
@@ -115,7 +115,7 @@ describe('Profile API Route', () => {
         body: JSON.stringify(goalData),
       });
       const res = await POST(req);
-      const data = await res.json();
+      await res.json();
 
       expect(res.status).toBe(200);
       expect(prisma.goal.upsert).toHaveBeenCalled();
@@ -135,6 +135,26 @@ describe('Profile API Route', () => {
 
       expect(res.status).toBe(400);
       expect(data).toHaveProperty('error');
+    });
+
+    it('returns 400 for invalid goal data in POST', async () => {
+      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
+      const res = await POST(new Request('http://localhost/api/profile', { method: 'POST', body: JSON.stringify({ proteinTarget: -10 }) }));
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 500 if database fails on GET', async () => {
+      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
+      vi.mocked(prisma.userProfile.findUnique).mockRejectedValueOnce(new Error('DB Error'));
+      const res = await GET(new Request('http://localhost/api/profile'));
+      expect(res.status).toBe(500);
+    });
+
+    it('returns 500 if database fails on POST', async () => {
+      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
+      vi.mocked(prisma.userProfile.upsert).mockRejectedValueOnce(new Error('DB Error'));
+      const res = await POST(new Request('http://localhost/api/profile', { method: 'POST', body: JSON.stringify({ age: 30 }) }));
+      expect(res.status).toBe(500);
     });
   });
 });
