@@ -12,10 +12,10 @@ import {
   type TabId,
 } from '@/lib/types';
 
-const VALID_TABS: TabId[] = ['chat', 'log', 'history', 'body', 'profile'];
+const VALID_TABS = new Set<TabId>(['chat', 'log', 'history', 'body', 'profile']);
 
 export function parseTab(value: string | null): TabId {
-  if (value && VALID_TABS.includes(value as TabId)) {
+  if (value && VALID_TABS.has(value as TabId)) {
     return value as TabId;
   }
 
@@ -157,8 +157,8 @@ export function buildHistoryRows(
       type: dayTypesByDay[entry.dayKey] ?? '--',
       sleep: entry.sleep === null ? '--' : formatNumber(entry.sleep),
       protein: round(entry.protein),
-      target: getProteinTarget(goals, (dayTypesByDay[entry.dayKey] ?? 'Rest') as DayType),
-      status: entry.protein >= getProteinTarget(goals, (dayTypesByDay[entry.dayKey] ?? 'Rest') as DayType) ? 'completed' : 'pending',
+      target: getProteinTarget(goals, dayTypesByDay[entry.dayKey] ?? 'Rest'),
+      status: entry.protein >= getProteinTarget(goals, dayTypesByDay[entry.dayKey] ?? 'Rest') ? 'completed' : 'pending',
       kcal: round(entry.kcal),
       carbs: round(entry.carbs),
       fats: round(entry.fats),

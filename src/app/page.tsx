@@ -360,7 +360,7 @@ export default function Home() {
                   <div className="chat-sidebar-layout">
                     <Chat 
                       onLogParsed={refreshDashboard} 
-                      isNewUser={!dashboard.profile || !dashboard.profile.age || !dashboard.profile.height}
+                      isNewUser={!dashboard.profile?.age || !dashboard.profile?.height}
                     />
                     <Sidebar
                       protein={nutrition.protein}

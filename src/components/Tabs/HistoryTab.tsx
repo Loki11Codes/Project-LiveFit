@@ -101,11 +101,11 @@ export default function HistoryTab({ history, analytics }: HistoryTabProps) {
           </div>
           <div className="flex items-center gap-4 text-[10px] uppercase tracking-[0.16em] text-[var(--text-muted)]">
             <span className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)]" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)]" />{' '}
               Protein
             </span>
             <span className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[var(--amber)]" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[var(--amber)]" />{' '}
               Calories
             </span>
           </div>
@@ -294,12 +294,12 @@ function AnalyticsMetricCard({
   tone,
   suffix,
 }: {
-  icon: typeof Activity;
-  label: string;
-  value: string;
-  subtitle: string;
-  tone: string;
-  suffix?: string;
+  readonly icon: typeof Activity;
+  readonly label: string;
+  readonly value: string;
+  readonly subtitle: string;
+  readonly tone: string;
+  readonly suffix?: string;
 }) {
   return (
     <div className="card shadow-xl border-[var(--border)] h-full">
@@ -333,10 +333,21 @@ function WeightTrendCard({
   weightTrend,
   delta,
 }: {
-  weightTrend: WeightTrendPoint[];
-  delta: number | null;
+  readonly weightTrend: WeightTrendPoint[];
+  readonly delta: number | null;
 }) {
   const latestWeight = weightTrend.at(-1)?.weight ?? null;
+  const isPositive = delta! > 0;
+  
+  const getWeightStatus = () => {
+    if (delta === null) return { color: 'text-[var(--text-muted)]', text: 'No change' };
+    return {
+      color: delta <= 0 ? 'text-[var(--green)]' : 'text-[var(--amber)]',
+      text: `${isPositive ? '+' : ''}${roundNumber(delta)} kg`
+    };
+  };
+
+  const { color: deltaColor, text: deltaText } = getWeightStatus();
 
   return (
     <div className="card shadow-xl border-[var(--border)] h-full">
@@ -361,16 +372,8 @@ function WeightTrendCard({
                 kg
               </span>
             </div>
-            <div
-              className={`text-[11px] font-bold uppercase tracking-[0.18em] ${
-                delta === null
-                  ? 'text-[var(--text-muted)]'
-                  : delta <= 0
-                    ? 'text-[var(--green)]'
-                    : 'text-[var(--amber)]'
-              }`}
-            >
-              {delta === null ? 'No change' : `${delta > 0 ? '+' : ''}${roundNumber(delta)} kg`}
+            <div className={`text-[11px] font-bold uppercase tracking-[0.18em] ${deltaColor}`}>
+              {deltaText}
             </div>
           </div>
 
@@ -393,8 +396,8 @@ function NutritionDayCard({
   stat,
   nutritionStats,
 }: {
-  stat: NutritionStat;
-  nutritionStats: NutritionStat[];
+  readonly stat: NutritionStat;
+  readonly nutritionStats: NutritionStat[];
 }) {
   const maxProtein = Math.max(...nutritionStats.map((entry) => entry.protein), 1);
   const maxKcal = Math.max(...nutritionStats.map((entry) => entry.kcal), 1);
@@ -446,7 +449,7 @@ function NutritionDayCard({
   );
 }
 
-function Sparkline({ points }: { points: number[] }) {
+function Sparkline({ points }: { readonly points: number[] }) {
   const width = 320;
   const height = 64;
   const padding = 8;
@@ -495,9 +498,9 @@ function EmptyAnalyticsState({
   message,
   compact = false,
 }: {
-  icon: typeof Activity;
-  message: string;
-  compact?: boolean;
+  readonly icon: typeof Activity;
+  readonly message: string;
+  readonly compact?: boolean;
 }) {
   return (
     <div
@@ -520,7 +523,7 @@ function getWeightDelta(weightTrend: WeightTrendPoint[]): number | null {
     return null;
   }
 
-  return weightTrend[weightTrend.length - 1].weight - weightTrend[0].weight;
+  return (weightTrend.at(-1)?.weight ?? 0) - weightTrend[0].weight;
 }
 
 function roundNumber(value: number): string {
