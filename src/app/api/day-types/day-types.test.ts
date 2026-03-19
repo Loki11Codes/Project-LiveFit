@@ -79,5 +79,19 @@ describe('DayTypes API Route', () => {
       const res = await POST(req);
       expect(res.status).toBe(400);
     });
+
+    it('returns 500 if database fails on GET', async () => {
+      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
+      vi.mocked(prisma.dayTypeEntry.findMany).mockRejectedValueOnce(new Error('DB Error'));
+      const res = await GET();
+      expect(res.status).toBe(500);
+    });
+
+    it('returns 500 if database fails on POST', async () => {
+      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
+      vi.mocked(prisma.dayTypeEntry.upsert).mockRejectedValueOnce(new Error('DB Error'));
+      const res = await POST(new Request('http://localhost/api/day-types', { method: 'POST', body: JSON.stringify({ dayKey: '2026-03-18', dayType: 'Rest' }) }));
+      expect(res.status).toBe(500);
+    });
   });
 });
