@@ -225,7 +225,7 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
       >
         <div className="w-full flex flex-col chat-content-v-inset">
           {isLoadingHistory ? (
-            <div className="flex justify-center py-6">
+            <div className="flex justify-center py-6" data-testid="chat-loader">
               <Activity className="w-6 h-6 animate-pulse" style={{ color: "#e67e22" }} />
             </div>
           ) : (
@@ -519,6 +519,7 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
                   void handleSend();
                 }
               }}
+              data-testid="chat-input"
               suppressHydrationWarning
             />
           </div>
@@ -529,6 +530,7 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
             whileTap={{ scale: 0.95 }}
             onClick={() => void handleSend()}
             disabled={isTyping || (!input.trim() && pendingImages.length === 0)}
+            aria-label="Send message"
             className="chat-send-btn-square"
             suppressHydrationWarning
           >

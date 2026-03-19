@@ -129,13 +129,15 @@ export default function BodyTab({
                     type="number"
                     step="0.1"
                     placeholder="0.0"
+                    data-testid={`input-${key}`}
                     value={measurements[key]}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const val = e.target.value;
                       setMeasurements((current) => ({
                         ...current,
-                        [key]: e.target.value,
-                      }))
-                    }
+                        [key]: val,
+                      }));
+                    }}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[var(--text-muted)] font-bold opacity-50">
                     {unit}
