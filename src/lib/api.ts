@@ -53,7 +53,7 @@ export async function parseJsonBody<T>(
   if (!result.success) {
     return {
       success: false,
-      response: badRequest('Invalid request body', result.error.format()),
+      response: badRequest('Invalid request body', result.error.issues),
     };
   }
 
