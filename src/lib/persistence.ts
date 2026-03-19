@@ -244,7 +244,6 @@ async function persistMeasurement(tx: Prisma.TransactionClient, data: Measuremen
     });
 
     if (existing) {
-      console.log('Updating existing body measurement');
       await tx.bodyMeasurement.update({
         where: { id: existing.id },
         data: {
