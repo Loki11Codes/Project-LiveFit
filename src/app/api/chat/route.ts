@@ -59,6 +59,7 @@ Example for dayType update:
 Confirmed! I've set today as a training day for you.
 
 CRITICAL: You MUST include the |||DATA block for every loggable action. 
+If the user provides multiple actions (e.g. eating multiple foods at once, or several workouts), you can output a single |||DATA block containing a JSON array of objects, or output multiple separate |||DATA blocks.
 
 Categories: food, workout, sleep, measurement, profile, goals, dayType.
 Identify the category and provide relevant fields (including optional "date" YYYY-MM-DD and "update" boolean).
@@ -331,6 +332,7 @@ async function handleUserResponse(text: string, body: z.infer<typeof ChatRequest
     return undefined;
   } catch (error) {
     console.error('Chat log persistence failed:', getErrorMessage(error));
+    require('fs').writeFileSync('d:\\LiveFit Project\\Project-LiveFit\\handle_error.txt', String(error) + '\n' + (error as any).stack);
     return 'Reply generated, but it could not be saved to your history completely.';
   }
 }
@@ -377,8 +379,12 @@ function extractParsedLogs(text: string): ParsedLogEnvelope[] {
     const jsonText = text.substring(contentStart, endIdx).trim();
     try {
       if (jsonText) {
-        const parsed = JSON.parse(jsonText) as ParsedLogEnvelope;
-        if (parsed) logs.push(parsed);
+        const parsed = JSON.parse(jsonText);
+        if (Array.isArray(parsed)) {
+          logs.push(...(parsed as ParsedLogEnvelope[]));
+        } else if (parsed) {
+          logs.push(parsed as ParsedLogEnvelope);
+        }
       }
     } catch (e) {
       console.warn('Failed to parse a DATA block from AI:', e);

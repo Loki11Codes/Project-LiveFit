@@ -1,8 +1,27 @@
 import { z } from 'zod';
 
-const finiteNumber = z.coerce.number().refine((n) => Number.isFinite(n), { message: "Must be a finite number" });
-const optionalFiniteNumber = finiteNumber.optional();
-const optionalNullableFiniteNumber = finiteNumber.nullable().optional();
+const fallbackNumber = (min?: number, max?: number) => {
+  let schema = z.number();
+  if (min !== undefined) schema = schema.min(min);
+  if (max !== undefined) schema = schema.max(max);
+  return z.preprocess((val) => {
+    if (val === null || val === undefined || val === '') return 0;
+    const n = Number(val);
+    return Number.isFinite(n) ? n : 0;
+  }, schema);
+};
+
+const optionalFiniteNumber = z.preprocess((val) => {
+  if (val === null || val === undefined || val === '') return undefined;
+  const n = Number(val);
+  return Number.isFinite(n) ? n : undefined;
+}, z.number().optional());
+
+const optionalNullableFiniteNumber = z.preprocess((val) => {
+  if (val === null || val === undefined || val === '') return null;
+  const n = Number(val);
+  return Number.isFinite(n) ? n : null;
+}, z.number().nullable().optional());
 const trimmedString = z.string().trim();
 
 export const DayTypeSchema = z.enum(['Rest', 'Training', 'Lite']);
@@ -16,8 +35,8 @@ export type DayTypeEntryInput = z.infer<typeof DayTypeEntrySchema>;
 
 // Goals Validation
 export const GoalSchema = z.object({
-  proteinTarget: finiteNumber.min(0).max(500),
-  kcalTarget: finiteNumber.min(0).max(10000),
+  proteinTarget: fallbackNumber(0, 500),
+  kcalTarget: fallbackNumber(0, 10000),
   proteinTraining: optionalNullableFiniteNumber,
   proteinRest: optionalNullableFiniteNumber,
   proteinLite: optionalNullableFiniteNumber,
@@ -61,8 +80,8 @@ export type MeasurementInput = z.infer<typeof MeasurementSchema>;
 // Food Log Item Validation (Used for manual or AI logs)
 export const FoodItemSchema = z.object({
   name: trimmedString.min(1).max(120),
-  protein: finiteNumber.min(0),
-  kcal: finiteNumber.min(0),
+  protein: fallbackNumber(0),
+  kcal: fallbackNumber(0),
   carbs: optionalFiniteNumber,
   fats: optionalFiniteNumber,
   fiber: optionalFiniteNumber,
@@ -83,7 +102,7 @@ export type WorkoutLogInput = z.infer<typeof WorkoutLogSchema>;
 
 // Sleep Log Validation
 export const SleepLogSchema = z.object({
-  hours: finiteNumber.min(0).max(24),
+  hours: fallbackNumber(0, 24),
   bedTime: trimmedString.max(40).optional(),
   wakeTime: trimmedString.max(40).optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
