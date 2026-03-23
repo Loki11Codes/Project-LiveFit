@@ -20,7 +20,7 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        console.log('--- Authorize Attempt ---');
+
         
         if (!credentials?.email || !credentials?.password) {
           console.error('Login failed: Missing email or password');
@@ -44,7 +44,7 @@ export const authOptions: NextAuthOptions = {
             throw new Error('Invalid password');
           }
 
-          console.log('Authorize successful for user:', user.email);
+
           return {
             id: user.id,
             email: user.email,

@@ -159,7 +159,7 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
         const stateKeywords = ["training", "lite", "light", "rest", "logged", "recorded", "saved"];
         const lowerText = cleanText.toLowerCase();
         if (stateKeywords.some(kw => lowerText.includes(kw))) {
-          console.log("State keyword detected without data block. Triggering fallback refresh.");
+  
           onLogParsed();
         }
       }

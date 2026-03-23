@@ -76,7 +76,7 @@ describe('Measurements API Route', () => {
       vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
       const req = new Request('http://localhost/api/measurements', {
         method: 'POST',
-        body: JSON.stringify({ weight: "invalid" }),
+        body: JSON.stringify({ date: "invalid-date" }),
       });
       const res = await POST(req);
       expect(res.status).toBe(400);

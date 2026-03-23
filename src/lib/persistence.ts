@@ -72,7 +72,7 @@ export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: str
 }
 
 async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInput[], userId: string) {
-  console.log('Saving food logs...');
+
   for (const item of items) {
     const parsed = FoodItemSchema.safeParse(item);
     if (!parsed.success) {
@@ -102,7 +102,7 @@ async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInpu
       });
 
       if (existing) {
-        console.log(`Updating existing food log: ${validated.name}`);
+
         await tx.foodLog.update({
           where: { id: existing.id },
           data: {
@@ -133,7 +133,7 @@ async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInpu
 }
 
 async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogInput, userId: string) {
-  console.log('Saving workout log...');
+
   const parsed = WorkoutLogSchema.safeParse(data);
   if (!parsed.success) {
     console.warn('Skipping invalid workout log from AI:', parsed.error);
@@ -163,7 +163,7 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
     });
 
     if (existing) {
-      console.log(`Updating existing workout log: ${validated.focus}`);
+
       await tx.workoutLog.update({
         where: { id: existing.id },
         data: {
@@ -187,7 +187,7 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
 }
 
 async function persistSleepLog(tx: Prisma.TransactionClient, data: SleepLogInput, userId: string) {
-  console.log('Saving sleep log...');
+
   const parsed = SleepLogSchema.safeParse(data);
   if (!parsed.success) {
     console.warn('Skipping invalid sleep log from AI:', parsed.error);
@@ -214,7 +214,7 @@ async function persistSleepLog(tx: Prisma.TransactionClient, data: SleepLogInput
     });
 
     if (existing) {
-      console.log('Updating existing sleep log');
+
       await tx.sleepLog.update({
         where: { id: existing.id },
         data: {
@@ -239,7 +239,7 @@ async function persistSleepLog(tx: Prisma.TransactionClient, data: SleepLogInput
 }
 
 async function persistMeasurement(tx: Prisma.TransactionClient, data: MeasurementInput, userId: string) {
-  console.log('Saving body measurement...');
+
   const parsed = MeasurementSchema.safeParse(data);
   if (!parsed.success) {
     console.warn('Skipping invalid measurement trace from AI:', parsed.error);
@@ -302,7 +302,7 @@ async function persistMeasurement(tx: Prisma.TransactionClient, data: Measuremen
 }
 
 async function persistProfileUpdate(tx: Prisma.TransactionClient, raw: UserProfileInput, userId: string) {
-  console.log('Updating user profile via AI...');
+
   const parsed = UserProfileSchema.safeParse(raw);
   if (!parsed.success) {
     console.warn('Skipping invalid profile update from AI:', parsed.error);
@@ -317,7 +317,7 @@ async function persistProfileUpdate(tx: Prisma.TransactionClient, raw: UserProfi
 }
 
 async function persistGoalUpdate(tx: Prisma.TransactionClient, raw: GoalInput, userId: string) {
-  console.log('Updating user goals via AI...');
+
   const parsed = GoalSchema.safeParse(raw);
   if (!parsed.success) {
     console.warn('Skipping invalid goal update from AI:', parsed.error);
@@ -332,7 +332,7 @@ async function persistGoalUpdate(tx: Prisma.TransactionClient, raw: GoalInput, u
 }
 
 async function persistDayTypeUpdate(tx: Prisma.TransactionClient, raw: unknown, userId: string, clientDate?: string) {
-  console.log('Updating day type via AI...', raw);
+
   const data = raw as Record<string, unknown>;
   const dayKey = (data.dayKey as string) || clientDate || getLocalDateKey(new Date());
   

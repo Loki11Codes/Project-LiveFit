@@ -95,7 +95,7 @@ async function callGemini(
   clientDate?: string,
   clientTime?: string
 ) {
-  console.log('Using Gemini...');
+
   const modelsToTry = [
     'gemini-3.1-flash-lite-preview',
     'gemini-3.1-flash-preview',
@@ -117,7 +117,7 @@ async function callGemini(
         ],
       });
       const responseText = result.response.text();
-      console.log(`Success with Gemini model: ${modelId}`);
+
       return responseText;
     } catch (error) {
       const message = getErrorMessage(error);
@@ -144,7 +144,7 @@ async function callOpenRouter(
   clientDate?: string,
   clientTime?: string
 ) {
-  console.log('Using OpenRouter...');
+
 
   const freeModels = [
     'openrouter/free',
@@ -155,7 +155,7 @@ async function callOpenRouter(
 
   for (const modelId of freeModels) {
     try {
-      console.log(`Trying OpenRouter model: ${modelId}...`);
+
       const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -182,7 +182,7 @@ async function callOpenRouter(
         const content = data.choices?.[0]?.message?.content;
 
         if (content) {
-          console.log(`Success with model: ${modelId}`);
+
           return content;
         }
       } else {
@@ -247,7 +247,7 @@ export async function POST(req: Request) {
       warning = await handleUserResponse(text, body, session.user.id, body.clientDate);
     }
 
-    console.log('AI Response:', `${text.substring(0, 50)}...`);
+
     return NextResponse.json({ text, warning });
   } catch (error) {
     const message = getErrorMessage(error);

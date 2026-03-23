@@ -6,7 +6,7 @@
 ## Next
 
 ## Later
-- [ ] **Technical Debt**: Refactor `src/lib/persistence.test.ts` to use a type-safe Prisma transaction mock instead of `eslint-disable` on `any`.
+- [x] **Technical Debt**: Refactor `src/lib/persistence.test.ts` to use a type-safe Prisma transaction mock instead of `eslint-disable` on `any`.
 
 ## Done
 - [x] Stabilize the dashboard data flow with shared TypeScript types.

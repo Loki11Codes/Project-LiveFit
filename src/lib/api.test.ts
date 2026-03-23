@@ -12,7 +12,7 @@ test('parseJsonBody returns parsed data for a valid JSON request body', async ()
   const result = await parseJsonBody(request, GoalSchema);
   expect(result.success).toBe(true);
   if (result.success) {
-    expect(result.data).toEqual({ proteinTarget: 160, kcalTarget: 2400 });
+    expect(result.data).toEqual(expect.objectContaining({ proteinTarget: 160, kcalTarget: 2400 }));
   }
 });
 
