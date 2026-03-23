@@ -66,7 +66,6 @@ export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: str
       });
     } catch (error) {
       console.error(`Persistence failed for ${category}:`, getErrorMessage(error));
-      import('fs').then(fs => fs.writeFileSync('d:\\LiveFit Project\\Project-LiveFit\\error.txt', String(error) + '\n' + (error as any).stack));
       throw error;
     }
   }

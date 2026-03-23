@@ -223,8 +223,7 @@ export async function POST(req: Request) {
     if (session?.user) {
       const serializedImages = body.images.length > 0 ? JSON.stringify(body.images) : null;
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (prisma.chatMessage as any).create({
+        await prisma.chatMessage.create({
           data: {
             userId: session.user.id,
             role: 'user',
@@ -320,8 +319,7 @@ async function handleUserResponse(text: string, body: z.infer<typeof ChatRequest
     cleanText = cleanText.trim();
 
     // Finally, save AI response
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (prisma.chatMessage as any).create({
+    await prisma.chatMessage.create({
       data: {
         userId,
         role: 'model',
@@ -332,7 +330,6 @@ async function handleUserResponse(text: string, body: z.infer<typeof ChatRequest
     return undefined;
   } catch (error) {
     console.error('Chat log persistence failed:', getErrorMessage(error));
-    require('fs').writeFileSync('d:\\LiveFit Project\\Project-LiveFit\\handle_error.txt', String(error) + '\n' + (error as any).stack);
     return 'Reply generated, but it could not be saved to your history completely.';
   }
 }

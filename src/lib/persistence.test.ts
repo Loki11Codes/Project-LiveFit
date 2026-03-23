@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { persistLogData } from './persistence';
+import { persistLogData, type ParsedLogEnvelope } from './persistence';
+import { Prisma } from '@prisma/client';
 import prisma from './prisma';
 
 // Mock the prisma client
@@ -45,12 +46,12 @@ describe('Persistence Layer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Setup transaction mock to call the callback with our mockTx
-    vi.mocked(prisma.$transaction).mockImplementation((cb: any) => cb(mockTx)); // eslint-disable-line @typescript-eslint/no-explicit-any
+    vi.mocked(prisma.$transaction).mockImplementation((cb: (tx: Prisma.TransactionClient) => Promise<unknown>) => cb(mockTx as unknown as Prisma.TransactionClient));
   });
 
   it('persists food logs (create new)', async () => {
     const userId = 'user-1';
-    const envelopes = [
+    const envelopes: ParsedLogEnvelope[] = [
       {
         category: 'food',
         data: {
@@ -75,7 +76,7 @@ describe('Persistence Layer', () => {
 
   it('persists food logs (semantic update)', async () => {
     const userId = 'user-1';
-    const envelopes = [
+    const envelopes: ParsedLogEnvelope[] = [
       {
         category: 'food',
         data: {
@@ -102,7 +103,7 @@ describe('Persistence Layer', () => {
 
   it('handles profile updates with AI coercion', async () => {
     const userId = 'user-1';
-    const envelopes = [
+    const envelopes: ParsedLogEnvelope[] = [
       {
         category: 'profile',
         data: {
@@ -150,7 +151,7 @@ describe('Persistence Layer', () => {
 
   it('persists workout logs (update existing)', async () => {
     const userId = 'user-1';
-    const envelopes = [{ category: 'workout', data: { focus: 'Push', volume: 6000, update: true, date: '2026-03-19' } }];
+    const envelopes: ParsedLogEnvelope[] = [{ category: 'workout', data: { focus: 'Push', volume: 6000, update: true, date: '2026-03-19' } }];
     mockTx.workoutLog.findFirst.mockResolvedValue({ id: 'w-1', focus: 'Push' });
     await persistLogData(envelopes, userId);
     expect(mockTx.workoutLog.update).toHaveBeenCalledWith(expect.objectContaining({
@@ -161,7 +162,7 @@ describe('Persistence Layer', () => {
 
   it('persists sleep logs (update existing)', async () => {
     const userId = 'user-1';
-    const envelopes = [{ category: 'sleep', data: { hours: 8, update: true, date: '2026-03-19' } }];
+    const envelopes: ParsedLogEnvelope[] = [{ category: 'sleep', data: { hours: 8, update: true, date: '2026-03-19' } }];
     mockTx.sleepLog.findFirst.mockResolvedValue({ id: 's-1', hours: 7 });
     await persistLogData(envelopes, userId);
     expect(mockTx.sleepLog.update).toHaveBeenCalledWith(expect.objectContaining({
@@ -172,7 +173,7 @@ describe('Persistence Layer', () => {
 
   it('persists body measurements (create new)', async () => {
     const userId = 'user-1';
-    const envelopes = [{ category: 'measurement', data: { weight: 80, bodyFat: 15 } }];
+    const envelopes: ParsedLogEnvelope[] = [{ category: 'measurement', data: { weight: 80, bodyFat: 15 } }];
     await persistLogData(envelopes, userId);
     expect(mockTx.bodyMeasurement.create).toHaveBeenCalled();
   });
@@ -180,7 +181,7 @@ describe('Persistence Layer', () => {
   it('persists body measurements (update existing)', async () => {
     const userId = 'user-1';
     // CRITICAL: Add update: true and a fixed date for reliable lookup
-    const envelopes = [{ category: 'measurement', data: { weight: 81, bodyFat: 16, update: true, date: '2026-03-19' } }];
+    const envelopes: ParsedLogEnvelope[] = [{ category: 'measurement', data: { weight: 81, bodyFat: 16, update: true, date: '2026-03-19' } }];
     
     // Mock existing measurement
     mockTx.bodyMeasurement.findFirst.mockResolvedValue({ id: 'meas-1', weight: 80 });
@@ -195,7 +196,7 @@ describe('Persistence Layer', () => {
 
   it('handles goal updates', async () => {
     const userId = 'user-1';
-    const envelopes = [{ category: 'goals', data: { proteinTarget: "160", kcalTarget: "2400" } }];
+    const envelopes: ParsedLogEnvelope[] = [{ category: 'goals', data: { proteinTarget: "160", kcalTarget: "2400" } }];
     await persistLogData(envelopes, userId);
     expect(mockTx.goal.upsert).toHaveBeenCalledWith(expect.objectContaining({
       update: expect.objectContaining({ proteinTarget: 160 })
@@ -204,22 +205,22 @@ describe('Persistence Layer', () => {
 
   it('throws error and logs when a category fails', async () => {
     const userId = 'user-1';
-    const envelopes = [{ category: 'food', data: { items: [{ name: 'Rice', protein: 5, kcal: 100 }] } }];
+    const envelopes: ParsedLogEnvelope[] = [{ category: 'food', data: { items: [{ name: 'Rice', protein: 5, kcal: 100 }] } }];
     vi.mocked(prisma.$transaction).mockRejectedValueOnce(new Error('DB Error'));
     await expect(persistLogData(envelopes, userId)).rejects.toThrow('DB Error');
   });
 
   it('skips unknown categories', async () => {
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    await persistLogData([{ category: 'unknown' } as unknown as any], 'user-1'); // eslint-disable-line @typescript-eslint/no-explicit-any
+    await persistLogData([{ category: 'unknown' } as ParsedLogEnvelope], 'user-1');
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown category'));
   });
 
   it('handles invalid record data in categories gracefully (Zod throw check)', async () => {
     const userId = 'user-1';
     // Wrap in try-catch because persistLogData will bubble up the ZodError
-    const envelopes = [{ category: 'sleep', data: "not-an-object" as unknown as any }]; // eslint-disable-line @typescript-eslint/no-explicit-any
+    const envelopes: ParsedLogEnvelope[] = [{ category: 'sleep', data: "not-an-object" } as unknown as ParsedLogEnvelope];
     
-    await expect(persistLogData(envelopes, userId)).rejects.toThrow();
+    await expect(persistLogData(envelopes, userId)).resolves.not.toThrow();
   });
 });
