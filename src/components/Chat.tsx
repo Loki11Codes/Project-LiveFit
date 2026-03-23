@@ -267,9 +267,11 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-col max-w-[80%] group">
+                  <div className={`flex flex-col max-w-[80%] group ${
+                    msg.role === "user" ? "items-end" : "items-start"
+                  }`}>
                     <div
-                      className={`chat-msg-bubble relative ${
+                      className={`chat-msg-bubble relative w-fit ${
                         msg.role === "model"
                           ? "chat-bubble-model"
                           : "chat-bubble-user"
