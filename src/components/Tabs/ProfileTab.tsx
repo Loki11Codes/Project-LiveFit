@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { signIn, signOut } from 'next-auth/react';
 import { motion } from 'framer-motion';
+import { cardVariants, rowVariants } from '@/lib/animations';
+import EmptyState from '@/components/Shared/EmptyState';
 import type { GoalsState, DashboardState, UserProfile } from '@/lib/types';
 
 interface ProfileTabProps {
@@ -31,28 +33,6 @@ interface ProfileTabProps {
   readonly trackedDayCount: number;
 }
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (index: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: index * 0.12, type: 'spring' as const, damping: 20, stiffness: 100 },
-  }),
-};
-
-const rowVariants = {
-  hidden: { opacity: 0, x: -10 },
-  visible: (index: number) => ({
-    opacity: 1,
-    x: 0,
-    transition: { delay: 0.15 + index * 0.06, type: 'spring' as const, damping: 20, stiffness: 120 },
-  }),
-};
-
-const floatAnimation = {
-  y: [0, -6, 0],
-  transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' as const },
-};
 
 export default function ProfileTab({ 
   session, 
@@ -197,18 +177,18 @@ export default function ProfileTab({
               </div>
             </div>
           ) : (
-            <div className="empty text-center py-16 px-5 border border-dashed border-[var(--border)] rounded-2xl">
-              <motion.div animate={floatAnimation}>
-                <div className="w-16 h-16 bg-[var(--surface2)] rounded-3xl flex items-center justify-center mx-auto mb-6">
-                  <User className="w-8 h-8 opacity-40" style={{ color: '#7b5ea7' }} />
-                </div>
-              </motion.div>
-              <div className="text-[var(--text-muted)] text-[12px] mb-6 max-w-[200px] mx-auto leading-relaxed">Join the community to track your physical progress over time.</div>
-              <button onClick={() => signIn()} className="save-btn w-full">
-                <LogIn className="w-4 h-4 mr-1" />
-                Sign In
-              </button>
-            </div>
+            <EmptyState
+              icon={User}
+              message="Join the community"
+              description="Sign in to track your physical progress and save your nutritional targets over time."
+              iconColor="#7b5ea7"
+              action={
+                <button onClick={() => signIn()} className="save-btn w-full">
+                  <LogIn className="w-4 h-4 mr-1" />
+                  Sign In
+                </button>
+              }
+            />
           )}
           
           <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-[var(--bg)] opacity-[0.5] blur-[80px] rounded-full pointer-events-none" />

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { internalError } from '@/lib/api';
+import { extractAndCleanLogData } from '@/lib/chat-utils';
 
 export async function GET() {
   try {
@@ -41,7 +42,7 @@ export async function GET() {
       return {
         id: msg.id,
         role: msg.role,
-        text: msg.text.replace(/\|\|\|DATA[\s\S]*?\|\|\|/, "").trim(),
+        text: extractAndCleanLogData(msg.text).cleanText,
         timestamp: new Intl.DateTimeFormat('en-US', {
           hour: '2-digit',
           minute: '2-digit',

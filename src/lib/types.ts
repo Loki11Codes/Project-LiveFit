@@ -101,6 +101,11 @@ export type InlineNotice = {
   message: string;
 };
 
+export type ParsedLogEnvelope = {
+  category?: string;
+  data?: unknown;
+};
+
 export type HistoryRow = {
   day: string;
   type: string;

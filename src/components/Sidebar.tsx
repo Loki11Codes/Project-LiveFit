@@ -213,6 +213,7 @@ export default function Sidebar({
           {dayTypes.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
+              type="button"
               onClick={() => setDayType(id)}
               className={`sidebar-daytype-btn ${
                 dayType === id

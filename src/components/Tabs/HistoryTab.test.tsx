@@ -74,6 +74,6 @@ describe('HistoryTab Component', () => {
     render(<HistoryTab history={[]} analytics={null} />);
     expect(screen.getByText(/No nutrition data yet/i)).toBeDefined();
     expect(screen.getByText(/No history logged yet/i)).toBeDefined();
-    expect(screen.getByText(/Add body measurements to unlock the weight trend/i)).toBeDefined();
+    expect(screen.getByText(/Add body measurements/i)).toBeDefined();
   });
 });

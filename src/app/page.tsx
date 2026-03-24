@@ -298,11 +298,6 @@ export default function Home() {
     setTheme((current) => (current === 'light' ? 'dark' : 'light'));
   };
 
-  const tabVariants = {
-    initial: { opacity: 0, y: 10 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -10 },
-  };
 
   return (
     <main className={`flex flex-col items-center bg-[var(--bg)] w-full overflow-x-hidden ${activeTab === 'chat' ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
@@ -340,82 +335,70 @@ export default function Home() {
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
-            variants={tabVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            initial={{ opacity: 0, x: 10, scale: 0.995 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -10, scale: 0.995 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
             className="flex flex-col flex-1 h-full min-h-0 relative"
           >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, x: 10, scale: 0.995 }}
-                animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, x: -10, scale: 0.995 }}
-                transition={{ duration: 0.3, ease: 'easeInOut' }}
-                className="flex flex-col flex-1 h-full min-h-0"
-              >
-                {activeTab === 'chat' && (
-                  <div className="chat-sidebar-layout">
-                    <Chat 
-                      onLogParsed={refreshDashboard} 
-                      isNewUser={!dashboard.profile?.age || !dashboard.profile?.height}
-                    />
-                    <Sidebar
-                      protein={nutrition.protein}
-                      proteinTarget={getProteinTarget(dashboard.goals, dashboard.dayType)}
-                      calories={nutrition.calories}
-                      calorieTarget={dashboard.goals.kcalTarget}
-                      carbs={nutrition.carbs}
-                      fats={nutrition.fats}
-                      fiber={nutrition.fiber}
-                      weight={dashboard.latestMeasurement?.weight ?? '--'}
-                      sleep={latestSleep?.hours ?? '--'}
-                      day={trackedDayCount || 1}
-                      dayType={dashboard.dayType}
-                      setDayType={handleDayTypeChange}
-                    />
-                  </div>
-                )}
+            {activeTab === 'chat' && (
+              <div className="chat-sidebar-layout">
+                <Chat 
+                  onLogParsed={refreshDashboard} 
+                  isNewUser={!dashboard.profile?.age || !dashboard.profile?.height}
+                />
+                <Sidebar
+                  protein={nutrition.protein}
+                  proteinTarget={getProteinTarget(dashboard.goals, dashboard.dayType)}
+                  calories={nutrition.calories}
+                  calorieTarget={dashboard.goals.kcalTarget}
+                  carbs={nutrition.carbs}
+                  fats={nutrition.fats}
+                  fiber={nutrition.fiber}
+                  weight={dashboard.latestMeasurement?.weight ?? '--'}
+                  sleep={latestSleep?.hours ?? '--'}
+                  day={trackedDayCount || 1}
+                  dayType={dashboard.dayType}
+                  setDayType={handleDayTypeChange}
+                />
+              </div>
+            )}
 
-                {activeTab === 'log' && (
-                  <LogTab
-                    foodLog={dashboard.logs.food}
-                    protein={nutrition.protein}
-                    workouts={dashboard.logs.workouts}
-                    sleepLogs={dashboard.logs.sleep}
-                  />
-                )}
+            {activeTab === 'log' && (
+              <LogTab
+                foodLog={dashboard.logs.food}
+                protein={nutrition.protein}
+                workouts={dashboard.logs.workouts}
+                sleepLogs={dashboard.logs.sleep}
+              />
+            )}
 
-                {activeTab === 'history' && (
-                  <HistoryTab history={history} analytics={dashboard.analytics} />
-                )}
+            {activeTab === 'history' && (
+              <HistoryTab history={history} analytics={dashboard.analytics} />
+            )}
 
-                {activeTab === 'body' && (
-                  <BodyTab
-                    measurements={dashboard.measurements}
-                    setMeasurements={updateMeasurements}
-                    handleSaveMeasurements={handleSaveMeasurements}
-                    latestMeasurement={dashboard.latestMeasurement}
-                  />
-                )}
+            {activeTab === 'body' && (
+              <BodyTab
+                measurements={dashboard.measurements}
+                setMeasurements={updateMeasurements}
+                handleSaveMeasurements={handleSaveMeasurements}
+                latestMeasurement={dashboard.latestMeasurement}
+              />
+            )}
 
-                {activeTab === 'profile' && (
-                  <ProfileTab
-                    session={session}
-                    goals={dashboard.goals}
-                    setGoals={updateGoals}
-                    handleSaveGoals={handleSaveGoals}
-                    profile={dashboard.profile}
-                    setProfile={updateProfile}
-                    handleSaveProfile={handleSaveProfile}
-                    analytics={dashboard.analytics}
-                    trackedDayCount={trackedDayCount}
-                  />
-                )}
-              </motion.div>
-            </AnimatePresence>
+            {activeTab === 'profile' && (
+              <ProfileTab
+                session={session}
+                goals={dashboard.goals}
+                setGoals={updateGoals}
+                handleSaveGoals={handleSaveGoals}
+                profile={dashboard.profile}
+                setProfile={updateProfile}
+                handleSaveProfile={handleSaveProfile}
+                analytics={dashboard.analytics}
+                trackedDayCount={trackedDayCount}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
       </div>

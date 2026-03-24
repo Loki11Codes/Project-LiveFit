@@ -18,6 +18,8 @@ import {
   Leaf,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { cardVariants, rowVariants, floatAnimation } from '@/lib/animations';
+import EmptyState from '@/components/Shared/EmptyState';
 import type { AnalyticsResponse, HistoryRow, NutritionStat, WeightTrendPoint } from '@/lib/types';
 
 interface HistoryTabProps {
@@ -25,28 +27,6 @@ interface HistoryTabProps {
   readonly analytics: AnalyticsResponse | null;
 }
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (index: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: index * 0.1, type: 'spring' as const, damping: 20, stiffness: 100 },
-  }),
-};
-
-const rowVariants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: (index: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: index * 0.05, type: 'spring' as const, damping: 20, stiffness: 100 },
-  }),
-};
-
-const floatAnimation = {
-  y: [0, -6, 0],
-  transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' as const },
-};
 
 export default function HistoryTab({ history, analytics }: HistoryTabProps) {
   const nutritionStats = analytics?.nutritionStats ?? [];
@@ -126,12 +106,12 @@ export default function HistoryTab({ history, analytics }: HistoryTabProps) {
             ))}
           </div>
         ) : (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
-            <EmptyAnalyticsState
+            <EmptyState
               icon={TrendingUp}
-              message="No nutrition data yet. Log meals to populate the 7-day trend."
+              message="No nutrition data yet"
+              description="Log meals via the chat to populate the 7-day trend visualization."
+              iconColor="#4db382"
             />
-          </motion.div>
         )}
       </motion.div>
 
@@ -317,7 +297,7 @@ function AnalyticsMetricCard({
 
       <div className="flex items-end gap-2">
         <div className="text-[32px] font-extralight tracking-[-0.04em]" style={{ color: tone }}>
-          {value.replace(` ${suffix}`, '')}
+          {value.replaceAll(` ${suffix}`, '')}
         </div>
         {suffix && (
           <span className="pb-2 text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)]">
@@ -382,9 +362,11 @@ function WeightTrendCard({
           </div>
         </>
       ) : (
-        <EmptyAnalyticsState
+        <EmptyState
           icon={Scale}
-          message="Add body measurements to unlock the weight trend."
+          message="Add body measurements"
+          description="Record your weight to unlock the weight trend visualization."
+          iconColor="#a86b12"
           compact
         />
       )}
@@ -493,30 +475,6 @@ function Sparkline({ points }: { readonly points: number[] }) {
   );
 }
 
-function EmptyAnalyticsState({
-  icon: Icon,
-  message,
-  compact = false,
-}: {
-  readonly icon: typeof Activity;
-  readonly message: string;
-  readonly compact?: boolean;
-}) {
-  return (
-    <div
-      className={`text-center rounded-[24px] border border-dashed border-[var(--border)] bg-[var(--surface2)]/20 ${
-        compact ? 'py-10 px-5' : 'py-16 px-5'
-      }`}
-    >
-      <motion.div animate={floatAnimation}>
-        <Icon className="w-8 h-8 mx-auto mb-3 opacity-20 text-[var(--text-muted)]" />
-      </motion.div>
-      <p className="text-[12px] text-[var(--text-muted)] leading-relaxed max-w-[260px] mx-auto">
-        {message}
-      </p>
-    </div>
-  );
-}
 
 function getWeightDelta(weightTrend: WeightTrendPoint[]): number | null {
   if (weightTrend.length < 2) {

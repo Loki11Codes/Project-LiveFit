@@ -11,6 +11,7 @@ import type { ChatImagePayload } from '@/lib/types';
 import {
   ChatRequestSchema,
 } from '@/lib/validation';
+import { extractAndCleanLogData } from '@/lib/chat-utils';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
@@ -79,10 +80,6 @@ type OpenRouterResponse = {
   }>;
 };
 
-type ParsedLogEnvelope = {
-  category?: string;
-  data?: unknown;
-};
 
 type GeminiPart =
   | { text: string }
@@ -206,9 +203,7 @@ export async function POST(req: Request) {
 
   try {
     const body = parsedBody.data;
-
     const session = await getServerSession(authOptions);
-
     const { geminiKey, openRouterKey } = getAIKeys();
 
     if (!geminiKey && !openRouterKey) {
@@ -219,21 +214,8 @@ export async function POST(req: Request) {
       return internalError('Image analysis is temporarily unavailable');
     }
 
-    // Save user message
     if (session?.user) {
-      const serializedImages = body.images.length > 0 ? JSON.stringify(body.images) : null;
-      try {
-        await prisma.chatMessage.create({
-          data: {
-            userId: session.user.id,
-            role: 'user',
-            text: body.prompt || (body.images.length > 0 ? '' : '...'),
-            images: serializedImages,
-          },
-        });
-      } catch (e) {
-        console.error('Failed to save user message:', e);
-      }
+      await saveUserMessage(body, session.user.id);
     }
 
     const text = await getAIResponse(body, geminiKey, openRouterKey);
@@ -244,15 +226,30 @@ export async function POST(req: Request) {
 
     let warning: string | undefined;
     if (session?.user) {
-      warning = await handleUserResponse(text, body, session.user.id, body.clientDate);
+      warning = await handleUserResponse(text, session.user.id, body.clientDate);
     }
-
 
     return NextResponse.json({ text, warning });
   } catch (error) {
     const message = getErrorMessage(error);
     console.error('Chat Route Error:', message);
     return internalError('The AI service is unavailable right now. Please try again.');
+  }
+}
+
+async function saveUserMessage(body: z.infer<typeof ChatRequestSchema>, userId: string) {
+  const serializedImages = body.images.length > 0 ? JSON.stringify(body.images) : null;
+  try {
+    await prisma.chatMessage.create({
+      data: {
+        userId,
+        role: 'user',
+        text: body.prompt || (body.images.length > 0 ? '' : '...'),
+        images: serializedImages,
+      },
+    });
+  } catch (e) {
+    console.error('Failed to save user message:', e);
   }
 }
 
@@ -297,28 +294,11 @@ async function getAIResponse(body: z.infer<typeof ChatRequestSchema>, geminiKey:
   return text;
 }
 
-async function handleUserResponse(text: string, body: z.infer<typeof ChatRequestSchema>, userId: string, clientDate?: string): Promise<string | undefined> {
+async function handleUserResponse(text: string, userId: string, clientDate?: string): Promise<string | undefined> {
   try {
-    // Try extracting and running logs
-    const envelopes = extractParsedLogs(text);
-    await persistLogData(envelopes, userId, clientDate);
+    const { logs, cleanText } = extractAndCleanLogData(text);
+    await persistLogData(logs, userId, clientDate);
 
-    // Clean text by removing all |||DATA ... ||| blocks without using a vulnerable regex
-    let cleanText = text;
-    let startIdx = cleanText.indexOf('|||DATA');
-    while (startIdx >= 0) {
-      const endMarker = '|||';
-      const endIdx = cleanText.indexOf(endMarker, startIdx + 7); // Skip the initial marker
-      if (endIdx >= 0) {
-        cleanText = cleanText.substring(0, startIdx) + cleanText.substring(endIdx + endMarker.length);
-        startIdx = cleanText.indexOf('|||DATA'); // Search again from start in cleaned text
-      } else {
-        break; // Malformed block, stop cleaning
-      }
-    }
-    cleanText = cleanText.trim();
-
-    // Finally, save AI response
     await prisma.chatMessage.create({
       data: {
         userId,
@@ -357,41 +337,3 @@ function buildGeminiPromptParts(
 
   return parts;
 }
-
-function extractParsedLogs(text: string): ParsedLogEnvelope[] {
-  const logs: ParsedLogEnvelope[] = [];
-  const startMarker = '|||DATA';
-  const endMarker = '|||';
-  
-  let currentPos = 0;
-  
-  while (true) {
-    const startIdx = text.indexOf(startMarker, currentPos);
-    if (startIdx === -1) break;
-    
-    const contentStart = startIdx + startMarker.length;
-    const endIdx = text.indexOf(endMarker, contentStart);
-    if (endIdx === -1) break;
-    
-    const jsonText = text.substring(contentStart, endIdx).trim();
-    try {
-      if (jsonText) {
-        const parsed = JSON.parse(jsonText);
-        if (Array.isArray(parsed)) {
-          logs.push(...(parsed as ParsedLogEnvelope[]));
-        } else if (parsed) {
-          logs.push(parsed as ParsedLogEnvelope);
-        }
-      }
-    } catch (e) {
-      console.warn('Failed to parse a DATA block from AI:', e);
-    }
-    
-    currentPos = endIdx + endMarker.length;
-  }
-
-  return logs;
-}
-
-
-

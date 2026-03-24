@@ -13,6 +13,8 @@ import {
   Leaf,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { cardVariants, rowVariants } from '@/lib/animations';
+import EmptyState from '@/components/Shared/EmptyState';
 
 interface LogTabProps {
   readonly foodLog: FoodLog[];
@@ -21,28 +23,6 @@ interface LogTabProps {
   readonly sleepLogs: SleepLog[];
 }
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (index: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: index * 0.1, type: 'spring' as const, damping: 20, stiffness: 100 },
-  }),
-};
-
-const rowVariants = {
-  hidden: { opacity: 0, x: -12 },
-  visible: (index: number) => ({
-    opacity: 1,
-    x: 0,
-    transition: { delay: 0.15 + index * 0.05, type: 'spring' as const, damping: 20, stiffness: 120 },
-  }),
-};
-
-const floatAnimation = {
-  y: [0, -6, 0],
-  transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' as const },
-};
 
 export default function LogTab({
   foodLog,
@@ -124,17 +104,12 @@ export default function LogTab({
                 </motion.div>
               ))
             ) : (
-              <motion.div
-                className="empty text-center py-12 px-5 text-[var(--text-muted)] text-[12px] tracking-[0.04em] border border-dashed border-[var(--border)] rounded-lg"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <motion.div animate={floatAnimation}>
-                  <Utensils className="w-8 h-8 mx-auto mb-3 opacity-40" style={{ color: '#e6ac50' }} />
-                </motion.div>
-                No food logged yet - use the Chat tab.
-              </motion.div>
+              <EmptyState
+                icon={Utensils}
+                message="No food logged yet"
+                description="Use the Chat tab to log your meals and track nutrition automatically."
+                iconColor="#e6ac50"
+              />
             )}
           </div>
         </motion.div>
@@ -185,17 +160,13 @@ export default function LogTab({
                 </motion.div>
               ))
             ) : (
-              <motion.div
-                className="empty text-center py-12 px-5 text-[var(--text-muted)] text-[12px] border border-dashed border-[var(--border)] rounded-lg"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <motion.div animate={floatAnimation}>
-                  <Dumbbell className="w-8 h-8 mx-auto mb-3 opacity-40" style={{ color: '#c0392b' }} />
-                </motion.div>
-                Nothing logged yet.
-              </motion.div>
+              <EmptyState
+                icon={Dumbbell}
+                message="No workouts logged"
+                description="Nothing logged yet. Start a session and log it via the Chat tab."
+                iconColor="#c0392b"
+                compact
+              />
             )}
           </div>
         </motion.div>
@@ -245,17 +216,13 @@ export default function LogTab({
                 </motion.div>
               ))
             ) : (
-              <motion.div
-                className="empty text-center py-12 px-5 text-[var(--text-muted)] text-[12px] border border-dashed border-[var(--border)] rounded-lg"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-              >
-                <motion.div animate={floatAnimation}>
-                  <Moon className="w-8 h-8 mx-auto mb-3 opacity-40" style={{ color: '#6b7ea8' }} />
-                </motion.div>
-                No sleep logged yet.
-              </motion.div>
+              <EmptyState
+                icon={Moon}
+                message="No sleep records"
+                description="No sleep logged yet. Track your rest to optimize recovery."
+                iconColor="#6b7ea8"
+                compact
+              />
             )}
           </div>
         </motion.div>

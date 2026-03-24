@@ -15,6 +15,8 @@ import {
   TableProperties,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { cardVariants, rowVariants } from '@/lib/animations';
+import EmptyState from '@/components/Shared/EmptyState';
 import type { MeasurementForm, MeasurementFormField } from '@/lib/types';
 
 interface BodyTabProps {
@@ -42,28 +44,6 @@ const measurementFields: Array<{
   { key: 'bodyFat', label: 'Body Fat', unit: '%', icon: Activity, color: '#e67e22' },
 ];
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (index: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: index * 0.12, type: 'spring' as const, damping: 20, stiffness: 100 },
-  }),
-};
-
-const rowVariants = {
-  hidden: { opacity: 0, x: -10 },
-  visible: (index: number) => ({
-    opacity: 1,
-    x: 0,
-    transition: { delay: 0.15 + index * 0.05, type: 'spring' as const, damping: 20, stiffness: 120 },
-  }),
-};
-
-const floatAnimation = {
-  y: [0, -6, 0],
-  transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' as const },
-};
 
 export default function BodyTab({
   measurements,
@@ -230,17 +210,12 @@ export default function BodyTab({
               </motion.div>
             </div>
           ) : (
-            <div className="empty text-center py-20 px-5 bg-[var(--surface2)]/10 rounded-2xl border border-dashed border-[var(--border)]">
-              <motion.div animate={floatAnimation}>
-                <Ruler className="w-12 h-12 mx-auto mb-4 opacity-40" style={{ color: '#e6ac50' }} />
-              </motion.div>
-              <div className="text-[13px] font-bold text-[var(--text-muted)] mb-1">
-                No data recorded
-              </div>
-              <p className="text-[11px] text-[var(--text-muted)] opacity-60">
-                Log your first measurements to see trends.
-              </p>
-            </div>
+            <EmptyState
+              icon={Ruler}
+              message="No data recorded"
+              description="Log your first measurements via the Chat or directly here to see trends."
+              iconColor="#e6ac50"
+            />
           )}
 
           <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[var(--accent)] opacity-[0.01] blur-[80px] rounded-full pointer-events-none" />

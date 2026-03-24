@@ -1,34 +1,15 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import {
-  ImageIcon,
-  Coffee,
-  Dumbbell,
-  Moon,
-  Info,
-  User,
-  ArrowUp,
-  Activity,
-  X,
-  type LucideIcon,
-} from "lucide-react";
+import { Activity, ArrowUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getClientErrorMessage, requestJson } from "@/lib/client-api";
-import type {
-  ChatImageAttachment,
-  ChatImagePayload,
-  InlineNotice,
-} from "@/lib/types";
+import type { ChatImageAttachment, ChatImagePayload, InlineNotice } from "@/lib/types";
+import { extractAndCleanLogData } from "@/lib/chat-utils";
 
-interface Message {
-  id: string;
-  role: "user" | "model";
-  text: string;
-  timestamp: string;
-  images?: ChatImageAttachment[];
-}
+import { MessageBubble, type Message } from "./Chat/MessageBubble";
+import { QuickChips } from "./Chat/QuickChips";
+import { ChatInput } from "./Chat/ChatInput";
 
 interface ChatProps {
   readonly onLogParsed: () => void;
@@ -57,7 +38,6 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
   const [pendingImages, setPendingImages] = useState<ChatImageAttachment[]>([]);
   const [notice, setNotice] = useState<InlineNotice | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const textInputRef = useRef<HTMLInputElement>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const isInitialMount = useRef(true);
@@ -73,6 +53,7 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
   useEffect(() => {
     async function fetchHistory() {
       try {
@@ -149,7 +130,7 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
 
   const processChatResponse = (data: ChatResponse) => {
     if (data.text) {
-      const { hasData, cleanText } = extractAndCleanData(data.text);
+      const { hasData, cleanText } = extractAndCleanLogData(data.text);
 
       if (hasData) {
         console.log("AI Data block detected! Triggering UI refresh...");
@@ -212,6 +193,11 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
     );
   };
 
+  const handleQuickChipSelect = (text: string) => {
+    setInput(text);
+    textInputRef.current?.focus();
+  };
+
   return (
     <div className="flex-1 min-w-0 h-full bg-[var(--surface)] rounded-[32px] flex flex-col border border-[var(--border)] shadow-[var(--shadow-lg)] overflow-hidden transition-all duration-300 [background-clip:padding-box] [transform:translateZ(0)] [mask-image:linear-gradient(#fff,#fff)] relative"
       role="log"
@@ -231,124 +217,17 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
           ) : (
             <AnimatePresence mode="popLayout">
               {messages.map((msg, index) => {
-              const isFirstInGroup =
-                index === 0 || messages[index - 1].role !== msg.role;
-
-              return (
-                <motion.div
-                  key={msg.id}
-                  layout
-                  initial={{ opacity: 0, y: 15, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                  className={`chat-msg-row ${
-                    msg.role === "user" ? "flex-row-reverse" : ""
-                  } ${isFirstInGroup ? "mt-6" : "mt-1"}`}
-                >
-                  <div
-                    className={`chat-avatar-container ${
-                      isFirstInGroup ? "" : "invisible opacity-0 h-0"
-                    }`}
-                  >
-                    <div
-                      className={`chat-avatar ${
-                        msg.role === "model"
-                          ? "bg-[var(--accent)] text-[var(--accent-inv)]"
-                          : "bg-[var(--surface2)] text-[var(--text)]"
-                      }`}
-                    >
-                      {msg.role === "model" ? (
-                        <Activity
-                          className="w-4.5 h-4.5 text-[var(--accent-inv)]"
-                          strokeWidth={3}
-                        />
-                      ) : (
-                        <User className="w-5 h-5" style={{ color: '#7b5ea7' }} />
-                      )}
-                    </div>
-                  </div>
-                  <div className={`flex flex-col max-w-[80%] group ${
-                    msg.role === "user" ? "items-end" : "items-start"
-                  }`}>
-                    <div
-                      className={`chat-msg-bubble relative w-fit ${
-                        msg.role === "model"
-                          ? "chat-bubble-model"
-                          : "chat-bubble-user"
-                      }`}
-                    >
-                      {msg.images && msg.images.length > 0 && (
-                        <div className="chat-msg-image-grid">
-                          {msg.images.map((image) => (
-                            <div key={image.id} className="chat-msg-image-frame">
-                              <Image
-                                src={image.previewUrl}
-                                alt={image.name}
-                                fill
-                                unoptimized
-                                className="chat-msg-image"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {msg.role === "model" && msg.id === "welcome-msg" && !isNewUser ? (
-                        <div>
-                          <p>
-                            Good morning! 👋{" "}
-                            <span className="chat-accent-text">
-                              I&apos;m your LiveFit AI
-                            </span>{" "}
-                            - speak naturally to log anything.
-                          </p>
-                          <div className="chat-bullet-list">
-                            {[
-                              {
-                                id: "search",
-                                icon: "🔍",
-                                text: '"Had 3 egg omelette and 150ml milk for breakfast"',
-                              },
-                              {
-                                id: "work",
-                                icon: "💪",
-                                text: '"Finished chest day, 3200kg volume, 8 PRs"',
-                              },
-                              {
-                                id: "sleep",
-                                icon: "😴",
-                                text: '"Slept 7.5h, bed at 11pm, woke at 6:30"',
-                              },
-                              {
-                                id: "weight",
-                                icon: "⚖️",
-                                text: '"Weight 70.5kg this morning"',
-                              },
-                            ].map((item) => (
-                              <div key={item.id} className="chat-bullet-item">
-                                <span className="chat-bullet-icon">
-                                  {item.icon}
-                                </span>
-                                <span className="chat-bullet-text">
-                                  {item.text}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : (
-                        <span>{msg.text}</span>
-                      )}
-
-                      <span className="chat-message-timestamp">
-                        {msg.timestamp}
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
+                const isFirstInGroup = index === 0 || messages[index - 1].role !== msg.role;
+                return (
+                  <MessageBubble 
+                    key={msg.id} 
+                    msg={msg} 
+                    isFirstInGroup={isFirstInGroup} 
+                    isNewUser={isNewUser}
+                  />
+                );
+              })}
+            </AnimatePresence>
           )}
 
           {isTyping && (
@@ -409,160 +288,20 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
           )}
         </AnimatePresence>
 
-        <div className="chat-quick-chips-row no-scrollbar">
-          <QuickChip
-            icon={Coffee}
-            label="Breakfast"
-            color="#e6ac50"
-            onClick={() => {
-              setInput("Log my breakfast");
-              textInputRef.current?.focus();
-            }}
-          />
-          <QuickChip
-            icon={Dumbbell}
-            label="Workout"
-            color="#c0392b"
-            onClick={() => {
-              setInput("Record my training session");
-              textInputRef.current?.focus();
-            }}
-          />
-          <QuickChip
-            icon={Moon}
-            label="Sleep"
-            color="#6b7ea8"
-            onClick={() => {
-              setInput("Show my sleep data");
-              textInputRef.current?.focus();
-            }}
-          />
-          <QuickChip
-            icon={Info}
-            label="Protein left?"
-            color="#4db382"
-            onClick={() => {
-              setInput("How is my protein intake?");
-              textInputRef.current?.focus();
-            }}
-          />
-          <QuickChip
-            icon={ImageIcon}
-            label="Summary"
-            color="#7b5ea7"
-            onClick={() => {
-              setInput("Give me a summary");
-              textInputRef.current?.focus();
-            }}
-          />
-        </div>
+        <QuickChips onSelect={handleQuickChipSelect} />
 
-        {pendingImages.length > 0 && (
-          <div className="chat-attachments-strip">
-            {pendingImages.map((image) => (
-              <div key={image.id} className="chat-attachment-thumb">
-                <div className="chat-attachment-thumb-image">
-                  <Image
-                    src={image.previewUrl}
-                    alt={image.name}
-                    fill
-                    unoptimized
-                    className="chat-msg-image"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removePendingImage(image.id)}
-                  className="chat-attachment-remove"
-                  aria-label={`Remove ${image.name}`}
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="chat-input-wrapper">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={handleFileSelection}
-          />
-
-          <motion.button
-            type="button"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className={`chat-photo-btn ${
-              pendingImages.length > 0 ? "chat-photo-btn-active" : ""
-            }`}
-            onClick={() => fileInputRef.current?.click()}
-            aria-label="Attach images"
-            suppressHydrationWarning
-          >
-            <ImageIcon className="w-5 h-5" style={{ color: '#7b5ea7' }} />
-          </motion.button>
-
-          <div className="chat-input-box">
-            <input
-              ref={textInputRef}
-              className="chat-input-field"
-              type="text"
-              placeholder="Tell me what you ate, your workout, sleep... or attach a photo 📷"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  void handleSend();
-                }
-              }}
-              data-testid="chat-input"
-              suppressHydrationWarning
-            />
-          </div>
-
-          <motion.button
-            type="button"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => void handleSend()}
-            disabled={isTyping || (!input.trim() && pendingImages.length === 0)}
-            aria-label="Send message"
-            className="chat-send-btn-square"
-            suppressHydrationWarning
-          >
-            <ArrowUp className="w-5 h-5" style={{ color: 'var(--accent-inv)' }} />
-          </motion.button>
-        </div>
+        <ChatInput 
+          input={input}
+          setInput={setInput}
+          isTyping={isTyping}
+          pendingImages={pendingImages}
+          onSend={() => void handleSend()}
+          onFileSelect={handleFileSelection}
+          onRemoveImage={removePendingImage}
+          textInputRef={textInputRef}
+        />
       </div>
     </div>
-  );
-}
-
-interface QuickChipProps {
-  readonly icon: LucideIcon;
-  readonly label: string;
-  readonly color?: string;
-  readonly onClick: () => void;
-}
-
-function QuickChip({ icon: Icon, label, color, onClick }: QuickChipProps) {
-  return (
-    <motion.button
-      whileHover={{ scale: 1.05, translateY: -2 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={onClick}
-      className="chat-quick-chip"
-      suppressHydrationWarning
-    >
-      <Icon className="w-3.5 h-3.5" style={{ color }} />
-      {label}
-    </motion.button>
   );
 }
 
@@ -595,47 +334,6 @@ function createChatMessage(
     }),
     images,
   };
-}
-
-function extractAndCleanData(text: string): { hasData: boolean; cleanText: string } {
-  const startMarker = "|||DATA";
-  const endMarker = "|||";
-  let hasData = false;
-  let currentPos = 0;
-
-  // Detect
-  while (true) {
-    const s = text.indexOf(startMarker, currentPos);
-    if (s === -1) break;
-    const c = s + startMarker.length;
-    const e = text.indexOf(endMarker, c);
-    if (e === -1) break;
-
-    hasData = true;
-    const json = text.substring(c, e).trim();
-    try {
-      if (json) JSON.parse(json);
-    } catch (err) {
-      console.error("Failed to parse log data:", err);
-    }
-    currentPos = e + endMarker.length;
-  }
-
-  // Clean
-  let cleanText = text;
-  let sIdx = cleanText.indexOf(startMarker);
-  while (sIdx >= 0) {
-    const eIdx = cleanText.indexOf(endMarker, sIdx + startMarker.length);
-    if (eIdx >= 0) {
-      cleanText =
-        cleanText.substring(0, sIdx) + cleanText.substring(eIdx + endMarker.length);
-      sIdx = cleanText.indexOf(startMarker);
-    } else {
-      break;
-    }
-  }
-
-  return { hasData, cleanText: cleanText.trim() };
 }
 
 function toPayload(image: ChatImageAttachment): ChatImagePayload {
