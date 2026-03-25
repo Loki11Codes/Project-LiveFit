@@ -60,7 +60,7 @@ export function MessageBubble({ msg, isFirstInGroup, isNewUser }: Readonly<Messa
         >
           {msg.images && msg.images.length > 0 && (
             <div className="chat-msg-image-grid">
-              {msg.images.map((image) => (
+              {msg.images.filter((image) => image.previewUrl).map((image) => (
                 <div key={image.id} className="chat-msg-image-frame">
                   <Image
                     src={image.previewUrl}
