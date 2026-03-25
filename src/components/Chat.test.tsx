@@ -31,6 +31,8 @@ vi.mock('lucide-react', () => ({
   Moon: () => <div data-testid="icon-moon" />,
   Info: () => <div data-testid="icon-info" />,
   X: () => <div data-testid="icon-x" />,
+  Mic: () => <div data-testid="icon-mic" />,
+  Square: () => <div data-testid="icon-square" />,
 }));
 
 vi.mock('@/lib/client-api', () => ({

@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Activity, ArrowUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getClientErrorMessage, requestJson } from "@/lib/client-api";
-import type { ChatImageAttachment, ChatImagePayload, InlineNotice } from "@/lib/types";
+import type { ChatAttachment, ChatAttachmentPayload, InlineNotice } from "@/lib/types";
 import { extractAndCleanLogData } from "@/lib/chat-utils";
 
 import { MessageBubble, type Message } from "./Chat/MessageBubble";
@@ -35,7 +35,7 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [pendingImages, setPendingImages] = useState<ChatImageAttachment[]>([]);
+  const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
   const [notice, setNotice] = useState<InlineNotice | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement>(null);
@@ -87,14 +87,14 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
 
   const handleSend = async () => {
     const userText = input.trim();
-    const attachedImages = [...pendingImages];
+    const attachedFiles = [...pendingAttachments];
 
-    if ((!userText && attachedImages.length === 0) || isTyping) return;
+    if ((!userText && attachedFiles.length === 0) || isTyping) return;
 
-    const userMsg = createChatMessage("user", userText || "Image attached", attachedImages);
+    const userMsg = createChatMessage("user", userText || (attachedFiles.some(a => a.mediaType.startsWith('audio')) ? "Audio message" : "Image attached"), attachedFiles);
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
-    setPendingImages([]);
+    setPendingAttachments([]);
     setIsTyping(true);
     setNotice(null);
 
@@ -114,7 +114,7 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
         body: JSON.stringify({
           prompt: userText,
           history,
-          images: attachedImages.map(toPayload),
+          images: attachedFiles.map(toPayload), // Backend still uses 'images' key for attachments
           clientDate,
           clientTime,
         }),
@@ -172,24 +172,39 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
     }
 
     try {
-      const newImages = await Promise.all(files.map(readImageFile));
-      setPendingImages((current) => [...current, ...newImages]);
+      const newAttachments = await Promise.all(files.map(readAttachmentFile));
+      setPendingAttachments((current) => [...current, ...newAttachments]);
       setNotice(null);
     } catch (error) {
       const message = getClientErrorMessage(error);
-      console.error("Failed to read image attachment:", message);
+      console.error("Failed to read attachment:", message);
       setNotice({
         tone: "error",
-        message: `Unable to read selected image: ${message}`,
+        message: `Unable to read selected file: ${message}`,
       });
     } finally {
       event.target.value = "";
     }
   };
 
-  const removePendingImage = (imageId: string) => {
-    setPendingImages((current) =>
-      current.filter((image) => image.id !== imageId)
+  const handleAudioRecorded = async (file: File) => {
+    try {
+      const audioAttachment = await readAttachmentFile(file);
+      setPendingAttachments((current) => [...current, audioAttachment]);
+      setNotice(null);
+    } catch (error) {
+      const message = getClientErrorMessage(error);
+      console.error("Failed to read recorded audio:", message);
+      setNotice({
+        tone: "error",
+        message: `Unable to process audio recording: ${message}`,
+      });
+    }
+  };
+
+  const removePendingAttachment = (attachmentId: string) => {
+    setPendingAttachments((current) =>
+      current.filter((att) => att.id !== attachmentId)
     );
   };
 
@@ -294,10 +309,11 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
           input={input}
           setInput={setInput}
           isTyping={isTyping}
-          pendingImages={pendingImages}
+          pendingAttachments={pendingAttachments}
           onSend={() => void handleSend()}
           onFileSelect={handleFileSelection}
-          onRemoveImage={removePendingImage}
+          onAudioRecorded={handleAudioRecorded}
+          onRemoveAttachment={removePendingAttachment}
           textInputRef={textInputRef}
         />
       </div>
@@ -322,7 +338,7 @@ function updateWelcomeMessageTimestamp(prev: Message[]): Message[] {
 function createChatMessage(
   role: "user" | "model",
   text: string,
-  images?: ChatImageAttachment[]
+  attachments?: ChatAttachment[]
 ): Message {
   return {
     id: crypto.randomUUID(),
@@ -332,22 +348,22 @@ function createChatMessage(
       hour: "2-digit",
       minute: "2-digit",
     }),
-    images,
+    attachments,
   };
 }
 
-function toPayload(image: ChatImageAttachment): ChatImagePayload {
+function toPayload(attachment: ChatAttachment): ChatAttachmentPayload {
   return {
-    base64: image.base64,
-    mediaType: image.mediaType,
-    name: image.name,
+    base64: attachment.base64,
+    mediaType: attachment.mediaType,
+    name: attachment.name,
   };
 }
 
-async function readImageFile(file: File): Promise<ChatImageAttachment> {
+async function readAttachmentFile(file: File): Promise<ChatAttachment> {
   const previewUrl = await readFileAsDataUrl(file);
   const [prefix, base64 = ""] = previewUrl.split(",");
-  const mediaType = file.type || getMediaTypeFromDataUrl(prefix) || "image/jpeg";
+  const mediaType = file.type || getMediaTypeFromDataUrl(prefix) || "application/octet-stream";
 
   return {
     id: crypto.randomUUID(),

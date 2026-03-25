@@ -2,14 +2,14 @@ import React from "react";
 import Image from "next/image";
 import { User, Activity } from "lucide-react";
 import { motion } from "framer-motion";
-import type { ChatImageAttachment } from "@/lib/types";
+import type { ChatAttachment } from "@/lib/types";
 
 export interface Message {
   id: string;
   role: "user" | "model";
   text: string;
   timestamp: string;
-  images?: ChatImageAttachment[];
+  attachments?: ChatAttachment[];
 }
 
 interface MessageBubbleProps {
@@ -58,19 +58,30 @@ export function MessageBubble({ msg, isFirstInGroup, isNewUser }: Readonly<Messa
             msg.role === "model" ? "chat-bubble-model" : "chat-bubble-user"
           }`}
         >
-          {msg.images && msg.images.length > 0 && (
-            <div className="chat-msg-image-grid">
-              {msg.images.filter((image) => image.previewUrl).map((image) => (
-                <div key={image.id} className="chat-msg-image-frame">
-                  <Image
-                    src={image.previewUrl}
-                    alt={image.name}
-                    fill
-                    unoptimized
-                    className="chat-msg-image"
+          {msg.attachments && msg.attachments.length > 0 && (
+            <div className="chat-msg-image-grid flex flex-col gap-2">
+              {msg.attachments.filter((att) => att.previewUrl).map((attachment) => {
+                const isAudio = attachment.mediaType.startsWith("audio/");
+                return isAudio ? (
+                  /* eslint-disable-next-line jsx-a11y/media-has-caption */
+                  <audio
+                    key={attachment.id}
+                    controls
+                    src={attachment.previewUrl}
+                    className="w-full max-w-[240px] h-10 outline-none"
                   />
-                </div>
-              ))}
+                ) : (
+                  <div key={attachment.id} className="chat-msg-image-frame">
+                    <Image
+                      src={attachment.previewUrl}
+                      alt={attachment.name}
+                      fill
+                      unoptimized
+                      className="chat-msg-image"
+                    />
+                  </div>
+                );
+              })}
             </div>
           )}
 

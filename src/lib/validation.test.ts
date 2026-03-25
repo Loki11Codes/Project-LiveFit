@@ -76,9 +76,9 @@ describe('Validation Schemas', () => {
   });
 
   describe('ChatRequestSchema', () => {
-    it('requires either a prompt or an image', () => {
+    it('requires either a prompt or an image/audio attachment', () => {
       // Empty prompt and no images should fail
-      expect(() => ChatRequestSchema.parse({ prompt: '   ', history: [], images: [] })).toThrow('A prompt or at least one image is required.');
+      expect(() => ChatRequestSchema.parse({ prompt: '   ', history: [], images: [] })).toThrow('A prompt or at least one image/audio attachment is required.');
       
       // Prompt only is OK
       expect(ChatRequestSchema.parse({ prompt: 'Hello', history: [], images: [] })).toBeDefined();
@@ -88,6 +88,13 @@ describe('Validation Schemas', () => {
         prompt: '', 
         history: [], 
         images: [{ name: 'img.png', base64: 'abc', mediaType: 'image/png' }] 
+      })).toBeDefined();
+
+      // Audio only is OK
+      expect(ChatRequestSchema.parse({ 
+        prompt: '', 
+        history: [], 
+        images: [{ name: 'audio.webm', base64: 'def', mediaType: 'audio/webm' }] 
       })).toBeDefined();
     });
   });

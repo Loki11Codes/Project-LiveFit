@@ -121,18 +121,18 @@ export const ChatHistoryMessageSchema = z.object({
 });
 export type ChatHistoryMessageInput = z.infer<typeof ChatHistoryMessageSchema>;
 
-export const ChatImagePayloadSchema = z.object({
+export const ChatAttachmentPayloadSchema = z.object({
   base64: z.string().min(1),
-  mediaType: z.string().startsWith('image/'),
+  mediaType: z.string().regex(/^(image|audio)\//),
   name: trimmedString.min(1).max(180),
 });
-export type ChatImagePayloadInput = z.infer<typeof ChatImagePayloadSchema>;
+export type ChatAttachmentPayloadInput = z.infer<typeof ChatAttachmentPayloadSchema>;
 
 export const ChatRequestSchema = z
   .object({
     prompt: z.string().max(4000),
     history: z.array(ChatHistoryMessageSchema).max(50),
-    images: z.array(ChatImagePayloadSchema).max(6),
+    images: z.array(ChatAttachmentPayloadSchema).max(6),
     clientDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     clientTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
   })
@@ -140,7 +140,7 @@ export const ChatRequestSchema = z
     if (!value.prompt.trim() && value.images.length === 0) {
       ctx.addIssue({
         code: "custom",
-        message: 'A prompt or at least one image is required.',
+        message: 'A prompt or at least one image/audio attachment is required.',
         path: ['prompt'],
       });
     }

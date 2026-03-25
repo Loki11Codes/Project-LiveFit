@@ -85,13 +85,13 @@ export type AnalyticsResponse = {
   };
 };
 
-export type ChatImagePayload = {
+export type ChatAttachmentPayload = {
   base64: string;
   mediaType: string;
   name: string;
 };
 
-export type ChatImageAttachment = ChatImagePayload & {
+export type ChatAttachment = ChatAttachmentPayload & {
   id: string;
   previewUrl: string;
 };
