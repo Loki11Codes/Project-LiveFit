@@ -12,7 +12,7 @@ import {
   type TabId,
 } from '@/lib/types';
 
-const VALID_TABS = new Set<TabId>(['chat', 'log', 'history', 'body', 'profile']);
+const VALID_TABS = new Set<TabId>(['chat', 'log', 'routines', 'history', 'body', 'profile']);
 
 export function parseTab(value: string | null): TabId {
   if (value && VALID_TABS.has(value as TabId)) {
