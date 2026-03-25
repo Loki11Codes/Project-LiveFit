@@ -1,5 +1,18 @@
 import type { ParsedLogEnvelope } from './types';
 
+/** Strip all |||DATA...|||  marker blocks from the raw text. */
+function removeDataBlocks(text: string, startMarker: string, endMarker: string): string {
+  let result = text;
+  let sIdx = result.indexOf(startMarker);
+  while (sIdx >= 0) {
+    const eIdx = result.indexOf(endMarker, sIdx + startMarker.length);
+    if (eIdx < 0) break;
+    result = result.substring(0, sIdx) + result.substring(eIdx + endMarker.length);
+    sIdx = result.indexOf(startMarker);
+  }
+  return result.trim();
+}
+
 export function extractAndCleanLogData(text: string): {
   logs: ParsedLogEnvelope[];
   cleanText: string;
@@ -39,18 +52,5 @@ export function extractAndCleanLogData(text: string): {
     currentPos = endIdx + endMarker.length;
   }
 
-  // Clean text
-  let cleanText = text;
-  let sIdx = cleanText.indexOf(startMarker);
-  while (sIdx >= 0) {
-    const eIdx = cleanText.indexOf(endMarker, sIdx + startMarker.length);
-    if (eIdx >= 0) {
-      cleanText = cleanText.substring(0, sIdx) + cleanText.substring(eIdx + endMarker.length);
-      sIdx = cleanText.indexOf(startMarker);
-    } else {
-      break;
-    }
-  }
-
-  return { logs, cleanText: cleanText.trim(), hasData };
+  return { logs, cleanText: removeDataBlocks(text, startMarker, endMarker), hasData };
 }

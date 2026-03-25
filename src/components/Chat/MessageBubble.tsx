@@ -18,7 +18,7 @@ interface MessageBubbleProps {
   isNewUser?: boolean;
 }
 
-export function MessageBubble({ msg, isFirstInGroup, isNewUser }: MessageBubbleProps) {
+export function MessageBubble({ msg, isFirstInGroup, isNewUser }: Readonly<MessageBubbleProps>) {
   return (
     <motion.div
       layout
