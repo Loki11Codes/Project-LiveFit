@@ -74,20 +74,21 @@ const masterExercises = [
 async function main() {
   console.log('Seeding Master Exercises...');
   
-  // Clear existing if necessary (optional depending on if it's safe to clear in dev)
-  try {
-    await prisma.exercise.deleteMany();
-    console.log('Cleared existing exercises.');
-  } catch (error) {
-    console.log('Error clearing database, might be first run:', error);
+  let seededCount = 0;
+  for (const exercise of masterExercises) {
+    try {
+      await prisma.exercise.upsert({
+        where: { name: exercise.name },
+        update: {},
+        create: exercise,
+      });
+      seededCount++;
+    } catch (err) {
+      console.error(`Failed to seed ${exercise.name}:`, err);
+    }
   }
 
-  const result = await prisma.exercise.createMany({
-    data: masterExercises,
-    skipDuplicates: true, // Prevents errors if rerun
-  });
-
-  console.log(`Seeded ${result.count} core exercises successfully!`);
+  console.log(`Seeded ${seededCount} core exercises successfully!`);
 }
 
 main()
