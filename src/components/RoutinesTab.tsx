@@ -125,13 +125,15 @@ export function RoutinesTab() {
         </div>
         
         {view === "list" ? (
-          <button 
-            onClick={() => setView("create")}
-            className="flex items-center gap-2 px-4 py-2 bg-[var(--surface)] text-[var(--accent)] font-semibold rounded-full border border-[var(--border)] shadow-sm active:scale-95 transition-transform"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">New Routine</span>
-          </button>
+          routines.length > 0 && (
+            <button 
+              onClick={() => setView("create")}
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--surface)] text-[var(--accent)] font-semibold rounded-full border border-[var(--border)] shadow-sm active:scale-95 transition-transform"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">New Routine</span>
+            </button>
+          )
         ) : (
           <button 
             onClick={() => setView("list")}
