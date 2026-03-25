@@ -50,6 +50,7 @@ model User {
   sleepLogs      SleepLog[]
   profile        UserProfile?
   workoutLogs    WorkoutLog[]
+  routines       Routine[]
 }
 
 model VerificationToken {
@@ -74,13 +75,17 @@ model FoodLog {
 }
 
 model WorkoutLog {
-  id      String   @id @default(cuid())
-  userId  String
-  focus   String
-  volume  Float?
-  details String?
-  time    DateTime @default(now())
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  userId    String
+  focus     String
+  volume    Float?
+  details   String?
+  time      DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  routineId String?
+  routine   Routine? @relation(fields: [routineId], references: [id])
+  exercises WorkoutExercise[]
 }
 
 model SleepLog {
@@ -159,4 +164,63 @@ model ChatMessage {
   createdAt DateTime @default(now())
   images    String?
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Exercise {
+  id               String   @id @default(cuid())
+  name             String   @unique
+  category         String   // e.g. "Chest", "Cardio"
+  equipment        String?  // e.g. "Dumbbell", "Barbell"
+  
+  routineExercises RoutineExercise[]
+  workoutExercises WorkoutExercise[]
+}
+
+model Routine {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  exercises   RoutineExercise[]
+  workoutLogs WorkoutLog[]
+}
+
+model RoutineExercise {
+  id         String   @id @default(cuid())
+  routineId  String
+  routine    Routine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  exerciseId String?
+  exercise   Exercise? @relation(fields: [exerciseId], references: [id])
+  customName String? // Fallback if Exercise not in master DB
+  order      Int
+  targetSets Int
+  targetReps String?
+}
+
+model WorkoutExercise {
+  id           String   @id @default(cuid())
+  workoutLogId String
+  workoutLog   WorkoutLog @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
+  exerciseId   String?
+  exercise     Exercise? @relation(fields: [exerciseId], references: [id])
+  customName   String?
+  order        Int
+  
+  sets         WorkoutSet[]
+}
+
+model WorkoutSet {
+  id                String          @id @default(cuid())
+  workoutExerciseId String
+  workoutExercise   WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+  setNumber         Int
+  reps              Int?
+  weight            Float?
+  distance          Float?   // km/miles
+  duration          Int?     // seconds
+  isWarmup          Boolean  @default(false)
+  isDrop            Boolean  @default(false)
+  isFailure         Boolean  @default(false)
 }

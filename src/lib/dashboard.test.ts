@@ -204,6 +204,7 @@ function createWorkoutLog(
     focus: 'Workout',
     volume: null,
     details: null,
+    routineId: null,
     time,
     ...overrides,
   };

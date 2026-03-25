@@ -71,7 +71,7 @@ export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: str
   }
 }
 
-async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInput[], userId: string) {
+async function persistFoodLogs(tx: any, items: FoodItemInput[], userId: string) {
 
   for (const item of items) {
     const parsed = FoodItemSchema.safeParse(item);
@@ -132,7 +132,7 @@ async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInpu
   }
 }
 
-async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogInput, userId: string) {
+async function persistWorkoutLog(tx: any, data: WorkoutLogInput, userId: string) {
 
   const parsed = WorkoutLogSchema.safeParse(data);
   if (!parsed.success) {
@@ -143,6 +143,22 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
   const logDate = validated.date ? new Date(validated.date) : new Date();
   const prs = getRecordValue(data, 'prs');
   const detailsFallback = prs ? JSON.stringify(prs) : undefined;
+  
+  const exercisesConfig = validated.exercises ? {
+    create: validated.exercises.map((ex, exIdx) => ({
+      customName: ex.name,
+      order: exIdx,
+      sets: ex.sets ? {
+        create: ex.sets.map((set) => ({
+          setNumber: set.setNumber,
+          reps: set.reps,
+          weight: set.weight,
+          distance: set.distance,
+          duration: set.duration,
+        }))
+      } : undefined
+    }))
+  } : undefined;
 
   if (validated.update) {
     const startOfDay = new Date(logDate);
@@ -169,6 +185,10 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
         data: {
           volume: validated.volume,
           details: validated.details || detailsFallback,
+          exercises: exercisesConfig ? {
+            deleteMany: {}, // Clear old sets for clean recreation
+            ...exercisesConfig
+          } : undefined
         },
       });
       return;
@@ -182,11 +202,12 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
       volume: validated.volume,
       details: validated.details || detailsFallback,
       time: validated.date ? new Date(validated.date) : undefined,
+      exercises: exercisesConfig,
     },
   });
 }
 
-async function persistSleepLog(tx: Prisma.TransactionClient, data: SleepLogInput, userId: string) {
+async function persistSleepLog(tx: any, data: SleepLogInput, userId: string) {
 
   const parsed = SleepLogSchema.safeParse(data);
   if (!parsed.success) {
@@ -238,7 +259,7 @@ async function persistSleepLog(tx: Prisma.TransactionClient, data: SleepLogInput
   });
 }
 
-async function persistMeasurement(tx: Prisma.TransactionClient, data: MeasurementInput, userId: string) {
+async function persistMeasurement(tx: any, data: MeasurementInput, userId: string) {
 
   const parsed = MeasurementSchema.safeParse(data);
   if (!parsed.success) {
@@ -301,7 +322,7 @@ async function persistMeasurement(tx: Prisma.TransactionClient, data: Measuremen
   });
 }
 
-async function persistProfileUpdate(tx: Prisma.TransactionClient, raw: UserProfileInput, userId: string) {
+async function persistProfileUpdate(tx: any, raw: UserProfileInput, userId: string) {
 
   const parsed = UserProfileSchema.safeParse(raw);
   if (!parsed.success) {
@@ -316,7 +337,7 @@ async function persistProfileUpdate(tx: Prisma.TransactionClient, raw: UserProfi
   });
 }
 
-async function persistGoalUpdate(tx: Prisma.TransactionClient, raw: GoalInput, userId: string) {
+async function persistGoalUpdate(tx: any, raw: GoalInput, userId: string) {
 
   const parsed = GoalSchema.safeParse(raw);
   if (!parsed.success) {
@@ -331,7 +352,7 @@ async function persistGoalUpdate(tx: Prisma.TransactionClient, raw: GoalInput, u
   });
 }
 
-async function persistDayTypeUpdate(tx: Prisma.TransactionClient, raw: unknown, userId: string, clientDate?: string) {
+async function persistDayTypeUpdate(tx: any, raw: unknown, userId: string, clientDate?: string) {
 
   const data = raw as Record<string, unknown>;
   const dayKey = (data.dayKey as string) || clientDate || getLocalDateKey(new Date());

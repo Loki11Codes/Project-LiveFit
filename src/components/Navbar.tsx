@@ -13,7 +13,8 @@ import {
   Moon, 
   LogIn, 
   Activity,
-  Heart
+  Heart,
+  Dumbbell
 } from 'lucide-react';
 import type { AppTheme, TabId } from '@/lib/types';
 
@@ -37,6 +38,7 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
   const tabs: NavbarTab[] = [
     { id: 'chat', label: 'Chat', icon: MessageSquare, color: 'var(--text)' },
     { id: 'log', label: 'Log', icon: ClipboardList, color: '#4db382' },
+    { id: 'routines', label: 'Routines', icon: Dumbbell, color: '#3b82f6' },
     { id: 'history', label: 'History', icon: BarChart3, color: '#c0392b' },
     { id: 'body', label: 'Body', icon: Ruler, color: '#e6ac50' },
     { id: 'profile', label: 'Profile', icon: User, color: '#7b5ea7' },

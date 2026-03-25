@@ -7,7 +7,7 @@ import type {
 
 export type AppTheme = 'light' | 'dark';
 export type DayType = 'Rest' | 'Training' | 'Lite';
-export type TabId = 'chat' | 'log' | 'history' | 'body' | 'profile';
+export type TabId = 'chat' | 'log' | 'history' | 'body' | 'profile' | 'routines';
 
 export type GoalsState = {
   proteinTarget: number;

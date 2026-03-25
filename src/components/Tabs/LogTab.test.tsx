@@ -17,7 +17,7 @@ describe('LogTab Component', () => {
     ],
     protein: 35,
     workouts: [
-      { id: 'w1', focus: 'Push Day', volume: 5000, time: new Date('2026-03-18T10:00:00Z'), userId: 'u1', details: null },
+      { id: 'w1', focus: 'Push Day', volume: 5000, time: new Date('2026-03-18T10:00:00Z'), userId: 'u1', details: null, routineId: null },
     ],
     sleepLogs: [
       { id: 's1', hours: 8, time: new Date('2026-03-18T07:00:00Z'), userId: 'u1', bedTime: '23:00', wakeTime: '07:00', quality: null },

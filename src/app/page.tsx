@@ -12,6 +12,7 @@ import LogTab from '@/components/Tabs/LogTab';
 import HistoryTab from '@/components/Tabs/HistoryTab';
 import BodyTab from '@/components/Tabs/BodyTab';
 import ProfileTab from '@/components/Tabs/ProfileTab';
+import { RoutinesTab } from '@/components/RoutinesTab';
 import {
   buildHistoryRows,
   buildDayTypeMap,
@@ -375,6 +376,10 @@ export default function Home() {
 
             {activeTab === 'history' && (
               <HistoryTab history={history} analytics={dashboard.analytics} />
+            )}
+
+            {activeTab === 'routines' && (
+              <RoutinesTab />
             )}
 
             {activeTab === 'body' && (

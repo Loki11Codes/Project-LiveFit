@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import type { FoodLog, BodyMeasurement } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -52,15 +53,15 @@ export async function GET() {
     // Calculate averages
     const totalDays = Object.keys(nutritionByDay).length || 1;
     const averages = {
-      kcal: foodLogs.reduce((sum, log) => sum + log.kcal, 0) / (totalDays || 1),
-      protein: foodLogs.reduce((sum, log) => sum + log.protein, 0) / (totalDays || 1),
+      kcal: foodLogs.reduce((sum: number, log: FoodLog) => sum + log.kcal, 0) / (totalDays || 1),
+      protein: foodLogs.reduce((sum: number, log: FoodLog) => sum + log.protein, 0) / (totalDays || 1),
     };
 
     // Weight trend
-    const weightTrend = bodyMeasurements.map(m => ({
+    const weightTrend = bodyMeasurements.map((m: BodyMeasurement) => ({
       date: new Date(m.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       weight: m.weight
-    })).filter(w => w.weight !== null);
+    })).filter((w: { date: string, weight: number | null }) => w.weight !== null);
 
     return NextResponse.json({
       nutritionStats,

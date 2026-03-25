@@ -7,7 +7,7 @@ import { authOptions } from '@/lib/auth';
 import { internalError, parseJsonBody } from '@/lib/api';
 import { persistLogData } from '@/lib/persistence';
 import { getErrorMessage } from '@/lib/dashboard';
-import type { ChatImagePayload } from '@/lib/types';
+import type { ChatAttachmentPayload } from '@/lib/types';
 import {
   ChatRequestSchema,
 } from '@/lib/validation';
@@ -45,19 +45,37 @@ NUTRITION REFERENCE:
 - Rice cooked (100g): 2.7g protein, 130kcal, 28g carb, 0.3g fat, 0.4g fiber
 - Chapati (1): 3g protein, 120kcal, 20g carb, 3g fat, 2g fiber
 
+WORKOUT SCREENSHOT PARSING (HEVY/STRONG/ETC):
+- If the user provides a workout summary screenshot, meticulously extract the entire structured routine.
+- Include an "exercises" array containing each exercise "name" and a "sets" array.
+- "sets" should have: "setNumber" (e.g. 1), "reps", "weight" (kg), "distance" (km), "duration" (seconds).
+- Automatically calculate or extract the overall "volume" and "duration".
+- You can ALSO do this for standard text inputs (e.g. "I did 3 sets of 12 bench press at 20kg").
+
 RESPONSE FORMAT:
 Your response must be a JSON object followed by a natural language message.
 The JSON block should be between |||DATA and |||.
 
-Example for dayType update:
+Example for full workout log:
 |||DATA
 {
-  "category": "dayType",
-  "dayType": "Training",
-  "date": "2026-03-18"
+  "category": "workout",
+  "focus": "Chest, Arms & Delts",
+  "volume": 3136,
+  "date": "2026-03-25",
+  "exercises": [
+    {
+      "name": "Incline Bench Press (Dumbbell)",
+      "sets": [
+        { "setNumber": 1, "reps": 12, "weight": 14 },
+        { "setNumber": 2, "reps": 12, "weight": 14 },
+        { "setNumber": 3, "reps": 12, "weight": 20 }
+      ]
+    }
+  ]
 }
 |||
-Confirmed! I've set today as a training day for you.
+Great job on the Chest, Arms & Delts workout! I've logged all 17 sets.
 
 CRITICAL: You MUST include the |||DATA block for every loggable action. 
 If the user provides multiple actions (e.g. eating multiple foods at once, or several workouts), you can output a single |||DATA block containing a JSON array of objects, or output multiple separate |||DATA blocks.
@@ -88,7 +106,7 @@ type GeminiPart =
 async function callGemini(
   prompt: string,
   history: ChatHistoryMessage[],
-  images: ChatImagePayload[],
+  images: ChatAttachmentPayload[],
   clientDate?: string,
   clientTime?: string
 ) {
@@ -293,8 +311,7 @@ async function getAIResponse(body: z.infer<typeof ChatRequestSchema>, geminiKey:
 
   return text;
 }
-
-async function handleUserResponse(text: string, userId: string, clientDate?: string): Promise<string | undefined> {
+async function handleUserResponse(text: string, userId: string, clientDate?: string): Promise<string | undefined> {
   try {
     const { logs, cleanText } = extractAndCleanLogData(text);
     await persistLogData(logs, userId, clientDate);
@@ -316,7 +333,7 @@ async function handleUserResponse(text: string, userId: string, clientDate?: str
 
 function buildGeminiPromptParts(
   prompt: string,
-  images: ChatImagePayload[]
+  images: ChatAttachmentPayload[]
 ): GeminiPart[] {
   const parts: GeminiPart[] = [];
 
