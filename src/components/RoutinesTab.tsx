@@ -212,16 +212,21 @@ export function RoutinesTab() {
                   <label className="text-sm font-bold text-[var(--foreground-muted)] uppercase tracking-wider ml-1">Exercises</label>
                   <button 
                     onClick={() => setIsSearching(true)}
-                    className="flex items-center gap-1.5 text-sm font-bold text-[var(--accent)]"
+                    className="flex items-center gap-1.5 text-[13px] font-bold text-[var(--accent)] bg-[var(--accent)]/10 px-3 py-2 rounded-xl border border-[var(--accent)]/20 hover:bg-[var(--accent)]/20 transition-all active:scale-95"
                   >
-                    <Plus className="w-4 h-4" /> Add Exercise
+                    <Search className="w-4 h-4" /> Search Exercises
                   </button>
                 </div>
 
                 {selectedExercises.length === 0 ? (
                   <div className="p-8 border-2 border-dashed border-[var(--border)] bg-[var(--surface)]/50 rounded-2xl flex flex-col items-center justify-center text-center">
-                     <p className="text-[var(--foreground-muted)] font-medium">No exercises added yet.</p>
-                     <button onClick={() => setIsSearching(true)} className="mt-2 text-[var(--accent)] font-semibold text-sm">Browse Database →</button>
+                      <p className="text-[var(--foreground-muted)] font-medium mb-4">You haven't added any exercises to this routine yet.</p>
+                      <button 
+                        onClick={() => setIsSearching(true)} 
+                        className="px-6 py-3 bg-[var(--accent)] text-white font-bold rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] active:scale-95 transition-all flex items-center gap-2"
+                      >
+                        <Search className="w-4 h-4" /> Search Exercises
+                      </button>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3">
