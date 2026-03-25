@@ -7,6 +7,7 @@ vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: Record<string, unknown>) => <div {...props}>{children as React.ReactNode}</div>,
   },
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 describe('LogTab Component', () => {
@@ -17,7 +18,28 @@ describe('LogTab Component', () => {
     ],
     protein: 35,
     workouts: [
-      { id: 'w1', focus: 'Push Day', volume: 5000, time: new Date('2026-03-18T10:00:00Z'), userId: 'u1', details: null, routineId: null },
+      {
+        id: 'w1',
+        focus: 'Push Day',
+        volume: 5000,
+        time: new Date('2026-03-18T10:00:00Z'),
+        userId: 'u1',
+        details: null,
+        routineId: null,
+        exercises: [
+          {
+            id: 'we1',
+            workoutLogId: 'w1',
+            exerciseId: 'e1',
+            customName: null,
+            order: 0,
+            exercise: { id: 'e1', name: 'Bench Press', category: 'Chest', equipment: 'Barbell' },
+            sets: [
+              { id: 's1', workoutExerciseId: 'we1', setNumber: 1, reps: 10, weight: 60, distance: null, duration: null, isWarmup: false, isDrop: false, isFailure: false },
+            ],
+          },
+        ],
+      },
     ],
     sleepLogs: [
       { id: 's1', hours: 8, time: new Date('2026-03-18T07:00:00Z'), userId: 'u1', bedTime: '23:00', wakeTime: '07:00', quality: null },

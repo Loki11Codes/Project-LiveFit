@@ -14,6 +14,8 @@ import { ChatInput } from "./Chat/ChatInput";
 interface ChatProps {
   readonly onLogParsed: () => void;
   readonly isNewUser?: boolean;
+  readonly initialMessage?: string | null;
+  readonly onMessageSent?: () => void;
 }
 
 type ChatResponse = {
@@ -22,7 +24,7 @@ type ChatResponse = {
   warning?: string;
 };
 
-export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
+export default function Chat({ onLogParsed, isNewUser, initialMessage, onMessageSent }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome-msg",
@@ -53,6 +55,18 @@ export default function Chat({ onLogParsed, isNewUser }: ChatProps) {
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  useEffect(() => {
+    if (initialMessage) {
+      setInput(initialMessage);
+      onMessageSent?.();
+      // We use a small timeout to ensure the input state is updated before sending
+      const timeoutId = setTimeout(() => {
+        handleSend();
+      }, 100);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [initialMessage]);
 
   useEffect(() => {
     async function fetchHistory() {

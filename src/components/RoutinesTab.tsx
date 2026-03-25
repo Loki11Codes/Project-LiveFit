@@ -1,10 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Search, Dumbbell, ChevronRight, X, Play } from "lucide-react";
+import { Plus, Search, Dumbbell, X, Play } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export function RoutinesTab() {
+interface RoutinesTabProps {
+  onStart?: (routine: any) => void;
+}
+
+export function RoutinesTab({ onStart }: RoutinesTabProps) {
   const [view, setView] = useState<"list" | "create">("list");
   const [routines, setRoutines] = useState<any[]>([]);
   const [exercises, setExercises] = useState<any[]>([]);
@@ -173,7 +177,10 @@ export function RoutinesTab() {
                   <div key={routine.id} className="p-5 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm flex flex-col gap-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-bold">{routine.name}</h3>
-                      <button className="flex items-center gap-2 px-3 py-1.5 bg-[var(--accent)]/10 text-[var(--accent)] rounded-lg font-semibold text-sm">
+                      <button 
+                        onClick={() => onStart?.(routine)}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-[var(--accent)]/10 text-[var(--accent)] rounded-lg font-semibold text-sm active:scale-95 transition-transform"
+                      >
                         <Play className="w-3.5 h-3.5 fill-current" />
                         Start
                       </button>
@@ -197,8 +204,9 @@ export function RoutinesTab() {
               className="flex flex-col gap-6"
             >
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-[var(--foreground-muted)] uppercase tracking-wider ml-1">Routine Name</label>
+                <label htmlFor="routine-name" className="text-sm font-bold text-[var(--foreground-muted)] uppercase tracking-wider ml-1">Routine Name</label>
                 <input
+                  id="routine-name"
                   type="text"
                   placeholder="e.g. Push Day, Pull Day, Legs"
                   className="w-full px-5 py-3.5 bg-[var(--surface)] rounded-xl border border-[var(--border)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all font-medium text-lg placeholder:text-[var(--foreground-muted)]/50 shadow-inner"
@@ -209,8 +217,9 @@ export function RoutinesTab() {
 
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold text-[var(--foreground-muted)] uppercase tracking-wider ml-1">Exercises</label>
+                  <label htmlFor="exercise-search-trigger" className="text-sm font-bold text-[var(--foreground-muted)] uppercase tracking-wider ml-1">Exercises</label>
                   <button 
+                    id="exercise-search-trigger"
                     onClick={() => setIsSearching(true)}
                     className="flex items-center gap-1.5 text-[13px] font-bold text-[var(--accent)] bg-[var(--accent)]/10 px-3 py-2 rounded-xl border border-[var(--accent)]/20 hover:bg-[var(--accent)]/20 transition-all active:scale-95"
                   >
@@ -248,8 +257,9 @@ export function RoutinesTab() {
 
                         <div className="grid grid-cols-2 gap-3 mt-1">
                           <div className="relative">
-                            <label className="text-[10px] font-bold text-[var(--foreground-muted)] uppercase absolute -top-2 left-3 bg-[var(--surface)] px-1">Sets</label>
+                            <label htmlFor={`sets-${e.routineExerciseId}`} className="text-[10px] font-bold text-[var(--foreground-muted)] uppercase absolute -top-2 left-3 bg-[var(--surface)] px-1">Sets</label>
                             <input 
+                              id={`sets-${e.routineExerciseId}`}
                               type="number" 
                               value={e.targetSets} 
                               onChange={(ev) => updateSetRep(e.routineExerciseId, "targetSets", ev.target.value)}
@@ -257,8 +267,9 @@ export function RoutinesTab() {
                             />
                           </div>
                           <div className="relative">
-                            <label className="text-[10px] font-bold text-[var(--foreground-muted)] uppercase absolute -top-2 left-3 bg-[var(--surface)] px-1">Target Reps</label>
+                            <label htmlFor={`reps-${e.routineExerciseId}`} className="text-[10px] font-bold text-[var(--foreground-muted)] uppercase absolute -top-2 left-3 bg-[var(--surface)] px-1">Target Reps</label>
                             <input 
+                              id={`reps-${e.routineExerciseId}`}
                               type="text" 
                               placeholder="e.g. 8-12"
                               value={e.targetReps} 

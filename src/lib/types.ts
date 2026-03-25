@@ -3,7 +3,27 @@ import type {
   FoodLog,
   SleepLog,
   WorkoutLog,
+  WorkoutExercise,
+  WorkoutSet,
+  Exercise,
 } from '@prisma/client';
+
+export type {
+  BodyMeasurement,
+  FoodLog,
+  SleepLog,
+  WorkoutLog,
+  WorkoutExercise,
+  WorkoutSet,
+  Exercise,
+};
+
+export type WorkoutLogWithRelations = WorkoutLog & {
+  exercises: (WorkoutExercise & {
+    sets: WorkoutSet[];
+    exercise: Exercise | null;
+  })[];
+};
 
 export type AppTheme = 'light' | 'dark';
 export type DayType = 'Rest' | 'Training' | 'Lite';
@@ -49,7 +69,7 @@ export type MeasurementPayload = Record<MeasurementFormField, number | null>;
 
 export type LogsResponse = {
   food: FoodLog[];
-  workouts: WorkoutLog[];
+  workouts: WorkoutLogWithRelations[];
   sleep: SleepLog[];
 };
 

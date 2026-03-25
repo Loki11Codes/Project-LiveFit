@@ -21,6 +21,15 @@ export async function GET() {
       }),
       prisma.workoutLog.findMany({ 
         where: { userId }, 
+        include: {
+          exercises: {
+            include: {
+              sets: true,
+              exercise: true,
+            },
+            orderBy: { order: 'asc' }
+          }
+        },
         orderBy: { time: 'desc' } 
       }),
       prisma.sleepLog.findMany({ 

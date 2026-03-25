@@ -145,19 +145,29 @@ async function persistWorkoutLog(tx: any, data: WorkoutLogInput, userId: string)
   const detailsFallback = prs ? JSON.stringify(prs) : undefined;
   
   const exercisesConfig = validated.exercises ? {
-    create: validated.exercises.map((ex, exIdx) => ({
-      customName: ex.name,
-      order: exIdx,
-      sets: ex.sets ? {
-        create: ex.sets.map((set) => ({
-          setNumber: set.setNumber,
-          reps: set.reps,
-          weight: set.weight,
-          distance: set.distance,
-          duration: set.duration,
-        }))
-      } : undefined
-    }))
+    create: await Promise.all(
+      validated.exercises.map(async (ex, exIdx) => {
+        const matched = await tx.exercise.findFirst({
+          where: { name: { equals: ex.name } },
+        });
+        return {
+          exerciseId: matched?.id || null,
+          customName: matched ? null : ex.name,
+          order: exIdx,
+          sets: ex.sets
+            ? {
+                create: ex.sets.map((set) => ({
+                  setNumber: set.setNumber,
+                  reps: set.reps,
+                  weight: set.weight,
+                  distance: set.distance,
+                  duration: set.duration,
+                })),
+              }
+            : undefined,
+        };
+      })
+    ),
   } : undefined;
 
   if (validated.update) {

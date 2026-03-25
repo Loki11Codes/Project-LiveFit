@@ -66,8 +66,15 @@ export default function Home() {
   const [theme, setTheme] = useState<AppTheme>('light');
   const [dashboard, setDashboard] = useState<DashboardState>(INITIAL_DASHBOARD_STATE);
   const [notice, setNotice] = useState<InlineNotice | null>(null);
+  const [chatDraft, setChatDraft] = useState<string | null>(null);
 
   const todaysFood = getTodayFoodLogs(dashboard.logs.food);
+  // ...
+  const handleStartWorkout = (routine: any) => {
+    const workoutMsg = `I'm starting my "${routine.name}" workout. Here is the plan: ${routine.exercises.map((e: any) => e.exercise.name).join(", ")}. Let's record the sets as I go!`;
+    setChatDraft(workoutMsg);
+    handleTabChange('chat');
+  };
   const nutrition = sumNutrition(todaysFood);
   const latestSleep = getLatestSleepLog(dashboard.logs.sleep);
   const trackedDayCount = getTrackedDayCount(dashboard.logs);
@@ -347,6 +354,8 @@ export default function Home() {
                 <Chat 
                   onLogParsed={refreshDashboard} 
                   isNewUser={!dashboard.profile?.age || !dashboard.profile?.height}
+                  initialMessage={chatDraft}
+                  onMessageSent={() => setChatDraft(null)}
                 />
                 <Sidebar
                   protein={nutrition.protein}
@@ -379,7 +388,7 @@ export default function Home() {
             )}
 
             {activeTab === 'routines' && (
-              <RoutinesTab />
+              <RoutinesTab onStart={handleStartWorkout} />
             )}
 
             {activeTab === 'body' && (

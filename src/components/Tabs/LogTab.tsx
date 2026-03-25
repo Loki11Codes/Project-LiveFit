@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import type { FoodLog, SleepLog, WorkoutLog } from '@prisma/client';
+import type { FoodLog, SleepLog, WorkoutLogWithRelations } from '@/lib/types';
 import {
   Utensils,
   Dumbbell,
@@ -11,15 +11,17 @@ import {
   Wheat,
   Droplets,
   Leaf,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cardVariants, rowVariants } from '@/lib/animations';
 import EmptyState from '@/components/Shared/EmptyState';
 
 interface LogTabProps {
   readonly foodLog: FoodLog[];
   readonly protein: number;
-  readonly workouts: WorkoutLog[];
+  readonly workouts: WorkoutLogWithRelations[];
   readonly sleepLogs: SleepLog[];
 }
 
@@ -30,6 +32,12 @@ export default function LogTab({
   workouts,
   sleepLogs,
 }: LogTabProps) {
+  const [expandedWorkouts, setExpandedWorkouts] = React.useState<Record<string, boolean>>({});
+
+  const toggleWorkout = (id: string) => {
+    setExpandedWorkouts((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
   return (
     <div className="flex flex-col gap-5">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -113,7 +121,7 @@ export default function LogTab({
             )}
           </div>
         </motion.div>
-
+        
         {/* Workout Card */}
         <motion.div
           className="card"
@@ -126,37 +134,94 @@ export default function LogTab({
             <Dumbbell className="w-5 h-5" style={{ color: '#c0392b' }} />
             <div className="card-label mb-0">Workout</div>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {workouts.length > 0 ? (
-              workouts.slice(0, 4).map((workout, index) => (
+              workouts.slice(0, 5).map((workout, index) => (
                 <motion.div
                   key={workout.id}
-                  className="log-row"
+                  className="flex flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface2)]/30"
                   variants={rowVariants}
                   initial="hidden"
                   animate="visible"
                   custom={index}
-                  whileHover={{ y: -2, transition: { duration: 0.2 } }}
                 >
-                  <div className="flex-1">
-                    <div className="log-row-name flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] opacity-40" />
-                      {workout.focus}
+                  <button
+                    onClick={() => toggleWorkout(workout.id)}
+                    className="flex items-start justify-between p-4 hover:bg-[var(--surface2)]/50 transition-colors text-left"
+                  >
+                    <div className="flex-1">
+                      <div className="log-row-name flex items-center gap-2 font-bold">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#c0392b]" />
+                        {workout.focus}
+                      </div>
+                      <div className="log-row-meta flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" style={{ color: '#a86b12' }} />
+                          {new Date(workout.time).toLocaleDateString([], {
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </span>
+                        <span className="flex items-center gap-1 font-semibold text-[var(--accent)]">
+                          <Flame className="w-3 h-3" style={{ color: '#e67e22' }} />
+                          {workout.volume ?? '--'} kg
+                        </span>
+                        {workout.exercises.length > 0 && (
+                          <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
+                            {workout.exercises.length} Exercises
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="log-row-meta flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" style={{ color: '#a86b12' }} />
-                        {new Date(workout.time).toLocaleDateString([], {
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Flame className="w-3 h-3" style={{ color: '#e67e22' }} />
-                        {workout.volume ?? '--'} kg
-                      </span>
-                    </div>
-                  </div>
+                    {workout.exercises.length > 0 && (
+                      <div className="ml-2 mt-1">
+                        {expandedWorkouts[workout.id] ? (
+                          <ChevronUp className="w-4 h-4 text-[var(--text-muted)]" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-[var(--text-muted)]" />
+                        )}
+                      </div>
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {expandedWorkouts[workout.id] && workout.exercises.length > 0 && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="border-t border-[var(--border)] bg-[var(--surface)]/40 px-4 py-3"
+                      >
+                        <div className="space-y-4">
+                          {workout.exercises.map((ex) => (
+                            <div key={ex.id} className="flex flex-col gap-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-bold text-[var(--text)]">
+                                  {ex.exercise?.name || ex.customName}
+                                </span>
+                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase">
+                                  {ex.sets.length} Sets
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {ex.sets.map((set) => (
+                                  <div
+                                    key={set.id}
+                                    className="px-2 py-1 rounded bg-[var(--surface2)] border border-[var(--border)] text-[10px] font-medium"
+                                  >
+                                    <span className="text-[var(--text-muted)]">S{set.setNumber}: </span>
+                                    <span className="text-[var(--text)]">
+                                      {set.weight ?? '--'}kg x {set.reps ?? '--'}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               ))
             ) : (
