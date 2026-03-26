@@ -1,0 +1,30 @@
+
+[1m[46m RUN [49m[22m [36mv4.1.0 [39m[90mD:/LiveFit Project/Project-LiveFit[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+[90mstderr[2m | src/app/api/chat/route.test.ts
+[22m[39m[vitest] The vi.fn() mock did not use 'function' or 'class' in its implementation, see https://vitest.dev/api/vi#vi-spyon for examples.
+
+ [31m❯[39m src/app/api/chat/route.test.ts [2m([22m[2m0 test[22m[2m)[22m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/app/api/chat/route.test.ts[2m [ src/app/api/chat/route.test.ts ][22m
+[31m[1mTypeError[22m: () => ({ getGenerativeModel: getGenerativeModelMock }) is not a constructor[39m
+[36m [2m❯[22m src/app/api/chat/route.ts:[2m16:15[22m[39m
+    [90m 14|[39m [35mimport[39m { extractAndCleanLogData } [35mfrom[39m [32m'@/lib/chat-utils'[39m[33m;[39m
+    [90m 15|[39m
+    [90m 16|[39m [35mconst[39m genAI [33m=[39m [35mnew[39m [33mGoogleGenerativeAI[39m(process[33m.[39menv[33m.[39m[33mGEMINI_API_KEY[39m [33m||[39m [32m''[39m)[33m;[39m
+    [90m   |[39m               [31m^[39m
+    [90m 17|[39m
+    [90m 18|[39m [35mconst[39m getSystemPrompt [33m=[39m (clientDate[33m?[39m[33m:[39m string[33m,[39m clientTime[33m?[39m[33m:[39m string) [33m=>[39m {
+[90m [2m❯[22m src/app/api/chat/route.test.ts:[2m2:1[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [2mno tests[22m
+[2m   Start at [22m 22:09:18
+[2m   Duration [22m 6.28s[2m (transform 272ms, setup 799ms, import 0ms, tests 0ms, environment 3.01s)[22m
+

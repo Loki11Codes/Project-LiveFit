@@ -1,0 +1,271 @@
+
+[1m[46m RUN [49m[22m [36mv4.1.0 [39m[90mD:/LiveFit Project/Project-LiveFit[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+[90mstderr[2m | src/lib/persistence.test.ts[2m > [22m[2mpersistence utility[2m > [22m[2mpersistLogData[2m > [22m[2mnormalizes dayType values
+[22m[39m[PERSISTENCE] Invalid DayType received: "unknown". Defaulting to Rest.
+
+[90mstderr[2m | src/lib/persistence.test.ts[2m > [22m[2mpersistence utility[2m > [22m[2mpersistLogData[2m > [22m[2mthrows error if persistence fails within transaction
+[22m[39mPersistence failed for food: Transaction failed
+
+[90mstderr[2m | src/lib/persistence.test.ts[2m > [22m[2mpersistence utility[2m > [22m[2mpersistLogData[2m > [22m[2mskips invalid food items
+[22m[39mSkipping invalid food log from AI: ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "name"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  }
+]
+    at new ZodError [90m(file:///D:/LiveFit%20Project/Project-LiveFit/[39mnode_modules/[4mzod[24m/v4/core/core.js:39:39[90m)[39m
+    at Module.<anonymous> [90m(file:///D:/LiveFit%20Project/Project-LiveFit/[39mnode_modules/[4mzod[24m/v4/core/parse.js:40:20[90m)[39m
+    at _.inst.safeParse [90m(file:///D:/LiveFit%20Project/Project-LiveFit/[39mnode_modules/[4mzod[24m/v4/classic/schemas.js:40:46[90m)[39m
+    at persistFoodLogs (D:/LiveFit Project/Project-LiveFit/src/lib/persistence.ts:89:35)
+    at handleCategoryPersistence (D:/LiveFit Project/Project-LiveFit/src/lib/persistence.ts:60:15)
+    at D:/LiveFit Project/Project-LiveFit/src/lib/persistence.ts:39:15
+    at Object.<anonymous> (D:/LiveFit Project/Project-LiveFit/src/lib/persistence.test.ts:27:66)
+    at Object.Mock [as $transaction] [90m(file:///D:/LiveFit%20Project/Project-LiveFit/[39mnode_modules/[4m@vitest/spy[24m/dist/index.js:332:34[90m)[39m
+    at Module.persistLogData (D:/LiveFit Project/Project-LiveFit/src/lib/persistence.ts:38:20)
+    at D:/LiveFit Project/Project-LiveFit/src/lib/persistence.test.ts:188:15
+
+[90mstderr[2m | src/lib/persistence.test.ts[2m > [22m[2mpersistence utility[2m > [22m[2mpersistLogData[2m > [22m[2mskips invalid workout items
+[22m[39mSkipping invalid workout log from AI: ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "focus"
+    ],
+    "message": "Invalid input: expected string, received number"
+  }
+]
+    at new ZodError [90m(file:///D:/LiveFit%20Project/Project-LiveFit/[39mnode_modules/[4mzod[24m/v4/core/core.js:39:39[90m)[39m
+    at Module.<anonymous> [90m(file:///D:/LiveFit%20Project/Project-LiveFit/[39mnode_modules/[4mzod[24m/v4/core/parse.js:40:20[90m)[39m
+    at _.inst.safeParse [90m(file:///D:/LiveFit%20Project/Project-LiveFit/[39mnode_modules/[4mzod[24m/v4/classic/schemas.js:40:46[90m)[39m
+    at persistWorkoutLog (D:/LiveFit Project/Project-LiveFit/src/lib/persistence.ts:149:35)
+    at handleCategoryPersistence (D:/LiveFit Project/Project-LiveFit/src/lib/persistence.ts:64:13)
+    at D:/LiveFit Project/Project-LiveFit/src/lib/persistence.ts:39:15
+    at Object.<anonymous> (D:/LiveFit Project/Project-LiveFit/src/lib/persistence.test.ts:27:66)
+    at Object.Mock [as $transaction] [90m(file:///D:/LiveFit%20Project/Project-LiveFit/[39mnode_modules/[4m@vitest/spy[24m/dist/index.js:332:34[90m)[39m
+    at Module.persistLogData (D:/LiveFit Project/Project-LiveFit/src/lib/persistence.ts:38:20)
+    at D:/LiveFit Project/Project-LiveFit/src/lib/persistence.test.ts:194:15
+
+ [31m❯[39m src/lib/persistence.test.ts [2m([22m[2m23 tests[22m[2m | [22m[31m5 failed[39m[2m)[22m[32m 32[2mms[22m[39m
+       [32m✓[39m returns early if no envelopes are provided[32m 2[2mms[22m[39m
+       [32m✓[39m skips envelopes without a category[32m 0[2mms[22m[39m
+       [32m✓[39m persists food logs (single item)[32m 4[2mms[22m[39m
+       [32m✓[39m persists food logs (array of items)[32m 0[2mms[22m[39m
+       [32m✓[39m updates existing food log if update flag is set[32m 1[2mms[22m[39m
+       [32m✓[39m persists workout log[32m 2[2mms[22m[39m
+       [32m✓[39m updates existing workout log[32m 0[2mms[22m[39m
+       [32m✓[39m persists sleep log[32m 1[2mms[22m[39m
+       [32m✓[39m updates sleep log[32m 0[2mms[22m[39m
+       [32m✓[39m persists measurements[32m 1[2mms[22m[39m
+       [32m✓[39m updates measurements[32m 0[2mms[22m[39m
+       [32m✓[39m persists profile updates[32m 1[2mms[22m[39m
+       [32m✓[39m persists goal updates[32m 1[2mms[22m[39m
+       [32m✓[39m persists dayType updates[32m 0[2mms[22m[39m
+       [32m✓[39m normalizes dayType values[32m 1[2mms[22m[39m
+       [32m✓[39m throws error if persistence fails within transaction[32m 2[2mms[22m[39m
+       [32m✓[39m skips invalid food items[32m 5[2mms[22m[39m
+       [32m✓[39m skips invalid workout items[32m 2[2mms[22m[39m
+[31m       [31m×[31m skips invalid sleep items[39m[32m 3[2mms[22m[39m
+[31m       [31m×[31m skips invalid measurement items[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m skips invalid profile items[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m skips invalid goal items[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m handles non-object data gracefully in helpers[39m[32m 1[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 5 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/lib/persistence.test.ts[2m > [22mpersistence utility[2m > [22mpersistLogData[2m > [22mskips invalid sleep items
+[31m[1mAssertionError[22m: expected "vi.fn()" to not be called at all, but actually been called 1 times[90m
+
+Received:
+
+[1m  1st vi.fn() call:
+
+[22m    Array [
+      Object {
+        "data": Object {
+          "bedTime": undefined,
+          "hours": 0,
+          "time": undefined,
+          "userId": "user-123",
+          "wakeTime": undefined,
+        },
+      },
+    ]
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/lib/persistence.test.ts:[2m201:44[22m[39m
+    [90m199|[39m         const envelopes = [{ category: 'sleep', data: { hours: 'long' …
+    [90m200|[39m         [35mawait[39m [34mpersistLogData[39m(envelopes [35mas[39m any[33m,[39m userId)[33m;[39m
+    [90m201|[39m         [34mexpect[39m(mockTx[33m.[39msleepLog[33m.[39mcreate)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+    [90m   |[39m                                            [31m^[39m
+    [90m202|[39m     })[33m;[39m
+    [90m203|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/lib/persistence.test.ts[2m > [22mpersistence utility[2m > [22mpersistLogData[2m > [22mskips invalid measurement items
+[31m[1mAssertionError[22m: expected "vi.fn()" to not be called at all, but actually been called 1 times[90m
+
+Received:
+
+[1m  1st vi.fn() call:
+
+[22m    Array [
+      Object {
+        "data": Object {
+          "arms": null,
+          "bodyFat": null,
+          "calves": null,
+          "chest": null,
+          "hips": null,
+          "neck": null,
+          "thighs": null,
+          "time": undefined,
+          "userId": "user-123",
+          "waist": null,
+          "weight": null,
+        },
+      },
+    ]
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/lib/persistence.test.ts:[2m207:51[22m[39m
+    [90m205|[39m         const envelopes = [{ category: 'measurement', data: { weight: …
+    [90m206|[39m         [35mawait[39m [34mpersistLogData[39m(envelopes [35mas[39m any[33m,[39m userId)[33m;[39m
+    [90m207|[39m         [34mexpect[39m(mockTx[33m.[39mbodyMeasurement[33m.[39mcreate)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+    [90m   |[39m                                                   [31m^[39m
+    [90m208|[39m     })[33m;[39m
+    [90m209|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/lib/persistence.test.ts[2m > [22mpersistence utility[2m > [22mpersistLogData[2m > [22mskips invalid profile items
+[31m[1mAssertionError[22m: expected "vi.fn()" to not be called at all, but actually been called 1 times[90m
+
+Received:
+
+[1m  1st vi.fn() call:
+
+[22m    Array [
+      Object {
+        "create": Object {
+          "height": null,
+          "userId": "user-123",
+        },
+        "update": Object {
+          "height": null,
+        },
+        "where": Object {
+          "userId": "user-123",
+        },
+      },
+    ]
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/lib/persistence.test.ts:[2m213:47[22m[39m
+    [90m211|[39m         const envelopes = [{ category: 'profile', data: { name: 123 } …
+    [90m212|[39m         [35mawait[39m [34mpersistLogData[39m(envelopes [35mas[39m any[33m,[39m userId)[33m;[39m
+    [90m213|[39m         [34mexpect[39m(mockTx[33m.[39muserProfile[33m.[39mupsert)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+    [90m   |[39m                                               [31m^[39m
+    [90m214|[39m     })[33m;[39m
+    [90m215|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/lib/persistence.test.ts[2m > [22mpersistence utility[2m > [22mpersistLogData[2m > [22mskips invalid goal items
+[31m[1mAssertionError[22m: expected "vi.fn()" to not be called at all, but actually been called 1 times[90m
+
+Received:
+
+[1m  1st vi.fn() call:
+
+[22m    Array [
+      Object {
+        "create": Object {
+          "kcalTarget": 0,
+          "proteinLite": null,
+          "proteinRest": null,
+          "proteinTarget": 0,
+          "proteinTraining": null,
+          "sleepTarget": null,
+          "userId": "user-123",
+          "waterTarget": null,
+        },
+        "update": Object {
+          "kcalTarget": 0,
+          "proteinLite": null,
+          "proteinRest": null,
+          "proteinTarget": 0,
+          "proteinTraining": null,
+          "sleepTarget": null,
+          "waterTarget": null,
+        },
+        "where": Object {
+          "userId": "user-123",
+        },
+      },
+    ]
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/lib/persistence.test.ts:[2m219:40[22m[39m
+    [90m217|[39m         const envelopes = [{ category: 'goals', data: { targetWeight: …
+    [90m218|[39m         [35mawait[39m [34mpersistLogData[39m(envelopes [35mas[39m any[33m,[39m userId)[33m;[39m
+    [90m219|[39m         [34mexpect[39m(mockTx[33m.[39mgoal[33m.[39mupsert)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+    [90m   |[39m                                        [31m^[39m
+    [90m220|[39m     })[33m;[39m
+    [90m221|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/lib/persistence.test.ts[2m > [22mpersistence utility[2m > [22mpersistLogData[2m > [22mhandles non-object data gracefully in helpers
+[31m[1mAssertionError[22m: expected "vi.fn()" to not be called at all, but actually been called 1 times[90m
+
+Received:
+
+[1m  1st vi.fn() call:
+
+[22m    Array [
+      Object {
+        "data": Object {
+          "bedTime": undefined,
+          "hours": 0,
+          "time": undefined,
+          "userId": "user-123",
+          "wakeTime": undefined,
+        },
+      },
+    ]
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/lib/persistence.test.ts:[2m225:44[22m[39m
+    [90m223|[39m         [90m// We trigger paths like getRecordValue with non-record[39m
+    [90m224|[39m         await persistLogData([{ category: 'sleep', data: null }], user…
+    [90m225|[39m         [34mexpect[39m(mockTx[33m.[39msleepLog[33m.[39mcreate)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+    [90m   |[39m                                            [31m^[39m
+    [90m226|[39m
+    [90m227|[39m         await persistLogData([{ category: 'workout', data: "not-an-obj…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m5 failed[39m[22m[2m | [22m[1m[32m18 passed[39m[22m[90m (23)[39m
+[2m   Start at [22m 22:05:26
+[2m   Duration [22m 3.15s[2m (transform 92ms, setup 277ms, import 154ms, tests 32ms, environment 1.02s)[22m
+

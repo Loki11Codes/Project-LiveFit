@@ -1,0 +1,813 @@
+
+[1m[46m RUN [49m[22m [36mv4.1.0 [39m[90mD:/LiveFit Project/Project-LiveFit[39m
+
+ [32m✓[39m src/components/Tabs/LogTab.test.tsx[2m > [22mLogTab Component[2m > [22mrenders food log items correctly[32m 81[2mms[22m[39m
+ [32m✓[39m src/components/Tabs/LogTab.test.tsx[2m > [22mLogTab Component[2m > [22mrenders workout logs correctly[32m 16[2mms[22m[39m
+ [32m✓[39m src/components/Tabs/LogTab.test.tsx[2m > [22mLogTab Component[2m > [22mrenders sleep logs correctly[32m 17[2mms[22m[39m
+ [32m✓[39m src/components/Tabs/LogTab.test.tsx[2m > [22mLogTab Component[2m > [22mrenders empty messages when logs are missing[32m 11[2mms[22m[39m
+ [31m×[39m src/components/Tabs/LogTab.test.tsx[2m > [22mLogTab Component[2m > [22mtoggles workout details when clicked[32m 43[2mms[22m[39m
+[31m   → Unable to find an element with the text: 1 Sessions. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"flex flex-col gap-5"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"card md:col-span-2 lg:col-span-2"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex justify-between items-center mb-6"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-2"[31m
+            [36m>[31m
+              [36m<svg[31m
+                [33maria-hidden[31m=[32m"true"[31m
+                [33mclass[31m=[32m"lucide lucide-utensils w-5 h-5"[31m
+                [33mfill[31m=[32m"none"[31m
+                [33mheight[31m=[32m"24"[31m
+                [33mstroke[31m=[32m"currentColor"[31m
+                [33mstroke-linecap[31m=[32m"round"[31m
+                [33mstroke-linejoin[31m=[32m"round"[31m
+                [33mstroke-width[31m=[32m"2"[31m
+                [33mstyle[31m=[32m"color: rgb(230, 172, 80);"[31m
+                [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [33mwidth[31m=[32m"24"[31m
+                [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+              [36m>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"[31m
+                [36m/>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M7 2v20"[31m
+                [36m/>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"[31m
+                [36m/>[31m
+              [36m</svg>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"card-label mb-0"[31m
+              [36m>[31m
+                [0mFood Log[0m
+              [36m</div>[31m
+            [36m</div>[31m
+            [36m<span[31m
+              [33mclass[31m=[32m"flex items-baseline gap-1.5"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"text-[24px] font-extralight tracking-tighter text-[var(--text)]"[31m
+              [36m>[31m
+                [0m35[0m
+                [0mg[0m
+              [36m</span>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]"[31m
+              [36m>[31m
+                [0mProtein[0m
+              [36m</span>[31m
+            [36m</span>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"space-y-1"[31m
+            [33mid[31m=[32m"food-list"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"log-row"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"flex-1"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"log-row-name flex items-center gap-2"[31m
+                [36m>[31m
+                  [36m<div[31m
+                    [33mclass[31m=[32m"w-1.5 h-1.5 rounded-full bg-[var(--accent)] opacity-40"[31m
+                  [36m/>[31m
+                  [0mChicken Breast[0m
+                [36m</div>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"log-row-meta flex flex-wrap items-center gap-x-3 gap-y-1 mt-1"[31m
+                [36m>[31m
+                  [36m<span[31m
+                    [33mclass[31m=[32m"flex items-center gap-1"[31m
+                  [36m>[31m
+                    [36m<svg[31m
+                      [33maria-hidden[31m=[32m"true"[31m
+                      [33mclass[31m=[32m"lucide lucide-clock w-3 h-3"[31m
+                      [33mfill[31m=[32m"none"[31m
+                      [33mheight[31m=[32m"24"[31m
+                      [33mstroke[31m=[32m"currentColor"[31m
+                      [33mstroke-linecap[31m=[32m"round"[31m
+                      [33mstroke-linejoin[31m=[32m"round"[31m
+                      [33mstroke-width[31m=[32m"2"[31m
+                      [33mstyle[31m=[32m"color: rgb(168, 107, 18);"[31m
+                      [33mviewBox[31m=[32m"0 0 24 24"[31m
+                      [33mwidth[31m=[32m"24"[31m
+                      [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                    [36m>[31m
+                      [36m<circle[31m
+                        [33mcx[31m=[32m"12"[31m
+                        [33mcy[31m=[32m"12"[31m
+                        [33mr[31m=[32m"10"[31m
+                      [36m/>[31m
+                      [36m<path[31m
+                        [33md[31m=[32m"M12 6v6l4 2"[31m
+                      [36m/>[31m
+                    [36m</svg>[31m
+                    [0m05:30 pm[0m
+                  [36m</span>[31m
+                  [36m<span[31m
+                    [33mclass[31m=[32m"flex items-center gap-1"[31m
+                  [36m>[31m
+                    [36m<svg[31m
+                      [33maria-hidden[31m=[32m"true"[31m
+                      [33mclass[31m=[32m"lucide lucide-flame w-3 h-3"[31m
+                      [33mfill[31m=[32m"none"[31m
+                      [33mheight[31m=[32m"24"[31m
+                      [33mstroke[31m=[32m"currentColor"[31m
+                      [33mstroke-linecap[31m=[32m"round"[31m
+                      [33mstroke-linejoin[31m=[32m"round"[31m
+                      [33mstroke-width[31m=[32m"2"[31m
+                      [33mstyle[31m=[32m"color: rgb(230, 126, 34);"[31m
+                      [33mviewBox[31m=[32m"0 0 24 24"[31m
+                      [33mwidth[31m=[32m"24"[31m
+                      [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                    [36m>[31m
+                      [36m<path[31m
+                        [33md[31m=[32m"M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"[31m
+                      [36m/>[31m
+                    [36m</svg>[31m
+                    [0m165[0m
+                    [0m kcal[0m
+                  [36m</span>[31m
+                  [36m<span[31m
+                    [33mclass[31m=[32m"flex items-center gap-1 text-[var(--amber)]"[31m
+                  [36m>[31m
+                    [36m<svg[31m
+                      [33maria-hidden[31m=[32m"true"[31m
+                      [33mclass[31m=[32m"lucide lucide-wheat w-3 h-3"[31m
+                      [33mfill[31m=[32m"none"[31m
+                      [33mheight[31m=[32m"24"[31m
+                      [33mstroke[31m=[32m"currentColor"[31m
+                      [33mstroke-linecap[31m=[32m"round"[31m
+                      [33mstroke-linejoin[31m=[32m"round"[31m
+                      [3...[39m
+ [31m×[39m src/components/Tabs/LogTab.test.tsx[2m > [22mLogTab Component[2m > [22mrenders all nutritional info for food items[32m 31[2mms[22m[39m
+[31m   → Found multiple elements with the text: 0g
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<span[31m
+  [33mclass[31m=[32m"flex items-center gap-1 text-[var(--amber)]"[31m
+[36m>[31m
+  [36m<svg[31m
+    [33maria-hidden[31m=[32m"true"[31m
+    [33mclass[31m=[32m"lucide lucide-wheat w-3 h-3"[31m
+    [33mfill[31m=[32m"none"[31m
+    [33mheight[31m=[32m"24"[31m
+    [33mstroke[31m=[32m"currentColor"[31m
+    [33mstroke-linecap[31m=[32m"round"[31m
+    [33mstroke-linejoin[31m=[32m"round"[31m
+    [33mstroke-width[31m=[32m"2"[31m
+    [33mstyle[31m=[32m"color: rgb(230, 172, 80);"[31m
+    [33mviewBox[31m=[32m"0 0 24 24"[31m
+    [33mwidth[31m=[32m"24"[31m
+    [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+  [36m>[31m
+    [36m<path[31m
+      [33md[31m=[32m"M2 22 16 8"[31m
+    [36m/>[31m
+    [36m<path[31m
+      [33md[31m=[32m"M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"[31m
+    [36m/>[31m
+    [36m<path[31m
+      [33md[31m=[32m"M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"[31m
+    [36m/>[31m
+    [36m<path[31m
+      [33md[31m=[32m"M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"[31m
+    [36m/>[31m
+    [36m<path[31m
+      [33md[31m=[32m"M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z"[31m
+    [36m/>[31m
+    [36m<path[31m
+      [33md[31m=[32m"M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"[31m
+    [36m/>[31m
+    [36m<path[31m
+      [33md[31m=[32m"M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"[31m
+    [36m/>[31m
+    [36m<path[31m
+      [33md[31m=[32m"M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"[31m
+    [36m/>[31m
+  [36m</svg>[31m
+  [0m0[0m
+  [0mg[0m
+[36m</span>[31m
+
+Ignored nodes: comments, script, style
+[36m<span[31m
+  [33mclass[31m=[32m"flex items-center gap-1 text-[var(--green)]"[31m
+[36m>[31m
+  [36m<svg[31m
+    [33maria-hidden[31m=[32m"true"[31m
+    [33mclass[31m=[32m"lucide lucide-leaf w-3 h-3"[31m
+    [33mfill[31m=[32m"none"[31m
+    [33mheight[31m=[32m"24"[31m
+    [33mstroke[31m=[32m"currentColor"[31m
+    [33mstroke-linecap[31m=[32m"round"[31m
+    [33mstroke-linejoin[31m=[32m"round"[31m
+    [33mstroke-width[31m=[32m"2"[31m
+    [33mstyle[31m=[32m"color: rgb(77, 179, 130);"[31m
+    [33mviewBox[31m=[32m"0 0 24 24"[31m
+    [33mwidth[31m=[32m"24"[31m
+    [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+  [36m>[31m
+    [36m<path[31m
+      [33md[31m=[32m"M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"[31m
+    [36m/>[31m
+    [36m<path[31m
+      [33md[31m=[32m"M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"[31m
+    [36m/>[31m
+  [36m</svg>[31m
+  [0m0[0m
+  [0mg[0m
+[36m</span>[31m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"flex flex-col gap-5"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"card md:col-span-2 lg:col-span-2"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex justify-between items-center mb-6"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-2"[31m
+            [36m>[31m
+              [36m<svg[31m
+                [33maria-hidden[31m=[32m"true"[31m
+                [33mclass[31m=[32m"lucide lucide-utensils w-5 h-5"[31m
+                [33mfill[31m=[32m"none"[31m
+                [33mheight[31m=[32m"24"[31m
+                [33mstroke[31m=[32m"currentColor"[31m
+                [33mstroke-linecap[31m=[32m"round"[31m
+                [33mstroke-linejoin[31m=[32m"round"[31m
+                [33mstroke-width[31m=[32m"2"[31m
+                [33mstyle[31m=[32m"color: rgb(230, 172, 80);"[31m
+                [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [33mwidth[31m=[32m"24"[31m
+                [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+              [36m>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"[31m
+                [36m/>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M7 2v20"[31m
+                [36m/>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"[31m
+                [36m/>[31m
+              [36m</svg>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"card-label mb-0"[31m
+              [36m>[31m
+                [0mFood Log[0m
+              [36m</div>[31m
+            [36m</div>[31m
+            [36m<span[31m
+              [33mclass[31m=[32m"flex items-baseline gap-1.5"[31m
+            [36m>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"text-[24px] font-extralight tracking-tighter text-[var(--text)]"[31m
+              [36m>[31m
+                [0m35[0m
+                [0mg[0m
+              [36m</span>[31m
+              [36m<span[31m
+                [33mclass[31m=[32m"text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]"[31m
+              [36m>[31m
+                [0mProtein[0m
+              [36m</span>[31m
+            [36m</span>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"space-y-1"[31m
+            [33mid[31m=[32m"food-list"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"log-row"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"flex-1"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"log-row-name flex items-center gap-2"[31m
+                [36m>[31m
+                  [36m<div[31m
+                    [33mclass[31m=[32m"w-1.5 h-1.5 rounded-full bg-[var(--accent)] opacity-40"[31m
+                  [36m/>[31m
+                  [0mChicken Breast[0m
+                [36m</div>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"log-row-meta flex flex-wrap items-center gap-x-3 gap-y-1 mt-1"[31m
+                [36m>[31m
+                  [36m<span[31m
+                    [33mclass[31m=[32m"flex items-center gap-1"[31m
+                  [36m>[31m
+                    [36m<svg[31m
+                      [33maria-hidden[31m=[32m"true"[31m
+                      [33mclass[31m=[32m"lucide lucide-clock w-3 h-3"[31m
+                      [33mfill[31m=[32m"none"[31m
+                      [33mheight[31m=[32m"24"[31m
+                      [33mstroke[31m=[32m"currentColor"[31m
+                      [33mstroke-linecap[31m=[32m"round"[31m
+                      [33mstroke-linejoin[31m=[32m"round"[31m
+                      [33mstroke-width[31m=[32m"2"[31m
+                      [33mstyle[31m=[32m"color: rgb(168, 107, 18);"[31m
+                      [33mviewBox[31m=[32m"0 0 24 24"[31m
+                      [33mwidth[31m=[32m"24"[31m
+                      [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                    [36m>[31m
+                      [36m<circle[31m
+                        [33mcx[31m=[32m"12"[31m
+                        [33mcy[31m=[32m"12"[31m
+                        [33mr[31m=[32m"10"[31m
+                      [36m/>[31m
+                      [36m<path[31m
+                        [33md[31m=[32m"M12 6v6l4 2"[31m
+                      [36m/>[31m
+                    [36m</svg>[31m
+                    [0m05:30 pm[0m
+                  [36m</span>[31m
+                  [36m<span[31m
+                    [33mclass[31m=[32m"flex items-center gap-1"[31m
+                  [36m>[31m
+                    [36m<svg[31m
+                      [33maria-hidden[31m=[32m"true"[31m
+                      [33mclass[31m=[32m"lucide lucide-flame w-3 h-3"[31m
+                      [33mfill[31m=[32m"none"[31m
+                      [33mheight[31m=[32m"24"[31m
+                      [33mstroke[31m=[32m"currentColor"[31m
+                      [33mstroke-linecap[31m=[32m"round"[31m
+                      [33mstroke-linejoin[31m=[32m"round"[31m
+                      [33mstroke-width[31m=[32m"2"[31m
+                      [33mstyle[31m=[32m"color: rgb(230, 126, 34);"[31m
+                      [33mviewBox[31m=[32m"0 0 24 24"[31m
+                      [33mwidth[31m=[32m"24"[31m
+                      [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                    [36m>[31m
+                      [36m<path[31m
+                        [33md[31m=[32m"M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"[31m
+                      [36m/>[31m
+                    [36m</svg>[31m
+                    [0m165[0m
+                    [0m kcal[0m
+                  [36m</span>[31m
+                  [36m<span[31m
+                    [33mclass[31m=[32m"flex items-center gap-1 text-[var(--amber)]"[31m
+                  [36m>[31m
+                    [36m<svg[31m
+                      [33maria-hidden[31m=[32m"true"[31m
+                      [33mclass[31m=[32m"lucide lucide-wheat w-3 h-3"[31m
+                      [33mfill[31m=[32m"none"[31m
+                      [33mheight[31m=[32m"24"[31m
+                      [33mstroke[31m=[32m"currentColor"[31m
+                      [33mstroke-linecap[31m=[32m"round"[31m
+                      [33mstroke-linejoin[31m=[32m"round"[31m
+                      [3...[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/components/Tabs/LogTab.test.tsx[2m > [22mLogTab Component[2m > [22mtoggles workout details when clicked
+[31m[1mTestingLibraryElementError[22m[39m: Unable to find an element with the text: 1 Sessions. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"flex flex-col gap-5"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card md:col-span-2 lg:col-span-2"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex justify-between items-center mb-6"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-center gap-2"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-utensils w-5 h-5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mstyle[39m=[32m"color: rgb(230, 172, 80);"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M7 2v20"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"card-label mb-0"[39m
+              [36m>[39m
+                [0mFood Log[0m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"flex items-baseline gap-1.5"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-[24px] font-extralight tracking-tighter text-[var(--text)]"[39m
+              [36m>[39m
+                [0m35[0m
+                [0mg[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]"[39m
+              [36m>[39m
+                [0mProtein[0m
+              [36m</span>[39m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"space-y-1"[39m
+            [33mid[39m=[32m"food-list"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"log-row"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex-1"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"log-row-name flex items-center gap-2"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"w-1.5 h-1.5 rounded-full bg-[var(--accent)] opacity-40"[39m
+                  [36m/>[39m
+                  [0mChicken Breast[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"log-row-meta flex flex-wrap items-center gap-x-3 gap-y-1 mt-1"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"flex items-center gap-1"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"lucide lucide-clock w-3 h-3"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"24"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mstyle[39m=[32m"color: rgb(168, 107, 18);"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"24"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<circle[39m
+                        [33mcx[39m=[32m"12"[39m
+                        [33mcy[39m=[32m"12"[39m
+                        [33mr[39m=[32m"10"[39m
+                      [36m/>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M12 6v6l4 2"[39m
+                      [36m/>[39m
+                    [36m</svg>[39m
+                    [0m05:30 pm[0m
+                  [36m</span>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"flex items-center gap-1"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"lucide lucide-flame w-3 h-3"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"24"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mstyle[39m=[32m"color: rgb(230, 126, 34);"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"24"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"[39m
+                      [36m/>[39m
+                    [36m</svg>[39m
+                    [0m165[0m
+                    [0m kcal[0m
+                  [36m</span>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"flex items-center gap-1 text-[var(--amber)]"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"lucide lucide-wheat w-3 h-3"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"24"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [3...
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m76:38[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m52:17[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m src/components/Tabs/LogTab.test.tsx:[2m104:19[22m[39m
+    [90m102|[39m     fireEvent[33m.[39m[34mclick[39m(workoutBtn)[33m;[39m
+    [90m103|[39m     [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([32m'Bench Press'[39m))[33m.[39m[34mtoBeDefined[39m()[33m;[39m
+    [90m104|[39m     expect(screen.getByText('1 Sessions')).toBeDefined(); // Actually …
+    [90m   |[39m                   [31m^[39m
+    [90m105|[39m     [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([32m'1 Sets'[39m))[33m.[39m[34mtoBeDefined[39m()[33m;[39m
+    [90m106|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/components/Tabs/LogTab.test.tsx[2m > [22mLogTab Component[2m > [22mrenders all nutritional info for food items
+[31m[1mTestingLibraryElementError[22m[39m: Found multiple elements with the text: 0g
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<span[39m
+  [33mclass[39m=[32m"flex items-center gap-1 text-[var(--amber)]"[39m
+[36m>[39m
+  [36m<svg[39m
+    [33maria-hidden[39m=[32m"true"[39m
+    [33mclass[39m=[32m"lucide lucide-wheat w-3 h-3"[39m
+    [33mfill[39m=[32m"none"[39m
+    [33mheight[39m=[32m"24"[39m
+    [33mstroke[39m=[32m"currentColor"[39m
+    [33mstroke-linecap[39m=[32m"round"[39m
+    [33mstroke-linejoin[39m=[32m"round"[39m
+    [33mstroke-width[39m=[32m"2"[39m
+    [33mstyle[39m=[32m"color: rgb(230, 172, 80);"[39m
+    [33mviewBox[39m=[32m"0 0 24 24"[39m
+    [33mwidth[39m=[32m"24"[39m
+    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+  [36m>[39m
+    [36m<path[39m
+      [33md[39m=[32m"M2 22 16 8"[39m
+    [36m/>[39m
+    [36m<path[39m
+      [33md[39m=[32m"M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"[39m
+    [36m/>[39m
+    [36m<path[39m
+      [33md[39m=[32m"M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"[39m
+    [36m/>[39m
+    [36m<path[39m
+      [33md[39m=[32m"M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"[39m
+    [36m/>[39m
+    [36m<path[39m
+      [33md[39m=[32m"M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z"[39m
+    [36m/>[39m
+    [36m<path[39m
+      [33md[39m=[32m"M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"[39m
+    [36m/>[39m
+    [36m<path[39m
+      [33md[39m=[32m"M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"[39m
+    [36m/>[39m
+    [36m<path[39m
+      [33md[39m=[32m"M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"[39m
+    [36m/>[39m
+  [36m</svg>[39m
+  [0m0[0m
+  [0mg[0m
+[36m</span>[39m
+
+Ignored nodes: comments, script, style
+[36m<span[39m
+  [33mclass[39m=[32m"flex items-center gap-1 text-[var(--green)]"[39m
+[36m>[39m
+  [36m<svg[39m
+    [33maria-hidden[39m=[32m"true"[39m
+    [33mclass[39m=[32m"lucide lucide-leaf w-3 h-3"[39m
+    [33mfill[39m=[32m"none"[39m
+    [33mheight[39m=[32m"24"[39m
+    [33mstroke[39m=[32m"currentColor"[39m
+    [33mstroke-linecap[39m=[32m"round"[39m
+    [33mstroke-linejoin[39m=[32m"round"[39m
+    [33mstroke-width[39m=[32m"2"[39m
+    [33mstyle[39m=[32m"color: rgb(77, 179, 130);"[39m
+    [33mviewBox[39m=[32m"0 0 24 24"[39m
+    [33mwidth[39m=[32m"24"[39m
+    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+  [36m>[39m
+    [36m<path[39m
+      [33md[39m=[32m"M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"[39m
+    [36m/>[39m
+    [36m<path[39m
+      [33md[39m=[32m"M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"[39m
+    [36m/>[39m
+  [36m</svg>[39m
+  [0m0[0m
+  [0mg[0m
+[36m</span>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"flex flex-col gap-5"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"card md:col-span-2 lg:col-span-2"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex justify-between items-center mb-6"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-center gap-2"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-utensils w-5 h-5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mstyle[39m=[32m"color: rgb(230, 172, 80);"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M7 2v20"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"card-label mb-0"[39m
+              [36m>[39m
+                [0mFood Log[0m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"flex items-baseline gap-1.5"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-[24px] font-extralight tracking-tighter text-[var(--text)]"[39m
+              [36m>[39m
+                [0m35[0m
+                [0mg[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]"[39m
+              [36m>[39m
+                [0mProtein[0m
+              [36m</span>[39m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"space-y-1"[39m
+            [33mid[39m=[32m"food-list"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"log-row"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex-1"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"log-row-name flex items-center gap-2"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"w-1.5 h-1.5 rounded-full bg-[var(--accent)] opacity-40"[39m
+                  [36m/>[39m
+                  [0mChicken Breast[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"log-row-meta flex flex-wrap items-center gap-x-3 gap-y-1 mt-1"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"flex items-center gap-1"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"lucide lucide-clock w-3 h-3"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"24"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mstyle[39m=[32m"color: rgb(168, 107, 18);"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"24"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<circle[39m
+                        [33mcx[39m=[32m"12"[39m
+                        [33mcy[39m=[32m"12"[39m
+                        [33mr[39m=[32m"10"[39m
+                      [36m/>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M12 6v6l4 2"[39m
+                      [36m/>[39m
+                    [36m</svg>[39m
+                    [0m05:30 pm[0m
+                  [36m</span>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"flex items-center gap-1"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"lucide lucide-flame w-3 h-3"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"24"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mstyle[39m=[32m"color: rgb(230, 126, 34);"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"24"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"[39m
+                      [36m/>[39m
+                    [36m</svg>[39m
+                    [0m165[0m
+                    [0m kcal[0m
+                  [36m</span>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"flex items-center gap-1 text-[var(--amber)]"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"lucide lucide-wheat w-3 h-3"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"24"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [3...
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m getElementError node_modules/@testing-library/dom/dist/query-helpers.js:[2m20:35[22m[39m
+[90m [2m❯[22m getMultipleElementsFoundError node_modules/@testing-library/dom/dist/query-helpers.js:[2m23:10[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m55:13[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m src/components/Tabs/LogTab.test.tsx:[2m118:19[22m[39m
+    [90m116|[39m     })[33m;[39m
+    [90m117|[39m     [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([32m'165 kcal'[39m))[33m.[39m[34mtoBeDefined[39m()[33m;[39m
+    [90m118|[39m     expect(screen.getByText('0g')).toBeDefined(); // Individual carbs/…
+    [90m   |[39m                   [31m^[39m
+    [90m119|[39m     [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([32m'3g'[39m))[33m.[39m[34mtoBeDefined[39m()[33m;[39m [90m// Individual fats[39m
+    [90m120|[39m   })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (6)[39m
+[2m   Start at [22m 21:48:29
+[2m   Duration [22m 1.77s[2m (transform 87ms, setup 217ms, import 153ms, tests 201ms, environment 920ms)[22m
+
