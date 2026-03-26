@@ -5,9 +5,9 @@ import BodyTab from './BodyTab';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: Record<string, unknown>) => <div {...props}>{children as React.ReactNode}</div>,
-    button: ({ children, ...props }: Record<string, unknown>) => <button {...props}>{children as React.ReactNode}</button>,
-    tr: ({ children, ...props }: Record<string, unknown>) => <tr {...props}>{children as React.ReactNode}</tr>,
+    div: ({ children, whileHover, whileTap, initial, animate, variants, custom, ...props }: any) => <div {...props}>{children}</div>,
+    button: ({ children, whileHover, whileTap, initial, animate, variants, custom, ...props }: any) => <button {...props}>{children}</button>,
+    tr: ({ children, whileHover, whileTap, initial, animate, variants, custom, ...props }: any) => <tr {...props}>{children}</tr>,
   },
 }));
 
@@ -60,8 +60,10 @@ describe('BodyTab Component', () => {
     cleanup();
   });
 
-  it('renders measurement inputs correctly', () => {
-    render(<BodyTab {...defaultProps} />);
+  it('renders measurement inputs correctly', async () => {
+    await act(async () => {
+      render(<BodyTab {...defaultProps} />);
+    });
     expect(screen.getByText('Log Measurements')).toBeDefined();
     expect(screen.getByDisplayValue('75')).toBeDefined();
     expect(screen.getByDisplayValue('85')).toBeDefined();
@@ -83,8 +85,10 @@ describe('BodyTab Component', () => {
     expect(newState.waist).toBe('85');
   });
 
-  it('calls handleSaveMeasurements when button is clicked', () => {
-    render(<BodyTab {...defaultProps} />);
+  it('calls handleSaveMeasurements when button is clicked', async () => {
+    await act(async () => {
+      render(<BodyTab {...defaultProps} />);
+    });
     const saveBtn = screen.getByText('Save Measurements');
     fireEvent.click(saveBtn);
     expect(mockHandleSaveMeasurements).toHaveBeenCalled();
@@ -112,8 +116,49 @@ describe('BodyTab Component', () => {
     expect(screen.getAllByText('75').length).toBeGreaterThan(1); // One in stats, one in table
   });
 
-  it('renders empty message when no latest measurement', () => {
-    render(<BodyTab {...defaultProps} latestMeasurement={null} />);
+  it('renders empty message when no latest measurement', async () => {
+    await act(async () => {
+      render(<BodyTab {...defaultProps} latestMeasurement={null} />);
+    });
     expect(screen.getByText('No data recorded')).toBeDefined();
+  });
+
+  it('renders all measurement fields in the input grid', async () => {
+    await act(async () => {
+      render(<BodyTab {...defaultProps} />);
+    });
+    expect(screen.getAllByText(/weight/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/waist/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/chest/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/arms/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/thighs/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/hips/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/calves/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/neck/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/body fat/i).length).toBeGreaterThan(0);
+  });
+
+  it('renders latest measurement values in the stats card', async () => {
+    await act(async () => {
+      render(<BodyTab {...defaultProps} />);
+    });
+    await waitFor(() => {
+      expect(screen.getAllByText('75').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('85').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('15').length).toBeGreaterThan(0); // Body Fat
+    });
+  });
+
+  it('handles fetch error gracefully', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockFetch.mockRejectedValueOnce(new Error('Fetch failed'));
+    await act(async () => {
+      render(<BodyTab {...defaultProps} />);
+    });
+    // Should still render but without history records
+    await waitFor(() => {
+      expect(screen.queryByText('1 records')).toBeNull();
+    });
+    consoleSpy.mockRestore();
   });
 });

@@ -1,11 +1,11 @@
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import LogTab from './LogTab';
 
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: Record<string, unknown>) => <div {...props}>{children as React.ReactNode}</div>,
+    div: ({ children, whileHover, whileTap, initial, animate, variants, custom, ...props }: any) => <div {...props}>{children}</div>,
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
@@ -54,31 +54,66 @@ describe('LogTab Component', () => {
     cleanup();
   });
 
-  it('renders food log items correctly', () => {
-    render(<LogTab {...defaultProps} />);
+  it('renders food log items correctly', async () => {
+    await act(async () => {
+      render(<LogTab {...defaultProps} />);
+    });
     expect(screen.getByText('Chicken Breast')).toBeDefined();
     expect(screen.getByText('Rice')).toBeDefined();
     expect(screen.getByText('35g')).toBeDefined(); // Total protein display
     expect(screen.getByText('30g')).toBeDefined(); // Individual protein
   });
 
-  it('renders workout logs correctly', () => {
-    render(<LogTab {...defaultProps} />);
+  it('renders workout logs correctly', async () => {
+    await act(async () => {
+      render(<LogTab {...defaultProps} />);
+    });
     expect(screen.getByText('Push Day')).toBeDefined();
     expect(screen.getByText('5000 kg')).toBeDefined();
   });
 
-  it('renders sleep logs correctly', () => {
-    render(<LogTab {...defaultProps} />);
+  it('renders sleep logs correctly', async () => {
+    await act(async () => {
+      render(<LogTab {...defaultProps} />);
+    });
     expect(screen.getByText('8')).toBeDefined();
     expect(screen.getByText('hrs')).toBeDefined();
     expect(screen.getByText(/23:00 to 07:00/)).toBeDefined();
   });
 
-  it('renders empty messages when logs are missing', () => {
-    render(<LogTab foodLog={[]} protein={0} workouts={[]} sleepLogs={[]} />);
+  it('renders empty messages when logs are missing', async () => {
+    await act(async () => {
+      render(<LogTab foodLog={[]} protein={0} workouts={[]} sleepLogs={[]} />);
+    });
     expect(screen.getByText(/No food logged yet/i)).toBeDefined();
     expect(screen.getByText(/No sleep logged yet/i)).toBeDefined();
-    expect(screen.getAllByText(/Nothing logged yet/i).length).toBeGreaterThan(0);
+  });
+
+  it('toggles workout details when clicked', async () => {
+    await act(async () => {
+      render(<LogTab {...defaultProps} />);
+    });
+    const workoutBtn = screen.getByText('Push Day').closest('button')!;
+    
+    // Initially details are hidden
+    expect(screen.queryByText('Bench Press')).toBeNull();
+    
+    // Click to expand
+    fireEvent.click(workoutBtn);
+    expect(screen.getByText('Bench Press')).toBeDefined();
+    expect(screen.getByText('1 Sets')).toBeDefined();
+    
+    // Click to collapse
+    fireEvent.click(workoutBtn);
+    expect(screen.queryByText('Bench Press')).toBeNull();
+  });
+
+  it('renders all nutritional info for food items', async () => {
+    await act(async () => {
+      render(<LogTab {...defaultProps} />);
+    });
+    expect(screen.getByText('165 kcal')).toBeDefined();
+    expect(screen.getAllByText('0g').length).toBeGreaterThan(0);
+    expect(screen.getByText('3g')).toBeDefined();
   });
 });

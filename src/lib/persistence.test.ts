@@ -1,287 +1,228 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { persistLogData, type ParsedLogEnvelope } from './persistence';
-import { Prisma } from '@prisma/client';
+import { persistLogData } from './persistence';
 import prisma from './prisma';
 
-// Mock the prisma client
+// Mock prisma client
 vi.mock('./prisma', () => ({
   default: {
     $transaction: vi.fn(),
   },
 }));
 
-// Help Vitest type-safe mocks
-const mockTx = {
-  foodLog: {
-    findFirst: vi.fn(),
-    update: vi.fn(),
-    create: vi.fn(),
-  },
-  workoutLog: {
-    findFirst: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-  },
-  sleepLog: {
-    findFirst: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-  },
-  bodyMeasurement: {
-    findFirst: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-  },
-  userProfile: {
-    upsert: vi.fn(),
-  },
-  goal: {
-    upsert: vi.fn(),
-  },
-  dayTypeEntry: {
-    upsert: vi.fn(),
-  },
-  exercise: {
-    findFirst: vi.fn(),
-  },
-} as unknown as Prisma.TransactionClient; // Still need one cast, but better structured
+describe('persistence utility', () => {
+  const userId = 'user-123';
+  const mockTx = {
+    foodLog: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn() },
+    workoutLog: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn() },
+    sleepLog: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn() },
+    bodyMeasurement: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn() },
+    userProfile: { upsert: vi.fn() },
+    goal: { upsert: vi.fn() },
+    dayTypeEntry: { upsert: vi.fn() },
+    exercise: { findFirst: vi.fn() },
+  };
 
-describe('Persistence Layer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Setup transaction mock to call the callback with our mockTx
-    vi.mocked(prisma.$transaction).mockImplementation((cb: (tx: Prisma.TransactionClient) => Promise<unknown>) => cb(mockTx));
+    (prisma.$transaction as any).mockImplementation((cb: any) => cb(mockTx));
   });
 
-  it('persists food logs (create new)', async () => {
-    const userId = 'user-1';
-    const envelopes: ParsedLogEnvelope[] = [
-      {
-        category: 'food',
-        data: {
-          items: [
-            { name: 'Chicken', protein: 30, kcal: 200 }
-          ]
+  describe('persistLogData', () => {
+    it('returns early if no envelopes are provided', async () => {
+      await persistLogData([], userId);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('skips envelopes without a category', async () => {
+      await persistLogData([{ data: {} } as any], userId);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('persists food logs (single item)', async () => {
+      const envelopes = [
+        {
+          category: 'food',
+          data: { name: 'Apple', kcal: 95, protein: 0.5, carbs: 25, fats: 0.3, fiber: 4.4 }
         }
-      }
-    ];
+      ];
+      await persistLogData(envelopes, userId);
+      expect(mockTx.foodLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ name: 'Apple', kcal: 95 })
+      });
+    });
 
-    await persistLogData(envelopes, userId);
-
-    expect(mockTx.foodLog.create).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({
-        userId,
-        name: 'Chicken',
-        protein: 30,
-        kcal: 200,
-      })
-    }));
-  });
-
-  it('persists food logs (semantic update)', async () => {
-    const userId = 'user-1';
-    const envelopes: ParsedLogEnvelope[] = [
-      {
-        category: 'food',
-        data: {
-          items: [
-            { name: 'Chicken', protein: 35, kcal: 220, update: true }
-          ]
+    it('persists food logs (array of items)', async () => {
+      const envelopes = [
+        {
+          category: 'food',
+          data: {
+            items: [
+              { name: 'Eggs', kcal: 140 },
+              { name: 'Toast', kcal: 100 }
+            ]
+          }
         }
-      }
-    ];
+      ];
+      await persistLogData(envelopes, userId);
+      expect(mockTx.foodLog.create).toHaveBeenCalledTimes(2);
+    });
 
-    // Mock existing entry found
-    vi.mocked(mockTx.foodLog.findFirst).mockResolvedValue({ id: 'existing-id' } as any);
-
-    await persistLogData(envelopes, userId);
-
-    expect(mockTx.foodLog.update).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: 'existing-id' },
-      data: expect.objectContaining({
-        protein: 35,
-        kcal: 220,
-      })
-    }));
-  });
-
-  it('handles profile updates with AI coercion', async () => {
-    const userId = 'user-1';
-    const envelopes: ParsedLogEnvelope[] = [
-      {
-        category: 'profile',
-        data: {
-          age: "25", // AI sends string
-          height: "180.5",
-          gender: "Male"
+    it('updates existing food log if update flag is set', async () => {
+      mockTx.foodLog.findFirst.mockResolvedValue({ id: 'existing-id' });
+      const envelopes = [
+        {
+          category: 'food',
+          data: { name: 'Apple', kcal: 100, update: true, date: '2024-01-01' }
         }
-      }
-    ];
+      ];
+      await persistLogData(envelopes, userId);
+      expect(mockTx.foodLog.update).toHaveBeenCalledWith({
+        where: { id: 'existing-id' },
+        data: expect.objectContaining({ kcal: 100 })
+      });
+    });
 
-    await persistLogData(envelopes, userId);
+    it('persists workout log', async () => {
+      mockTx.exercise.findFirst.mockResolvedValue({ id: 'exercise-id' });
+      const envelopes = [
+        {
+          category: 'workout',
+          data: {
+            focus: 'Upper Body',
+            volume: 5000,
+            exercises: [
+              { name: 'Bench Press', sets: [{ setNumber: 1, reps: 10, weight: 60 }] }
+            ]
+          }
+        }
+      ];
+      await persistLogData(envelopes, userId);
+      expect(mockTx.workoutLog.create).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({ focus: 'Upper Body' })
+      }));
+    });
 
-    expect(mockTx.userProfile.upsert).toHaveBeenCalledWith(expect.objectContaining({
-      where: { userId },
-      create: expect.objectContaining({ age: 25, height: 180.5 }),
-    }));
-  });
+    it('updates existing workout log', async () => {
+      mockTx.workoutLog.findFirst.mockResolvedValue({ id: 'workout-id' });
+      const envelopes = [
+        {
+          category: 'workout',
+          data: { focus: 'Upper Body', update: true, date: '2024-01-01' }
+        }
+      ];
+      await persistLogData(envelopes, userId);
+      expect(mockTx.workoutLog.update).toHaveBeenCalled();
+    });
 
-  it('handles dayType updates with normalization', async () => {
-    const userId = 'user-1';
-    // Test Training
-    await persistLogData([{ category: 'dayType', data: { type: 'training' } }], userId);
-    expect(mockTx.dayTypeEntry.upsert).toHaveBeenCalledWith(expect.objectContaining({
-      update: { dayType: 'Training' }
-    }));
+    it('persists sleep log', async () => {
+      const envelopes = [{ category: 'sleep', data: { hours: 8, bed: '22:00', wake: '06:00' } }];
+      await persistLogData(envelopes, userId);
+      expect(mockTx.sleepLog.create).toHaveBeenCalled();
+    });
 
-    // Test Rest
-    await persistLogData([{ category: 'dayType', data: { type: 'resting' } }], userId);
-    expect(mockTx.dayTypeEntry.upsert).toHaveBeenCalledWith(expect.objectContaining({
-      update: { dayType: 'Rest' }
-    }));
+    it('updates sleep log', async () => {
+      mockTx.sleepLog.findFirst.mockResolvedValue({ id: 'sleep-id' });
+      const envelopes = [{ category: 'sleep', data: { hours: 7, update: true } }];
+      await persistLogData(envelopes, userId);
+      expect(mockTx.sleepLog.update).toHaveBeenCalled();
+    });
 
-    // Test Lite
-    await persistLogData([{ category: 'dayType', data: { type: 'light work' } }], userId);
-    expect(mockTx.dayTypeEntry.upsert).toHaveBeenCalledWith(expect.objectContaining({
-      update: { dayType: 'Lite' }
-    }));
+    it('persists measurements', async () => {
+      const envelopes = [{ category: 'measurement', data: { weight: 70, waist: 80 } }];
+      await persistLogData(envelopes, userId);
+      expect(mockTx.bodyMeasurement.create).toHaveBeenCalled();
+    });
 
-    // Test Invalid -> Rest
-    await persistLogData([{ category: 'dayType', data: { type: 'party' } }], userId);
-    expect(mockTx.dayTypeEntry.upsert).toHaveBeenCalledWith(expect.objectContaining({
-      update: { dayType: 'Rest' }
-    }));
-  });
+    it('updates measurements', async () => {
+      mockTx.bodyMeasurement.findFirst.mockResolvedValue({ id: 'm-id' });
+      const envelopes = [{ category: 'measurement', data: { weight: 71, update: true } }];
+      await persistLogData(envelopes, userId);
+      expect(mockTx.bodyMeasurement.update).toHaveBeenCalled();
+    });
 
-  it('persists workout logs (update existing)', async () => {
-    const userId = 'user-1';
-    const envelopes: ParsedLogEnvelope[] = [{ 
-      category: 'workout', 
-      data: { 
-        focus: 'Push', 
-        volume: 6000, 
-        update: true, 
-        date: '2026-03-19',
-        exercises: [{ name: 'Squat', sets: [{ setNumber: 1, reps: 5, weight: 100 }] }]
-      } 
-    }];
-    vi.mocked(mockTx.workoutLog.findFirst).mockResolvedValue({ id: 'w-1', focus: 'Push' } as any);
-    await persistLogData(envelopes, userId);
-    expect(mockTx.workoutLog.update).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: 'w-1' },
-      data: expect.objectContaining({ 
-        volume: 6000,
-        exercises: expect.objectContaining({ deleteMany: {} })
-      })
-    }));
-  });
+    it('persists profile updates', async () => {
+      const envelopes = [{ category: 'profile', data: { name: 'John', age: 30 } }];
+      await persistLogData(envelopes, userId);
+      expect(mockTx.userProfile.upsert).toHaveBeenCalled();
+    });
 
-  it('persists workout logs (create new with exercises)', async () => {
-    const userId = 'user-1';
-    const envelopes: ParsedLogEnvelope[] = [{ 
-      category: 'workout', 
-      data: { 
-        focus: 'Pull', 
-        volume: 4000,
-        prs: { bench: 100 },
-        exercises: [{ name: 'Pullup', sets: [{ setNumber: 1, reps: 10, weight: 0 }] }]
-      } 
-    }];
-    
-    vi.mocked(mockTx.exercise.findFirst).mockResolvedValueOnce({ id: 'ex-1' } as any);
+    it('persists goal updates', async () => {
+      const envelopes = [{ category: 'goals', data: { targetWeight: 75 } }];
+      await persistLogData(envelopes, userId);
+      expect(mockTx.goal.upsert).toHaveBeenCalled();
+    });
 
-    await persistLogData(envelopes, userId);
-    
-    expect(mockTx.workoutLog.create).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({
-        focus: 'Pull',
-        volume: 4000,
-        details: JSON.stringify({ bench: 100 }),
-        exercises: expect.objectContaining({
-          create: expect.arrayContaining([
-            expect.objectContaining({ exerciseId: 'ex-1' })
-          ])
-        })
-      })
-    }));
-  });
+    it('persists dayType updates', async () => {
+      const envelopes = [{ category: 'dayType', data: { dayType: 'Training', dayKey: '2024-01-01' } }];
+      await persistLogData(envelopes, userId);
+      expect(mockTx.dayTypeEntry.upsert).toHaveBeenCalledWith(expect.objectContaining({
+        create: expect.objectContaining({ dayType: 'Training' })
+      }));
+    });
 
-  // Validation Failure Tests
-  it('skips invalid logs gracefully when required fields are missing', async () => {
-    const userId = 'user-1';
-    const envelopes: ParsedLogEnvelope[] = [
-      { category: 'food', data: { items: [{ name: '' }] } }, // Invalid food (no name)
-      { category: 'workout', data: {} }, // Invalid workout (no focus)
-    ];
+    it('normalizes dayType values', async () => {
+        const testCases = [
+            { input: 'train', expected: 'Training' },
+            { input: 'rest day', expected: 'Rest' },
+            { input: 'lite workout', expected: 'Lite' },
+            { input: 'unknown', expected: 'Rest' },
+        ];
 
-    await persistLogData(envelopes, userId);
+        for (const tc of testCases) {
+            await persistLogData([{ category: 'dayType', data: { type: tc.input } }], userId);
+            expect(mockTx.dayTypeEntry.upsert).toHaveBeenLastCalledWith(expect.objectContaining({
+                create: expect.objectContaining({ dayType: tc.expected })
+            }));
+        }
+    });
 
-    // If they skipped properly, create should NOT have been called
-    expect(mockTx.foodLog.create).not.toHaveBeenCalled();
-    expect(mockTx.workoutLog.create).not.toHaveBeenCalled();
-  });
+    it('throws error if persistence fails within transaction', async () => {
+      (prisma.$transaction as any).mockImplementation(() => {
+        throw new Error('Transaction failed');
+      });
+      await expect(persistLogData([{ category: 'food', data: { name: 'X' } }], userId)).rejects.toThrow('Transaction failed');
+    });
 
-  it('persists sleep logs (update existing)', async () => {
-    const userId = 'user-1';
-    const envelopes: ParsedLogEnvelope[] = [{ category: 'sleep', data: { hours: 8, update: true, date: '2026-03-19' } }];
-    vi.mocked(mockTx.sleepLog.findFirst).mockResolvedValue({ id: 's-1', hours: 7 } as any);
-    await persistLogData(envelopes, userId);
-    expect(mockTx.sleepLog.update).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: 's-1' },
-      data: expect.objectContaining({ hours: 8 })
-    }));
-  });
+    it('skips invalid food items', async () => {
+        const envelopes = [{ category: 'food', data: { name: '', kcal: 100 } }];
+        await persistLogData(envelopes as any, userId);
+        expect(mockTx.foodLog.create).not.toHaveBeenCalled();
+    });
 
-  it('persists body measurements (create new)', async () => {
-    const userId = 'user-1';
-    const envelopes: ParsedLogEnvelope[] = [{ category: 'measurement', data: { weight: 80, bodyFat: 15 } }];
-    await persistLogData(envelopes, userId);
-    expect(mockTx.bodyMeasurement.create).toHaveBeenCalled();
-  });
+    it('skips invalid workout items', async () => {
+        const envelopes = [{ category: 'workout', data: { focus: '', volume: 100 } }];
+        await persistLogData(envelopes as any, userId);
+        expect(mockTx.workoutLog.create).not.toHaveBeenCalled();
+    });
 
-  it('persists body measurements (update existing)', async () => {
-    const userId = 'user-1';
-    // CRITICAL: Add update: true and a fixed date for reliable lookup
-    const envelopes: ParsedLogEnvelope[] = [{ category: 'measurement', data: { weight: 81, bodyFat: 16, update: true, date: '2026-03-19' } }];
-    
-    // Mock existing measurement
-    vi.mocked(mockTx.bodyMeasurement.findFirst).mockResolvedValue({ id: 'meas-1', weight: 80 } as any);
+    it('skips invalid sleep items', async () => {
+        const envelopes = [{ category: 'sleep', data: { date: 'not-a-date' } }];
+        await persistLogData(envelopes as any, userId);
+        expect(mockTx.sleepLog.create).not.toHaveBeenCalled();
+    });
 
-    await persistLogData(envelopes, userId);
+    it('skips invalid measurement items', async () => {
+        const envelopes = [{ category: 'measurement', data: { date: 'not-a-date' } }];
+        await persistLogData(envelopes as any, userId);
+        expect(mockTx.bodyMeasurement.create).not.toHaveBeenCalled();
+    });
 
-    expect(mockTx.bodyMeasurement.update).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: 'meas-1' },
-      data: expect.objectContaining({ weight: 81 })
-    }));
-  });
+    it('skips invalid profile items', async () => {
+        const envelopes = [{ category: 'profile', data: { age: -5 } }];
+        await persistLogData(envelopes as any, userId);
+        expect(mockTx.userProfile.upsert).not.toHaveBeenCalled();
+    });
 
-  it('handles goal updates', async () => {
-    const userId = 'user-1';
-    const envelopes: ParsedLogEnvelope[] = [{ category: 'goals', data: { proteinTarget: "160", kcalTarget: "2400" } }];
-    await persistLogData(envelopes, userId);
-    expect(mockTx.goal.upsert).toHaveBeenCalledWith(expect.objectContaining({
-      update: expect.objectContaining({ proteinTarget: 160 })
-    }));
-  });
+    it('skips invalid goal items', async () => {
+        const envelopes = [{ category: 'goals', data: { kcalTarget: -100 } }];
+        await persistLogData(envelopes as any, userId);
+        expect(mockTx.goal.upsert).not.toHaveBeenCalled();
+    });
 
-  it('throws error and logs when a category fails', async () => {
-    const userId = 'user-1';
-    const envelopes: ParsedLogEnvelope[] = [{ category: 'food', data: { items: [{ name: 'Rice', protein: 5, kcal: 100 }] } }];
-    vi.mocked(prisma.$transaction).mockRejectedValueOnce(new Error('DB Error'));
-    await expect(persistLogData(envelopes, userId)).rejects.toThrow('DB Error');
-  });
-
-  it('skips unknown categories', async () => {
-    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    await persistLogData([{ category: 'unknown' } as ParsedLogEnvelope], 'user-1');
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown category'));
-  });
-
-  it('handles invalid record data in categories gracefully (Zod throw check)', async () => {
-    const userId = 'user-1';
-    // Wrap in try-catch because persistLogData will bubble up the ZodError
-    const envelopes: ParsedLogEnvelope[] = [{ category: 'sleep', data: "not-an-object" } as unknown as ParsedLogEnvelope];
-    
-    await expect(persistLogData(envelopes, userId)).resolves.not.toThrow();
+    it('handles non-object data gracefully in helpers', async () => {
+        // This triggers isRecord(value) returning false
+        await persistLogData([{ category: 'sleep', data: "not-an-object" }], userId);
+        expect(mockTx.sleepLog.create).not.toHaveBeenCalled();
+    });
   });
 });

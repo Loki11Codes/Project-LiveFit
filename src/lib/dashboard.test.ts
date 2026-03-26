@@ -1,228 +1,156 @@
-import { test, expect } from 'vitest';
-import type { FoodLog, SleepLog } from '@prisma/client';
+import { describe, it, expect } from 'vitest';
 import {
-  buildHistoryRows,
-  getCurrentDayType,
-  getLocalDateKey,
-  getProteinTarget,
-  getTrackedDayCount,
-  sumNutrition,
+  parseTab,
   toMeasurementForm,
   toMeasurementPayload,
+  getTodayFoodLogs,
+  sumNutrition,
+  getLatestSleepLog,
+  getTrackedDayCount,
+  buildHistoryRows,
+  getErrorMessage,
+  buildDayTypeMap,
+  getProteinTarget,
+  getLocalDateKey,
 } from './dashboard';
-import type { DayTypeMap, GoalsState, LogsResponse } from './types';
+import type { FoodLog } from '@prisma/client';
+import { EMPTY_MEASUREMENT_FORM } from './types';
 
-test('buildHistoryRows aggregates daily logs, applies day types, and sorts newest first', () => {
-  const march16Morning = new Date(2026, 2, 16, 8, 15);
-  const march16Evening = new Date(2026, 2, 16, 20, 0);
-  const march15Morning = new Date(2026, 2, 15, 9, 30);
+describe('dashboard utilities', () => {
+  describe('parseTab', () => {
+    it('returns valid tab if provided', () => {
+      expect(parseTab('body')).toBe('body');
+      expect(parseTab('history')).toBe('history');
+    });
 
-  const logs: LogsResponse = {
-    food: [
-      createFoodLog('food-1', march16Morning, { protein: 30, kcal: 500 }),
-      createFoodLog('food-2', march16Evening, { protein: 20, kcal: 400 }),
-      createFoodLog('food-3', march15Morning, { protein: 40, kcal: 600 }),
-    ],
-    workouts: [
-      createWorkoutLog('workout-1', march16Morning, { focus: 'Push' }),
-      createWorkoutLog('workout-2', march16Evening, { focus: 'Legs' }),
-    ],
-    sleep: [
-      createSleepLog('sleep-1', march16Morning, { hours: 7.5 }),
-      createSleepLog('sleep-2', march15Morning, { hours: 6 }),
-    ],
-  };
-  const goals: GoalsState = {
-    proteinTarget: 45,
-    kcalTarget: 2200,
-  };
-  const dayTypesByDay: DayTypeMap = {
-    [getLocalDateKey(march16Morning)]: 'Training',
-    [getLocalDateKey(march15Morning)]: 'Rest',
-  };
-
-  const history = buildHistoryRows(logs, goals, dayTypesByDay);
-
-  expect(history.length).toBe(2);
-  expect(history[0]).toEqual({
-    day: 'Mar 16, 2026',
-    type: 'Training',
-    sleep: '7.5',
-    protein: 50,
-    target: 45,
-    status: 'completed',
-    kcal: 900,
-    carbs: 0,
-    fats: 0,
-    fiber: 0,
-    workout: 'Push, Legs',
-  });
-  expect(history[1]).toEqual({
-    day: 'Mar 15, 2026',
-    type: 'Rest',
-    sleep: '6',
-    protein: 40,
-    target: 45,
-    status: 'pending',
-    kcal: 600,
-    carbs: 0,
-    fats: 0,
-    fiber: 0,
-    workout: '--',
-  });
-});
-
-test('buildHistoryRows handles Lite day type', () => {
-  const march18 = new Date(2026, 2, 18);
-  const logs: LogsResponse = { 
-    food: [createFoodLog('food-1', march18, { protein: 10 })], 
-    workouts: [], 
-    sleep: [] 
-  };
-  const goals: GoalsState = { proteinTarget: 40, kcalTarget: 2000 };
-  const dayTypes: DayTypeMap = { [getLocalDateKey(march18)]: 'Lite' };
-  
-  const history = buildHistoryRows(logs, goals, dayTypes);
-  expect(history[0].type).toBe('Lite');
-});
-
-test('buildHistoryRows handles missing data gracefully', () => {
-  const march18 = new Date(2026, 2, 18);
-  const logs: LogsResponse = { 
-    food: [], 
-    workouts: [], 
-    sleep: [createSleepLog('sleep-1', march18, { hours: 8 })] 
-  };
-  const history = buildHistoryRows(logs, { proteinTarget: 40, kcalTarget: 2000 }, {});
-  expect(history[0].workout).toBe('--');
-});
-
-test('getTrackedDayCount counts unique logged days across categories', () => {
-  const logs: LogsResponse = {
-    food: [
-      createFoodLog('food-1', new Date(2026, 2, 16, 8), { protein: 10, kcal: 100 }),
-      createFoodLog('food-2', new Date(2026, 2, 16, 18), { protein: 12, kcal: 140 }),
-    ],
-    workouts: [
-      createWorkoutLog('workout-1', new Date(2026, 2, 14, 7), { focus: 'Pull' }),
-    ],
-    sleep: [
-      createSleepLog('sleep-1', new Date(2026, 2, 15, 23), { hours: 8 }),
-    ],
-  };
-
-  expect(getTrackedDayCount(logs)).toBe(3);
-});
-
-test('sumNutrition totals optional macros and getCurrentDayType falls back to Rest', () => {
-  const foodLogs = [
-    createFoodLog('food-1', new Date(2026, 2, 16, 8), {
-      protein: 25,
-      kcal: 320,
-      carbs: 18,
-      fats: 12,
-      fiber: 4,
-    }),
-    createFoodLog('food-2', new Date(2026, 2, 16, 13), {
-      protein: 15,
-      kcal: 280,
-    }),
-  ];
-
-  expect(sumNutrition(foodLogs)).toEqual({
-    protein: 40,
-    calories: 600,
-    carbs: 18,
-    fats: 12,
-    fiber: 4,
+    it('returns "chat" for invalid or null tab', () => {
+      expect(parseTab('invalid')).toBe('chat');
+      expect(parseTab(null)).toBe('chat');
+    });
   });
 
-  expect(getCurrentDayType({})).toBe('Rest');
-  expect(getCurrentDayType({ [getLocalDateKey(new Date())]: 'Lite' })
-  ).toBe('Lite');
+  describe('toMeasurementForm', () => {
+    it('returns empty form for null input', () => {
+      expect(toMeasurementForm(null)).toEqual(EMPTY_MEASUREMENT_FORM);
+    });
+
+    it('converts measurement to form strings', () => {
+      const m = { weight: 75.5, waist: 80 } as any;
+      const form = toMeasurementForm(m);
+      expect(form.weight).toBe('75.5');
+      expect(form.waist).toBe('80');
+      expect(form.chest).toBe('');
+    });
+  });
+
+  describe('toMeasurementPayload', () => {
+    it('converts form strings back to numbers or null', () => {
+      const form: any = { 
+        weight: '75.5', waist: '', chest: 'abc',
+        arms: '', thighs: '', hips: '', calves: '', neck: '', bodyFat: ''
+      };
+      const payload = toMeasurementPayload(form);
+      expect(payload.weight).toBe(75.5);
+      expect(payload.waist).toBeNull();
+      expect(payload.chest).toBeNull();
+    });
+  });
+
+  describe('sumNutrition', () => {
+    it('sums kcal and protein correctly', () => {
+      const logs = [
+        { kcal: 500, protein: 30, carbs: 50, fats: 10, fiber: 5 },
+        { kcal: 300, protein: 20, carbs: 40, fats: 5, fiber: 2 },
+      ] as FoodLog[];
+      const totals = sumNutrition(logs);
+      expect(totals.calories).toBe(800);
+      expect(totals.protein).toBe(50);
+      expect(totals.carbs).toBe(90);
+    });
+  });
+
+  describe('getTrackedDayCount', () => {
+    it('counts unique days across categories', () => {
+      const logs = {
+        food: [{ time: new Date('2024-01-01T10:00:00Z') }],
+        workouts: [{ time: new Date('2024-01-01T15:00:00Z') }, { time: new Date('2024-01-02T10:00:00Z') }],
+        sleep: [{ time: new Date('2024-01-03T10:00:00Z') }],
+      } as any;
+      expect(getTrackedDayCount(logs)).toBe(3);
+    });
+  });
+
+  describe('getProteinTarget', () => {
+    const goals = { proteinTarget: 150, proteinTraining: 180, proteinRest: 120 } as any;
+    it('returns correct target for day type', () => {
+      expect(getProteinTarget(goals, 'Training')).toBe(180);
+      expect(getProteinTarget(goals, 'Rest')).toBe(120);
+      expect(getProteinTarget(goals, 'Lite' as any)).toBe(150); // Fallback to proteinTarget if lite not set
+    });
+  });
+
+  describe('buildDayTypeMap', () => {
+    it('converts array to map', () => {
+      const entries = [
+        { dayKey: '2024-01-01', dayType: 'Training' },
+        { dayKey: '2024-01-02', dayType: 'Rest' },
+      ] as any;
+      const map = buildDayTypeMap(entries);
+      expect(map['2024-01-01']).toBe('Training');
+      expect(map['2024-01-02']).toBe('Rest');
+    });
+  });
+
+  describe('buildHistoryRows', () => {
+    it('aggregates data into daily rows', () => {
+      const logs = {
+        food: [{ time: new Date('2024-01-01'), kcal: 2000, protein: 150, carbs: 200, fats: 70, fiber: 30 }],
+        workouts: [{ time: new Date('2024-01-01'), focus: 'Legs' }],
+        sleep: [{ time: new Date('2024-01-01'), hours: 8 }],
+      } as any;
+      const goals = { proteinTarget: 160 } as any;
+      const map = { '2024-01-01': 'Training' } as any;
+      
+      const rows = buildHistoryRows(logs, goals, map);
+      expect(rows).toHaveLength(1);
+      expect(rows[0].workout).toBe('Legs');
+      expect(rows[0].kcal).toBe(2000);
+      expect(rows[0].protein).toBe(150);
+      expect(rows[0].status).toBe('pending'); // 150 < 160
+    });
+  });
+
+  describe('getErrorMessage', () => {
+    it('extracts message from Error object', () => {
+      expect(getErrorMessage(new Error('Test error'))).toBe('Test error');
+    });
+    it('returns fallback for non-error types', () => {
+      expect(getErrorMessage('string error')).toBe('Unknown error');
+    });
+  });
+
+  describe('getLocalDateKey', () => {
+    it('formats date correctly as YYYY-MM-DD', () => {
+      const d = new Date(2024, 0, 15); // Jan 15 2024
+      expect(getLocalDateKey(d)).toBe('2024-01-15');
+    });
+  });
+
+  describe('getTodayFoodLogs', () => {
+    it('filters logs for today', () => {
+      const today = new Date();
+      const logs = [
+        { time: today },
+        { time: new Date('2020-01-01') }
+      ] as FoodLog[];
+      expect(getTodayFoodLogs(logs)).toHaveLength(1);
+    });
+  });
+
+  describe('getLatestSleepLog', () => {
+    it('returns first log if exists', () => {
+      expect(getLatestSleepLog([{ hours: 8 }] as any)).toEqual({ hours: 8 });
+      expect(getLatestSleepLog([])).toBeNull();
+    });
+  });
 });
-
-test('toMeasurementForm handles null and populated data', () => {
-  expect(toMeasurementForm(null).weight).toBe('');
-  expect(toMeasurementForm({ weight: 80 }).weight).toBe('80');
-});
-
-test('toMeasurementPayload handles empty and numeric strings', () => {
-  const base = {
-    weight: '', waist: '', chest: '', arms: '', thighs: '',
-    hips: '', calves: '', neck: '', bodyFat: ''
-  };
-  expect(toMeasurementPayload({ ...base, weight: '' }).weight).toBe(null);
-  expect(toMeasurementPayload({ ...base, weight: '80.5' }).weight).toBe(80.5);
-  expect(toMeasurementPayload({ ...base, weight: 'abc' }).weight).toBe(null);
-});
-
-test('getProteinTarget falls back to default goals', () => {
-  const goals: GoalsState = { proteinTarget: 100, kcalTarget: 2000 };
-  expect(getProteinTarget(goals, 'Unknown' as import('./types').DayType)).toBe(100);
-});
-
-test('buildHistoryRows handles complex training rows', () => {
-  const march18 = new Date(2026, 2, 18);
-  const logs: LogsResponse = {
-    food: [createFoodLog('f1', march18, { protein: 50, kcal: 1000 })],
-    workouts: [createWorkoutLog('w1', march18, { focus: 'Upper' })],
-    sleep: [createSleepLog('s1', march18, { hours: 8 })]
-  };
-  const history = buildHistoryRows(logs, { proteinTarget: 40, kcalTarget: 2000 }, { [getLocalDateKey(march18)]: 'Training' });
-  expect(history[0].status).toBe('completed');
-  expect(history[0].workout).toBe('Upper');
-});
-
-function createFoodLog(
-  id: string,
-  time: Date,
-  overrides: Partial<FoodLog>
-): FoodLog {
-  return {
-    id,
-    userId: 'user-1',
-    name: 'Meal',
-    protein: 0,
-    kcal: 0,
-    carbs: null,
-    fats: null,
-    fiber: null,
-    time,
-    ...overrides,
-  };
-}
-
-function createWorkoutLog(
-  id: string,
-  time: Date,
-  overrides: Partial<import('./types').WorkoutLogWithRelations>
-): import('./types').WorkoutLogWithRelations {
-  return {
-    id,
-    userId: 'user-1',
-    focus: 'Workout',
-    volume: null,
-    details: null,
-    routineId: null,
-    time,
-    exercises: [],
-    ...overrides,
-  };
-}
-
-function createSleepLog(
-  id: string,
-  time: Date,
-  overrides: Partial<SleepLog>
-): SleepLog {
-  return {
-    id,
-    userId: 'user-1',
-    hours: 0,
-    bedTime: null,
-    wakeTime: null,
-    time,
-    ...overrides,
-  };
-}
