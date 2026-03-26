@@ -1,0 +1,32 @@
+﻿
+[1m[46m RUN [49m[22m [36mv4.1.0 [39m[90mD:/LiveFit Project/Project-LiveFit[39m
+
+ [31mΓ¥»[39m src/lib/auth.test.ts [2m([22m[2m6 tests[22m[2m | [22m[31m4 failed[39m[2m)[22m[32m 14[2mms[22m[39m
+[31m       [31m├ù[31m throws error if credentials missing[39m[32m 7[2mms[22m[39m
+[31m       [31m├ù[31m throws error if user not found or no password[39m[32m 1[2mms[22m[39m
+[31m       [31m├ù[31m throws error if password invalid[39m[32m 1[2mms[22m[39m
+[31m       [31m├ù[31m returns user if valid[39m[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m jwt returns token with user id[32m 1[2mms[22m[39m
+       [32mΓ£ô[39m session maps token id to user id[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/app/api/routines/route.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [31mΓ¥»[39m src/lib/persistence.test.ts [2m([22m[2m14 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 39[2mms[22m[39m
+     [32mΓ£ô[39m persists food logs (create new)[32m 8[2mms[22m[39m
+     [32mΓ£ô[39m persists food logs (semantic update)[32m 1[2mms[22m[39m
+     [32mΓ£ô[39m handles profile updates with AI coercion[32m 1[2mms[22m[39m
+     [32mΓ£ô[39m handles dayType updates with normalization[32m 2[2mms[22m[39m
+     [32mΓ£ô[39m persists workout logs (update existing)[32m 2[2mms[22m[39m
+     [32mΓ£ô[39m persists workout logs (create new with exercises)[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m skips invalid logs gracefully[39m[32m 12[2mms[22m[39m
+     [32mΓ£ô[39m persists sleep logs (update existing)[32m 1[2mms[22m[39m
+     [32mΓ£ô[39m persists body measurements (create new)[32m 1[2mms[22m[39m
+     [32mΓ£ô[39m persists body measurements (update existing)[32m 1[2mms[22m[39m
+     [32mΓ£ô[39m handles goal updates[32m 0[2mms[22m[39m
+     [32mΓ£ô[39m throws error and logs when a category fails[32m 2[2mms[22m[39m
+     [32mΓ£ô[39m skips unknown categories[32m 1[2mms[22m[39m
+     [32mΓ£ô[39m handles invalid record data in categories gracefully (Zod throw check)[32m 1[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[31m5 failed[39m[22m[2m | [22m[1m[32m22 passed[39m[22m[90m (27)[39m
+[2m   Start at [22m 20:53:55
+[2m   Duration [22m 2.47s[2m (transform 298ms, setup 1.09s, import 467ms, tests 78ms, environment 4.72s)[22m
+

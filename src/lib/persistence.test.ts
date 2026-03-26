@@ -155,13 +155,70 @@ describe('Persistence Layer', () => {
 
   it('persists workout logs (update existing)', async () => {
     const userId = 'user-1';
-    const envelopes: ParsedLogEnvelope[] = [{ category: 'workout', data: { focus: 'Push', volume: 6000, update: true, date: '2026-03-19' } }];
+    const envelopes: ParsedLogEnvelope[] = [{ 
+      category: 'workout', 
+      data: { 
+        focus: 'Push', 
+        volume: 6000, 
+        update: true, 
+        date: '2026-03-19',
+        exercises: [{ name: 'Squat', sets: [{ setNumber: 1, reps: 5, weight: 100 }] }]
+      } 
+    }];
     vi.mocked(mockTx.workoutLog.findFirst).mockResolvedValue({ id: 'w-1', focus: 'Push' } as any);
     await persistLogData(envelopes, userId);
     expect(mockTx.workoutLog.update).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: 'w-1' },
-      data: expect.objectContaining({ volume: 6000 })
+      data: expect.objectContaining({ 
+        volume: 6000,
+        exercises: expect.objectContaining({ deleteMany: {} })
+      })
     }));
+  });
+
+  it('persists workout logs (create new with exercises)', async () => {
+    const userId = 'user-1';
+    const envelopes: ParsedLogEnvelope[] = [{ 
+      category: 'workout', 
+      data: { 
+        focus: 'Pull', 
+        volume: 4000,
+        prs: { bench: 100 },
+        exercises: [{ name: 'Pullup', sets: [{ setNumber: 1, reps: 10, weight: 0 }] }]
+      } 
+    }];
+    
+    vi.mocked(mockTx.exercise.findFirst).mockResolvedValueOnce({ id: 'ex-1' } as any);
+
+    await persistLogData(envelopes, userId);
+    
+    expect(mockTx.workoutLog.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        focus: 'Pull',
+        volume: 4000,
+        details: JSON.stringify({ bench: 100 }),
+        exercises: expect.objectContaining({
+          create: expect.arrayContaining([
+            expect.objectContaining({ exerciseId: 'ex-1' })
+          ])
+        })
+      })
+    }));
+  });
+
+  // Validation Failure Tests
+  it('skips invalid logs gracefully when required fields are missing', async () => {
+    const userId = 'user-1';
+    const envelopes: ParsedLogEnvelope[] = [
+      { category: 'food', data: { items: [{ name: '' }] } }, // Invalid food (no name)
+      { category: 'workout', data: {} }, // Invalid workout (no focus)
+    ];
+
+    await persistLogData(envelopes, userId);
+
+    // If they skipped properly, create should NOT have been called
+    expect(mockTx.foodLog.create).not.toHaveBeenCalled();
+    expect(mockTx.workoutLog.create).not.toHaveBeenCalled();
   });
 
   it('persists sleep logs (update existing)', async () => {

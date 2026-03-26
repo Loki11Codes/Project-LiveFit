@@ -1,0 +1,44 @@
+skips invalid logs gracefully
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times[90m
+
+Received:
+
+[1m  1st vi.fn() call:
+
+[22m    Array [
+      Object {
+        "create": Object {
+          "kcalTarget": 0,
+          "proteinLite": null,
+          "proteinRest": null,
+          "proteinTarget": 0,
+          "proteinTraining": null,
+          "sleepTarget": null,
+          "userId": "user-1",
+          "waterTarget": null,
+        },
+        "update": Object {
+          "kcalTarget": 0,
+          "proteinLite": null,
+          "proteinRest": null,
+          "proteinTarget": 0,
+          "proteinTraining": null,
+          "sleepTarget": null,
+          "waterTarget": null,
+        },
+        "where": Object {
+          "userId": "user-1",
+        },
+      },
+    ]
+[39m[90m
+
+Number of calls: [1m1[22m
+[39m
+    at Proxy.<anonymous> (file:///D:/LiveFit%20Project/Project-LiveFit/node_modules/@vitest/expect/dist/index.js:1462:10)
+    at Proxy.<anonymous> (file:///D:/LiveFit%20Project/Project-LiveFit/node_modules/@vitest/expect/dist/index.js:1151:15)
+    at Proxy.methodWrapper (file:///D:/LiveFit%20Project/Project-LiveFit/node_modules/chai/index.js:1700:25)
+    at D:/LiveFit Project/Project-LiveFit/src/lib/persistence.test.ts:227:36
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at file:///D:/LiveFit%20Project/Project-LiveFit/node_modules/@vitest/runner/dist/index.js:1258:20
+
