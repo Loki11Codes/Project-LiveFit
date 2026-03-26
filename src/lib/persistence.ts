@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import prisma from './prisma';
 import {
   FoodItemSchema,
@@ -20,48 +21,22 @@ export type ParsedLogEnvelope = {
   data?: unknown;
 };
 
-export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: string, clientDate?: string) {
+/**
+ * Orchestrates the persistence of multiple log envelopes within a single transaction 
+ * per envelope to ensure partial successes don't fail the entire set.
+ */
+export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: string, clientDate?: string): Promise<void> {
   if (envelopes.length === 0) return;
 
   for (const envelope of envelopes) {
     if (!envelope.category) continue;
 
-    // AI might send { category: '...', data: { ... } } OR { category: '...', field1: '...', field2: '...' }
-    // We handle the "flat" case by using the envelope itself as data if 'data' property is missing.
     const category = envelope.category;
     const logData = envelope.data || envelope;
 
     try {
       await prisma.$transaction(async (tx) => {
-        switch (category) {
-          case 'food':
-            if (hasItemsArray(logData)) {
-              await persistFoodLogs(tx, logData.items as FoodItemInput[], userId);
-            } else {
-              await persistFoodLogs(tx, [logData as FoodItemInput], userId);
-            }
-            break;
-          case 'workout':
-            await persistWorkoutLog(tx, logData as WorkoutLogInput, userId);
-            break;
-          case 'sleep':
-            await persistSleepLog(tx, logData as SleepLogInput, userId);
-            break;
-          case 'measurement':
-            await persistMeasurement(tx, logData as MeasurementInput, userId);
-            break;
-          case 'profile':
-            await persistProfileUpdate(tx, logData as UserProfileInput, userId);
-            break;
-          case 'goals':
-            await persistGoalUpdate(tx, logData as GoalInput, userId);
-            break;
-          case 'dayType':
-            await persistDayTypeUpdate(tx, logData, userId, clientDate);
-            break;
-          default:
-            console.warn(`Unknown category: ${category}`);
-        }
+        await handleCategoryPersistence(tx, category, logData, userId, clientDate);
       });
     } catch (error) {
       console.error(`Persistence failed for ${category}:`, getErrorMessage(error));
@@ -70,7 +45,45 @@ export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: str
   }
 }
 
-async function persistFoodLogs(tx: any, items: FoodItemInput[], userId: string) {
+async function handleCategoryPersistence(
+  tx: Prisma.TransactionClient,
+  category: string,
+  logData: unknown,
+  userId: string,
+  clientDate?: string
+): Promise<void> {
+  switch (category) {
+    case 'food':
+      if (hasItemsArray(logData)) {
+        await persistFoodLogs(tx, logData.items as FoodItemInput[], userId);
+      } else {
+        await persistFoodLogs(tx, [logData as FoodItemInput], userId);
+      }
+      break;
+    case 'workout':
+      await persistWorkoutLog(tx, logData as WorkoutLogInput, userId);
+      break;
+    case 'sleep':
+      await persistSleepLog(tx, logData as SleepLogInput, userId);
+      break;
+    case 'measurement':
+      await persistMeasurement(tx, logData as MeasurementInput, userId);
+      break;
+    case 'profile':
+      await persistProfileUpdate(tx, logData as UserProfileInput, userId);
+      break;
+    case 'goals':
+      await persistGoalUpdate(tx, logData as GoalInput, userId);
+      break;
+    case 'dayType':
+      await persistDayTypeUpdate(tx, logData, userId, clientDate);
+      break;
+    default:
+      console.warn(`Unknown category: ${category}`);
+  }
+}
+
+async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInput[], userId: string): Promise<void> {
 
   for (const item of items) {
     const parsed = FoodItemSchema.safeParse(item);
@@ -131,7 +144,7 @@ async function persistFoodLogs(tx: any, items: FoodItemInput[], userId: string) 
   }
 }
 
-async function persistWorkoutLog(tx: any, data: WorkoutLogInput, userId: string) {
+async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogInput, userId: string): Promise<void> {
 
   const parsed = WorkoutLogSchema.safeParse(data);
   if (!parsed.success) {
@@ -216,7 +229,7 @@ async function persistWorkoutLog(tx: any, data: WorkoutLogInput, userId: string)
   });
 }
 
-async function persistSleepLog(tx: any, data: SleepLogInput, userId: string) {
+async function persistSleepLog(tx: Prisma.TransactionClient, data: SleepLogInput, userId: string): Promise<void> {
 
   const parsed = SleepLogSchema.safeParse(data);
   if (!parsed.success) {
@@ -268,7 +281,7 @@ async function persistSleepLog(tx: any, data: SleepLogInput, userId: string) {
   });
 }
 
-async function persistMeasurement(tx: any, data: MeasurementInput, userId: string) {
+async function persistMeasurement(tx: Prisma.TransactionClient, data: MeasurementInput, userId: string): Promise<void> {
 
   const parsed = MeasurementSchema.safeParse(data);
   if (!parsed.success) {
@@ -331,7 +344,7 @@ async function persistMeasurement(tx: any, data: MeasurementInput, userId: strin
   });
 }
 
-async function persistProfileUpdate(tx: any, raw: UserProfileInput, userId: string) {
+async function persistProfileUpdate(tx: Prisma.TransactionClient, raw: UserProfileInput, userId: string): Promise<void> {
 
   const parsed = UserProfileSchema.safeParse(raw);
   if (!parsed.success) {
@@ -346,7 +359,7 @@ async function persistProfileUpdate(tx: any, raw: UserProfileInput, userId: stri
   });
 }
 
-async function persistGoalUpdate(tx: any, raw: GoalInput, userId: string) {
+async function persistGoalUpdate(tx: Prisma.TransactionClient, raw: GoalInput, userId: string): Promise<void> {
 
   const parsed = GoalSchema.safeParse(raw);
   if (!parsed.success) {
@@ -361,7 +374,7 @@ async function persistGoalUpdate(tx: any, raw: GoalInput, userId: string) {
   });
 }
 
-async function persistDayTypeUpdate(tx: any, raw: unknown, userId: string, clientDate?: string) {
+async function persistDayTypeUpdate(tx: Prisma.TransactionClient, raw: unknown, userId: string, clientDate?: string): Promise<void> {
 
   const data = raw as Record<string, unknown>;
   const dayKey = (data.dayKey as string) || clientDate || getLocalDateKey(new Date());

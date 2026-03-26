@@ -92,14 +92,14 @@ describe('Chat Component', () => {
   };
 
   it('renders welcome message for existing user', async () => {
-    render(<Chat onLogParsed={mockOnLogParsed} isNewUser={false} />);
+    render(<Chat onLogParsed={mockOnLogParsed} isNewUser={false} input="" setInput={() => {}} />);
     await waitForLoader();
     expect(screen.getByText(/Good morning!/i)).toBeDefined();
     expect(screen.getByTestId('chat-input')).toBeDefined();
   });
 
   it('renders welcome message for new user', async () => {
-    render(<Chat onLogParsed={mockOnLogParsed} isNewUser={true} />);
+    render(<Chat onLogParsed={mockOnLogParsed} isNewUser={true} input="" setInput={() => {}} />);
     await waitForLoader();
     expect(screen.getByText(/Welcome to LiveFit!/i)).toBeDefined();
   });
@@ -114,7 +114,7 @@ describe('Chat Component', () => {
       json: () => Promise.resolve(historicalMessages),
     });
 
-    render(<Chat onLogParsed={mockOnLogParsed} />);
+    render(<Chat onLogParsed={mockOnLogParsed} input="" setInput={() => {}} />);
     await waitForLoader();
     expect(screen.getByText('Hello history')).toBeDefined();
     expect(screen.getByText('Hi history')).toBeDefined();
@@ -125,7 +125,11 @@ describe('Chat Component', () => {
       text: 'Logged your meal! |||DATA{"type":"food"}|||',
     });
 
-    render(<Chat onLogParsed={mockOnLogParsed} />);
+    const TestWrapper = () => {
+      const [input, setInput] = React.useState('');
+      return <Chat onLogParsed={mockOnLogParsed} input={input} setInput={setInput} />;
+    };
+    render(<TestWrapper />);
     await waitForLoader();
 
     const input = screen.getByTestId('chat-input');
@@ -148,11 +152,15 @@ describe('Chat Component', () => {
   it('handles chat errors gracefully', async () => {
     (clientApi.requestJson as any).mockRejectedValueOnce(new Error('Network Error')); // eslint-disable-line @typescript-eslint/no-explicit-any
 
-    render(<Chat onLogParsed={mockOnLogParsed} />);
+    const TestWrapper = () => {
+      const [input, setInput] = React.useState('');
+      return <Chat onLogParsed={mockOnLogParsed} input={input} setInput={setInput} />;
+    };
+    render(<TestWrapper />);
     await waitForLoader();
 
-    const input = screen.getByTestId('chat-input');
-    fireEvent.change(input, { target: { value: 'Test error' } });
+    const inputArea = screen.getByTestId('chat-input');
+    fireEvent.change(inputArea, { target: { value: 'Test error' } });
     
     const sendBtn = screen.getByLabelText('Send message');
     
@@ -170,7 +178,11 @@ describe('Chat Component', () => {
   });
 
   it('populates input when quick chips are clicked', async () => {
-    render(<Chat onLogParsed={mockOnLogParsed} />);
+    const TestWrapper = () => {
+      const [input, setInput] = React.useState('');
+      return <Chat onLogParsed={mockOnLogParsed} input={input} setInput={setInput} />;
+    };
+    render(<TestWrapper />);
     await waitForLoader();
 
     const chips = [
@@ -190,7 +202,11 @@ describe('Chat Component', () => {
   });
 
   it('handles image attachments', async () => {
-    render(<Chat onLogParsed={mockOnLogParsed} />);
+    const TestWrapper = () => {
+      const [input, setInput] = React.useState('');
+      return <Chat onLogParsed={mockOnLogParsed} input={input} setInput={setInput} />;
+    };
+    render(<TestWrapper />);
     await waitForLoader();
 
     const photoBtn = screen.getByLabelText(/Attach images/i);

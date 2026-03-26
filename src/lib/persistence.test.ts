@@ -10,6 +10,7 @@ vi.mock('./prisma', () => ({
   },
 }));
 
+// Help Vitest type-safe mocks
 const mockTx = {
   foodLog: {
     findFirst: vi.fn(),
@@ -40,13 +41,16 @@ const mockTx = {
   dayTypeEntry: {
     upsert: vi.fn(),
   },
-};
+  exercise: {
+    findFirst: vi.fn(),
+  },
+} as unknown as Prisma.TransactionClient; // Still need one cast, but better structured
 
 describe('Persistence Layer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Setup transaction mock to call the callback with our mockTx
-    vi.mocked(prisma.$transaction).mockImplementation((cb: (tx: Prisma.TransactionClient) => Promise<unknown>) => cb(mockTx as unknown as Prisma.TransactionClient));
+    vi.mocked(prisma.$transaction).mockImplementation((cb: (tx: Prisma.TransactionClient) => Promise<unknown>) => cb(mockTx));
   });
 
   it('persists food logs (create new)', async () => {
@@ -88,7 +92,7 @@ describe('Persistence Layer', () => {
     ];
 
     // Mock existing entry found
-    mockTx.foodLog.findFirst.mockResolvedValue({ id: 'existing-id' });
+    vi.mocked(mockTx.foodLog.findFirst).mockResolvedValue({ id: 'existing-id' } as any);
 
     await persistLogData(envelopes, userId);
 
@@ -152,7 +156,7 @@ describe('Persistence Layer', () => {
   it('persists workout logs (update existing)', async () => {
     const userId = 'user-1';
     const envelopes: ParsedLogEnvelope[] = [{ category: 'workout', data: { focus: 'Push', volume: 6000, update: true, date: '2026-03-19' } }];
-    mockTx.workoutLog.findFirst.mockResolvedValue({ id: 'w-1', focus: 'Push' });
+    vi.mocked(mockTx.workoutLog.findFirst).mockResolvedValue({ id: 'w-1', focus: 'Push' } as any);
     await persistLogData(envelopes, userId);
     expect(mockTx.workoutLog.update).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: 'w-1' },
@@ -163,7 +167,7 @@ describe('Persistence Layer', () => {
   it('persists sleep logs (update existing)', async () => {
     const userId = 'user-1';
     const envelopes: ParsedLogEnvelope[] = [{ category: 'sleep', data: { hours: 8, update: true, date: '2026-03-19' } }];
-    mockTx.sleepLog.findFirst.mockResolvedValue({ id: 's-1', hours: 7 });
+    vi.mocked(mockTx.sleepLog.findFirst).mockResolvedValue({ id: 's-1', hours: 7 } as any);
     await persistLogData(envelopes, userId);
     expect(mockTx.sleepLog.update).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: 's-1' },
@@ -184,7 +188,7 @@ describe('Persistence Layer', () => {
     const envelopes: ParsedLogEnvelope[] = [{ category: 'measurement', data: { weight: 81, bodyFat: 16, update: true, date: '2026-03-19' } }];
     
     // Mock existing measurement
-    mockTx.bodyMeasurement.findFirst.mockResolvedValue({ id: 'meas-1', weight: 80 });
+    vi.mocked(mockTx.bodyMeasurement.findFirst).mockResolvedValue({ id: 'meas-1', weight: 80 } as any);
 
     await persistLogData(envelopes, userId);
 
