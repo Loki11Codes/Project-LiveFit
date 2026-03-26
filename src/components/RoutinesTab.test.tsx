@@ -11,8 +11,8 @@ vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
-// Mock window.crypto.randomUUID
-Object.defineProperty(window, 'crypto', {
+// Mock globalThis.crypto.randomUUID
+Object.defineProperty(globalThis, 'crypto', {
   value: {
     randomUUID: () => 'test-uuid-123',
   },
@@ -36,7 +36,7 @@ describe('RoutinesTab Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    global.fetch = vi.fn((url) => {
+    globalThis.fetch = vi.fn((url) => {
       if (url === '/api/routines') {
         return Promise.resolve({
           ok: true,
@@ -97,7 +97,7 @@ describe('RoutinesTab Component', () => {
     // Switch back
     // The close button is the one with the X icon in the header. We can find it by looking for the sibling of the title element
     // An easier way is to find it via a query for buttons if we don't have test ids
-    const buttons = screen.getAllByRole('button');
+    screen.getAllByRole('button');
     // Usually the close button is the last button in the header. Since we don't have a label, we'll try firing clicking it based on class structure or we can just mock the list view render.
     // Instead of clicking the close button which is hard to target without aria-label, we can just test adding an exercise.
     expect(screen.getByPlaceholderText('e.g. Push Day, Pull Day, Legs')).toBeDefined();
@@ -134,7 +134,7 @@ describe('RoutinesTab Component', () => {
 
   it('saves a new routine', async () => {
     // Modify fetch to handle POST
-    global.fetch = vi.fn((url, options: any) => {
+    globalThis.fetch = vi.fn((url, options: any) => {
       if (url === '/api/routines' && (!options || options.method === 'GET')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
       }
@@ -172,7 +172,7 @@ describe('RoutinesTab Component', () => {
 
     // Verify POST
     await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith('/api/routines', expect.objectContaining({
+        expect(globalThis.fetch).toHaveBeenCalledWith('/api/routines', expect.objectContaining({
             method: 'POST',
             body: expect.stringContaining('New Test Routine')
         }));

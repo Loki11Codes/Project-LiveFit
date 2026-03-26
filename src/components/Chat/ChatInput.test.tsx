@@ -77,7 +77,7 @@ describe('ChatInput Component', () => {
     const props = {
       ...defaultProps,
       pendingAttachments: [
-        { id: '1', file: new File([], 'img.png'), previewUrl: 'foo.png', mediaType: 'image/png', name: 'img.png' },
+        { id: '1', file: new File([], 'img.png'), previewUrl: 'foo.png', mediaType: 'image/png', name: 'img.png', base64: 'data:image/png;base64,foo' },
       ],
     };
     render(<ChatInput {...props} />);
@@ -88,7 +88,7 @@ describe('ChatInput Component', () => {
     const props = {
       ...defaultProps,
       pendingAttachments: [
-        { id: '1', file: new File([], 'img.png'), previewUrl: 'foo.png', mediaType: 'image/png', name: 'img.png' },
+        { id: '1', file: new File([], 'img.png'), previewUrl: 'foo.png', mediaType: 'image/png', name: 'img.png', base64: 'data:image/png;base64,foo' },
       ],
       onRemoveAttachment: vi.fn(),
     };

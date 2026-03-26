@@ -49,7 +49,7 @@ describe('MessageBubble Component', () => {
       text: 'Look at this photo',
       timestamp: '10:02 AM',
       attachments: [
-        { id: 'att1', file: new File([], 'img.png'), previewUrl: 'preview.png', mediaType: 'image/png', name: 'img.png' },
+        { id: 'att1', file: new File([], 'img.png'), previewUrl: 'preview.png', mediaType: 'image/png', name: 'img.png', base64: 'data:image/png;base64,foo' },
       ],
     };
     render(<MessageBubble msg={msg} isFirstInGroup={true} />);

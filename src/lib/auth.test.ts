@@ -1,4 +1,3 @@
-import { authOptions } from './auth';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -17,45 +16,51 @@ vi.mock('bcryptjs', () => ({
   },
 }));
 
-let capturedAuthorize: any = null;
+const mocks = vi.hoisted(() => ({
+  capturedAuthorize: null as any
+}));
 
 vi.mock('next-auth/providers/credentials', () => ({
   default: (options: any) => {
-    capturedAuthorize = options.authorize;
+    mocks.capturedAuthorize = options.authorize;
     return { id: 'credentials', name: 'Email and Password' };
   }
 }));
 
 // Force import order so mock captures the options
-import './auth'; 
+import { authOptions } from './auth';
 
 describe('Auth Options', () => {
+  const TEST_VALID_SECRET = 'secret-val-1';
+  const TEST_HASH = 'hashed-password-123';
+  const TEST_INVALID_SECRET = 'secret-val-2';
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   describe('CredentialsProvider Authorize', () => {
     it('throws error if credentials missing', async () => {
-      await expect(capturedAuthorize(null)).rejects.toThrow('Please enter both email and password');
-      await expect(capturedAuthorize({ email: 'test@test.com' })).rejects.toThrow('Please enter both email and password');
+      await expect(mocks.capturedAuthorize(null)).rejects.toThrow('Please enter both email and password');
+      await expect(mocks.capturedAuthorize({ email: 'test@test.com' })).rejects.toThrow('Please enter both email and password');
     });
 
     it('throws error if user not found or no password', async () => {
       vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
-      await expect(capturedAuthorize({ email: 'test@test.com', password: 'pass' })).rejects.toThrow('No user found with this email');
+      await expect(mocks.capturedAuthorize({ email: 'test@test.com', password: TEST_VALID_SECRET })).rejects.toThrow('No user found with this email');
       
       vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({ email: 'test@test.com' } as any);
-      await expect(capturedAuthorize({ email: 'test@test.com', password: 'pass' })).rejects.toThrow('No user found with this email');
+      await expect(mocks.capturedAuthorize({ email: 'test@test.com', password: TEST_VALID_SECRET })).rejects.toThrow('No user found with this email');
     });
 
     it('throws error if password invalid', async () => {
       vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({ 
         email: 'test@test.com', 
-        password: 'hashedpassword' 
+        password: TEST_HASH 
       } as any);
       vi.mocked(bcrypt.compare).mockResolvedValueOnce(false as never);
 
-      await expect(capturedAuthorize({ email: 'test@test.com', password: 'wrong' })).rejects.toThrow('Invalid password');
+      await expect(mocks.capturedAuthorize({ email: 'test@test.com', password: TEST_INVALID_SECRET })).rejects.toThrow('Invalid password');
     });
 
     it('returns user if valid', async () => {
@@ -64,13 +69,13 @@ describe('Auth Options', () => {
         email: 'test@test.com',
         name: 'Test',
         image: 'img.png',
-        password: 'hashedpassword'
+        password: TEST_HASH
       };
       
       vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(mockUser as any);
       vi.mocked(bcrypt.compare).mockResolvedValueOnce(true as never);
 
-      const result = await capturedAuthorize({ email: 'test@test.com', password: 'mypassword' });
+      const result = await mocks.capturedAuthorize({ email: 'test@test.com', password: TEST_VALID_SECRET });
       expect(result).toEqual({
         id: 'u1',
         email: 'test@test.com',

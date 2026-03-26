@@ -24,7 +24,6 @@ describe('Routines API', () => {
   describe('GET /api/routines', () => {
     it('returns 401 if unauthorized', async () => {
       vi.mocked(getServerSession).mockResolvedValueOnce(null);
-      const req = new Request('http://localhost/api/routines');
       
       const res = await GET();
       expect(res.status).toBe(401);
