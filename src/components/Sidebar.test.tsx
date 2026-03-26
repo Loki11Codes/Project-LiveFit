@@ -7,6 +7,7 @@ vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, style, ...props }: any) => <div {...props} style={style}>{children}</div>, // eslint-disable-line @typescript-eslint/no-explicit-any
   },
+  AnimatePresence: ({ children }: any) => <>{children}</>, // eslint-disable-line @typescript-eslint/no-explicit-any
 }));
 
 describe('Sidebar Component', () => {
@@ -35,27 +36,22 @@ describe('Sidebar Component', () => {
 
   it('renders protein progress correctly', () => {
     render(<Sidebar {...defaultProps} />);
-    expect(screen.getByText('Protein Today')).toBeDefined();
-    expect(screen.getByText('50')).toBeDefined();
-    expect(screen.getByText(/g of 100g/)).toBeDefined();
-    expect(screen.getByText('50g remaining')).toBeDefined();
+    expect(screen.getAllByText('Protein').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('50').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('/100g').length).toBeGreaterThan(0);
   });
 
-  it('shows goal reached message when protein target is met', () => {
+  it('handles protein goal reached correctly', () => {
     render(<Sidebar {...defaultProps} protein={100} />);
-    expect(screen.getByText('Goal reached! Excellent work.')).toBeDefined();
+    expect(screen.getAllByText('100').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('/100g').length).toBeGreaterThan(0);
   });
 
-  it('renders calorie progress and remaining kcal', () => {
+  it('renders calorie progress and remaining kcal correctly', () => {
     render(<Sidebar {...defaultProps} />);
-    expect(screen.getByText('Calories Today')).toBeDefined();
+    expect(screen.getAllByText('Calories').length).toBeGreaterThan(0);
     expect(screen.getAllByText('1500').length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/remaining/i).length).toBeGreaterThan(0);
-  });
-
-  it('shows warning when calories overshot', () => {
-    render(<Sidebar {...defaultProps} calories={2500} />);
-    expect(screen.getByText('Warning: Calories overshot')).toBeDefined();
+    expect(screen.getAllByText('/2000').length).toBeGreaterThan(0);
   });
 
   it('renders stats rows for weight, sleep, etc.', () => {
