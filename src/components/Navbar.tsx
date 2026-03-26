@@ -22,7 +22,7 @@ interface NavbarProps {
   readonly activeTab: TabId;
   readonly setActiveTab: (tab: TabId) => void;
   readonly theme: AppTheme;
-  readonly toggleTheme: () => void;
+  readonly toggleTheme: (e?: React.MouseEvent) => void;
 }
 
 type NavbarTab = {
@@ -130,7 +130,7 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
             )}
             
             <button
-              onClick={toggleTheme}
+              onClick={(e) => toggleTheme(e)}
               className="theme-toggle-btn"
               aria-label="Toggle theme"
             >

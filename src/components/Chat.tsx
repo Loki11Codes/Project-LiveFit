@@ -16,6 +16,12 @@ interface ChatProps {
   readonly isNewUser?: boolean;
   readonly initialMessage?: string | null;
   readonly onMessageSent?: () => void;
+  readonly nudgeStatus?: {
+    protein: number;
+    proteinTarget: number;
+    calories: number;
+    calorieTarget: number;
+  };
 }
 
 type ChatResponse = {
@@ -24,7 +30,13 @@ type ChatResponse = {
   warning?: string;
 };
 
-export default function Chat({ onLogParsed, isNewUser, initialMessage, onMessageSent }: ChatProps) {
+export default function Chat({ 
+  onLogParsed, 
+  isNewUser, 
+  initialMessage, 
+  onMessageSent,
+  nudgeStatus 
+}: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome-msg",
@@ -55,6 +67,24 @@ export default function Chat({ onLogParsed, isNewUser, initialMessage, onMessage
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  useEffect(() => {
+    // Proactive Nudge logic
+    if (nudgeStatus && messages.length === 1 && messages[0].id === "welcome-msg") {
+      const proteinPct = (nudgeStatus.protein / nudgeStatus.proteinTarget) * 100;
+      if (proteinPct < 50) {
+        setMessages(prev => [
+          ...prev,
+          {
+            id: "protein-nudge",
+            role: "model",
+            text: `I noticed you're a bit behind on your protein goal today (${Math.round(nudgeStatus.protein)}g / ${nudgeStatus.proteinTarget}g). Would you like some high-protein dinner ideas to help you catch up? 🥩`,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          }
+        ]);
+      }
+    }
+  }, [nudgeStatus, messages.length]);
 
   useEffect(() => {
     if (initialMessage) {
@@ -228,7 +258,7 @@ export default function Chat({ onLogParsed, isNewUser, initialMessage, onMessage
   };
 
   return (
-    <div className="flex-1 min-w-0 h-full bg-[var(--surface)] rounded-[32px] flex flex-col border border-[var(--border)] shadow-[var(--shadow-lg)] overflow-hidden transition-all duration-300 [background-clip:padding-box] [transform:translateZ(0)] [mask-image:linear-gradient(#fff,#fff)] relative"
+    <div className="flex-1 min-w-0 h-full bg-[var(--surface)] rounded-[var(--radius-xl)] flex flex-col border border-[var(--border)] shadow-[var(--shadow-lg)] overflow-hidden transition-all duration-300 [background-clip:padding-box] [transform:translateZ(0)] [mask-image:linear-gradient(#fff,#fff)] relative"
       role="log"
       aria-label="Chat history"
       aria-live="polite"
@@ -241,7 +271,7 @@ export default function Chat({ onLogParsed, isNewUser, initialMessage, onMessage
         <div className="w-full flex flex-col chat-content-v-inset">
           {isLoadingHistory ? (
             <div className="flex justify-center py-6" data-testid="chat-loader">
-              <Activity className="w-6 h-6 animate-pulse" style={{ color: "#e67e22" }} />
+              <Activity className="w-6 h-6 animate-pulse" style={{ color: "#e67e22" }} strokeWidth={2.5} />
             </div>
           ) : (
             <AnimatePresence mode="popLayout">
@@ -292,7 +322,7 @@ export default function Chat({ onLogParsed, isNewUser, initialMessage, onMessage
             className="absolute bottom-40 right-8 z-50 w-10 h-10 rounded-full bg-[var(--accent)] text-[var(--accent-inv)] shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
             aria-label="Scroll to bottom"
           >
-            <ArrowUp className="w-5 h-5 rotate-180" />
+            <ArrowUp className="w-5 h-5 rotate-180" strokeWidth={3} />
           </motion.button>
         )}
       </AnimatePresence>

@@ -302,8 +302,30 @@ export default function Home() {
     }
   };
 
-  const toggleTheme = () => {
-    setTheme((current) => (current === 'light' ? 'dark' : 'light'));
+  const toggleTheme = (event?: React.MouseEvent) => {
+    const nextTheme = theme === 'light' ? 'dark' : 'light';
+
+    // @ts-ignore - View Transition API is still experimental in some TS versions
+    if (!document.startViewTransition) {
+      setTheme(nextTheme);
+      return;
+    }
+
+    const x = event?.clientX ?? window.innerWidth / 2;
+    const y = event?.clientY ?? window.innerHeight / 2;
+
+    document.documentElement.style.setProperty('--transition-x', `${x}px`);
+    document.documentElement.style.setProperty('--transition-y', `${y}px`);
+    document.documentElement.classList.add('theme-transitioning');
+
+    // @ts-ignore
+    const transition = document.startViewTransition(() => {
+      startTransition(() => setTheme(nextTheme));
+    });
+
+    transition.finished.finally(() => {
+      document.documentElement.classList.remove('theme-transitioning');
+    });
   };
 
 
@@ -356,21 +378,29 @@ export default function Home() {
                   isNewUser={!dashboard.profile?.age || !dashboard.profile?.height}
                   initialMessage={chatDraft}
                   onMessageSent={() => setChatDraft(null)}
+                  nudgeStatus={{
+                    protein: nutrition.protein,
+                    proteinTarget: getProteinTarget(dashboard.goals, dashboard.dayType),
+                    calories: nutrition.calories,
+                    calorieTarget: dashboard.goals.kcalTarget
+                  }}
                 />
-                <Sidebar
-                  protein={nutrition.protein}
-                  proteinTarget={getProteinTarget(dashboard.goals, dashboard.dayType)}
-                  calories={nutrition.calories}
-                  calorieTarget={dashboard.goals.kcalTarget}
-                  carbs={nutrition.carbs}
-                  fats={nutrition.fats}
-                  fiber={nutrition.fiber}
-                  weight={dashboard.latestMeasurement?.weight ?? '--'}
-                  sleep={latestSleep?.hours ?? '--'}
-                  day={trackedDayCount || 1}
-                  dayType={dashboard.dayType}
-                  setDayType={handleDayTypeChange}
-                />
+                  <div className="ui-pane h-full overflow-hidden flex flex-col">
+                    <Sidebar
+                      protein={nutrition.protein}
+                      proteinTarget={getProteinTarget(dashboard.goals, dashboard.dayType)}
+                      calories={nutrition.calories}
+                      calorieTarget={dashboard.goals.kcalTarget}
+                      carbs={nutrition.carbs}
+                      fats={nutrition.fats}
+                      fiber={nutrition.fiber}
+                      weight={dashboard.latestMeasurement?.weight ?? '--'}
+                      sleep={latestSleep?.hours ?? '--'}
+                      day={trackedDayCount || 1}
+                      dayType={dashboard.dayType}
+                      setDayType={handleDayTypeChange}
+                    />
+                  </div>
               </div>
             )}
 

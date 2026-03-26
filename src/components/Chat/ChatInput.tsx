@@ -109,7 +109,7 @@ export function ChatInput({
           className="chat-send-btn-square !bg-[var(--surface2)]"
           suppressHydrationWarning
         >
-          <Mic className="w-5 h-5" style={{ color: "#7b5ea7" }} />
+          <Mic className="w-5 h-5" style={{ color: "#7b5ea7" }} strokeWidth={2} />
         </motion.button>
       );
     }
@@ -129,7 +129,7 @@ export function ChatInput({
         className="chat-send-btn-square"
         suppressHydrationWarning
       >
-        <ArrowUp className="w-5 h-5" style={{ color: "var(--accent-inv)" }} />
+        <ArrowUp className="w-5 h-5" style={{ color: "var(--accent-inv)" }} strokeWidth={2} />
       </motion.button>
     );
   };
@@ -150,7 +150,7 @@ export function ChatInput({
                 <div key={attachment.id} className="chat-attachment-thumb">
                   {isAudio ? (
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--surface2)] rounded-lg border border-[var(--border)] relative top-[2px]">
-                      <Mic className="w-4 h-4 text-[var(--accent)]" />
+                      <Mic className="w-4 h-4 text-[var(--accent)]" strokeWidth={2} />
                       <span className="text-[12px] font-medium max-w-[100px] truncate">{attachment.name}</span>
                     </div>
                   ) : (
@@ -170,7 +170,7 @@ export function ChatInput({
                     className="chat-attachment-remove"
                     aria-label={`Remove ${attachment.name}`}
                   >
-                    <X className="w-3 h-3" />
+                    <X className="w-3 h-3" strokeWidth={2} />
                   </button>
                 </div>
               );
@@ -201,7 +201,7 @@ export function ChatInput({
           disabled={isRecording}
           suppressHydrationWarning
         >
-          <ImageIcon className="w-5 h-5" style={{ color: "#7b5ea7" }} />
+          <ImageIcon className="w-5 h-5" style={{ color: "#7b5ea7" }} strokeWidth={2} />
         </motion.button>
 
         <div className="chat-input-box relative overflow-hidden">

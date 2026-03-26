@@ -19,7 +19,7 @@ export function QuickChip({ icon: Icon, label, color, onClick }: QuickChipProps)
       className="chat-quick-chip"
       suppressHydrationWarning
     >
-      <Icon className="w-3.5 h-3.5" style={{ color }} />
+      <Icon className="w-4 h-4" style={{ color }} strokeWidth={2} />
       {label}
     </motion.button>
   );

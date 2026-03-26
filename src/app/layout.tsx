@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Work_Sans } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/Providers';
+import { CloudBackground } from '@/components/Shared/CloudBackground';
 
 const workSans = Work_Sans({
   subsets: ['latin'],
@@ -22,7 +23,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={workSans.className} suppressHydrationWarning>
-        <Providers>{children}</Providers>
+        <Providers>
+          <CloudBackground />
+          {children}
+        </Providers>
       </body>
     </html>
   );

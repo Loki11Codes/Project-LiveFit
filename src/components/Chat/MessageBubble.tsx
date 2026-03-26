@@ -44,7 +44,7 @@ export function MessageBubble({ msg, isFirstInGroup, isNewUser }: Readonly<Messa
           {msg.role === "model" ? (
             <Activity className="w-4.5 h-4.5 text-[var(--accent-inv)]" strokeWidth={3} />
           ) : (
-            <User className="w-5 h-5" style={{ color: "#7b5ea7" }} />
+            <User className="w-5 h-5" style={{ color: "#7b5ea7" }} strokeWidth={2.5} />
           )}
         </div>
       </div>
