@@ -23,6 +23,9 @@ export function GlassPopover({ isOpen, onClose, children, title }: GlassPopoverP
             className="fixed inset-0 bg-black/5 backdrop-blur-[2px] z-[100]"
           />
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title ? 'popover-title' : undefined}
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -30,7 +33,7 @@ export function GlassPopover({ isOpen, onClose, children, title }: GlassPopoverP
           >
             {title && (
               <div className="mb-4">
-                <h3 className="text-sm font-black uppercase tracking-widest opacity-80">{title}</h3>
+                <h3 id="popover-title" className="text-sm font-black uppercase tracking-widest opacity-80">{title}</h3>
                 <div className="h-0.5 w-8 bg-[var(--accent)] mt-1 rounded-full" />
               </div>
             )}

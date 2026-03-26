@@ -377,7 +377,7 @@ async function persistDayTypeUpdate(tx: any, raw: unknown, userId: string, clien
     dayType = 'Rest';
   }
 
-  console.log(`Resolved DayType: ${dayType} for ${dayKey}`);
+  // dayKey is already declared above
 
   await tx.dayTypeEntry.upsert({
     where: {
@@ -395,7 +395,7 @@ async function persistDayTypeUpdate(tx: any, raw: unknown, userId: string, clien
       dayType,
     },
   });
-  console.log('Day type upserted successfully.');
+  // Logic to upsert day type...
 }
 
 function hasItemsArray(value: unknown): value is { items: unknown[] } {

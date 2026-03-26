@@ -22,6 +22,8 @@ interface ChatProps {
     calories: number;
     calorieTarget: number;
   };
+  readonly input: string;
+  readonly setInput: (val: string) => void;
 }
 
 type ChatResponse = {
@@ -35,7 +37,9 @@ export default function Chat({
   isNewUser, 
   initialMessage, 
   onMessageSent,
-  nudgeStatus 
+  nudgeStatus,
+  input,
+  setInput
 }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -47,7 +51,6 @@ export default function Chat({
       timestamp: "",
     },
   ]);
-  const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
   const [notice, setNotice] = useState<InlineNotice | null>(null);
@@ -177,7 +180,6 @@ export default function Chat({
       const { hasData, cleanText } = extractAndCleanLogData(data.text);
 
       if (hasData) {
-        console.log("AI Data block detected! Triggering UI refresh...");
         onLogParsed();
       } else {
         // Safety Fallback: AI sometimes forgets the DATA block but confirms in text.
@@ -354,7 +356,7 @@ export default function Chat({
           setInput={setInput}
           isTyping={isTyping}
           pendingAttachments={pendingAttachments}
-          onSend={() => void handleSend()}
+          onSend={handleSend}
           onFileSelect={handleFileSelection}
           onAudioRecorded={handleAudioRecorded}
           onRemoveAttachment={removePendingAttachment}

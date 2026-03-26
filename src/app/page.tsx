@@ -67,6 +67,7 @@ export default function Home() {
   const [dashboard, setDashboard] = useState<DashboardState>(INITIAL_DASHBOARD_STATE);
   const [notice, setNotice] = useState<InlineNotice | null>(null);
   const [chatDraft, setChatDraft] = useState<string | null>(null);
+  const [chatInput, setChatInput] = useState("");
 
   const todaysFood = getTodayFoodLogs(dashboard.logs.food);
   // ...
@@ -378,6 +379,8 @@ export default function Home() {
                   isNewUser={!dashboard.profile?.age || !dashboard.profile?.height}
                   initialMessage={chatDraft}
                   onMessageSent={() => setChatDraft(null)}
+                  input={chatInput}
+                  setInput={setChatInput}
                   nudgeStatus={{
                     protein: nutrition.protein,
                     proteinTarget: getProteinTarget(dashboard.goals, dashboard.dayType),

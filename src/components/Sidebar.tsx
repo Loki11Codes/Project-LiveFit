@@ -209,12 +209,13 @@ export default function Sidebar({
                 key={id}
                 type="button"
                 onClick={() => setDayType(id)}
+                aria-pressed={dayType === id}
                 className="sidebar-daytype-btn relative flex-1 py-1.5 rounded-lg transition-all z-10 flex items-center justify-center gap-1.5"
                 suppressHydrationWarning
               >
                 {dayType === id && (
                   <motion.div
-                    layoutId="activeTab"
+                    layoutId="sidebarActiveTab"
                     className="absolute inset-0 bg-[var(--accent)] shadow-md rounded-lg"
                     transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                   />
