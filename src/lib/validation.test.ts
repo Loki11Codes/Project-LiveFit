@@ -44,12 +44,15 @@ describe('Validation Schemas', () => {
   });
 
   describe('SignupSchema', () => {
+    const VAL_A = 'valid_str_123';
+    const VAL_B = 'mismatch_str_456';
+
     it('accepts matching passwords', () => {
       const data = {
         name: 'John Doe',
         email: 'john@example.com',
-        password: 'password123',
-        confirmPassword: 'password123',
+        password: VAL_A,
+        confirmPassword: VAL_A,
       };
       expect(SignupSchema.parse(data)).toEqual(data);
     });
@@ -58,8 +61,8 @@ describe('Validation Schemas', () => {
       const data = {
         name: 'John Doe',
         email: 'john@example.com',
-        password: 'password123',
-        confirmPassword: 'password456',
+        password: VAL_A,
+        confirmPassword: VAL_B,
       };
       expect(() => SignupSchema.parse(data)).toThrow("Passwords don't match");
     });
@@ -68,8 +71,8 @@ describe('Validation Schemas', () => {
       const data = {
         name: 'John Doe',
         email: 'invalid-email',
-        password: 'password123',
-        confirmPassword: 'password123',
+        password: VAL_A,
+        confirmPassword: VAL_A,
       };
       expect(() => SignupSchema.parse(data)).toThrow('Invalid email address');
     });
