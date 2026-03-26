@@ -220,12 +220,11 @@ async function main() {
   console.log(`Successfully populated ${seededCount} exercises.`);
 }
 
-main()
-  .then(async () => {
-    await prisma.$disconnect()
-  })
-  .catch(async (e) => {
-    console.error(e)
-    await prisma.$disconnect()
-    process.exit(1)
-  });
+try {
+  await main();
+} catch (e) {
+  console.error(e);
+  process.exit(1);
+} finally {
+  await prisma.$disconnect();
+}

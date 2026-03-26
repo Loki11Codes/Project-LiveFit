@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest';
-import type { FoodLog, SleepLog, WorkoutLog } from '@prisma/client';
+import type { FoodLog, SleepLog } from '@prisma/client';
 import {
   buildHistoryRows,
   getCurrentDayType,
@@ -196,8 +196,8 @@ function createFoodLog(
 function createWorkoutLog(
   id: string,
   time: Date,
-  overrides: Partial<WorkoutLog>
-): WorkoutLog {
+  overrides: Partial<import('./types').WorkoutLogWithRelations>
+): import('./types').WorkoutLogWithRelations {
   return {
     id,
     userId: 'user-1',
@@ -206,6 +206,7 @@ function createWorkoutLog(
     details: null,
     routineId: null,
     time,
+    exercises: [],
     ...overrides,
   };
 }

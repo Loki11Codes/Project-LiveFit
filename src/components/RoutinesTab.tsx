@@ -5,7 +5,7 @@ import { Plus, Search, Dumbbell, X, Play } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface RoutinesTabProps {
-  onStart?: (routine: any) => void;
+  readonly onStart?: (routine: any) => void;
 }
 
 export function RoutinesTab({ onStart }: RoutinesTabProps) {

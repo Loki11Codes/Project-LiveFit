@@ -16,7 +16,7 @@ export type {
   WorkoutExercise,
   WorkoutSet,
   Exercise,
-};
+} from '@prisma/client';
 
 export type WorkoutLogWithRelations = WorkoutLog & {
   exercises: (WorkoutExercise & {
