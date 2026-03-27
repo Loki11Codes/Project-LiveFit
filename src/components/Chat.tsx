@@ -74,17 +74,23 @@ export default function Chat({
   useEffect(() => {
     // Proactive Nudge logic
     if (nudgeStatus && messages.length === 1 && messages[0].id === "welcome-msg") {
+      const alreadyHasNudge = messages.some(m => m.id === "protein-nudge");
+      if (alreadyHasNudge) return;
+
       const proteinPct = (nudgeStatus.protein / nudgeStatus.proteinTarget) * 100;
       if (proteinPct < 50) {
-        setMessages(prev => [
-          ...prev,
-          {
-            id: "protein-nudge",
-            role: "model",
-            text: `I noticed you're a bit behind on your protein goal today (${Math.round(nudgeStatus.protein)}g / ${nudgeStatus.proteinTarget}g). Would you like some high-protein dinner ideas to help you catch up? 🥩`,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          }
-        ]);
+        setMessages(prev => {
+          if (prev.some(m => m.id === "protein-nudge")) return prev;
+          return [
+            ...prev,
+            {
+              id: "protein-nudge",
+              role: "model",
+              text: `I noticed you're a bit behind on your protein goal today (${Math.round(nudgeStatus.protein)}g / ${nudgeStatus.proteinTarget}g). Would you like some high-protein dinner ideas to help you catch up? 🥩`,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            }
+          ];
+        });
       }
     }
   }, [nudgeStatus, messages.length]);
