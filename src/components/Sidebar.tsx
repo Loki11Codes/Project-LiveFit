@@ -179,6 +179,7 @@ export default function Sidebar({
                 type="button"
                 className={`w-full flex justify-between items-center py-1.5 cursor-pointer hover:bg-[rgba(0,0,0,0.02)] px-1 rounded-md transition-all ${index < statsRows.length - 1 ? 'border-b border-[rgba(0,0,0,0.02)]' : ''}`}
                 onClick={() => setActiveMetric(row.label)}
+                suppressHydrationWarning
               >
                 <div className="flex items-center gap-2.5">
                   <row.icon className="w-3.5 h-3.5" style={{ color: row.color }} strokeWidth={2} />

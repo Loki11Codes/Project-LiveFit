@@ -81,6 +81,7 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`nav-tab ${isActive ? 'nav-tab-active' : 'nav-tab-inactive'}`}
+                  suppressHydrationWarning
                 >
                   {isActive && (
                     <motion.div 
@@ -133,6 +134,7 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
               onClick={(e) => toggleTheme(e)}
               className="theme-toggle-btn"
               aria-label="Toggle theme"
+              suppressHydrationWarning
             >
               <AnimatePresence mode="wait">
                 <motion.div
@@ -162,6 +164,7 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`mobile-nav-tab ${isActive ? 'mobile-nav-tab-active' : 'mobile-nav-tab-inactive'}`}
+                suppressHydrationWarning
               >
                 <Icon 
                   className={`w-6 h-6 transition-all duration-500 ${isActive ? 'scale-110 stroke-[2.5px]' : 'scale-90 stroke-[1.5px]'}`} 

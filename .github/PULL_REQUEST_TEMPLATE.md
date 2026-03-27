@@ -9,6 +9,13 @@
 - [ ] Bug Fix: ...
 - [ ] Refactor: ...
 
+## Checklist
+<!-- Check all that apply -->
+- [ ] I have tested my changes locally.
+- [ ] I have updated any relevant documentation.
+- [ ] My code follows the project's coding standards.
+- [ ] All new and existing tests passed.
+
 ## Verification Results
 <!-- Describe the testing you've done to verify these changes. Provide screenshots or logs if applicable. -->
 
