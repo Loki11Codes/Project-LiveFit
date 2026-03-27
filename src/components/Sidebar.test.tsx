@@ -1,16 +1,20 @@
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import Sidebar from './Sidebar';
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import Sidebar from "./Sidebar";
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, style, ...props }: any) => <div {...props} style={style}>{children}</div>, // eslint-disable-line @typescript-eslint/no-explicit-any
+    div: ({ children, style, ...props }: any) => (
+      <div {...props} style={style}>
+        {children}
+      </div>
+    ), // eslint-disable-line @typescript-eslint/no-explicit-any
   },
   AnimatePresence: ({ children }: any) => <>{children}</>, // eslint-disable-line @typescript-eslint/no-explicit-any
 }));
 
-describe('Sidebar Component', () => {
+describe("Sidebar Component", () => {
   const defaultProps = {
     protein: 50,
     proteinTarget: 100,
@@ -22,7 +26,7 @@ describe('Sidebar Component', () => {
     weight: 70,
     sleep: 8,
     day: 1,
-    dayType: 'Rest' as const,
+    dayType: "Rest" as const,
     setDayType: vi.fn(),
   };
 
@@ -34,45 +38,54 @@ describe('Sidebar Component', () => {
     cleanup();
   });
 
-  it('renders protein progress correctly', () => {
+  it("renders protein progress correctly", () => {
     render(<Sidebar {...defaultProps} />);
-    expect(screen.getAllByText('Protein').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('50').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('/100g').length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Protein").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("50").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("/100g").length).toBeGreaterThan(0);
   });
 
-  it('handles protein goal reached correctly', () => {
+  it("handles protein goal reached correctly", () => {
     render(<Sidebar {...defaultProps} protein={100} />);
-    expect(screen.getAllByText('100').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('/100g').length).toBeGreaterThan(0);
+    expect(screen.getAllByText("100").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("/100g").length).toBeGreaterThan(0);
   });
 
-  it('renders calorie progress and remaining kcal correctly', () => {
+  it("renders calorie progress and remaining kcal correctly", () => {
     render(<Sidebar {...defaultProps} />);
-    expect(screen.getAllByText('Calories').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('1500').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('/2000').length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Calories").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("1500").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("/2000").length).toBeGreaterThan(0);
   });
 
-  it('renders stats rows for weight, sleep, etc.', () => {
+  it("renders stats rows for weight, sleep, etc.", () => {
     render(<Sidebar {...defaultProps} />);
-    expect(screen.getByText('Weight')).toBeDefined();
-    expect(screen.getByText('70')).toBeDefined();
-    expect(screen.getByText('Sleep')).toBeDefined();
-    expect(screen.getByText('8')).toBeDefined();
+    expect(screen.getByText("Weight")).toBeDefined();
+    expect(screen.getByText("70")).toBeDefined();
+    expect(screen.getByText("Sleep")).toBeDefined();
+    expect(screen.getByText("8")).toBeDefined();
   });
 
-  it('calls setDayType when a day type button is clicked', () => {
+  it("calls setDayType when a day type button is clicked", () => {
     render(<Sidebar {...defaultProps} />);
-    const trainBtn = screen.getByText('Train');
-    const button = trainBtn.closest('button');
+    const trainBtn = screen.getByText("Train");
+    const button = trainBtn.closest("button");
     if (button) fireEvent.click(button);
-    expect(defaultProps.setDayType).toHaveBeenCalledWith('Training');
+    expect(defaultProps.setDayType).toHaveBeenCalledWith("Training");
   });
 
-  it('highlights the active day type', () => {
+  it("highlights the active day type", () => {
     render(<Sidebar {...defaultProps} dayType="Training" />);
     // Testing specific class name or style if needed, but checking for label is usually enough
-    expect(screen.getByText('Train')).toBeDefined();
+    expect(screen.getByText("Train")).toBeDefined();
+  });
+
+  it("opens and closes the metric popover", () => {
+    render(<Sidebar {...defaultProps} />);
+    const labels = screen.getAllByText("Protein");
+    if (labels.length > 0) {
+      fireEvent.click(labels[0]);
+      expect(screen.getByText("Past 7 Days")).toBeInTheDocument();
+    }
   });
 });
