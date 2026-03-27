@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import React, { startTransition, useEffect, useState } from 'react';
-import type { BodyMeasurement } from '@prisma/client';
-import { useSession } from 'next-auth/react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
-import Navbar from '@/components/Navbar';
-import Sidebar from '@/components/Sidebar';
-import Chat from '@/components/Chat';
-import LogTab from '@/components/Tabs/LogTab';
-import HistoryTab from '@/components/Tabs/HistoryTab';
-import BodyTab from '@/components/Tabs/BodyTab';
-import ProfileTab from '@/components/Tabs/ProfileTab';
-import { RoutinesTab } from '@/components/RoutinesTab';
+import React, { startTransition, useEffect, useState } from "react";
+import type { BodyMeasurement } from "@prisma/client";
+import { useSession } from "next-auth/react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
+import Navbar from "@/components/Navbar";
+import Sidebar from "@/components/Sidebar";
+import Chat from "@/components/Chat";
+import LogTab from "@/components/Tabs/LogTab";
+import HistoryTab from "@/components/Tabs/HistoryTab";
+import BodyTab from "@/components/Tabs/BodyTab";
+import ProfileTab from "@/components/Tabs/ProfileTab";
+import { RoutinesTab } from "@/components/RoutinesTab";
 import {
   buildHistoryRows,
   buildDayTypeMap,
@@ -26,8 +26,8 @@ import {
   sumNutrition,
   toMeasurementForm,
   toMeasurementPayload,
-} from '@/lib/dashboard';
-import { getClientErrorMessage, requestJson } from '@/lib/client-api';
+} from "@/lib/dashboard";
+import { getClientErrorMessage, requestJson } from "@/lib/client-api";
 import {
   DEFAULT_GOALS,
   EMPTY_ANALYTICS,
@@ -44,7 +44,7 @@ import {
   type LogsResponse,
   type MeasurementForm,
   type TabId,
-} from '@/lib/types';
+} from "@/lib/types";
 
 const INITIAL_DASHBOARD_STATE: DashboardState = {
   logs: EMPTY_LOGS,
@@ -53,7 +53,7 @@ const INITIAL_DASHBOARD_STATE: DashboardState = {
   goals: DEFAULT_GOALS,
   profile: null,
   analytics: EMPTY_ANALYTICS,
-  dayType: 'Rest',
+  dayType: "Rest",
   dayTypesByDay: EMPTY_DAY_TYPES_BY_DAY,
 };
 
@@ -62,19 +62,24 @@ export default function Home() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const activeTab = parseTab(searchParams.get('tab'));
-  const [theme, setTheme] = useState<AppTheme>('light');
-  const [dashboard, setDashboard] = useState<DashboardState>(INITIAL_DASHBOARD_STATE);
+  const activeTab = parseTab(searchParams.get("tab"));
+  const [theme, setTheme] = useState<AppTheme>("light");
+  const [dashboard, setDashboard] = useState<DashboardState>(
+    INITIAL_DASHBOARD_STATE,
+  );
   const [notice, setNotice] = useState<InlineNotice | null>(null);
   const [chatDraft, setChatDraft] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState("");
 
   const todaysFood = getTodayFoodLogs(dashboard.logs.food);
   // ...
-  const handleStartWorkout = (routine: any) => {
-    const workoutMsg = `I'm starting my "${routine.name}" workout. Here is the plan: ${routine.exercises.map((e: any) => e.exercise.name).join(", ")}. Let's record the sets as I go!`;
+  const handleStartWorkout = (routine: {
+    name: string;
+    exercises: { exercise: { name: string } }[];
+  }) => {
+    const workoutMsg = `I'm starting my "${routine.name}" workout. Here is the plan: ${routine.exercises.map((e) => e.exercise.name).join(", ")}. Let's record the sets as I go!`;
     setChatDraft(workoutMsg);
-    handleTabChange('chat');
+    handleTabChange("chat");
   };
   const nutrition = sumNutrition(todaysFood);
   const latestSleep = getLatestSleepLog(dashboard.logs.sleep);
@@ -82,36 +87,20 @@ export default function Home() {
   const history = buildHistoryRows(
     dashboard.logs,
     dashboard.goals,
-    dashboard.dayTypesByDay
+    dashboard.dayTypesByDay,
   );
 
   const handleTabChange = (tab: TabId) => {
     router.push(`/?tab=${tab}`, { scroll: false });
   };
 
-  const updateMeasurements: React.Dispatch<React.SetStateAction<MeasurementForm>> = (
-    value
-  ) => {
+  const updateMeasurements: React.Dispatch<
+    React.SetStateAction<MeasurementForm>
+  > = (value) => {
     setDashboard((current) => ({
       ...current,
       measurements:
-        typeof value === 'function' ? value(current.measurements) : value,
-    }));
-  };
-
-  const updateGoals: React.Dispatch<React.SetStateAction<GoalsState>> = (value) => {
-    setDashboard((current) => ({
-      ...current,
-      goals: typeof value === 'function' ? value(current.goals) : value,
-    }));
-  };
-
-  const updateProfile: React.Dispatch<React.SetStateAction<DashboardState['profile']>> = (
-    value
-  ) => {
-    setDashboard((current) => ({
-      ...current,
-      profile: typeof value === 'function' ? value(current.profile) : value,
+        typeof value === "function" ? value(current.measurements) : value,
     }));
   };
 
@@ -134,8 +123,8 @@ export default function Home() {
 
     void persistDayType(dayKey, nextDayType).catch((error) => {
       const message = getClientErrorMessage(error);
-      console.error('Failed to persist day type:', message);
-      setNotice({ tone: 'error', message });
+      console.error("Failed to persist day type:", message);
+      setNotice({ tone: "error", message });
       startTransition(() => updateLocalState(previousDayType));
     });
   };
@@ -170,9 +159,9 @@ export default function Home() {
       })
       .catch((error) => {
         const message = getClientErrorMessage(error);
-        console.error('Failed to fetch dashboard data:', message);
+        console.error("Failed to fetch dashboard data:", message);
         setNotice({
-          tone: 'error',
+          tone: "error",
           message: `Unable to load dashboard data: ${message}`,
         });
       });
@@ -187,7 +176,7 @@ export default function Home() {
   }, [theme]);
 
   useEffect(() => {
-    if (!notice || notice.tone === 'error') {
+    if (!notice || notice.tone === "error") {
       return;
     }
 
@@ -213,9 +202,9 @@ export default function Home() {
       });
     } catch (error) {
       const message = getClientErrorMessage(error);
-      console.error('Failed to refresh dashboard:', message);
+      console.error("Failed to refresh dashboard:", message);
       setNotice({
-        tone: 'error',
+        tone: "error",
         message: `Unable to refresh dashboard: ${message}`,
       });
     }
@@ -223,14 +212,17 @@ export default function Home() {
 
   const handleSaveMeasurements = async () => {
     try {
-      const latestMeasurement = await requestJson<BodyMeasurement>('/api/measurements', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(toMeasurementPayload(dashboard.measurements)),
-      });
+      const latestMeasurement = await requestJson<BodyMeasurement>(
+        "/api/measurements",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(toMeasurementPayload(dashboard.measurements)),
+        },
+      );
       setNotice({
-        tone: 'success',
-        message: 'Measurements saved.',
+        tone: "success",
+        message: "Measurements saved.",
       });
       startTransition(() => {
         setDashboard((current) => ({
@@ -241,72 +233,17 @@ export default function Home() {
       });
     } catch (error) {
       const message = getClientErrorMessage(error);
-      console.error('Failed to save measurements:', message);
+      console.error("Failed to save measurements:", message);
       setNotice({
-        tone: 'error',
-        message,
-      });
-    }
-  };
-
-  const handleSaveGoals = async () => {
-    try {
-      const goals = await requestJson<GoalsState>('/api/profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dashboard.goals),
-      });
-      setNotice({
-        tone: 'success',
-        message: 'Daily goals updated.',
-      });
-      startTransition(() => {
-        setDashboard((current) => ({
-          ...current,
-          goals,
-        }));
-      });
-    } catch (error) {
-      const message = getClientErrorMessage(error);
-      console.error('Failed to save goals:', message);
-      setNotice({
-        tone: 'error',
-        message,
-      });
-    }
-  };
-
-  const handleSaveProfile = async () => {
-    try {
-      const profile = await requestJson<DashboardState['profile']>('/api/profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dashboard.profile),
-      });
-      setNotice({
-        tone: 'success',
-        message: 'Profile details updated.',
-      });
-      startTransition(() => {
-        setDashboard((current) => ({
-          ...current,
-          profile,
-        }));
-      });
-    } catch (error) {
-      const message = getClientErrorMessage(error);
-      console.error('Failed to save profile:', message);
-      setNotice({
-        tone: 'error',
+        tone: "error",
         message,
       });
     }
   };
 
   const toggleTheme = (event?: React.MouseEvent) => {
-    const nextTheme = theme === 'light' ? 'dark' : 'light';
+    const nextTheme = theme === "light" ? "dark" : "light";
 
-    // @ts-ignore - View Transition API is still experimental in some TS versions
     if (!document.startViewTransition) {
       setTheme(nextTheme);
       return;
@@ -315,23 +252,23 @@ export default function Home() {
     const x = event?.clientX ?? window.innerWidth / 2;
     const y = event?.clientY ?? window.innerHeight / 2;
 
-    document.documentElement.style.setProperty('--transition-x', `${x}px`);
-    document.documentElement.style.setProperty('--transition-y', `${y}px`);
-    document.documentElement.classList.add('theme-transitioning');
+    document.documentElement.style.setProperty("--transition-x", `${x}px`);
+    document.documentElement.style.setProperty("--transition-y", `${y}px`);
+    document.documentElement.classList.add("theme-transitioning");
 
-    // @ts-ignore
     const transition = document.startViewTransition(() => {
       startTransition(() => setTheme(nextTheme));
     });
 
     transition.finished.finally(() => {
-      document.documentElement.classList.remove('theme-transitioning');
+      document.documentElement.classList.remove("theme-transitioning");
     });
   };
 
-
   return (
-    <main className={`flex flex-col items-center bg-[var(--bg)] w-full overflow-x-hidden ${activeTab === 'chat' ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
+    <main
+      className={`flex flex-col items-center bg-(--bg) w-full overflow-x-hidden ${activeTab === "chat" ? "h-screen overflow-hidden" : "min-h-screen"}`}
+    >
       <Navbar
         activeTab={activeTab}
         setActiveTab={handleTabChange}
@@ -341,7 +278,7 @@ export default function Home() {
 
       <AnimatePresence>
         {notice && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
@@ -360,7 +297,9 @@ export default function Home() {
 
       <div
         className={`flex-1 min-h-0 w-full main-layout transition-all duration-500 ${
-          activeTab === 'chat' ? 'single-screen-layout' : 'page-top-offset pb-32 md:pb-12'
+          activeTab === "chat"
+            ? "single-screen-layout"
+            : "page-top-offset pb-32 md:pb-12"
         }`}
       >
         <AnimatePresence mode="wait">
@@ -369,45 +308,53 @@ export default function Home() {
             initial={{ opacity: 0, x: 10, scale: 0.995 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: -10, scale: 0.995 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
             className="flex flex-col flex-1 h-full min-h-0 relative"
           >
-            {activeTab === 'chat' && (
+            {activeTab === "chat" && (
               <div className="chat-sidebar-layout">
-                <Chat 
-                  onLogParsed={refreshDashboard} 
-                  isNewUser={!dashboard.profile?.age || !dashboard.profile?.height}
+                <Chat
+                  onLogParsed={refreshDashboard}
+                  isNewUser={
+                    !dashboard.profile?.age || !dashboard.profile?.height
+                  }
                   initialMessage={chatDraft}
                   onMessageSent={() => setChatDraft(null)}
                   input={chatInput}
                   setInput={setChatInput}
                   nudgeStatus={{
                     protein: nutrition.protein,
-                    proteinTarget: getProteinTarget(dashboard.goals, dashboard.dayType),
+                    proteinTarget: getProteinTarget(
+                      dashboard.goals,
+                      dashboard.dayType,
+                    ),
                     calories: nutrition.calories,
-                    calorieTarget: dashboard.goals.kcalTarget
+                    calorieTarget: dashboard.goals.kcalTarget,
                   }}
                 />
-                  <div className="ui-pane h-full overflow-hidden flex flex-col">
-                    <Sidebar
-                      protein={nutrition.protein}
-                      proteinTarget={getProteinTarget(dashboard.goals, dashboard.dayType)}
-                      calories={nutrition.calories}
-                      calorieTarget={dashboard.goals.kcalTarget}
-                      carbs={nutrition.carbs}
-                      fats={nutrition.fats}
-                      fiber={nutrition.fiber}
-                      weight={dashboard.latestMeasurement?.weight ?? '--'}
-                      sleep={latestSleep?.hours ?? '--'}
-                      day={trackedDayCount || 1}
-                      dayType={dashboard.dayType}
-                      setDayType={handleDayTypeChange}
-                    />
-                  </div>
+                <div className="ui-pane h-full overflow-hidden flex flex-col">
+                  <Sidebar
+                    protein={nutrition.protein}
+                    proteinTarget={getProteinTarget(
+                      dashboard.goals,
+                      dashboard.dayType,
+                    )}
+                    calories={nutrition.calories}
+                    calorieTarget={dashboard.goals.kcalTarget}
+                    carbs={nutrition.carbs}
+                    fats={nutrition.fats}
+                    fiber={nutrition.fiber}
+                    weight={dashboard.latestMeasurement?.weight ?? "--"}
+                    sleep={latestSleep?.hours ?? "--"}
+                    day={trackedDayCount || 1}
+                    dayType={dashboard.dayType}
+                    setDayType={handleDayTypeChange}
+                  />
+                </div>
               </div>
             )}
 
-            {activeTab === 'log' && (
+            {activeTab === "log" && (
               <LogTab
                 foodLog={dashboard.logs.food}
                 protein={nutrition.protein}
@@ -416,15 +363,15 @@ export default function Home() {
               />
             )}
 
-            {activeTab === 'history' && (
+            {activeTab === "history" && (
               <HistoryTab history={history} analytics={dashboard.analytics} />
             )}
 
-            {activeTab === 'routines' && (
+            {activeTab === "routines" && (
               <RoutinesTab onStart={handleStartWorkout} />
             )}
 
-            {activeTab === 'body' && (
+            {activeTab === "body" && (
               <BodyTab
                 measurements={dashboard.measurements}
                 setMeasurements={updateMeasurements}
@@ -433,15 +380,11 @@ export default function Home() {
               />
             )}
 
-            {activeTab === 'profile' && (
+            {activeTab === "profile" && (
               <ProfileTab
                 session={session}
                 goals={dashboard.goals}
-                setGoals={updateGoals}
-                handleSaveGoals={handleSaveGoals}
                 profile={dashboard.profile}
-                setProfile={updateProfile}
-                handleSaveProfile={handleSaveProfile}
                 analytics={dashboard.analytics}
                 trackedDayCount={trackedDayCount}
               />
@@ -462,12 +405,12 @@ async function fetchDashboardData(): Promise<DashboardState> {
     dayTypesResponse,
     profileResponse,
   ] = await Promise.all([
-    requestJson<LogsResponse>('/api/logs'),
-    requestJson<unknown>('/api/measurements'),
-    requestJson<unknown>('/api/profile?type=goals'), // We'll use the profile route for goals now
-    requestJson<unknown>('/api/analytics'),
-    requestJson<unknown>('/api/day-types'),
-    requestJson<unknown>('/api/profile'),
+    requestJson<LogsResponse>("/api/logs"),
+    requestJson<unknown>("/api/measurements"),
+    requestJson<unknown>("/api/profile?type=goals"), // We'll use the profile route for goals now
+    requestJson<unknown>("/api/analytics"),
+    requestJson<unknown>("/api/day-types"),
+    requestJson<unknown>("/api/profile"),
   ]);
 
   const latestMeasurement = isBodyMeasurement(latestMeasurementResponse)
@@ -495,78 +438,80 @@ async function fetchDashboardData(): Promise<DashboardState> {
   };
 }
 
-function isUserProfile(value: unknown): value is DashboardState['profile'] {
+function isUserProfile(value: unknown): value is DashboardState["profile"] {
   return (
-    typeof value === 'object' &&
+    typeof value === "object" &&
     value !== null &&
-    (!('error' in value) || Object.keys(value).length > 1)
+    (!("error" in value) || Object.keys(value).length > 1)
   );
 }
 
 function isBodyMeasurement(value: unknown): value is BodyMeasurement {
   return (
-    typeof value === 'object' &&
+    typeof value === "object" &&
     value !== null &&
-    'id' in value &&
-    'time' in value
+    "id" in value &&
+    "time" in value
   );
 }
 
 function isGoalsState(value: unknown): value is GoalsState {
   return (
-    typeof value === 'object' &&
+    typeof value === "object" &&
     value !== null &&
-    'proteinTarget' in value &&
-    typeof value.proteinTarget === 'number' &&
-    'kcalTarget' in value &&
-    typeof value.kcalTarget === 'number'
+    "proteinTarget" in value &&
+    typeof value.proteinTarget === "number" &&
+    "kcalTarget" in value &&
+    typeof value.kcalTarget === "number"
   );
 }
 
 function isAnalyticsResponse(value: unknown): value is AnalyticsResponse {
   return (
-    typeof value === 'object' &&
+    typeof value === "object" &&
     value !== null &&
-    'nutritionStats' in value &&
+    "nutritionStats" in value &&
     Array.isArray(value.nutritionStats) &&
-    'averages' in value &&
-    typeof value.averages === 'object' &&
+    "averages" in value &&
+    typeof value.averages === "object" &&
     value.averages !== null &&
-    'kcal' in value.averages &&
-    typeof value.averages.kcal === 'number' &&
-    'protein' in value.averages &&
-    typeof value.averages.protein === 'number' &&
-    'weightTrend' in value &&
+    "kcal" in value.averages &&
+    typeof value.averages.kcal === "number" &&
+    "protein" in value.averages &&
+    typeof value.averages.protein === "number" &&
+    "weightTrend" in value &&
     Array.isArray(value.weightTrend) &&
-    'meta' in value &&
-    typeof value.meta === 'object' &&
+    "meta" in value &&
+    typeof value.meta === "object" &&
     value.meta !== null &&
-    'period' in value.meta &&
-    typeof value.meta.period === 'string'
+    "period" in value.meta &&
+    typeof value.meta.period === "string"
   );
 }
 
-function isDayTypeEntryRecordArray(value: unknown): value is DayTypeEntryRecord[] {
+function isDayTypeEntryRecordArray(
+  value: unknown,
+): value is DayTypeEntryRecord[] {
   return (
     Array.isArray(value) &&
     value.every(
       (entry) =>
-        typeof entry === 'object' &&
+        typeof entry === "object" &&
         entry !== null &&
-        'dayKey' in entry &&
-        typeof entry.dayKey === 'string' &&
-        'dayType' in entry &&
-        (entry.dayType === 'Rest' ||
-          entry.dayType === 'Training' ||
-          entry.dayType === 'Lite')
+        "dayKey" in entry &&
+        typeof entry.dayKey === "string" &&
+        "dayType" in entry &&
+        (entry.dayType === "Rest" ||
+          entry.dayType === "Training" ||
+          entry.dayType === "Lite"),
     )
   );
 }
 
 async function persistDayType(dayKey: string, dayType: DayType) {
-  await requestJson<DayTypeEntryRecord>('/api/day-types', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  await requestJson<DayTypeEntryRecord>("/api/day-types", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ dayKey, dayType }),
   });
 }

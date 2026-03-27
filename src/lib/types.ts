@@ -6,7 +6,7 @@ import type {
   WorkoutExercise,
   WorkoutSet,
   Exercise,
-} from '@prisma/client';
+} from "@prisma/client";
 
 export type {
   BodyMeasurement,
@@ -16,7 +16,7 @@ export type {
   WorkoutExercise,
   WorkoutSet,
   Exercise,
-} from '@prisma/client';
+} from "@prisma/client";
 
 export type WorkoutLogWithRelations = WorkoutLog & {
   exercises: (WorkoutExercise & {
@@ -25,26 +25,46 @@ export type WorkoutLogWithRelations = WorkoutLog & {
   })[];
 };
 
-export type AppTheme = 'light' | 'dark';
-export type DayType = 'Rest' | 'Training' | 'Lite';
-export type TabId = 'chat' | 'log' | 'history' | 'body' | 'profile' | 'routines';
+export type AppTheme = "light" | "dark";
+export type DayType = "Rest" | "Training" | "Lite";
+export type TabId =
+  | "chat"
+  | "log"
+  | "history"
+  | "body"
+  | "profile"
+  | "routines";
 
 export type GoalsState = {
   proteinTarget: number;
   kcalTarget: number;
+  carbsTarget?: number | null;
+  fatsTarget?: number | null;
   proteinTraining?: number | null;
   proteinRest?: number | null;
   proteinLite?: number | null;
   waterTarget?: number | null;
   sleepTarget?: number | null;
+  workoutDuration?: number | null;
 };
 
 export type UserProfile = {
+  name?: string | null;
+  email?: string | null;
+  username?: string | null;
+  phone?: string | null;
   age?: number | null;
   gender?: string | null;
   height?: number | null;
   startDay?: number | null;
   primaryGoal?: string | null;
+  dietaryPreference?: string | null;
+  activityPreference?: string | null;
+  darkMode?: boolean;
+  hapticFeedback?: boolean;
+  workoutReminders?: boolean;
+  mealLogging?: boolean;
+  waterCheckIns?: boolean;
   day1?: string | null;
   day2?: string | null;
   day3?: string | null;
@@ -54,15 +74,15 @@ export type UserProfile = {
 };
 
 export type MeasurementFormField =
-  | 'weight'
-  | 'waist'
-  | 'chest'
-  | 'arms'
-  | 'thighs'
-  | 'hips'
-  | 'calves'
-  | 'neck'
-  | 'bodyFat';
+  | "weight"
+  | "waist"
+  | "chest"
+  | "arms"
+  | "thighs"
+  | "hips"
+  | "calves"
+  | "neck"
+  | "bodyFat";
 
 export type MeasurementForm = Record<MeasurementFormField, string>;
 export type MeasurementPayload = Record<MeasurementFormField, number | null>;
@@ -117,7 +137,7 @@ export type ChatAttachment = ChatAttachmentPayload & {
 };
 
 export type InlineNotice = {
-  tone: 'success' | 'error' | 'warning';
+  tone: "success" | "error" | "warning";
   message: string;
 };
 
@@ -132,7 +152,7 @@ export type HistoryRow = {
   sleep: string;
   protein: number;
   target: number;
-  status: 'completed' | 'pending';
+  status: "completed" | "pending";
   kcal: number;
   carbs: number;
   fats: number;
@@ -162,15 +182,15 @@ export const DEFAULT_GOALS: GoalsState = {
 };
 
 export const EMPTY_MEASUREMENT_FORM: MeasurementForm = {
-  weight: '',
-  waist: '',
-  chest: '',
-  arms: '',
-  thighs: '',
-  hips: '',
-  calves: '',
-  neck: '',
-  bodyFat: '',
+  weight: "",
+  waist: "",
+  chest: "",
+  arms: "",
+  thighs: "",
+  hips: "",
+  calves: "",
+  neck: "",
+  bodyFat: "",
 };
 
 export const EMPTY_LOGS: LogsResponse = {
@@ -189,7 +209,7 @@ export const EMPTY_ANALYTICS: AnalyticsResponse = {
   },
   weightTrend: [],
   meta: {
-    period: '7d',
+    period: "7d",
     logCount: 0,
     measurementCount: 0,
   },

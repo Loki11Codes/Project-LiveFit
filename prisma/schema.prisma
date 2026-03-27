@@ -36,6 +36,8 @@ model Session {
 model User {
   id             String            @id @default(cuid())
   name           String?
+  username       String?           @unique
+  phone          String?
   email          String?           @unique
   emailVerified  DateTime?
   image          String?
@@ -119,23 +121,33 @@ model Goal {
   userId          String @unique
   proteinTarget   Float
   kcalTarget      Float
+  carbsTarget     Float?
+  fatsTarget      Float?
   proteinLite     Float?
   proteinRest     Float?
   proteinTraining Float?
   sleepTarget     Float?
   waterTarget     Float?
+  workoutDuration Int?
   user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserProfile {
-  id          String  @id @default(cuid())
-  userId      String  @unique
-  age         Int?
-  gender      String?
-  height      Float?
-  startDay    Int?
-  primaryGoal String?
-  day1        String?
+  id                 String  @id @default(cuid())
+  userId             String  @unique
+  age                Int?
+  gender             String?
+  height             Float?
+  startDay           Int?
+  primaryGoal        String?
+  dietaryPreference  String?
+  activityPreference String?
+  darkMode           Boolean @default(false)
+  hapticFeedback     Boolean @default(true)
+  workoutReminders   Boolean @default(true)
+  mealLogging        Boolean @default(false)
+  waterCheckIns      Boolean @default(true)
+  day1               String?
   day2        String?
   day3        String?
   day4        String?

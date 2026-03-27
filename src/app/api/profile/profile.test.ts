@@ -1,13 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GET, POST } from './route';
-import prisma from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { GET, POST } from "./route";
+import prisma from "@/lib/prisma";
+import { getServerSession } from "next-auth";
 
-vi.mock('next-auth', () => ({
+vi.mock("next-auth", () => ({
   getServerSession: vi.fn(),
 }));
 
-vi.mock('@/lib/prisma', () => ({
+vi.mock("@/lib/prisma", () => ({
   default: {
     userProfile: {
       findUnique: vi.fn(),
@@ -19,77 +19,96 @@ vi.mock('@/lib/prisma', () => ({
     },
     user: {
       update: vi.fn(),
+      findUnique: vi.fn(),
     },
   },
 }));
 
-describe('Profile API Route', () => {
+describe("Profile API Route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('GET', () => {
-    it('returns 401 if not authenticated', async () => {
+  describe("GET", () => {
+    it("returns 401 if not authenticated", async () => {
       vi.mocked(getServerSession).mockResolvedValue(null);
-      const req = new Request('http://localhost/api/profile');
+      const req = new Request("http://localhost/api/profile");
       const res = await GET(req);
       expect(res.status).toBe(401);
     });
 
-    it('returns profile data for authenticated user', async () => {
-      const mockUser = { id: 'user-1', email: 'test@example.com' };
-      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
-      
-      const mockProfile = { userId: 'user-1', age: 30, gender: 'Male' };
-      vi.mocked(prisma.userProfile.findUnique).mockResolvedValue(mockProfile as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    it("returns profile data for authenticated user", async () => {
+      const mockSession = { user: { id: "user-1", email: "test@example.com" } };
+      vi.mocked(getServerSession).mockResolvedValue(mockSession as any);
 
-      const req = new Request('http://localhost/api/profile');
+      const mockProfile = { userId: "user-1", age: 30, gender: "Male" };
+      const mockUser = {
+        name: "Test User",
+        email: "test@example.com",
+        phone: null,
+        username: null,
+      };
+      vi.mocked(prisma.userProfile.findUnique).mockResolvedValue(
+        mockProfile as any,
+      ); // eslint-disable-line @typescript-eslint/no-explicit-any
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+
+      const req = new Request("http://localhost/api/profile");
       const res = await GET(req);
       const data = await res.json();
 
       expect(res.status).toBe(200);
-      expect(data).toEqual(mockProfile);
+      expect(data).toEqual({ ...mockProfile, ...mockUser });
       expect(prisma.userProfile.findUnique).toHaveBeenCalledWith({
-        where: { userId: 'user-1' },
+        where: { userId: "user-1" },
+      });
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { id: "user-1" },
       });
     });
 
-    it('returns goal data when type=goals is requested', async () => {
-      const mockUser = { id: 'user-1' };
+    it("returns goal data when type=goals is requested", async () => {
+      const mockUser = { id: "user-1" };
       vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
-      
-      const mockGoal = { userId: 'user-1', proteinTarget: 150 };
+
+      const mockGoal = { userId: "user-1", proteinTarget: 150 };
       vi.mocked(prisma.goal.findUnique).mockResolvedValue(mockGoal as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
-      const req = new Request('http://localhost/api/profile?type=goals');
+      const req = new Request("http://localhost/api/profile?type=goals");
       const res = await GET(req);
       const data = await res.json();
 
       expect(res.status).toBe(200);
       expect(data).toEqual(mockGoal);
       expect(prisma.goal.findUnique).toHaveBeenCalledWith({
-        where: { userId: 'user-1' },
+        where: { userId: "user-1" },
       });
     });
   });
 
-  describe('POST', () => {
-    it('returns 401 if not authenticated', async () => {
+  describe("POST", () => {
+    it("returns 401 if not authenticated", async () => {
       vi.mocked(getServerSession).mockResolvedValue(null);
-      const req = new Request('http://localhost/api/profile', { method: 'POST', body: JSON.stringify({}) });
+      const req = new Request("http://localhost/api/profile", {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
       const res = await POST(req);
       expect(res.status).toBe(401);
     });
 
-    it('updates profile data', async () => {
-      const mockUser = { id: 'user-1' };
+    it("updates profile data", async () => {
+      const mockUser = { id: "user-1" };
       vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
-      
-      const updateData = { age: 31, gender: 'Male', name: 'New Name' };
-      vi.mocked(prisma.userProfile.upsert).mockResolvedValue({ userId: 'user-1', ...updateData } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
-      const req = new Request('http://localhost/api/profile', {
-        method: 'POST',
+      const updateData = { age: 31, gender: "Male", name: "New Name" };
+      vi.mocked(prisma.userProfile.upsert).mockResolvedValue({
+        userId: "user-1",
+        ...updateData,
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+
+      const req = new Request("http://localhost/api/profile", {
+        method: "POST",
         body: JSON.stringify(updateData),
       });
       const res = await POST(req);
@@ -98,20 +117,23 @@ describe('Profile API Route', () => {
       expect(res.status).toBe(200);
       expect(prisma.userProfile.upsert).toHaveBeenCalled();
       expect(prisma.user.update).toHaveBeenCalledWith({
-        where: { id: 'user-1' },
-        data: { name: 'New Name' },
+        where: { id: "user-1" },
+        data: { name: "New Name" },
       });
     });
 
-    it('updates goal data if goal fields are present', async () => {
-      const mockUser = { id: 'user-1' };
+    it("updates goal data if goal fields are present", async () => {
+      const mockUser = { id: "user-1" };
       vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
-      
-      const goalData = { proteinTarget: 180, kcalTarget: 2500 };
-      vi.mocked(prisma.goal.upsert).mockResolvedValue({ userId: 'user-1', ...goalData } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
-      const req = new Request('http://localhost/api/profile', {
-        method: 'POST',
+      const goalData = { proteinTarget: 180, kcalTarget: 2500 };
+      vi.mocked(prisma.goal.upsert).mockResolvedValue({
+        userId: "user-1",
+        ...goalData,
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+
+      const req = new Request("http://localhost/api/profile", {
+        method: "POST",
         body: JSON.stringify(goalData),
       });
       const res = await POST(req);
@@ -121,39 +143,53 @@ describe('Profile API Route', () => {
       expect(prisma.goal.upsert).toHaveBeenCalled();
     });
 
-    it('returns 400 for invalid profile data', async () => {
-      const mockUser = { id: 'user-1' };
+    it("returns 400 for invalid profile data", async () => {
+      const mockUser = { id: "user-1" };
       vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
-      
+
       const invalidData = { age: "invalid" }; // age should be number (forced by schema)
-      const req = new Request('http://localhost/api/profile', {
-        method: 'POST',
+      const req = new Request("http://localhost/api/profile", {
+        method: "POST",
         body: JSON.stringify(invalidData),
       });
       const res = await POST(req);
       const data = await res.json();
 
       expect(res.status).toBe(400);
-      expect(data).toHaveProperty('error');
+      expect(data).toHaveProperty("error");
     });
 
-    it('returns 400 for invalid goal data in POST', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
-      const res = await POST(new Request('http://localhost/api/profile', { method: 'POST', body: JSON.stringify({ proteinTarget: -10 }) }));
+    it("returns 400 for invalid goal data in POST", async () => {
+      vi.mocked(getServerSession).mockResolvedValue({ user: { id: "user-1" } });
+      const res = await POST(
+        new Request("http://localhost/api/profile", {
+          method: "POST",
+          body: JSON.stringify({ proteinTarget: -10 }),
+        }),
+      );
       expect(res.status).toBe(400);
     });
 
-    it('returns 500 if database fails on GET', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
-      vi.mocked(prisma.userProfile.findUnique).mockRejectedValueOnce(new Error('DB Error'));
-      const res = await GET(new Request('http://localhost/api/profile'));
+    it("returns 500 if database fails on GET", async () => {
+      vi.mocked(getServerSession).mockResolvedValue({ user: { id: "user-1" } });
+      vi.mocked(prisma.userProfile.findUnique).mockRejectedValueOnce(
+        new Error("DB Error"),
+      );
+      const res = await GET(new Request("http://localhost/api/profile"));
       expect(res.status).toBe(500);
     });
 
-    it('returns 500 if database fails on POST', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
-      vi.mocked(prisma.userProfile.upsert).mockRejectedValueOnce(new Error('DB Error'));
-      const res = await POST(new Request('http://localhost/api/profile', { method: 'POST', body: JSON.stringify({ age: 30 }) }));
+    it("returns 500 if database fails on POST", async () => {
+      vi.mocked(getServerSession).mockResolvedValue({ user: { id: "user-1" } });
+      vi.mocked(prisma.userProfile.upsert).mockRejectedValueOnce(
+        new Error("DB Error"),
+      );
+      const res = await POST(
+        new Request("http://localhost/api/profile", {
+          method: "POST",
+          body: JSON.stringify({ age: 30 }),
+        }),
+      );
       expect(res.status).toBe(500);
     });
   });

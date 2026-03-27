@@ -1,19 +1,21 @@
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { UserProfileSchema, GoalSchema } from '@/lib/validation';
-import { unauthorized, internalError } from '@/lib/api';
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { UserProfileSchema, GoalSchema } from "@/lib/validation";
+import { unauthorized, internalError } from "@/lib/api";
+import { type Session } from "next-auth";
 
+// Distinguish between Goal update and Profile update based on fields
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return unauthorized();
 
   const { searchParams } = new URL(req.url);
-  const type = searchParams.get('type');
+  const type = searchParams.get("type");
 
   try {
-    if (type === 'goals') {
+    if (type === "goals") {
       const goal = await prisma.goal.findUnique({
         where: { userId: session.user.id },
       });
@@ -23,11 +25,94 @@ export async function GET(req: Request) {
     const profile = await prisma.userProfile.findUnique({
       where: { userId: session.user.id },
     });
-    return NextResponse.json(profile || {});
+
+    const user = (await prisma.user.findUnique({
+      where: { id: session.user.id },
+    })) as {
+      name: string | null;
+      email: string | null;
+      phone?: string | null;
+      username?: string | null;
+    } | null;
+
+    return NextResponse.json({
+      ...profile,
+      name: user?.name,
+      email: user?.email,
+      phone: user?.phone,
+      username: user?.username,
+    });
   } catch (error) {
-    console.error('Failed to fetch profile/goal:', error);
-    return internalError(`Unable to load data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error("Failed to fetch profile/goal:", error);
+    return internalError(
+      `Unable to load data: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
+}
+
+async function handleGoalUpdate(session: Session, body: unknown) {
+  const parsed = GoalSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      {
+        error: parsed.error.issues.map((issue) => ({
+          path: issue.path,
+          message: issue.message,
+        })),
+      },
+      { status: 400 },
+    );
+  }
+
+  const goal = await prisma.goal.upsert({
+    where: { userId: session.user.id },
+    create: {
+      userId: session.user.id,
+      ...parsed.data,
+    },
+    update: parsed.data,
+  });
+  return NextResponse.json(goal);
+}
+
+async function handleProfileUpdate(session: Session, body: unknown) {
+  const parsed = UserProfileSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      {
+        error: parsed.error.issues.map((issue) => ({
+          path: issue.path,
+          message: issue.message,
+        })),
+      },
+      { status: 400 },
+    );
+  }
+
+  const { name, phone, username, ...profileData } = parsed.data;
+
+  const profile = await prisma.userProfile.upsert({
+    where: { userId: session.user.id },
+    create: {
+      userId: session.user.id,
+      ...profileData,
+    },
+    update: profileData,
+  });
+
+  const userUpdate: Record<string, string | null> = {};
+  if (name !== undefined) userUpdate.name = name;
+  if (phone !== undefined) userUpdate.phone = phone;
+  if (username !== undefined) userUpdate.username = username;
+
+  if (Object.keys(userUpdate).length > 0) {
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: userUpdate,
+    });
+  }
+
+  return NextResponse.json({ ...profile, name, phone, username });
 }
 
 export async function POST(req: Request) {
@@ -35,63 +120,19 @@ export async function POST(req: Request) {
   if (!session?.user) return unauthorized();
 
   const body = await req.json();
-  
-  // Distinguish between Goal update and Profile update based on fields
-  const isGoalUpdate = 'proteinTarget' in body || 'proteinTraining' in body;
+  const isGoalUpdate =
+    body &&
+    typeof body === "object" &&
+    ("proteinTarget" in body || "proteinTraining" in body);
 
   try {
     if (isGoalUpdate) {
-      const parsed = GoalSchema.safeParse(body);
-      if (!parsed.success) {
-        return NextResponse.json({ 
-          error: parsed.error.issues.map(issue => ({
-            path: issue.path,
-            message: issue.message
-          })) 
-        }, { status: 400 });
-      }
-
-      const goal = await prisma.goal.upsert({
-        where: { userId: session.user.id },
-        create: {
-          userId: session.user.id,
-          ...parsed.data,
-        },
-        update: parsed.data,
-      });
-      return NextResponse.json(goal);
+      return await handleGoalUpdate(session, body);
     } else {
-      const parsed = UserProfileSchema.safeParse(body);
-      if (!parsed.success) {
-        return NextResponse.json({ 
-          error: parsed.error.issues.map(issue => ({
-            path: issue.path,
-            message: issue.message
-          })) 
-        }, { status: 400 });
-      }
-
-      const profile = await prisma.userProfile.upsert({
-        where: { userId: session.user.id },
-        create: {
-          userId: session.user.id,
-          ...parsed.data,
-        },
-        update: parsed.data,
-      });
-
-      // Also update name in User model if provided in body (though not in schema, user might expect it)
-      if (body.name) {
-        await prisma.user.update({
-          where: { id: session.user.id },
-          data: { name: body.name },
-        });
-      }
-
-      return NextResponse.json(profile);
+      return await handleProfileUpdate(session, body);
     }
   } catch (error) {
-    console.error('Failed to update profile/goal:', error);
-    return internalError('Unable to save changes right now');
+    console.error("Failed to update profile/goal:", error);
+    return internalError("Unable to save changes right now");
   }
 }
