@@ -66,7 +66,7 @@
 }
 
 html {
-  transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background 1.2s cubic-bezier(0.4, 0, 0.2, 1);
   scroll-behavior: smooth;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -549,7 +549,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 1000;
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
   display: flex;
   justify-content: center;
@@ -585,7 +585,7 @@ body {
 }
 
 .theme-transitioning::view-transition-new(root) {
-  animation: reveal-radial 600ms cubic-bezier(0.4, 0, 0.2, 1);
+  animation: reveal-radial 1200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .nav-tab-container {
@@ -606,7 +606,7 @@ body {
   cursor: pointer;
   position: relative;
   background: transparent;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
   font-size: 10px;
   font-weight: 800;
@@ -686,7 +686,7 @@ body {
   position: relative;
   background: transparent;
   font-family: inherit;
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .mobile-nav-tab-active {
