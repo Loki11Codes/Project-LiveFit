@@ -5,13 +5,17 @@ import Sidebar from "./Sidebar";
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, style, ...props }: any) => (
+    div: ({
+      children,
+      style,
+      ...props
+    }: React.HTMLAttributes<HTMLDivElement>) => (
       <div {...props} style={style}>
         {children}
       </div>
-    ), // eslint-disable-line @typescript-eslint/no-explicit-any
+    ),
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>, // eslint-disable-line @typescript-eslint/no-explicit-any
+  AnimatePresence: ({ children }: React.PropsWithChildren) => <>{children}</>,
 }));
 
 describe("Sidebar Component", () => {
