@@ -4,7 +4,11 @@ import React, { useEffect, useRef, useState } from "react";
 import { Activity, ArrowUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getClientErrorMessage, requestJson } from "@/lib/client-api";
-import type { ChatAttachment, ChatAttachmentPayload, InlineNotice } from "@/lib/types";
+import type {
+  ChatAttachment,
+  ChatAttachmentPayload,
+  InlineNotice,
+} from "@/lib/types";
 import { extractAndCleanLogData } from "@/lib/chat-utils";
 
 import { MessageBubble, type Message } from "./Chat/MessageBubble";
@@ -32,27 +36,29 @@ type ChatResponse = {
   warning?: string;
 };
 
-export default function Chat({ 
-  onLogParsed, 
-  isNewUser, 
-  initialMessage, 
+export default function Chat({
+  onLogParsed,
+  isNewUser,
+  initialMessage,
   onMessageSent,
   nudgeStatus,
   input,
-  setInput
+  setInput,
 }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome-msg",
       role: "model",
-      text: isNewUser 
+      text: isNewUser
         ? "Welcome to LiveFit! 👋 I'm your AI assistant. To help you set your targets, could you tell me your age, gender, height, and primary fitness goal?"
-        : "Good morning! 👋 I'm your LiveFit AI - speak naturally to log anything.\n\n🔍 \"Had 3 egg omelette and 150ml milk for breakfast\"\n💪 \"Finished chest day, 3200kg volume, 8 PRs\"\n😴 \"Slept 7.5h, bed at 11pm, woke at 6:30\"\n⚖️ \"Weight 70.5kg this morning\"",
+        : 'Good morning! 👋 I\'m your LiveFit AI - speak naturally to log anything.\n\n🔍 "Had 3 egg omelette and 150ml milk for breakfast"\n💪 "Finished chest day, 3200kg volume, 8 PRs"\n😴 "Slept 7.5h, bed at 11pm, woke at 6:30"\n⚖️ "Weight 70.5kg this morning"',
       timestamp: "",
     },
   ]);
   const [isTyping, setIsTyping] = useState(false);
-  const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
+  const [pendingAttachments, setPendingAttachments] = useState<
+    ChatAttachment[]
+  >([]);
   const [notice, setNotice] = useState<InlineNotice | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement>(null);
@@ -73,26 +79,35 @@ export default function Chat({
 
   useEffect(() => {
     // Proactive Nudge logic
-    if (nudgeStatus && messages.length === 1 && messages[0].id === "welcome-msg") {
-      const alreadyHasNudge = messages.some(m => m.id === "protein-nudge");
+    if (
+      nudgeStatus &&
+      messages.length === 1 &&
+      messages[0].id === "welcome-msg"
+    ) {
+      const alreadyHasNudge = messages.some((m) => m.id === "protein-nudge");
       if (alreadyHasNudge) return;
 
-      const proteinPct = (nudgeStatus.protein / nudgeStatus.proteinTarget) * 100;
+      const proteinPct =
+        (nudgeStatus.protein / nudgeStatus.proteinTarget) * 100;
       if (proteinPct < 50) {
-        setMessages(prev => {
-          if (prev.some(m => m.id === "protein-nudge")) return prev;
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === "protein-nudge")) return prev;
           return [
             ...prev,
             {
               id: "protein-nudge",
               role: "model",
               text: `I noticed you're a bit behind on your protein goal today (${Math.round(nudgeStatus.protein)}g / ${nudgeStatus.proteinTarget}g). Would you like some high-protein dinner ideas to help you catch up? 🥩`,
-              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            }
+              timestamp: new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            },
           ];
         });
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nudgeStatus, messages.length]);
 
   useEffect(() => {
@@ -105,6 +120,7 @@ export default function Chat({
       }, 100);
       return () => clearTimeout(timeoutId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialMessage]);
 
   useEffect(() => {
@@ -125,7 +141,7 @@ export default function Chat({
         setIsLoadingHistory(false);
       }
     }
-    
+
     void fetchHistory();
   }, []);
 
@@ -144,7 +160,14 @@ export default function Chat({
 
     if ((!userText && attachedFiles.length === 0) || isTyping) return;
 
-    const userMsg = createChatMessage("user", userText || (attachedFiles.some(a => a.mediaType.startsWith('audio')) ? "Audio message" : "Image attached"), attachedFiles);
+    const userMsg = createChatMessage(
+      "user",
+      userText ||
+        (attachedFiles.some((a) => a.mediaType.startsWith("audio"))
+          ? "Audio message"
+          : "Image attached"),
+      attachedFiles,
+    );
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setPendingAttachments([]);
@@ -158,8 +181,16 @@ export default function Chat({
       }));
 
       const now = new Date();
-      const clientDate = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-      const clientTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      const clientDate =
+        now.getFullYear() +
+        "-" +
+        String(now.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(now.getDate()).padStart(2, "0");
+      const clientTime =
+        String(now.getHours()).padStart(2, "0") +
+        ":" +
+        String(now.getMinutes()).padStart(2, "0");
 
       const data = await requestJson<ChatResponse>("/api/chat", {
         method: "POST",
@@ -189,10 +220,17 @@ export default function Chat({
         onLogParsed();
       } else {
         // Safety Fallback: AI sometimes forgets the DATA block but confirms in text.
-        const stateKeywords = ["training", "lite", "light", "rest", "logged", "recorded", "saved"];
+        const stateKeywords = [
+          "training",
+          "lite",
+          "light",
+          "rest",
+          "logged",
+          "recorded",
+          "saved",
+        ];
         const lowerText = cleanText.toLowerCase();
-        if (stateKeywords.some(kw => lowerText.includes(kw))) {
-  
+        if (stateKeywords.some((kw) => lowerText.includes(kw))) {
           onLogParsed();
         }
       }
@@ -210,13 +248,16 @@ export default function Chat({
     const message = getClientErrorMessage(error);
     console.error("Chat connection error:", message);
     setNotice({ tone: "error", message });
-    
-    const errorMsg = createChatMessage("model", `Unable to connect to AI service. ${message}`);
+
+    const errorMsg = createChatMessage(
+      "model",
+      `Unable to connect to AI service. ${message}`,
+    );
     setMessages((prev) => [...prev, errorMsg]);
   };
 
   const handleFileSelection = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const files = Array.from(event.target.files ?? []);
     if (files.length === 0) {
@@ -256,7 +297,7 @@ export default function Chat({
 
   const removePendingAttachment = (attachmentId: string) => {
     setPendingAttachments((current) =>
-      current.filter((att) => att.id !== attachmentId)
+      current.filter((att) => att.id !== attachmentId),
     );
   };
 
@@ -266,12 +307,13 @@ export default function Chat({
   };
 
   return (
-    <div className="flex-1 min-w-0 h-full bg-[var(--surface)] rounded-[var(--radius-xl)] flex flex-col border border-[var(--border)] shadow-[var(--shadow-lg)] overflow-hidden transition-all duration-300 [background-clip:padding-box] [transform:translateZ(0)] [mask-image:linear-gradient(#fff,#fff)] relative"
+    <div
+      className="flex-1 min-w-0 h-full bg-[var(--surface)] rounded-[var(--radius-xl)] flex flex-col border border-[var(--border)] shadow-[var(--shadow-lg)] overflow-hidden transition-all duration-300 [background-clip:padding-box] [transform:translateZ(0)] [mask-image:linear-gradient(#fff,#fff)] relative"
       role="log"
       aria-label="Chat history"
       aria-live="polite"
     >
-      <div 
+      <div
         ref={viewportRef}
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col scroll-smooth h-full no-scrollbar chat-viewport rounded-[inherit]"
@@ -279,17 +321,22 @@ export default function Chat({
         <div className="w-full flex flex-col chat-content-v-inset">
           {isLoadingHistory ? (
             <div className="flex justify-center py-6" data-testid="chat-loader">
-              <Activity className="w-6 h-6 animate-pulse" style={{ color: "#e67e22" }} strokeWidth={2.5} />
+              <Activity
+                className="w-6 h-6 animate-pulse"
+                style={{ color: "#e67e22" }}
+                strokeWidth={2.5}
+              />
             </div>
           ) : (
             <AnimatePresence mode="popLayout">
               {messages.map((msg, index) => {
-                const isFirstInGroup = index === 0 || messages[index - 1].role !== msg.role;
+                const isFirstInGroup =
+                  index === 0 || messages[index - 1].role !== msg.role;
                 return (
-                  <MessageBubble 
-                    key={msg.id} 
-                    msg={msg} 
-                    isFirstInGroup={isFirstInGroup} 
+                  <MessageBubble
+                    key={msg.id}
+                    msg={msg}
+                    isFirstInGroup={isFirstInGroup}
                     isNewUser={isNewUser}
                   />
                 );
@@ -340,7 +387,7 @@ export default function Chat({
           {notice && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
+              animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
@@ -357,14 +404,13 @@ export default function Chat({
 
         <QuickChips onSelect={handleQuickChipSelect} />
 
-        <ChatInput 
+        <ChatInput
           input={input}
           setInput={setInput}
           isTyping={isTyping}
           pendingAttachments={pendingAttachments}
           onSend={handleSend}
           onFileSelect={handleFileSelection}
-          onAudioRecorded={handleAudioRecorded}
           onRemoveAttachment={removePendingAttachment}
           textInputRef={textInputRef}
         />
@@ -383,14 +429,14 @@ function updateWelcomeMessageTimestamp(prev: Message[]): Message[] {
             minute: "2-digit",
           }),
         }
-      : msg
+      : msg,
   );
 }
 
 function createChatMessage(
   role: "user" | "model",
   text: string,
-  attachments?: ChatAttachment[]
+  attachments?: ChatAttachment[],
 ): Message {
   return {
     id: crypto.randomUUID(),
@@ -415,7 +461,8 @@ function toPayload(attachment: ChatAttachment): ChatAttachmentPayload {
 async function readAttachmentFile(file: File): Promise<ChatAttachment> {
   const previewUrl = await readFileAsDataUrl(file);
   const [prefix, base64 = ""] = previewUrl.split(",");
-  const mediaType = file.type || getMediaTypeFromDataUrl(prefix) || "application/octet-stream";
+  const mediaType =
+    file.type || getMediaTypeFromDataUrl(prefix) || "application/octet-stream";
 
   return {
     id: crypto.randomUUID(),
@@ -437,7 +484,8 @@ function readFileAsDataUrl(file: File): Promise<string> {
 
       reject(new Error("Unexpected file reader result."));
     };
-    reader.onerror = () => reject(reader.error ?? new Error("Failed to read file."));
+    reader.onerror = () =>
+      reject(reader.error ?? new Error("Failed to read file."));
     reader.readAsDataURL(file);
   });
 }
