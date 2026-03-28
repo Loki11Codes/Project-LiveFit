@@ -28,6 +28,20 @@ vi.mock("framer-motion", () => ({
   AnimatePresence: ({ children }: React.PropsWithChildren) => <>{children}</>,
 }));
 
+// Mock SpeechRecognition
+class MockSpeechRecognition {
+  start = vi.fn();
+  stop = vi.fn();
+  abort = vi.fn();
+}
+
+if (typeof window !== "undefined") {
+  Object.defineProperty(window, "SpeechRecognition", {
+    writable: true,
+    value: MockSpeechRecognition,
+  });
+}
+
 // Mock next/image
 vi.mock("next/image", () => ({
   default: ({ src, alt }: React.ImgHTMLAttributes<HTMLImageElement>) => (
