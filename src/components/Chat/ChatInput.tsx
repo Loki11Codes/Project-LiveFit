@@ -1,8 +1,45 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import { ImageIcon, X, ArrowUp, Mic, Square } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ChatAttachment } from "@/lib/types";
+
+// Add Speech Recognition Types
+interface SpeechRecognitionEvent extends Event {
+  results: {
+    length: number;
+    [index: number]: {
+      [index: number]: {
+        transcript: string;
+      };
+    };
+  };
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  start: () => void;
+  stop: () => void;
+  onresult:
+    | ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => unknown)
+    | null;
+  onerror:
+    | ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => unknown)
+    | null;
+  onend: ((this: SpeechRecognition, ev: Event) => unknown) | null;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
 
 interface ChatInputProps {
   readonly input: string;
@@ -11,7 +48,6 @@ interface ChatInputProps {
   readonly pendingAttachments: ChatAttachment[];
   readonly onSend: () => void;
   readonly onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  readonly onAudioRecorded: (file: File) => void;
   readonly onRemoveAttachment: (id: string) => void;
   readonly textInputRef: React.RefObject<HTMLInputElement | null>;
 }
@@ -23,45 +59,72 @@ export function ChatInput({
   pendingAttachments,
   onSend,
   onFileSelect,
-  onAudioRecorded,
   onRemoveAttachment,
   textInputRef,
 }: ChatInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isRecording, setIsRecording] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<BlobPart[]>([]);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
+  const hasSpeechSupport =
+    globalThis.window !== undefined &&
+    !!(
+      globalThis.window.SpeechRecognition ||
+      globalThis.window.webkitSpeechRecognition
+    );
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMounted(true);
+  }, []);
 
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        const audioFile = new File([audioBlob], `Voice Note - ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.webm`, { type: "audio/webm" });
-        onAudioRecorded(audioFile);
-        stream.getTracks().forEach((track) => track.stop());
-      };
+  useEffect(() => {
+    if (globalThis.window !== undefined) {
+      const SpeechRecognition =
+        globalThis.window.SpeechRecognition ||
+        globalThis.window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
 
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (error) {
-      console.error("Microphone access denied or error:", error);
+        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+          let currentTranscript = "";
+          for (const result of Array.from(event.results)) {
+            currentTranscript += result[0].transcript;
+          }
+          setInput(currentTranscript);
+        };
+
+        recognitionRef.current.onerror = (
+          event: SpeechRecognitionErrorEvent,
+        ) => {
+          console.error("Speech recognition error:", event.error);
+          setIsRecording(false);
+        };
+
+        recognitionRef.current.onend = () => {
+          setIsRecording(false);
+        };
+      }
+    }
+  }, [setInput]);
+
+  const startRecording = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.start();
+        setIsRecording(true);
+      } catch (error) {
+        console.error("Speech recognition could not start:", error);
+      }
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop();
       setIsRecording(false);
     }
   };
@@ -73,74 +136,13 @@ export function ChatInput({
     }
   };
 
-  const renderActionButton = () => {
-    if (isRecording) {
-      return (
-        <motion.button
-          key="stop"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.8, opacity: 0 }}
-          type="button"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={stopRecording}
-          aria-label="Stop recording"
-          className="chat-send-btn-square !bg-[#e74c3c] shadow-[0_0_15px_rgba(231,76,60,0.4)]"
-          suppressHydrationWarning
-        >
-          <Square className="w-4 h-4 fill-current" style={{ fill: "#fff", color: "#fff" }} />
-        </motion.button>
-      );
-    }
-
-    if (!input.trim() && pendingAttachments.length === 0) {
-      return (
-        <motion.button
-          key="mic"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.8, opacity: 0 }}
-          type="button"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={startRecording}
-          aria-label="Start recording"
-          className="chat-send-btn-square !bg-[var(--surface2)]"
-          suppressHydrationWarning
-        >
-          <Mic className="w-5 h-5" style={{ color: "#7b5ea7" }} strokeWidth={2} />
-        </motion.button>
-      );
-    }
-
-    return (
-      <motion.button
-        key="send"
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.8, opacity: 0 }}
-        type="button"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={onSend}
-        disabled={isTyping}
-        aria-label="Send message"
-        className="chat-send-btn-square"
-        suppressHydrationWarning
-      >
-        <ArrowUp className="w-5 h-5" style={{ color: "var(--accent-inv)" }} strokeWidth={2} />
-      </motion.button>
-    );
-  };
-
   return (
     <>
       <AnimatePresence>
         {pendingAttachments.length > 0 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="chat-attachments-strip"
           >
@@ -149,9 +151,14 @@ export function ChatInput({
               return (
                 <div key={attachment.id} className="chat-attachment-thumb">
                   {isAudio ? (
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--surface2)] rounded-lg border border-[var(--border)] relative top-[2px]">
-                      <Mic className="w-4 h-4 text-[var(--accent)]" strokeWidth={2} />
-                      <span className="text-[12px] font-medium max-w-[100px] truncate">{attachment.name}</span>
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-(--surface2) rounded-lg border border-(--border) relative top-0.5">
+                      <Mic
+                        className="w-4 h-4 text-(--accent)"
+                        strokeWidth={2}
+                      />
+                      <span className="text-[12px] font-medium max-w-25 truncate">
+                        {attachment.name}
+                      </span>
                     </div>
                   ) : (
                     <div className="chat-attachment-thumb-image">
@@ -201,25 +208,23 @@ export function ChatInput({
           disabled={isRecording}
           suppressHydrationWarning
         >
-          <ImageIcon className="w-5 h-5" style={{ color: "#7b5ea7" }} strokeWidth={2} />
+          <ImageIcon
+            className="w-5 h-5"
+            style={{ color: "#7b5ea7" }}
+            strokeWidth={2}
+          />
         </motion.button>
 
-        <div className="chat-input-box relative overflow-hidden">
-          {isRecording && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="absolute inset-0 bg-[var(--surface)] z-10 flex items-center px-4 gap-3 text-[var(--accent)]"
-            >
-              <div className="w-2.5 h-2.5 rounded-full bg-[#e74c3c] animate-pulse" />
-              <span className="text-[14px] font-medium tracking-wide">Recording Voice Note...</span>
-            </motion.div>
-          )}
+        <div className="chat-input-box relative overflow-hidden flex items-center pr-1">
           <input
             ref={textInputRef}
-            className="chat-input-field"
+            className="chat-input-field flex-1 pr-12 bg-transparent"
             type="text"
-            placeholder="Tell me what you ate, your workout... or tap mic 🎤"
+            placeholder={
+              isRecording
+                ? "Listening..."
+                : "Tell me what you ate, your workout... or tap mic ???"
+            }
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -227,11 +232,76 @@ export function ChatInput({
             data-testid="chat-input"
             suppressHydrationWarning
           />
+          <AnimatePresence>
+            {(input.trim() || pendingAttachments.length > 0) && (
+              <motion.button
+                key="send"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                type="button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onSend}
+                disabled={isTyping}
+                aria-label="Send message"
+                className="absolute flex items-center justify-center right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg chat-send-btn-square shadow-sm p-0 m-0 shrink-0 z-10"
+                suppressHydrationWarning
+              >
+                <ArrowUp
+                  className="w-4 h-4"
+                  style={{ color: "var(--accent-inv)" }}
+                  strokeWidth={2.5}
+                />
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
 
-        <AnimatePresence mode="wait">
-          {renderActionButton()}
-        </AnimatePresence>
+        {isMounted && hasSpeechSupport && (
+          <AnimatePresence mode="wait">
+            {isRecording ? (
+              <motion.button
+                key="stop"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                type="button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={stopRecording}
+                aria-label="Stop recording"
+                className="chat-send-btn-square bg-[#e74c3c]! shadow-[0_0_15px_rgba(231,76,60,0.4)]"
+                suppressHydrationWarning
+              >
+                <Square
+                  className="w-4 h-4 fill-current"
+                  style={{ fill: "#fff", color: "#fff" }}
+                />
+              </motion.button>
+            ) : (
+              <motion.button
+                key="mic"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                type="button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={startRecording}
+                aria-label="Start recording"
+                className="chat-send-btn-square bg-(--surface2)!"
+                suppressHydrationWarning
+              >
+                <Mic
+                  className="w-5 h-5"
+                  style={{ color: "#7b5ea7" }}
+                  strokeWidth={2}
+                />
+              </motion.button>
+            )}
+          </AnimatePresence>
+        )}
       </div>
     </>
   );
