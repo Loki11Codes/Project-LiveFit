@@ -41,6 +41,68 @@ declare global {
   }
 }
 
+const AuraRing = ({ isRecording }: { isRecording: boolean }) => {
+  if (!isRecording) return null;
+  return (
+    <motion.div
+      className="absolute rounded-full border pointer-events-none"
+      style={{
+        width: 44,
+        height: 44,
+        borderWidth: 2,
+        borderColor: "var(--accent)",
+        boxShadow: "0 0 15px var(--accent)",
+      }}
+      animate={{
+        scale: [1, 1.2, 1],
+        opacity: [0.3, 0.6, 0.3],
+      }}
+      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+    />
+  );
+};
+
+const SpeechWaveform = ({ isRecording }: { isRecording: boolean }) => {
+  const [bars, setBars] = useState<
+    { id: string; duration: number; delay: number; heightSteps: string[] }[]
+  >([]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setBars(
+      Array.from({ length: 15 }).map((_, i) => ({
+        id: `waveform-bar-${i}`,
+        duration: 0.8 + Math.random() * 0.4,
+        delay: Math.random() * 0.5,
+        heightSteps: ["20%", "100%", "30%", "80%", "20%"],
+      })),
+    );
+  }, []);
+
+  if (!isRecording || bars.length === 0) return null;
+
+  return (
+    <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex items-end gap-1 h-3 pointer-events-none opacity-50">
+      {bars.map((bar) => (
+        <motion.div
+          key={bar.id}
+          className="w-1 bg-(--accent) rounded-t-sm"
+          animate={{
+            height: bar.heightSteps,
+          }}
+          transition={{
+            duration: bar.duration,
+            repeat: Infinity,
+            repeatType: "mirror",
+            ease: "easeInOut",
+            delay: bar.delay,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
 interface ChatInputProps {
   readonly input: string;
   readonly setInput: (val: string) => void;
@@ -187,6 +249,7 @@ export function ChatInput({
       </AnimatePresence>
 
       <div className="chat-input-wrapper">
+        <SpeechWaveform isRecording={isRecording} />
         <input
           ref={fileInputRef}
           type="file"
@@ -259,48 +322,51 @@ export function ChatInput({
         </div>
 
         {isMounted && hasSpeechSupport && (
-          <AnimatePresence mode="wait">
-            {isRecording ? (
-              <motion.button
-                key="stop"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                type="button"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={stopRecording}
-                aria-label="Stop recording"
-                className="chat-send-btn-square bg-[#e74c3c]! shadow-[0_0_15px_rgba(231,76,60,0.4)]"
-                suppressHydrationWarning
-              >
-                <Square
-                  className="w-4 h-4 fill-current"
-                  style={{ fill: "#fff", color: "#fff" }}
-                />
-              </motion.button>
-            ) : (
-              <motion.button
-                key="mic"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                type="button"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={startRecording}
-                aria-label="Start recording"
-                className="chat-send-btn-square bg-(--surface2)!"
-                suppressHydrationWarning
-              >
-                <Mic
-                  className="w-5 h-5"
-                  style={{ color: "#7b5ea7" }}
-                  strokeWidth={2}
-                />
-              </motion.button>
-            )}
-          </AnimatePresence>
+          <div className="relative flex items-center justify-center">
+            <AuraRing isRecording={isRecording} />
+            <AnimatePresence mode="wait">
+              {isRecording ? (
+                <motion.button
+                  key="stop"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  type="button"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={stopRecording}
+                  aria-label="Stop recording"
+                  className="chat-send-btn-square bg-[#e74c3c]! shadow-[0_0_15px_rgba(231,76,60,0.4)]"
+                  suppressHydrationWarning
+                >
+                  <Square
+                    className="w-4 h-4 fill-current"
+                    style={{ fill: "#fff", color: "#fff" }}
+                  />
+                </motion.button>
+              ) : (
+                <motion.button
+                  key="mic"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  type="button"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={startRecording}
+                  aria-label="Start recording"
+                  className="chat-send-btn-square bg-(--surface2)!"
+                  suppressHydrationWarning
+                >
+                  <Mic
+                    className="w-5 h-5"
+                    style={{ color: "#7b5ea7" }}
+                    strokeWidth={2}
+                  />
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
         )}
       </div>
     </>

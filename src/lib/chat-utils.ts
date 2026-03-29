@@ -34,7 +34,8 @@ export function extractAndCleanLogData(text: string): {
     if (endIdx === -1) break;
 
     hasData = true;
-    const jsonText = text.substring(contentStart, endIdx).trim();
+    let jsonText = text.substring(contentStart, endIdx).trim();
+    jsonText = jsonText.replace(/^```json/i, "").replace(/^```/i, "").replace(/```$/i, "").trim();
 
     try {
       if (jsonText) {
