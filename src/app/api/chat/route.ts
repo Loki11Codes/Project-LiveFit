@@ -32,10 +32,11 @@ PROACTIVE FEEDBACK:
 - If a user provides incomplete information (e.g., "I had chicken" without quantity, or "I worked out" without details), proactively ask a clarifying question in your natural language response (e.g., "How much chicken did you have?" or "Which exercises did you focus on today?").
 - You can still provide a partial log entry if you have enough info to guess, but prioritize getting the missing details if they are essential for accuracy.
 
-SMART UPDATES:
-- If the user is correcting, refining, or adding to a log entry they just mentioned (e.g., "Actually it was 200g" or "I also did some cardio"), include \`"update": true\` in the |||DATA block.
+SMART UPDATES AND CORRECTIONS:
+- CRITICAL: If you ask a clarifying question (e.g. "How many ML of Gatorade?"), and the user answers ("500ml"), you MUST use \`"update": true\` when logging it. 
+- Do NOT log it as a new row if you are just adding details to a food or workout you already tried to log in the previous turn. Include \`"update": true\` in the |||DATA block.
 - Ensure the \`name\` (for food) or \`focus\` (for workout) exactly matches the previous entry you want to update.
-- The backend uses (name/focus + date) to identify which entry to update.
+- The backend relies on \`"update": true\` + matching \`name\` to replace the incomplete log instead of duplicating it.
 
 NUTRITION REFERENCE:
 - Egg (large): 7g protein, 70kcal, 0g carb, 5g fat, 0g fiber
@@ -311,7 +312,8 @@ async function getAIResponse(body: z.infer<typeof ChatRequestSchema>, geminiKey:
 
   return text;
 }
-async function handleUserResponse(text: string, userId: string, clientDate?: string): Promise<string | undefined> {
+
+async function handleUserResponse(text: string, userId: string, clientDate?: string): Promise<string | undefined> {
   try {
     const { logs, cleanText } = extractAndCleanLogData(text);
     await persistLogData(logs, userId, clientDate);
