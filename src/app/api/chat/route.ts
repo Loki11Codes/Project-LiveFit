@@ -182,10 +182,12 @@ async function callGemini(
   for (const modelId of modelsToTry) {
     try {
       const systemPrompt = getSystemPrompt(clientDate, clientTime);
-      const model = genAI.getGenerativeModel({ model: modelId });
+      const model = genAI.getGenerativeModel({ 
+        model: modelId,
+        systemInstruction: systemPrompt 
+      });
       const result = await model.generateContent({
         contents: [
-          { role: "user", parts: [{ text: systemPrompt }] },
           ...history,
           { role: "user", parts: buildGeminiPromptParts(prompt, images) },
         ],
