@@ -62,6 +62,14 @@ const AuraRing = ({ isRecording }: { isRecording: boolean }) => {
   );
 };
 
+const getSecureRandom = () => {
+  if (globalThis.window === undefined || !globalThis.crypto)
+    return (Date.now() % 1000) / 1000;
+  const array = new Uint32Array(1);
+  globalThis.crypto.getRandomValues(array);
+  return array[0] / (0xffffffff + 1);
+};
+
 const SpeechWaveform = ({ isRecording }: { isRecording: boolean }) => {
   const [bars, setBars] = useState<
     { id: string; duration: number; delay: number; heightSteps: string[] }[]
@@ -72,8 +80,8 @@ const SpeechWaveform = ({ isRecording }: { isRecording: boolean }) => {
     setBars(
       Array.from({ length: 15 }).map((_, i) => ({
         id: `waveform-bar-${i}`,
-        duration: 0.8 + Math.random() * 0.4,
-        delay: Math.random() * 0.5,
+        duration: 0.8 + getSecureRandom() * 0.4,
+        delay: getSecureRandom() * 0.5,
         heightSteps: ["20%", "100%", "30%", "80%", "20%"],
       })),
     );

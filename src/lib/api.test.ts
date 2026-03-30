@@ -1,11 +1,11 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, expect } from 'vitest';
 import { parseJsonBody, unauthorized, conflict, internalError } from './api';
 import { GoalSchema } from './validation';
 import { z } from 'zod';
 
 test('parseJsonBody returns parsed data for a valid JSON request body', async () => {
-  const request = new Request('http://localhost/api/goals', {
+  const request = new Request('https://localhost/api/goals', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ proteinTarget: 160, kcalTarget: 2400 }),
@@ -18,7 +18,7 @@ test('parseJsonBody returns parsed data for a valid JSON request body', async ()
 });
 
 test('parseJsonBody returns a 400 response when the body is malformed JSON', async () => {
-  const request = new Request('http://localhost/api/goals', {
+  const request = new Request('https://localhost/api/goals', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: '{"invalid":',
@@ -33,7 +33,7 @@ test('parseJsonBody returns a 400 response when the body is malformed JSON', asy
 });
 
 test('parseJsonBody returns validation details for invalid payloads', async () => {
-  const request = new Request('http://localhost/api/goals', {
+  const request = new Request('https://localhost/api/goals', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ proteinTarget: -5, kcalTarget: 'invalid' }),
@@ -63,7 +63,7 @@ test('internalError returns 500', () => {
 });
 
 test('parseJsonBody returns badRequest on schema mismatch', async () => {
-  const req = new Request('http://test', {
+  const req = new Request('https://test', {
     method: 'POST',
     body: JSON.stringify({ age: 'not-a-number' }),
   });
