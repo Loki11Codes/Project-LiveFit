@@ -32,10 +32,10 @@ describe('Routines API', () => {
     });
 
     it('returns routines for authenticated user', async () => {
-      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as unknown);
       
       const mockRoutines = [{ id: 'r1', name: 'Push' }];
-      vi.mocked(prisma.routine.findMany).mockResolvedValueOnce(mockRoutines as any);
+      vi.mocked(prisma.routine.findMany).mockResolvedValueOnce(mockRoutines as unknown);
 
       const res = await GET();
       expect(res.status).toBe(200);
@@ -47,7 +47,7 @@ describe('Routines API', () => {
     });
 
     it('returns 500 on db error', async () => {
-      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as unknown);
       vi.mocked(prisma.routine.findMany).mockRejectedValueOnce(new Error('DB Error'));
 
       const res = await GET();
@@ -65,7 +65,7 @@ describe('Routines API', () => {
     });
 
     it('returns 400 for invalid data', async () => {
-      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as unknown);
       const req = new Request('http://localhost/api/routines', { 
         method: 'POST', 
         body: JSON.stringify({ name: '' }) 
@@ -76,7 +76,7 @@ describe('Routines API', () => {
     });
 
     it('creates a new routine successfully', async () => {
-      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as unknown);
       
       const reqBody = {
         name: 'New Routine',
@@ -88,7 +88,7 @@ describe('Routines API', () => {
       });
 
       const mockCreated = { id: 'r2', name: 'New Routine' };
-      vi.mocked(prisma.routine.create).mockResolvedValueOnce(mockCreated as any);
+      vi.mocked(prisma.routine.create).mockResolvedValueOnce(mockCreated as unknown);
 
       const res = await POST(req);
       expect(res.status).toBe(201);
@@ -103,7 +103,7 @@ describe('Routines API', () => {
     });
 
     it('returns 500 on db error', async () => {
-      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as unknown);
       const req = new Request('http://localhost/api/routines', { 
         method: 'POST', 
         body: JSON.stringify({ name: 'n', exercises: [] }) 

@@ -39,7 +39,7 @@ describe("Profile API Route", () => {
 
     it("returns profile data for authenticated user", async () => {
       const mockSession = { user: { id: "user-1", email: "test@example.com" } };
-      vi.mocked(getServerSession).mockResolvedValue(mockSession as any);
+      vi.mocked(getServerSession).mockResolvedValue(mockSession as unknown);
 
       const mockProfile = { userId: "user-1", age: 30, gender: "Male" };
       const mockUser = {
@@ -49,9 +49,9 @@ describe("Profile API Route", () => {
         username: null,
       };
       vi.mocked(prisma.userProfile.findUnique).mockResolvedValue(
-        mockProfile as any,
-      ); // eslint-disable-line @typescript-eslint/no-explicit-any
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+        mockProfile as unknown,
+      );  
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as unknown);
 
       const req = new Request("http://localhost/api/profile");
       const res = await GET(req);
@@ -72,7 +72,7 @@ describe("Profile API Route", () => {
       vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
 
       const mockGoal = { userId: "user-1", proteinTarget: 150 };
-      vi.mocked(prisma.goal.findUnique).mockResolvedValue(mockGoal as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      vi.mocked(prisma.goal.findUnique).mockResolvedValue(mockGoal as unknown);  
 
       const req = new Request("http://localhost/api/profile?type=goals");
       const res = await GET(req);
@@ -105,7 +105,7 @@ describe("Profile API Route", () => {
       vi.mocked(prisma.userProfile.upsert).mockResolvedValue({
         userId: "user-1",
         ...updateData,
-      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      } as unknown);  
 
       const req = new Request("http://localhost/api/profile", {
         method: "POST",
@@ -130,7 +130,7 @@ describe("Profile API Route", () => {
       vi.mocked(prisma.goal.upsert).mockResolvedValue({
         userId: "user-1",
         ...goalData,
-      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      } as unknown);  
 
       const req = new Request("http://localhost/api/profile", {
         method: "POST",

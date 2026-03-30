@@ -5,7 +5,7 @@ import LogTab from './LogTab';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, whileHover, whileTap, initial, animate, variants, custom, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({ children, whileHover, whileTap, initial, animate, variants, custom, ...props }: unknown) => <div {...props}>{children}</div>,
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));

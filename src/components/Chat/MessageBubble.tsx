@@ -63,7 +63,7 @@ export function MessageBubble({ msg, isFirstInGroup, isNewUser }: Readonly<Messa
               {msg.attachments.filter((att) => att.previewUrl).map((attachment) => {
                 const isAudio = attachment.mediaType.startsWith("audio/");
                 return isAudio ? (
-                  /* eslint-disable-next-line jsx-a11y/media-has-caption */
+                   
                   <audio
                     key={attachment.id}
                     controls

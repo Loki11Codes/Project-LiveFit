@@ -370,7 +370,7 @@ function ProfilePanel({
             label="Haptic Feedback"
             description="Enable vibrations for app interactions."
             checked={data.hapticFeedback ?? true}
-            onChange={(c) => onChange("hapticFeedback", c as any)}
+            onChange={(c) => onChange("hapticFeedback", c as unknown)}
           />
         </div>
       </div>

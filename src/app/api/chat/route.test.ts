@@ -56,8 +56,8 @@ describe('Chat API Route', () => {
     process.env.OPENROUTER_API_KEY = 'or-key';
     mockShouldFailGemini = false;
     mockResponseText = '|||DATA {"category": "food", "name": "Apple"} ||| That sounds healthy!';
-    (getServerSession as any).mockResolvedValue(mockSession);
-    (global.fetch as any).mockResolvedValue({
+    (getServerSession as unknown).mockResolvedValue(mockSession);
+    (global.fetch as unknown).mockResolvedValue({
         ok: true,
         json: async () => ({ choices: [{ message: { content: '|||DATA {"category": "sleep", "hours": 8} ||| Sleep logged via OpenRouter' } }] })
     });
@@ -111,7 +111,7 @@ describe('Chat API Route', () => {
   });
 
   it('handles database saving errors during session', async () => {
-    (prisma.chatMessage.create as any).mockRejectedValueOnce(new Error('DB Error'));
+    (prisma.chatMessage.create as unknown).mockRejectedValueOnce(new Error('DB Error'));
     const req = new Request('http://localhost/api/chat', {
       method: 'POST',
       body: JSON.stringify({ prompt: 'Log this', history: [], images: [] }),
@@ -122,7 +122,7 @@ describe('Chat API Route', () => {
   });
 
   it('handles persistence errors with a warning', async () => {
-    (persistLogData as any).mockRejectedValueOnce(new Error('Persistence failed'));
+    (persistLogData as unknown).mockRejectedValueOnce(new Error('Persistence failed'));
     const req = new Request('http://localhost/api/chat', {
       method: 'POST',
       body: JSON.stringify({ prompt: 'Bad data', history: [], images: [] }),

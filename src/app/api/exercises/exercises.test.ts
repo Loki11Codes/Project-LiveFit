@@ -21,14 +21,14 @@ describe('Exercises API Route', () => {
   });
 
   it('returns 401 if unauthorized', async () => {
-    (getServerSession as any).mockResolvedValue(null);
+    (getServerSession as unknown).mockResolvedValue(null);
     const res = await GET();
     expect(res.status).toBe(401);
   });
 
   it('returns exercises on success', async () => {
-    (getServerSession as any).mockResolvedValue({ user: { id: 'user-1' } });
-    (prisma.exercise.findMany as any).mockResolvedValue([{ id: '1', name: 'Pushups' }]);
+    (getServerSession as unknown).mockResolvedValue({ user: { id: 'user-1' } });
+    (prisma.exercise.findMany as unknown).mockResolvedValue([{ id: '1', name: 'Pushups' }]);
     
     const res = await GET();
     expect(res.status).toBe(200);
@@ -38,8 +38,8 @@ describe('Exercises API Route', () => {
   });
 
   it('returns 500 on database error', async () => {
-    (getServerSession as any).mockResolvedValue({ user: { id: 'user-1' } });
-    (prisma.exercise.findMany as any).mockRejectedValue(new Error('DB Error'));
+    (getServerSession as unknown).mockResolvedValue({ user: { id: 'user-1' } });
+    (prisma.exercise.findMany as unknown).mockRejectedValue(new Error('DB Error'));
     
     const res = await GET();
     expect(res.status).toBe(500);

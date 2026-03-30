@@ -49,7 +49,7 @@ export async function POST(req: Request) {
         userId: session.user.id,
         name,
         exercises: {
-          create: exercises.map((e: any) => ({
+          create: exercises.map((e: unknown) => ({
             exerciseId: e.exerciseId,
             order: e.order,
             targetSets: e.targetSets,

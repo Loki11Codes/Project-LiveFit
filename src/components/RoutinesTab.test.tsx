@@ -5,10 +5,10 @@ import { RoutinesTab } from './RoutinesTab';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, style, ...props }: any) => <div {...props} style={style}>{children}</div>,
-    button: ({ children, style, ...props }: any) => <button {...props} style={style}>{children}</button>,
+    div: ({ children, style, ...props }: unknown) => <div {...props} style={style}>{children}</div>,
+    button: ({ children, style, ...props }: unknown) => <button {...props} style={style}>{children}</button>,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: unknown) => <>{children}</>,
 }));
 
 // Mock globalThis.crypto.randomUUID
@@ -50,7 +50,7 @@ describe('RoutinesTab Component', () => {
         });
       }
       return Promise.resolve({ ok: false });
-    }) as any;
+    }) as unknown;
   });
 
   afterEach(() => {
@@ -134,7 +134,7 @@ describe('RoutinesTab Component', () => {
 
   it('saves a new routine', async () => {
     // Modify fetch to handle POST
-    globalThis.fetch = vi.fn((url, options: any) => {
+    globalThis.fetch = vi.fn((url, options: unknown) => {
       if (url === '/api/routines' && (!options || options.method === 'GET')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
       }
@@ -145,7 +145,7 @@ describe('RoutinesTab Component', () => {
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ id: 'new-id' }) });
       }
       return Promise.resolve({ ok: false });
-    }) as any;
+    }) as unknown;
 
     render(<RoutinesTab />);
     await waitFor(() => {

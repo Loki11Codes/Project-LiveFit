@@ -11,9 +11,9 @@ describe("Animations", () => {
     if (typeof animations.cardVariants.visible === "function") {
       const visible = animations.cardVariants.visible(
         1,
-        {} as any,
-        {} as any,
-      ) as any;
+        {} as unknown,
+        {} as unknown,
+      ) as unknown;
       expect(visible.opacity).toBe(1);
       expect(visible.transition.delay).toBe(0.1);
     }

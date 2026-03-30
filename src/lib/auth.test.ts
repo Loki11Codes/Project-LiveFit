@@ -17,11 +17,11 @@ vi.mock('bcryptjs', () => ({
 }));
 
 const mocks = vi.hoisted(() => ({
-  capturedAuthorize: null as any
+  capturedAuthorize: null as unknown
 }));
 
 vi.mock('next-auth/providers/credentials', () => ({
-  default: (options: any) => {
+  default: (options: unknown) => {
     mocks.capturedAuthorize = options.authorize;
     return { id: 'credentials', name: 'Email and Password' };
   }
@@ -49,7 +49,7 @@ describe('Auth Options', () => {
       vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
       await expect(mocks.capturedAuthorize({ email: 'test@test.com', password: TEST_VALID_SECRET })).rejects.toThrow('No user found with this email');
       
-      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({ email: 'test@test.com' } as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({ email: 'test@test.com' } as unknown);
       await expect(mocks.capturedAuthorize({ email: 'test@test.com', password: TEST_VALID_SECRET })).rejects.toThrow('No user found with this email');
     });
 
@@ -57,7 +57,7 @@ describe('Auth Options', () => {
       vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({ 
         email: 'test@test.com', 
         password: TEST_HASH 
-      } as any);
+      } as unknown);
       vi.mocked(bcrypt.compare).mockResolvedValueOnce(false as never);
 
       await expect(mocks.capturedAuthorize({ email: 'test@test.com', password: TEST_INVALID_SECRET })).rejects.toThrow('Invalid password');
@@ -72,7 +72,7 @@ describe('Auth Options', () => {
         password: TEST_HASH
       };
       
-      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(mockUser as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(mockUser as unknown);
       vi.mocked(bcrypt.compare).mockResolvedValueOnce(true as never);
 
       const result = await mocks.capturedAuthorize({ email: 'test@test.com', password: TEST_VALID_SECRET });
@@ -87,7 +87,7 @@ describe('Auth Options', () => {
 
   describe('Callbacks', () => {
     it('jwt returns token with user id', async () => {
-      const jwtCb = authOptions.callbacks?.jwt as any;
+      const jwtCb = authOptions.callbacks?.jwt as unknown;
       const result = await jwtCb({ token: { orig: true }, user: { id: 'user123' }});
       expect(result).toEqual({ orig: true, id: 'user123' });
       
@@ -96,7 +96,7 @@ describe('Auth Options', () => {
     });
 
     it('session maps token id to user id', async () => {
-      const sessionCb = authOptions.callbacks?.session as any;
+      const sessionCb = authOptions.callbacks?.session as unknown;
       const session = { user: { name: 'hi' } };
       const token = { id: 'tid' };
       const result = await sessionCb({ session, token });

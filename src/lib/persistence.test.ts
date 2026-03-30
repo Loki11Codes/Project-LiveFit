@@ -24,7 +24,7 @@ describe('persistence utility', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (prisma.$transaction as any).mockImplementation((cb: any) => cb(mockTx));
+    (prisma.$transaction as unknown).mockImplementation((cb: unknown) => cb(mockTx));
   });
 
   describe('persistLogData', () => {
@@ -34,7 +34,7 @@ describe('persistence utility', () => {
     });
 
     it('skips envelopes without a category', async () => {
-      await persistLogData([{ data: {} } as any], userId);
+      await persistLogData([{ data: {} } as unknown], userId);
       expect(prisma.$transaction).not.toHaveBeenCalled();
     });
 
@@ -177,7 +177,7 @@ describe('persistence utility', () => {
     });
 
     it('throws error if persistence fails within transaction', async () => {
-      (prisma.$transaction as any).mockImplementation(() => {
+      (prisma.$transaction as unknown).mockImplementation(() => {
         throw new Error('Transaction failed');
       });
       await expect(persistLogData([{ category: 'food', data: { name: 'X' } }], userId)).rejects.toThrow('Transaction failed');
@@ -185,37 +185,37 @@ describe('persistence utility', () => {
 
     it('skips invalid food items', async () => {
         const envelopes = [{ category: 'food', data: { name: '', kcal: 100 } }];
-        await persistLogData(envelopes as any, userId);
+        await persistLogData(envelopes as unknown, userId);
         expect(mockTx.foodLog.create).not.toHaveBeenCalled();
     });
 
     it('skips invalid workout items', async () => {
         const envelopes = [{ category: 'workout', data: { focus: '', volume: 100 } }];
-        await persistLogData(envelopes as any, userId);
+        await persistLogData(envelopes as unknown, userId);
         expect(mockTx.workoutLog.create).not.toHaveBeenCalled();
     });
 
     it('skips invalid sleep items', async () => {
         const envelopes = [{ category: 'sleep', data: { date: 'not-a-date' } }];
-        await persistLogData(envelopes as any, userId);
+        await persistLogData(envelopes as unknown, userId);
         expect(mockTx.sleepLog.create).not.toHaveBeenCalled();
     });
 
     it('skips invalid measurement items', async () => {
         const envelopes = [{ category: 'measurement', data: { date: 'not-a-date' } }];
-        await persistLogData(envelopes as any, userId);
+        await persistLogData(envelopes as unknown, userId);
         expect(mockTx.bodyMeasurement.create).not.toHaveBeenCalled();
     });
 
     it('skips invalid profile items', async () => {
         const envelopes = [{ category: 'profile', data: { age: -5 } }];
-        await persistLogData(envelopes as any, userId);
+        await persistLogData(envelopes as unknown, userId);
         expect(mockTx.userProfile.upsert).not.toHaveBeenCalled();
     });
 
     it('skips invalid goal items', async () => {
         const envelopes = [{ category: 'goals', data: { kcalTarget: -100 } }];
-        await persistLogData(envelopes as any, userId);
+        await persistLogData(envelopes as unknown, userId);
         expect(mockTx.goal.upsert).not.toHaveBeenCalled();
     });
 

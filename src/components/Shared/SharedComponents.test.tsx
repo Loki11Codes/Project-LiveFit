@@ -11,9 +11,9 @@ import { Activity } from 'lucide-react';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, whileHover, whileTap, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({ children, whileHover, whileTap, ...props }: unknown) => <div {...props}>{children}</div>,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: unknown) => <>{children}</>,
 }));
 
 describe('Shared Utility Components', () => {
