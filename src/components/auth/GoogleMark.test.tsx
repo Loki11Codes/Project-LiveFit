@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render } from '@testing-library/react';
 import { test, expect } from 'vitest';
 import { GoogleMark } from './GoogleMark';
@@ -17,3 +18,4 @@ test('GoogleMark renders the Google SVG logo', () => {
   expect(svgEntry).toHaveAttribute('width', '18');
   expect(svgEntry).toHaveAttribute('height', '18');
 });
+

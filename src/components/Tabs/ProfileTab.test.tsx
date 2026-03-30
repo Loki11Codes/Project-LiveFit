@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import ProfileTab from "./ProfileTab";
@@ -21,10 +22,10 @@ vi.mock("next/navigation", () => ({
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: Record<string, unknown>) => (
+    div: ({ children, ...props }: Record<string, any>) => (
       <div {...props}>{children as React.ReactNode}</div>
     ),
-    button: ({ children, ...props }: Record<string, unknown>) => (
+    button: ({ children, ...props }: Record<string, any>) => (
       <button {...props}>{children as React.ReactNode}</button>
     ),
   },
@@ -113,3 +114,4 @@ describe("ProfileTab Component", () => {
     expect(screen.getByText("0g")).toBeDefined();
   });
 });
+

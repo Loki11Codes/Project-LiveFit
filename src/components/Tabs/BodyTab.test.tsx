@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, fireEvent, cleanup, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import BodyTab from './BodyTab';
@@ -5,9 +6,9 @@ import BodyTab from './BodyTab';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, whileHover, whileTap, initial, animate, variants, custom, ...props }: unknown) => <div {...props}>{children}</div>,
-    button: ({ children, whileHover, whileTap, initial, animate, variants, custom, ...props }: unknown) => <button {...props}>{children}</button>,
-    tr: ({ children, whileHover, whileTap, initial, animate, variants, custom, ...props }: unknown) => <tr {...props}>{children}</tr>,
+    div: ({ children, whileHover, whileTap, initial, animate, variants, custom, ...props }: any) => <div {...props}>{children}</div>,
+    button: ({ children, whileHover, whileTap, initial, animate, variants, custom, ...props }: any) => <button {...props}>{children}</button>,
+    tr: ({ children, whileHover, whileTap, initial, animate, variants, custom, ...props }: any) => <tr {...props}>{children}</tr>,
   },
 }));
 
@@ -162,3 +163,4 @@ describe('BodyTab Component', () => {
     consoleSpy.mockRestore();
   });
 });
+

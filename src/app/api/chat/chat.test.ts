@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { POST } from './route';
 import prisma from '@/lib/prisma';
@@ -109,3 +110,4 @@ describe('Chat API Route', () => {
     expect(data.text).toBe('OpenRouter response');
   });
 });
+

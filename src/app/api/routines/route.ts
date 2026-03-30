@@ -16,16 +16,19 @@ export async function GET() {
       include: {
         exercises: {
           include: { exercise: true },
-          orderBy: { order: 'asc' }
-        }
+          orderBy: { order: "asc" },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
-    
+
     return NextResponse.json(routines);
   } catch (error) {
     console.error("Error fetching routines:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -49,22 +52,32 @@ export async function POST(req: Request) {
         userId: session.user.id,
         name,
         exercises: {
-          create: exercises.map((e: unknown) => ({
-            exerciseId: e.exerciseId,
-            order: e.order,
-            targetSets: e.targetSets,
-            targetReps: e.targetReps || null
-          }))
-        }
+          create: exercises.map(
+            (e: {
+              exerciseId: string;
+              order: number;
+              targetSets: number;
+              targetReps?: number | string;
+            }) => ({
+              exerciseId: e.exerciseId,
+              order: e.order,
+              targetSets: e.targetSets,
+              targetReps: e.targetReps ? e.targetReps.toString() : null,
+            }),
+          ),
+        },
       },
       include: {
-        exercises: { include: { exercise: true } }
-      }
+        exercises: { include: { exercise: true } },
+      },
     });
 
     return NextResponse.json(newRoutine, { status: 201 });
   } catch (error) {
     console.error("Error creating routine:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }

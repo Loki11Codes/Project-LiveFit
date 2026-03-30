@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from "vitest";
 import * as animations from "./animations";
 
@@ -11,11 +12,12 @@ describe("Animations", () => {
     if (typeof animations.cardVariants.visible === "function") {
       const visible = animations.cardVariants.visible(
         1,
-        {} as unknown,
-        {} as unknown,
-      ) as unknown;
+        {} as any,
+        {} as any,
+      ) as any;
       expect(visible.opacity).toBe(1);
       expect(visible.transition.delay).toBe(0.1);
     }
   });
 });
+

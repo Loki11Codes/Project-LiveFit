@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, expect } from 'vitest';
 import { parseJsonBody, unauthorized, conflict, internalError } from './api';
 import { GoalSchema } from './validation';
@@ -70,3 +71,4 @@ test('parseJsonBody returns badRequest on schema mismatch', async () => {
   const result = await parseJsonBody(req, schema);
   expect(result.success).toBe(false);
 });
+

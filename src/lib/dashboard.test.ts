@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from 'vitest';
 import {
   parseTab,
@@ -35,7 +36,7 @@ describe('dashboard utilities', () => {
     });
 
     it('converts measurement to form strings', () => {
-      const m = { weight: 75.5, waist: 80 } as unknown;
+      const m = { weight: 75.5, waist: 80 } as any;
       const form = toMeasurementForm(m);
       expect(form.weight).toBe('75.5');
       expect(form.waist).toBe('80');
@@ -45,7 +46,7 @@ describe('dashboard utilities', () => {
 
   describe('toMeasurementPayload', () => {
     it('converts form strings back to numbers or null', () => {
-      const form: unknown = { 
+      const form: any = { 
         weight: '75.5', waist: '', chest: 'abc',
         arms: '', thighs: '', hips: '', calves: '', neck: '', bodyFat: ''
       };
@@ -75,17 +76,17 @@ describe('dashboard utilities', () => {
         food: [{ time: new Date('2024-01-01T10:00:00Z') }],
         workouts: [{ time: new Date('2024-01-01T15:00:00Z') }, { time: new Date('2024-01-02T10:00:00Z') }],
         sleep: [{ time: new Date('2024-01-03T10:00:00Z') }],
-      } as unknown;
+      } as any;
       expect(getTrackedDayCount(logs)).toBe(3);
     });
   });
 
   describe('getProteinTarget', () => {
-    const goals = { proteinTarget: 150, proteinTraining: 180, proteinRest: 120 } as unknown;
+    const goals = { proteinTarget: 150, proteinTraining: 180, proteinRest: 120 } as any;
     it('returns correct target for day type', () => {
       expect(getProteinTarget(goals, 'Training')).toBe(180);
       expect(getProteinTarget(goals, 'Rest')).toBe(120);
-      expect(getProteinTarget(goals, 'Lite' as unknown)).toBe(150); // Fallback to proteinTarget if lite not set
+      expect(getProteinTarget(goals, 'Lite' as any)).toBe(150); // Fallback to proteinTarget if lite not set
     });
   });
 
@@ -94,7 +95,7 @@ describe('dashboard utilities', () => {
       const entries = [
         { dayKey: '2024-01-01', dayType: 'Training' },
         { dayKey: '2024-01-02', dayType: 'Rest' },
-      ] as unknown;
+      ] as any;
       const map = buildDayTypeMap(entries);
       expect(map['2024-01-01']).toBe('Training');
       expect(map['2024-01-02']).toBe('Rest');
@@ -107,9 +108,9 @@ describe('dashboard utilities', () => {
         food: [{ time: new Date('2024-01-01'), kcal: 2000, protein: 150, carbs: 200, fats: 70, fiber: 30 }],
         workouts: [{ time: new Date('2024-01-01'), focus: 'Legs' }],
         sleep: [{ time: new Date('2024-01-01'), hours: 8 }],
-      } as unknown;
-      const goals = { proteinTarget: 160 } as unknown;
-      const map = { '2024-01-01': 'Training' } as unknown;
+      } as any;
+      const goals = { proteinTarget: 160 } as any;
+      const map = { '2024-01-01': 'Training' } as any;
       
       const rows = buildHistoryRows(logs, goals, map);
       expect(rows).toHaveLength(1);
@@ -149,8 +150,9 @@ describe('dashboard utilities', () => {
 
   describe('getLatestSleepLog', () => {
     it('returns first log if exists', () => {
-      expect(getLatestSleepLog([{ hours: 8 }] as unknown)).toEqual({ hours: 8 });
+      expect(getLatestSleepLog([{ hours: 8 }] as any)).toEqual({ hours: 8 });
       expect(getLatestSleepLog([])).toBeNull();
     });
   });
 });
+

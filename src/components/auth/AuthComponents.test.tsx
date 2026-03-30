@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { AuthShell } from './AuthShell';
@@ -7,14 +8,14 @@ import { NutritionIllustration } from './NutritionIllustration';
 // Mock framer-motion to avoid animation issues in tests
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: unknown) => <div {...props}>{children}</div>,
-    section: ({ children, ...props }: unknown) => <section {...props}>{children}</section>,
-    path: (props: unknown) => <path {...props} />,
-    circle: (props: unknown) => <circle {...props} />,
-    g: ({ children, ...props }: unknown) => <g {...props}>{children}</g>,
-    rect: (props: unknown) => <rect {...props} />,
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    section: ({ children, ...props }: any) => <section {...props}>{children}</section>,
+    path: (props: any) => <path {...props} />,
+    circle: (props: any) => <circle {...props} />,
+    g: ({ children, ...props }: any) => <g {...props}>{children}</g>,
+    rect: (props: any) => <rect {...props} />,
   },
-  AnimatePresence: ({ children }: unknown) => <>{children}</>,
+  AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
 describe('Auth Utility Components', () => {
@@ -74,3 +75,4 @@ describe('Auth Utility Components', () => {
     });
   });
 });
+

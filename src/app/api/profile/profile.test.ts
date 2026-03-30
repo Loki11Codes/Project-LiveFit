@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { GET, POST } from "./route";
 import prisma from "@/lib/prisma";
@@ -39,7 +40,7 @@ describe("Profile API Route", () => {
 
     it("returns profile data for authenticated user", async () => {
       const mockSession = { user: { id: "user-1", email: "test@example.com" } };
-      vi.mocked(getServerSession).mockResolvedValue(mockSession as unknown);
+      vi.mocked(getServerSession).mockResolvedValue(mockSession as any);
 
       const mockProfile = { userId: "user-1", age: 30, gender: "Male" };
       const mockUser = {
@@ -49,9 +50,9 @@ describe("Profile API Route", () => {
         username: null,
       };
       vi.mocked(prisma.userProfile.findUnique).mockResolvedValue(
-        mockProfile as unknown,
+        mockProfile as any,
       );  
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as unknown);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
 
       const req = new Request("http://localhost/api/profile");
       const res = await GET(req);
@@ -72,7 +73,7 @@ describe("Profile API Route", () => {
       vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
 
       const mockGoal = { userId: "user-1", proteinTarget: 150 };
-      vi.mocked(prisma.goal.findUnique).mockResolvedValue(mockGoal as unknown);  
+      vi.mocked(prisma.goal.findUnique).mockResolvedValue(mockGoal as any);  
 
       const req = new Request("http://localhost/api/profile?type=goals");
       const res = await GET(req);
@@ -105,7 +106,7 @@ describe("Profile API Route", () => {
       vi.mocked(prisma.userProfile.upsert).mockResolvedValue({
         userId: "user-1",
         ...updateData,
-      } as unknown);  
+      } as any);  
 
       const req = new Request("http://localhost/api/profile", {
         method: "POST",
@@ -130,7 +131,7 @@ describe("Profile API Route", () => {
       vi.mocked(prisma.goal.upsert).mockResolvedValue({
         userId: "user-1",
         ...goalData,
-      } as unknown);  
+      } as any);  
 
       const req = new Request("http://localhost/api/profile", {
         method: "POST",
@@ -194,3 +195,6 @@ describe("Profile API Route", () => {
     });
   });
 });
+
+
+

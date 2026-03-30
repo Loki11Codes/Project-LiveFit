@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, expect, vi } from 'vitest';
 import {
   ApiClientError,
@@ -31,7 +32,7 @@ test('requestJson throws ApiClientError for error responses', async () => {
   await expect(requestJson('http://localhost/test')).rejects.toThrow(ApiClientError);
   try {
     await requestJson('http://localhost/test');
-  } catch (e: unknown) {
+  } catch (e: any) {
     if (e instanceof Error) {
       expect(e.message).toBe('API Error');
     }
@@ -77,3 +78,4 @@ test('getClientErrorMessage handles Error instances', () => {
 test('getClientErrorMessage fallback', () => {
   expect(getClientErrorMessage({} as any)).toBe('Something went wrong. Please try again.'); // eslint-disable-line @typescript-eslint/no-explicit-any
 });
+

@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect } from 'vitest';
 import SignIn from './page';
@@ -97,3 +98,4 @@ describe('SignIn Component', () => {
     expect(passwordInput).toHaveAttribute('type', 'text');
   });
 });
+

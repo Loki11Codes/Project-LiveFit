@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { RoutinesTab } from './RoutinesTab';
@@ -5,10 +6,10 @@ import { RoutinesTab } from './RoutinesTab';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, style, ...props }: unknown) => <div {...props} style={style}>{children}</div>,
-    button: ({ children, style, ...props }: unknown) => <button {...props} style={style}>{children}</button>,
+    div: ({ children, style, ...props }: any) => <div {...props} style={style}>{children}</div>,
+    button: ({ children, style, ...props }: any) => <button {...props} style={style}>{children}</button>,
   },
-  AnimatePresence: ({ children }: unknown) => <>{children}</>,
+  AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
 // Mock globalThis.crypto.randomUUID
@@ -50,7 +51,7 @@ describe('RoutinesTab Component', () => {
         });
       }
       return Promise.resolve({ ok: false });
-    }) as unknown;
+    }) as any;
   });
 
   afterEach(() => {
@@ -134,7 +135,7 @@ describe('RoutinesTab Component', () => {
 
   it('saves a new routine', async () => {
     // Modify fetch to handle POST
-    globalThis.fetch = vi.fn((url, options: unknown) => {
+    globalThis.fetch = vi.fn((url, options: any) => {
       if (url === '/api/routines' && (!options || options.method === 'GET')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
       }
@@ -145,7 +146,7 @@ describe('RoutinesTab Component', () => {
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ id: 'new-id' }) });
       }
       return Promise.resolve({ ok: false });
-    }) as unknown;
+    }) as any;
 
     render(<RoutinesTab />);
     await waitFor(() => {
@@ -179,3 +180,4 @@ describe('RoutinesTab Component', () => {
     });
   });
 });
+

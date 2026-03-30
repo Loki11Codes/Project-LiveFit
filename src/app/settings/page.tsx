@@ -370,7 +370,7 @@ function ProfilePanel({
             label="Haptic Feedback"
             description="Enable vibrations for app interactions."
             checked={data.hapticFeedback ?? true}
-            onChange={(c) => onChange("hapticFeedback", c as unknown)}
+            onChange={(c) => onChange("hapticFeedback", c as any)} // eslint-disable-line @typescript-eslint/no-explicit-any
           />
         </div>
       </div>

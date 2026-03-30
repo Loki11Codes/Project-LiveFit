@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import HistoryTab from './HistoryTab';
@@ -5,8 +6,8 @@ import HistoryTab from './HistoryTab';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: Record<string, unknown>) => <div {...props}>{children as React.ReactNode}</div>,
-    tr: ({ children, ...props }: Record<string, unknown>) => <tr {...props}>{children as React.ReactNode}</tr>,
+    div: ({ children, ...props }: Record<string, any>) => <div {...props}>{children as React.ReactNode}</div>,
+    tr: ({ children, ...props }: Record<string, any>) => <tr {...props}>{children as React.ReactNode}</tr>,
   },
 }));
 
@@ -77,3 +78,4 @@ describe('HistoryTab Component', () => {
     expect(screen.getByText(/Add body measurements/i)).toBeDefined();
   });
 });
+

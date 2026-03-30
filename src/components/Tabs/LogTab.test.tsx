@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import LogTab from './LogTab';
@@ -5,7 +6,7 @@ import LogTab from './LogTab';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, whileHover, whileTap, initial, animate, variants, custom, ...props }: unknown) => <div {...props}>{children}</div>,
+    div: ({ children, whileHover, whileTap, initial, animate, variants, custom, ...props }: any) => <div {...props}>{children}</div>,
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
@@ -117,3 +118,4 @@ describe('LogTab Component', () => {
     expect(screen.getByText('3g')).toBeDefined();
   });
 });
+

@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   render,
   screen,
@@ -15,8 +16,8 @@ import React from "react";
 
 // STUBS
 if (typeof globalThis !== "undefined") {
-  (globalThis as unknown).HTMLElement.prototype.scrollIntoView = vi.fn();  
-  (globalThis as unknown).scrollTo = vi.fn();  
+  (globalThis as any).HTMLElement.prototype.scrollIntoView = vi.fn();  
+  (globalThis as any).scrollTo = vi.fn();  
 }
 
 // MOCKS
@@ -34,18 +35,18 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: unknown) => <div {...props}>{children}</div>,  
-    button: ({ children, ...props }: unknown) => (
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,  
+    button: ({ children, ...props }: any) => (
       <button {...props}>{children}</button>
     ),  
   },
-  AnimatePresence: ({ children }: unknown) => <>{children}</>,  
+  AnimatePresence: ({ children }: any) => <>{children}</>,  
 }));
 
 // Mock sub-components to isolate Dashboard logic
 vi.mock("@/components/Navbar", () => ({
   default: (
-    { activeTab, setActiveTab, toggleTheme }: unknown,  
+    { activeTab, setActiveTab, toggleTheme }: any,  
   ) => (
     <nav data-testid="navbar">
       <button onClick={() => setActiveTab("profile")}>Profile Link</button>
@@ -71,7 +72,7 @@ vi.mock("@/components/Tabs/HistoryTab", () => ({
 }));
 vi.mock("@/components/Tabs/BodyTab", () => ({
   default: (
-    { handleSaveMeasurements }: unknown,  
+    { handleSaveMeasurements }: any,  
   ) => (
     <div data-testid="body-tab">
       <button onClick={handleSaveMeasurements}>Save Measurements</button>
@@ -80,7 +81,7 @@ vi.mock("@/components/Tabs/BodyTab", () => ({
 }));
 vi.mock("@/components/Tabs/ProfileTab", () => ({
   default: (
-    { handleSaveProfile, handleSaveGoals }: unknown,  
+    { handleSaveProfile, handleSaveGoals }: any,  
   ) => (
     <div data-testid="profile-tab">
       <button onClick={handleSaveProfile}>Save Profile</button>
@@ -112,15 +113,15 @@ describe("Home (Dashboard) Orchestration", () => {
       ),
     );
 
-    (useSession as unknown).mockReturnValue({
+    (useSession as any).mockReturnValue({
       data: { user: { id: "test-user" } },
       status: "authenticated",
     });  
-    (useRouter as unknown).mockReturnValue(mockRouter);  
-    (useSearchParams as unknown).mockReturnValue(mockSearchParams);  
+    (useRouter as any).mockReturnValue(mockRouter);  
+    (useSearchParams as any).mockReturnValue(mockSearchParams);  
 
     // Dashboard data mock
-    (clientApi.requestJson as unknown).mockImplementation((url: string) => {
+    (clientApi.requestJson as any).mockImplementation((url: string) => {
        
       if (url === "/api/logs")
         return Promise.resolve({ food: [], workouts: [], sleep: [] });
@@ -150,7 +151,7 @@ describe("Home (Dashboard) Orchestration", () => {
   });
 
   it("renders specific tab from search params", async () => {
-    (useSearchParams as unknown).mockReturnValue(new URLSearchParams("tab=body"));  
+    (useSearchParams as any).mockReturnValue(new URLSearchParams("tab=body"));  
     render(<Home />);
     await waitFor(() => {
       expect(screen.getByTestId("body-tab")).toBeDefined();
@@ -180,11 +181,11 @@ describe("Home (Dashboard) Orchestration", () => {
   });
 
   it("processes measurement saves with notifications", async () => {
-    (useSearchParams as unknown).mockReturnValue(new URLSearchParams("tab=body"));  
+    (useSearchParams as any).mockReturnValue(new URLSearchParams("tab=body"));  
     render(<Home />);
 
     const saveBtn = await screen.findByText(/Save Measurements/i);
-    (clientApi.requestJson as unknown).mockResolvedValueOnce({ id: "m1" });  
+    (clientApi.requestJson as any).mockResolvedValueOnce({ id: "m1" });  
 
     await act(async () => {
       fireEvent.click(saveBtn);
@@ -201,7 +202,7 @@ describe("Home (Dashboard) Orchestration", () => {
     expect(screen.getByTestId("navbar")).toBeDefined();
 
     // Session loss
-    (useSession as unknown).mockReturnValue({
+    (useSession as any).mockReturnValue({
       data: null,
       status: "unauthenticated",
     });  
@@ -217,3 +218,6 @@ describe("Home (Dashboard) Orchestration", () => {
     });
   });
 });
+
+
+

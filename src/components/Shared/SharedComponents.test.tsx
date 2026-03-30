@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { GlassMetric } from './GlassMetric';
@@ -11,9 +12,9 @@ import { Activity } from 'lucide-react';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, whileHover, whileTap, ...props }: unknown) => <div {...props}>{children}</div>,
+    div: ({ children, whileHover, whileTap, ...props }: any) => <div {...props}>{children}</div>,
   },
-  AnimatePresence: ({ children }: unknown) => <>{children}</>,
+  AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
 describe('Shared Utility Components', () => {
@@ -112,3 +113,4 @@ describe('Shared Utility Components', () => {
     });
   });
 });
+

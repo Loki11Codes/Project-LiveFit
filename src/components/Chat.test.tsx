@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   render,
   screen,
@@ -101,3 +102,4 @@ describe("Chat Components", () => {
     });
   });
 });
+

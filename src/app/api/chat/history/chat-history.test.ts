@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET } from './route';
 import prisma from '@/lib/prisma';
@@ -92,3 +93,4 @@ describe('Chat History API Route', () => {
     expect(res.status).toBe(500);
   });
 });
+

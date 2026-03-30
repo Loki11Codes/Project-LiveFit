@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import SignUp from './page';
 import { useRouter } from 'next/navigation';
@@ -137,3 +138,4 @@ describe('SignUp Component', () => {
     expect(passwordInput).toHaveAttribute('type', 'text');
   });
 });
+
