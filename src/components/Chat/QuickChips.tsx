@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Coffee, Dumbbell, Moon, Info, ImageIcon, type LucideIcon } from "lucide-react";
+import { Coffee, Dumbbell, Moon, Info, ImageIcon, Trash2, type LucideIcon } from "lucide-react";
 
 interface QuickChipProps {
   readonly icon: LucideIcon;
@@ -61,6 +61,12 @@ export function QuickChips({ onSelect }: QuickChipsProps) {
         label="Summary"
         color="#7b5ea7"
         onClick={() => onSelect("Give me a summary")}
+      />
+      <QuickChip
+        icon={Trash2}
+        label="Delete Log"
+        color="#e74c3c"
+        onClick={() => onSelect("Delete my last food log from today")}
       />
     </div>
   );

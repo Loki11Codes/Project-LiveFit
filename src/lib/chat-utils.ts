@@ -13,13 +13,28 @@ function removeDataBlocks(text: string, startMarker: string, endMarker: string):
   return result.trim();
 }
 
+/** Find the closing ||| that is NOT the start of another |||DATA block. */
+function findClosingMarker(text: string, searchFrom: number): number {
+  let pos = searchFrom;
+  while (pos < text.length) {
+    const idx = text.indexOf('|||', pos);
+    if (idx === -1) return -1;
+    // If this ||| is immediately followed by 'DATA', it's a new opening block — skip past it
+    if (text.startsWith('DATA', idx + 3)) {
+      pos = idx + 3; // skip past this '|||' and keep searching
+      continue;
+    }
+    return idx;
+  }
+  return -1;
+}
+
 export function extractAndCleanLogData(text: string): {
   logs: ParsedLogEnvelope[];
   cleanText: string;
   hasData: boolean;
 } {
   const startMarker = '|||DATA';
-  const endMarker = '|||';
   const logs: ParsedLogEnvelope[] = [];
   let hasData = false;
   let currentPos = 0;
@@ -30,7 +45,7 @@ export function extractAndCleanLogData(text: string): {
     if (startIdx === -1) break;
 
     const contentStart = startIdx + startMarker.length;
-    const endIdx = text.indexOf(endMarker, contentStart);
+    const endIdx = findClosingMarker(text, contentStart);
     if (endIdx === -1) break;
 
     hasData = true;
@@ -50,8 +65,8 @@ export function extractAndCleanLogData(text: string): {
       console.warn('Failed to parse a DATA block:', e);
     }
 
-    currentPos = endIdx + endMarker.length;
+    currentPos = endIdx + 3; // length of '|||'
   }
 
-  return { logs, cleanText: removeDataBlocks(text, startMarker, endMarker), hasData };
+  return { logs, cleanText: removeDataBlocks(text, startMarker, '|||'), hasData };
 }

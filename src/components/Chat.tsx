@@ -228,6 +228,8 @@ export default function Chat({
           "logged",
           "recorded",
           "saved",
+          "deleted",
+          "removed",
         ];
         const lowerText = cleanText.toLowerCase();
         if (stateKeywords.some((kw) => lowerText.includes(kw))) {

@@ -50,6 +50,25 @@ NUTRITION REFERENCE:
 - Rice cooked (100g): 2.7g protein, 130kcal, 28g carb, 0.3g fat, 0.4g fiber
 - Chapati (1): 3g protein, 120kcal, 20g carb, 3g fat, 2g fiber
 
+NUTRITION SCREENSHOT PARSING:
+- If the user provides a nutrition/meal log screenshot (e.g. a table of foods with protein/kcal/carbs/fats/fiber), extract ALL individual food items.
+- Output a SINGLE |||DATA block with "category": "food" and an "items" array containing each row.
+- Each item in "items" must have: "name", "protein" (g), "kcal", "carbs" (g), "fats" (g), "fiber" (g), and "date" (YYYY-MM-DD).
+- If multiple meals appear in the same screenshot (e.g. Breakfast + Midday + Lunch), output one |||DATA block per meal group.
+- Do NOT include summary/total rows as separate items. Only log the individual food rows.
+
+Example for a nutrition screenshot with 2 items:
+|||DATA
+{
+  "category": "food",
+  "date": "2026-03-30",
+  "items": [
+    { "name": "Milk 150ml", "protein": 4.6, "kcal": 87, "carbs": 12, "fats": 4.8, "fiber": 0 },
+    { "name": "Ragi Puttu 70g", "protein": 3, "kcal": 245, "carbs": 51, "fats": 1.5, "fiber": 4.5 }
+  ]
+}
+|||
+
 WORKOUT SCREENSHOT PARSING (HEVY/STRONG/ETC):
 - If the user provides a workout summary screenshot, meticulously extract the entire structured routine.
 - Include an "exercises" array containing each exercise "name" and a "sets" array.
@@ -85,7 +104,44 @@ Great job on the Chest, Arms & Delts workout! I've logged all 17 sets.
 CRITICAL: You MUST include the |||DATA block for every loggable action. 
 If the user provides multiple actions (e.g. eating multiple foods at once, or several workouts), you can output a single |||DATA block containing a JSON array of objects, or output multiple separate |||DATA blocks.
 
-Categories: food, workout, sleep, measurement, profile, goals, dayType.
+DELETE LOGS:
+- If the user asks to delete, remove, or undo a specific log entry, emit a |||DATA block with "category": "delete".
+- Include "target" (food/workout/sleep/measurement/all), optional "name" for food or "focus" for workout, and optional "date" (YYYY-MM-DD).
+- Use "target": "all" when the user wants to delete ALL logs for a day (food + workout + sleep + measurement).
+- If no name is given and the user says "delete all food logs today", omit "name" to delete all food entries for that day.
+
+Example: User says "Delete the Milk 150ml entry from today"
+|||DATA
+{
+  "category": "delete",
+  "target": "food",
+  "name": "Milk 150ml",
+  "date": "${dateStr}"
+}
+|||
+Done! I've removed the Milk 150ml entry from today's log.
+
+Example: User says "Remove today's workout"
+|||DATA
+{
+  "category": "delete",
+  "target": "workout",
+  "date": "${dateStr}"
+}
+|||
+Done! I've removed today's workout log.
+
+Example: User says "Delete all of today's logs"
+|||DATA
+{
+  "category": "delete",
+  "target": "all",
+  "date": "${dateStr}"
+}
+|||
+Done! I've cleared all of today's logs — food, workout, sleep, and measurements have been removed.
+
+Categories: food, workout, sleep, measurement, profile, goals, dayType, delete.
 Identify the category and provide relevant fields (including optional "date" YYYY-MM-DD and "update" boolean).
 `;
 };
@@ -115,11 +171,11 @@ async function callGemini(
   clientTime?: string,
 ) {
   const modelsToTry = [
-    "gemini-3.1-flash-lite-preview",
-    "gemini-3.1-flash-preview",
-    "gemini-3-flash",
     "gemini-2.0-flash",
     "gemini-1.5-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-pro",
+    "gemini-3.1-flash-preview",
   ];
   let lastError: unknown = null;
 

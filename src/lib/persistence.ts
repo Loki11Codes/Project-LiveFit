@@ -53,13 +53,21 @@ async function handleCategoryPersistence(
   clientDate?: string
 ): Promise<void> {
   switch (category) {
-    case 'food':
+    case 'food': {
+      // Extract envelope-level date for items that don't carry their own
+      const envelopeDate = isRecord(logData) && typeof logData.date === 'string' ? logData.date : clientDate;
       if (hasItemsArray(logData)) {
-        await persistFoodLogs(tx, logData.items as FoodItemInput[], userId);
+        const itemsWithDate = (logData.items as FoodItemInput[]).map((item) => ({
+          ...item,
+          date: item.date ?? envelopeDate,
+        }));
+        await persistFoodLogs(tx, itemsWithDate, userId);
       } else {
-        await persistFoodLogs(tx, [logData as FoodItemInput], userId);
+        const singleItem = { ...(logData as FoodItemInput), date: (logData as FoodItemInput).date ?? envelopeDate };
+        await persistFoodLogs(tx, [singleItem], userId);
       }
       break;
+    }
     case 'workout':
       await persistWorkoutLog(tx, logData as WorkoutLogInput, userId);
       break;
@@ -77,6 +85,9 @@ async function handleCategoryPersistence(
       break;
     case 'dayType':
       await persistDayTypeUpdate(tx, logData, userId, clientDate);
+      break;
+    case 'delete':
+      await persistDeleteAction(tx, logData, userId, clientDate);
       break;
     default:
       console.warn(`Unknown category: ${category}`);
@@ -409,6 +420,110 @@ async function persistDayTypeUpdate(tx: Prisma.TransactionClient, raw: unknown, 
     },
   });
   // Logic to upsert day type...
+}
+
+async function persistDeleteAction(
+  tx: Prisma.TransactionClient,
+  raw: unknown,
+  userId: string,
+  clientDate?: string
+): Promise<void> {
+  if (!isRecord(raw)) {
+    console.warn('[PERSISTENCE] Delete action received non-object data');
+    return;
+  }
+
+  const target = typeof raw.target === 'string' ? raw.target : '';
+  const name = typeof raw.name === 'string' ? raw.name : '';
+  const dateStr = typeof raw.date === 'string' ? raw.date : clientDate;
+
+  if (!target) {
+    console.warn('[PERSISTENCE] Delete action missing "target" category');
+    return;
+  }
+
+  const logDate = dateStr ? new Date(dateStr) : new Date();
+  const startOfDay = new Date(logDate);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(logDate);
+  endOfDay.setHours(23, 59, 59, 999);
+  const dateRange = { gte: startOfDay, lte: endOfDay };
+
+  const focus = name || (typeof raw.focus === 'string' ? raw.focus : '');
+
+  const handlers: Record<string, () => Promise<void>> = {
+    food: () => deleteFoodEntry(tx, userId, dateRange, name),
+    workout: () => deleteWorkoutEntry(tx, userId, dateRange, focus),
+    sleep: () => deleteSingleEntry(tx.sleepLog, userId, dateRange),
+    measurement: () => deleteSingleEntry(tx.bodyMeasurement, userId, dateRange),
+    all: async () => {
+      await Promise.all([
+        tx.foodLog.deleteMany({ where: { userId, time: dateRange } }),
+        tx.workoutLog.deleteMany({ where: { userId, time: dateRange } }),
+        tx.sleepLog.deleteMany({ where: { userId, time: dateRange } }),
+        tx.bodyMeasurement.deleteMany({ where: { userId, time: dateRange } }),
+      ]);
+    },
+  };
+
+  const handler = handlers[target];
+  if (handler) {
+    await handler();
+  } else {
+    console.warn(`[PERSISTENCE] Unknown delete target: "${target}"`);
+  }
+}
+
+type TimeRangeFilter = { gte: Date; lte: Date };
+
+async function deleteFoodEntry(
+  tx: Prisma.TransactionClient, userId: string, dateRange: TimeRangeFilter, name: string
+): Promise<void> {
+  if (name) {
+    const entry = await tx.foodLog.findFirst({
+      where: { userId, name: { equals: name }, time: dateRange },
+      orderBy: { time: 'desc' },
+    });
+    if (entry) {
+      await tx.foodLog.delete({ where: { id: entry.id } });
+    } else {
+      console.warn(`[PERSISTENCE] No food log found to delete: "${name}"`);
+    }
+  } else {
+    await tx.foodLog.deleteMany({ where: { userId, time: dateRange } });
+  }
+}
+
+async function deleteWorkoutEntry(
+  tx: Prisma.TransactionClient, userId: string, dateRange: TimeRangeFilter, focus: string
+): Promise<void> {
+  if (focus) {
+    const entry = await tx.workoutLog.findFirst({
+      where: { userId, focus: { equals: focus }, time: dateRange },
+      orderBy: { time: 'desc' },
+    });
+    if (entry) {
+      await tx.workoutLog.delete({ where: { id: entry.id } });
+    } else {
+      console.warn(`[PERSISTENCE] No workout log found to delete: "${focus}"`);
+    }
+  } else {
+    await tx.workoutLog.deleteMany({ where: { userId, time: dateRange } });
+  }
+}
+
+async function deleteSingleEntry(
+  model: { findFirst: (args: { where: { userId: string; time: TimeRangeFilter }; orderBy: { time: 'desc' } }) => Promise<{ id: string } | null>; delete: (args: { where: { id: string } }) => Promise<unknown> },
+  userId: string,
+  dateRange: TimeRangeFilter,
+): Promise<void> {
+  const entry = await model.findFirst({
+    where: { userId, time: dateRange },
+    orderBy: { time: 'desc' },
+  });
+  if (entry) {
+    await model.delete({ where: { id: entry.id } });
+  }
 }
 
 function hasItemsArray(value: unknown): value is { items: unknown[] } {
