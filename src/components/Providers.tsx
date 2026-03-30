@@ -3,9 +3,11 @@
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "react-hot-toast";
 
-export function Providers({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+interface ProvidersProps {
+  readonly children: React.ReactNode;
+}
+
+export function Providers({ children }: ProvidersProps) {
   return (
     <SessionProvider>
       {children}

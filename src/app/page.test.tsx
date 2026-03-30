@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   render,
   screen,
@@ -191,8 +191,12 @@ describe("Home (Dashboard) Orchestration", () => {
       fireEvent.click(saveBtn);
     });
 
-    const success = await screen.findByText(/Measurements saved/i);
-    expect(success).toBeDefined();
+    const { default: toast } = await import("react-hot-toast");
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith(
+        expect.stringMatching(/saved/i),
+      );
+    });
   });
 
   it("clears dashboard state when session is lost", async () => {
