@@ -1,4 +1,3 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import SignUp from './page';
 import { useRouter } from 'next/navigation';
@@ -21,7 +20,7 @@ vi.mock('@/lib/client-api', () => ({
 
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>, // eslint-disable-line @typescript-eslint/no-explicit-any
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
   },
 }));
 
@@ -37,7 +36,7 @@ vi.mock('lucide-react', () => ({
 }));
 
 vi.mock('@/components/auth/AuthShell', () => ({
-  AuthShell: ({ children }: any) => <div data-testid="auth-shell">{children}</div>, // eslint-disable-line @typescript-eslint/no-explicit-any
+  AuthShell: ({ children }: any) => <div data-testid="auth-shell">{children}</div>,
 }));
 
 vi.mock('@/components/auth/GoogleMark', () => ({
@@ -53,7 +52,7 @@ describe('SignUp Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useRouter).mockReturnValue(mockRouter as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    vi.mocked(useRouter).mockReturnValue(mockRouter as any);
   });
 
   it('renders sign up form correctly', () => {
@@ -131,7 +130,7 @@ describe('SignUp Component', () => {
     const passwordInput = screen.getByLabelText(/^Password$/i);
     // Find toggle buttons - they are the ones with no accessible name in our mock
     const buttons = screen.getAllByRole('button');
-    const toggle = buttons.find(b => !b.textContent && (b as any).type !== 'submit'); // eslint-disable-line @typescript-eslint/no-explicit-any
+    const toggle = buttons.find(b => !b.textContent && (b as any).type !== 'submit');
     
     expect(passwordInput).toHaveAttribute('type', 'password');
     if (toggle) fireEvent.click(toggle);

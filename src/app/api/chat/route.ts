@@ -151,6 +151,18 @@ type ChatHistoryMessage = {
   parts: Array<{ text: string }>;
 };
 
+type OpenRouterContent =
+  | string
+  | Array<
+      | { type: "text"; text: string }
+      | { type: "image_url"; image_url: { url: string } }
+    >;
+
+type OpenRouterMessage = {
+  role: "system" | "user" | "assistant";
+  content: OpenRouterContent;
+};
+
 type OpenRouterResponse = {
   choices?: Array<{
     message?: {
@@ -249,18 +261,36 @@ async function callOpenRouter(
     "mistralai/mistral-7b-instruct:free",
   ];
 
-  const userContent: any = images.length > 0 
-    ? [
-        { type: "text", text: prompt || "Analyze this image and extract relevant physical stats or foods." },
-        ...images.map(img => ({
-          type: "image_url",
-          image_url: { url: `data:${img.mediaType};base64,${img.base64}` }
-        }))
-      ]
-    : prompt || "Give me a concise update.";
+  const userContent: OpenRouterContent =
+    images.length > 0
+      ? [
+          {
+            type: "text",
+            text:
+              prompt ||
+              "Analyze this image and extract relevant physical stats or foods.",
+          },
+          ...images.map((img) => ({
+            type: "image_url" as const,
+            image_url: { url: `data:${img.mediaType};base64,${img.base64}` },
+          })),
+        ]
+      : prompt || "Give me a concise update.";
 
   for (const modelId of freeModels) {
     try {
+      const messages: OpenRouterMessage[] = [
+        {
+          role: "system",
+          content: getSystemPrompt(clientDate, clientTime),
+        },
+        ...history.map((message) => ({
+          role: message.role === "model" ? ("assistant" as const) : ("user" as const),
+          content: message.parts[0]?.text ?? "",
+        })),
+        { role: "user" as const, content: userContent },
+      ];
+
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -271,17 +301,7 @@ async function callOpenRouter(
         },
         body: JSON.stringify({
           model: modelId,
-          messages: [
-            {
-              role: "system",
-              content: getSystemPrompt(clientDate, clientTime),
-            },
-            ...history.map((message) => ({
-              role: message.role === "model" ? "assistant" : "user",
-              content: message.parts[0]?.text ?? "",
-            })),
-            { role: "user", content: userContent },
-          ],
+          messages,
         }),
       });
 

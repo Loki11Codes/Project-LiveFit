@@ -1,4 +1,3 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect } from 'vitest';
 import SignIn from './page';
@@ -18,7 +17,7 @@ vi.mock('next-auth/react', () => ({
 
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>, // eslint-disable-line @typescript-eslint/no-explicit-any
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
   },
 }));
 
@@ -32,7 +31,7 @@ vi.mock('lucide-react', () => ({
 }));
 
 vi.mock('@/components/auth/AuthShell', () => ({
-  AuthShell: ({ children }: any) => <div data-testid="auth-shell">{children}</div>, // eslint-disable-line @typescript-eslint/no-explicit-any
+  AuthShell: ({ children }: any) => <div data-testid="auth-shell">{children}</div>,
 }));
 
 vi.mock('@/components/auth/GoogleMark', () => ({
@@ -69,7 +68,7 @@ describe('SignIn Component', () => {
   });
 
   it('shows success message when redirected from signup', () => {
-    vi.mocked(useSearchParams).mockReturnValue({ get: vi.fn((key) => key === 'success' ? '1' : null) } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    vi.mocked(useSearchParams).mockReturnValue({ get: vi.fn((key) => key === 'success' ? '1' : null) } as any);
     render(<SignIn />);
     expect(screen.getByText(/Account created successfully/i)).toBeInTheDocument();
   });

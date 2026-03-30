@@ -1,4 +1,3 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { POST } from "./route";
 import prisma from "@/lib/prisma";
@@ -43,8 +42,6 @@ describe("Signup API Route", () => {
       name: payload.name,
       email: payload.email,
       emailVerified: null,
-      username: null,
-      phone: null,
       image: null,
       password: mockHash,
     });
@@ -76,8 +73,6 @@ describe("Signup API Route", () => {
       name: "Existing User",
       email: payload.email,
       emailVerified: null,
-      username: null,
-      phone: null,
       image: null,
       password: mockHash,
     });

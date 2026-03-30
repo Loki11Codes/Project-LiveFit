@@ -1,4 +1,3 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET } from './route';
 import prisma from '@/lib/prisma';
@@ -49,7 +48,7 @@ describe('Chat History API Route', () => {
       },
     ];
 
-    vi.mocked(prisma.chatMessage.findMany).mockResolvedValue(mockMessages as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    vi.mocked(prisma.chatMessage.findMany).mockResolvedValue(mockMessages as any);
 
     const res = await GET();
     const data = await res.json();
@@ -76,7 +75,7 @@ describe('Chat History API Route', () => {
       },
     ];
 
-    vi.mocked(prisma.chatMessage.findMany).mockResolvedValue(mockMessages as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    vi.mocked(prisma.chatMessage.findMany).mockResolvedValue(mockMessages as any);
 
     const res = await GET();
     const data = await res.json();
