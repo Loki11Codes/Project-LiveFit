@@ -186,12 +186,30 @@ async function callGemini(
         model: modelId,
         systemInstruction: systemPrompt 
       });
-      const result = await model.generateContent({
-        contents: [
-          ...history,
-          { role: "user", parts: buildGeminiPromptParts(prompt, images) },
-        ],
-      });
+      const rawContents = [
+        ...history,
+        { role: "user" as const, parts: buildGeminiPromptParts(prompt, images) },
+      ];
+
+      const contents: { role: "user" | "model"; parts: GeminiPart[] }[] = [];
+      
+      for (const msg of rawContents) {
+        if (contents.length === 0 && msg.role === "model") {
+          continue; // Gemini requires the conversation to start with 'user'
+        }
+        
+        if (contents.length > 0 && contents.at(-1)?.role === msg.role) {
+          // Combine parts of consecutive identical roles
+          contents.at(-1)?.parts.push(...(msg.parts as GeminiPart[]));
+        } else {
+          contents.push({ 
+            role: msg.role as "user" | "model", 
+            parts: [...(msg.parts as GeminiPart[])] 
+          });
+        }
+      }
+
+      const result = await model.generateContent({ contents });
       const responseText = result.response.text();
 
       return responseText;
