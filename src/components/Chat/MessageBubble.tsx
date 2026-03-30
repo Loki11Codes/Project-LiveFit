@@ -70,7 +70,9 @@ export function MessageBubble({ msg, isFirstInGroup, isNewUser, onDelete }: Read
                     controls
                     src={attachment.previewUrl}
                     className="w-full max-w-[240px] h-10 outline-none"
-                  />
+                  >
+                    <track kind="captions" />
+                  </audio>
                 ) : (
                   <div key={attachment.id} className="chat-msg-image-frame">
                     <Image

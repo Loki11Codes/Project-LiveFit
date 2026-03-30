@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prisma';
@@ -17,7 +17,6 @@ let mockShouldFailGemini = false;
 vi.mock('@google/generative-ai', () => {
   return {
     GoogleGenerativeAI: class {
-      constructor() {}
       getGenerativeModel() {
         return {
           generateContent: vi.fn().mockImplementation(async () => {
@@ -45,7 +44,7 @@ vi.mock('@/lib/persistence', () => ({
 }));
 
 // Mock global fetch for OpenRouter
-global.fetch = vi.fn();
+globalThis.fetch = vi.fn();
 
 describe('Chat API Route', () => {
   const userId = 'user-123';
@@ -58,7 +57,7 @@ describe('Chat API Route', () => {
     mockShouldFailGemini = false;
     mockResponseText = '|||DATA {"category": "food", "name": "Apple"} ||| That sounds healthy!';
     (getServerSession as any).mockResolvedValue(mockSession);
-    (global.fetch as any).mockResolvedValue({
+    (globalThis.fetch as any).mockResolvedValue({
         ok: true,
         json: async () => ({ choices: [{ message: { content: '|||DATA {"category": "sleep", "hours": 8} ||| Sleep logged via OpenRouter' } }] })
     });
@@ -108,7 +107,7 @@ describe('Chat API Route', () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.text).toContain('Sleep logged via OpenRouter');
-    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('openrouter.ai'), expect.any(Object));
+    expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining('openrouter.ai'), expect.any(Object));
   });
 
   it('handles database saving errors during session', async () => {
@@ -148,7 +147,7 @@ describe('Chat API Route', () => {
     const res = await POST(req);
     expect(res.status).toBe(200);
     // Should NOT failover to OpenRouter for images (route.ts: lines 231, 308)
-    expect(global.fetch).not.toHaveBeenCalled();
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 });
 

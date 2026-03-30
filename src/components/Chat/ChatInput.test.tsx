@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @next/next/no-img-element */
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -36,8 +36,8 @@ class MockSpeechRecognition {
   abort = vi.fn();
 }
 
-if (typeof window !== "undefined") {
-  Object.defineProperty(window, "SpeechRecognition", {
+if (typeof globalThis !== "undefined") {
+  Object.defineProperty(globalThis, "SpeechRecognition", {
     writable: true,
     value: MockSpeechRecognition,
   });
