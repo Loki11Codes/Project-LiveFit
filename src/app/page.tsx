@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { startTransition, useEffect, useState } from "react";
 import type { BodyMeasurement } from "@prisma/client";
@@ -28,6 +28,7 @@ import {
   toMeasurementPayload,
 } from "@/lib/dashboard";
 import { getClientErrorMessage, requestJson } from "@/lib/client-api";
+import toast from "react-hot-toast";
 import {
   DEFAULT_GOALS,
   EMPTY_ANALYTICS,
@@ -40,7 +41,6 @@ import {
   type DashboardState,
   type DayType,
   type GoalsState,
-  type InlineNotice,
   type LogsResponse,
   type MeasurementForm,
   type TabId,
@@ -67,7 +67,6 @@ export default function Home() {
   const [dashboard, setDashboard] = useState<DashboardState>(
     INITIAL_DASHBOARD_STATE,
   );
-  const [notice, setNotice] = useState<InlineNotice | null>(null);
   const [chatDraft, setChatDraft] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState("");
 
@@ -124,7 +123,7 @@ export default function Home() {
     void persistDayType(dayKey, nextDayType).catch((error) => {
       const message = getClientErrorMessage(error);
       console.error("Failed to persist day type:", message);
-      setNotice({ tone: "error", message });
+      toast.error(message);
       startTransition(() => updateLocalState(previousDayType));
     });
   };
@@ -152,7 +151,6 @@ export default function Home() {
           return;
         }
 
-        setNotice(null);
         startTransition(() => {
           setDashboard(nextState);
         });
@@ -160,10 +158,7 @@ export default function Home() {
       .catch((error) => {
         const message = getClientErrorMessage(error);
         console.error("Failed to fetch dashboard data:", message);
-        setNotice({
-          tone: "error",
-          message: `Unable to load dashboard data: ${message}`,
-        });
+        toast.error(`Unable to load dashboard data: ${message}`);
       });
 
     return () => {
@@ -175,20 +170,6 @@ export default function Home() {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
-  useEffect(() => {
-    if (!notice || notice.tone === "error") {
-      return;
-    }
-
-    const timeoutId = globalThis.setTimeout(() => {
-      setNotice(null);
-    }, 4000);
-
-    return () => {
-      globalThis.clearTimeout(timeoutId);
-    };
-  }, [notice]);
-
   const refreshDashboard = async () => {
     if (!session?.user?.id) {
       return;
@@ -196,17 +177,13 @@ export default function Home() {
 
     try {
       const nextState = await fetchDashboardData();
-      setNotice(null);
       startTransition(() => {
         setDashboard(nextState);
       });
     } catch (error) {
       const message = getClientErrorMessage(error);
       console.error("Failed to refresh dashboard:", message);
-      setNotice({
-        tone: "error",
-        message: `Unable to refresh dashboard: ${message}`,
-      });
+      toast.error(`Unable to refresh dashboard: ${message}`);
     }
   };
 
@@ -220,10 +197,7 @@ export default function Home() {
           body: JSON.stringify(toMeasurementPayload(dashboard.measurements)),
         },
       );
-      setNotice({
-        tone: "success",
-        message: "Measurements saved.",
-      });
+      toast.success("Measurements saved.");
       startTransition(() => {
         setDashboard((current) => ({
           ...current,
@@ -234,10 +208,7 @@ export default function Home() {
     } catch (error) {
       const message = getClientErrorMessage(error);
       console.error("Failed to save measurements:", message);
-      setNotice({
-        tone: "error",
-        message,
-      });
+      toast.error(message);
     }
   };
 
@@ -275,25 +246,6 @@ export default function Home() {
         theme={theme}
         toggleTheme={toggleTheme}
       />
-
-      <AnimatePresence>
-        {notice && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-            className="main-status-wrap shrink-0"
-          >
-            <div
-              className={`notice-banner notice-banner-${notice.tone}`}
-              role="status"
-              aria-live="polite"
-            >
-              {notice.message}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <div
         className={`flex-1 min-h-0 w-full main-layout transition-all duration-500 ${

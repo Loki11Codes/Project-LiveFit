@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
@@ -18,6 +18,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-hot-toast";
 
 const SIDEBAR_TABS = [
   { id: "profile", label: "General & Profile", icon: User },
@@ -66,24 +67,29 @@ export default function SettingsPage() {
   const handleSave = async () => {
     try {
       // Save profile data
-      await fetch("/api/profile", {
+      const pubRes = await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profileData),
       });
+      if (!pubRes.ok) throw new Error("Failed to save profile");
+
       // Save goals data
-      await fetch("/api/profile", {
+      const goalsRes = await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(goalsData),
       });
+      if (!goalsRes.ok) throw new Error("Failed to save goals");
 
       setSavedStatus(true);
+      toast.success("Settings saved successfully!");
       setTimeout(() => setSavedStatus(false), 2500);
 
       // Refresh the page data if needed or inform router
     } catch (e) {
       console.error(e);
+      toast.error("Failed to save settings");
     }
   };
 

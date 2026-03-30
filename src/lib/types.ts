@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   BodyMeasurement,
   FoodLog,
   SleepLog,
@@ -136,10 +136,7 @@ export type ChatAttachment = ChatAttachmentPayload & {
   previewUrl: string;
 };
 
-export type InlineNotice = {
-  tone: "success" | "error" | "warning";
-  message: string;
-};
+;
 
 export type ParsedLogEnvelope = {
   category?: string;
@@ -214,3 +211,4 @@ export const EMPTY_ANALYTICS: AnalyticsResponse = {
     measurementCount: 0,
   },
 };
+
