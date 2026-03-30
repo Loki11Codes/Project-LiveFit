@@ -163,6 +163,27 @@ type GeminiPart =
   | { text: string }
   | { inlineData: { mimeType: string; data: string } };
 
+function sanitizeGeminiHistory(history: Array<{ role: "user" | "model"; parts: GeminiPart[] }>): { role: "user" | "model"; parts: GeminiPart[] }[] {
+  const contents: { role: "user" | "model"; parts: GeminiPart[] }[] = [];
+  
+  for (const msg of history) {
+    if (contents.length === 0 && msg.role === "model") {
+      continue; // Gemini requires starting with 'user'
+    }
+    
+    if (contents.length > 0 && contents.at(-1)?.role === msg.role) {
+      contents.at(-1)?.parts.push(...msg.parts);
+    } else {
+      contents.push({ 
+        role: msg.role, 
+        parts: [...msg.parts] 
+      });
+    }
+  }
+  
+  return contents;
+}
+
 async function callGemini(
   prompt: string,
   history: ChatHistoryMessage[],
@@ -186,42 +207,21 @@ async function callGemini(
         model: modelId,
         systemInstruction: systemPrompt 
       });
+      
       const rawContents = [
         ...history,
         { role: "user" as const, parts: buildGeminiPromptParts(prompt, images) },
       ];
 
-      const contents: { role: "user" | "model"; parts: GeminiPart[] }[] = [];
-      
-      for (const msg of rawContents) {
-        if (contents.length === 0 && msg.role === "model") {
-          continue; // Gemini requires the conversation to start with 'user'
-        }
-        
-        if (contents.length > 0 && contents.at(-1)?.role === msg.role) {
-          // Combine parts of consecutive identical roles
-          contents.at(-1)?.parts.push(...(msg.parts as GeminiPart[]));
-        } else {
-          contents.push({ 
-            role: msg.role as "user" | "model", 
-            parts: [...(msg.parts as GeminiPart[])] 
-          });
-        }
-      }
-
+      const contents = sanitizeGeminiHistory(rawContents);
       const result = await model.generateContent({ contents });
-      const responseText = result.response.text();
-
-      return responseText;
+      return result.response.text();
     } catch (error) {
       const message = getErrorMessage(error);
       console.warn(`Gemini model ${modelId} failed:`, message);
       lastError = error;
 
-      if (
-        message.includes("404") ||
-        message.toLowerCase().includes("not found")
-      ) {
+      if (message.includes("404") || message.toLowerCase().includes("not found")) {
         continue;
       }
     }
@@ -238,6 +238,7 @@ async function callOpenRouter(
   prompt: string,
   history: ChatHistoryMessage[],
   openRouterKey: string,
+  images: ChatAttachmentPayload[],
   clientDate?: string,
   clientTime?: string,
 ) {
@@ -247,6 +248,16 @@ async function callOpenRouter(
     "meta-llama/llama-3.3-70b-instruct:free",
     "mistralai/mistral-7b-instruct:free",
   ];
+
+  const userContent: any = images.length > 0 
+    ? [
+        { type: "text", text: prompt || "Analyze this image and extract relevant physical stats or foods." },
+        ...images.map(img => ({
+          type: "image_url",
+          image_url: { url: `data:${img.mediaType};base64,${img.base64}` }
+        }))
+      ]
+    : prompt || "Give me a concise update.";
 
   for (const modelId of freeModels) {
     try {
@@ -269,7 +280,7 @@ async function callOpenRouter(
               role: message.role === "model" ? "assistant" : "user",
               content: message.parts[0]?.text ?? "",
             })),
-            { role: "user", content: prompt || "Give me a concise update." },
+            { role: "user", content: userContent },
           ],
         }),
       });
@@ -337,6 +348,13 @@ export async function POST(req: Request) {
   } catch (error) {
     const message = getErrorMessage(error);
     console.error("Chat Route Error:", message);
+    
+    if (message.includes("429") || message.includes("Too Many Requests") || message.includes("quota")) {
+      return internalError(
+        "AI Free Tier Rate Limit Exceeded: You have used up your quota. Please wait about a minute before trying your request again.",
+      );
+    }
+    
     return internalError(
       "The AI service is unavailable right now. Please try again.",
     );
@@ -391,9 +409,6 @@ async function getAIResponse(
     try {
       text = await callGemini(prompt, history, images, clientDate, clientTime);
     } catch (error) {
-      if (images.length > 0) {
-        throw error;
-      }
       console.error(
         "Gemini failed completely, failing over to OpenRouter...",
         getErrorMessage(error),
@@ -401,12 +416,13 @@ async function getAIResponse(
     }
   }
 
-  if (!text && openRouterKey && images.length === 0) {
+  if (!text && openRouterKey) {
     text =
       (await callOpenRouter(
         prompt,
         history,
         openRouterKey,
+        images,
         clientDate,
         clientTime,
       )) || "";

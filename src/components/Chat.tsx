@@ -174,6 +174,11 @@ export default function Chat({
     setIsTyping(true);
     setNotice(null);
 
+    await submitChat(userText, attachedFiles);
+    setIsTyping(false);
+  };
+
+  const submitChat = async (prompt: string, images: ChatAttachment[] = []) => {
     try {
       const history = messages.map((m) => ({
         role: m.role,
@@ -196,9 +201,9 @@ export default function Chat({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: userText,
+          prompt,
           history,
-          images: attachedFiles.map(toPayload), // Backend still uses 'images' key for attachments
+          images: images.map(toPayload),
           clientDate,
           clientTime,
         }),
@@ -207,9 +212,20 @@ export default function Chat({
       processChatResponse(data);
     } catch (error) {
       handleChatError(error);
-    } finally {
-      setIsTyping(false);
     }
+  };
+
+  const handleDeleteMessage = async (msg: Message) => {
+    if (isTyping) return;
+    
+    setIsTyping(true);
+    setNotice(null);
+    
+    // Construct a specific command for the AI to "undo" or delete the log from that message
+    const deleteCommand = `Delete the log for: "${msg.text}"`;
+    
+    await submitChat(deleteCommand);
+    setIsTyping(false);
   };
 
   const processChatResponse = (data: ChatResponse) => {
@@ -340,6 +356,7 @@ export default function Chat({
                     msg={msg}
                     isFirstInGroup={isFirstInGroup}
                     isNewUser={isNewUser}
+                    onDelete={handleDeleteMessage}
                   />
                 );
               })}

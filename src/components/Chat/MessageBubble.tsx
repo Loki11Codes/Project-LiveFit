@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import { User, Activity } from "lucide-react";
+import { User, Activity, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import type { ChatAttachment } from "@/lib/types";
 
@@ -16,9 +16,10 @@ interface MessageBubbleProps {
   msg: Message;
   isFirstInGroup: boolean;
   isNewUser?: boolean;
+  onDelete?: (msg: Message) => void;
 }
 
-export function MessageBubble({ msg, isFirstInGroup, isNewUser }: Readonly<MessageBubbleProps>) {
+export function MessageBubble({ msg, isFirstInGroup, isNewUser, onDelete }: Readonly<MessageBubbleProps>) {
   return (
     <motion.div
       layout
@@ -27,7 +28,7 @@ export function MessageBubble({ msg, isFirstInGroup, isNewUser }: Readonly<Messa
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
       className={`chat-msg-row ${
         msg.role === "user" ? "flex-row-reverse" : ""
-      } ${isFirstInGroup ? "mt-6" : "mt-1"}`}
+      } ${isFirstInGroup ? "mt-6" : "mt-1"} group/row`}
     >
       <div
         className={`chat-avatar-container ${
@@ -129,6 +130,16 @@ export function MessageBubble({ msg, isFirstInGroup, isNewUser }: Readonly<Messa
           <span className="chat-message-timestamp">{msg.timestamp}</span>
         </div>
       </div>
+
+      {onDelete && msg.id !== "welcome-msg" && (
+        <button
+          onClick={() => onDelete(msg)}
+          className="chat-delete-btn opacity-0 group-hover/row:opacity-100 transition-opacity p-2 hover:text-red-500 rounded-full hover:bg-[var(--surface2)]"
+          aria-label="Delete message"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      )}
     </motion.div>
   );
 }
