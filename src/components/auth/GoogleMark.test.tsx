@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+﻿ 
 import { render } from '@testing-library/react';
 import { test, expect } from 'vitest';
 import { GoogleMark } from './GoogleMark';

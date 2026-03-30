@@ -6,7 +6,7 @@ import { Plus, Search, Dumbbell, X, Play } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface RoutinesTabProps {
-  readonly onStart?: (routine: any) => void; /* eslint-disable-line @typescript-eslint/no-explicit-any */
+  readonly onStart?: (routine: any) => void;  
 }
 
 export function RoutinesTab({ onStart }: RoutinesTabProps) {
@@ -41,7 +41,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
     }
   };
 
-  const handleAddExercise = (exercise: any) /* eslint-disable-line @typescript-eslint/no-explicit-any */ => {
+  const handleAddExercise = (exercise: any)   => {
     setSelectedExercises([
       ...selectedExercises,
       {

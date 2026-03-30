@@ -33,7 +33,7 @@ describe('Measurements API Route', () => {
     it('returns latest measurement by default', async () => {
       vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
       const mockLatest = { id: 'm1', weight: 70 };
-      vi.mocked(prisma.bodyMeasurement.findFirst).mockResolvedValue(mockLatest as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      vi.mocked(prisma.bodyMeasurement.findFirst).mockResolvedValue(mockLatest as any);  
 
       const res = await GET(new Request('http://localhost/api/measurements'));
       const data = await res.json();
@@ -45,7 +45,7 @@ describe('Measurements API Route', () => {
     it('returns all measurements when all=true', async () => {
       vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
       const mockMany = [{ id: 'm1' }, { id: 'm2' }];
-      vi.mocked(prisma.bodyMeasurement.findMany).mockResolvedValue(mockMany as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      vi.mocked(prisma.bodyMeasurement.findMany).mockResolvedValue(mockMany as any);  
 
       const res = await GET(new Request('http://localhost/api/measurements?all=true'));
       const data = await res.json();
@@ -59,7 +59,7 @@ describe('Measurements API Route', () => {
     it('creates a new measurement', async () => {
       vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
       const payload = { weight: 70.5, waist: 80 };
-      vi.mocked(prisma.bodyMeasurement.create).mockResolvedValue({ id: 'm1', ...payload } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      vi.mocked(prisma.bodyMeasurement.create).mockResolvedValue({ id: 'm1', ...payload } as any);  
 
       const req = new Request('http://localhost/api/measurements', {
         method: 'POST',

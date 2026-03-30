@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { test, expect } from 'vitest';
 import { parseJsonBody, unauthorized, conflict, internalError } from './api';
 import { GoalSchema } from './validation';

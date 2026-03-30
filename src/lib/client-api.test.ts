@@ -76,6 +76,6 @@ test('getClientErrorMessage handles Error instances', () => {
 });
 
 test('getClientErrorMessage fallback', () => {
-  expect(getClientErrorMessage({} as any)).toBe('Something went wrong. Please try again.'); // eslint-disable-line @typescript-eslint/no-explicit-any
+  expect(getClientErrorMessage({} as any)).toBe('Something went wrong. Please try again.');  
 });
 

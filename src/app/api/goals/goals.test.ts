@@ -34,7 +34,7 @@ describe('Goals API Route', () => {
 
   it('returns goals for the current user', async () => {
     const mockGoal = { proteinTarget: 150, kcalTarget: 2500 };
-    vi.mocked(prisma.goal.findUnique).mockResolvedValueOnce(mockGoal as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    vi.mocked(prisma.goal.findUnique).mockResolvedValueOnce(mockGoal as any);  
 
     const res = await GET();
     const data = await res.json();
@@ -45,7 +45,7 @@ describe('Goals API Route', () => {
 
   it('creates or updates goals on POST', async () => {
     const goalData = { proteinTarget: 160, kcalTarget: 2600 };
-    vi.mocked(prisma.goal.upsert).mockResolvedValueOnce(goalData as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    vi.mocked(prisma.goal.upsert).mockResolvedValueOnce(goalData as any);  
 
     const req = new NextRequest('http://localhost/api/goals', {
       method: 'POST',

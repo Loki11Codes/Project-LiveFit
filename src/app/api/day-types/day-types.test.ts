@@ -34,7 +34,7 @@ describe('DayTypes API Route', () => {
       vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
       
       const mockEntries = [{ dayKey: '2026-03-18', dayType: 'Training' }];
-      vi.mocked(prisma.dayTypeEntry.findMany).mockResolvedValue(mockEntries as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      vi.mocked(prisma.dayTypeEntry.findMany).mockResolvedValue(mockEntries as any);  
 
       const res = await GET();
       const data = await res.json();
@@ -57,7 +57,7 @@ describe('DayTypes API Route', () => {
       vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
       
       const payload = { dayKey: '2026-03-18', dayType: 'Rest' };
-      vi.mocked(prisma.dayTypeEntry.upsert).mockResolvedValue(payload as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      vi.mocked(prisma.dayTypeEntry.upsert).mockResolvedValue(payload as any);  
 
       const req = new Request('http://localhost/api/day-types', {
         method: 'POST',
