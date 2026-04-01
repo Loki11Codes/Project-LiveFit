@@ -298,21 +298,6 @@ export default function Chat({
     }
   };
 
-  const handleAudioRecorded = async (file: File) => {
-    try {
-      const audioAttachment = await readAttachmentFile(file);
-      setPendingAttachments((current) => [...current, audioAttachment]);
-      setNotice(null);
-    } catch (error) {
-      const message = getClientErrorMessage(error);
-      console.error("Failed to read recorded audio:", message);
-      setNotice({
-        tone: "error",
-        message: `Unable to process audio recording: ${message}`,
-      });
-    }
-  };
-
   const removePendingAttachment = (attachmentId: string) => {
     setPendingAttachments((current) =>
       current.filter((att) => att.id !== attachmentId),

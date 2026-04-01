@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   BodyMeasurement,
   FoodLog,
   SleepLog,
@@ -123,6 +123,11 @@ export type AnalyticsResponse = {
     logCount: number;
     measurementCount: number;
   };
+};
+
+export type InlineNotice = {
+  tone: "warning" | "error" | "info";
+  message: string;
 };
 
 export type ChatAttachmentPayload = {

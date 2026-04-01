@@ -44,6 +44,8 @@ describe("Signup API Route", () => {
       emailVerified: null,
       image: null,
       password: mockHash,
+      username: null,
+      phone: null,
     });
 
     const req = new NextRequest("http://localhost/api/auth/signup", {
@@ -75,6 +77,8 @@ describe("Signup API Route", () => {
       emailVerified: null,
       image: null,
       password: mockHash,
+      username: null,
+      phone: null,
     });
 
     const req = new NextRequest("http://localhost/api/auth/signup", {
