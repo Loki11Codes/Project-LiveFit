@@ -133,6 +133,15 @@ body {
   min-height: 0;
 }
 
+@media (max-width: 1023px) {
+  .chat-sidebar-layout .ui-pane {
+    display: none !important;
+  }
+  .chat-sidebar-layout {
+    height: calc(100% - 90px) !important; /* Leave space for mobile bottom nav */
+  }
+}
+
 @media (min-width: 1024px) {
   .chat-sidebar-layout {
     display: grid;
@@ -859,6 +868,12 @@ body {
   gap: 16px;
   position: relative;
   z-index: 10;
+}
+
+@media (max-width: 1023px) {
+  .chat-footer-container {
+    padding-bottom: 110px !important; /* 72px nav + 24px default + 14px safety */
+  }
 }
 
 .chat-input-wrapper {

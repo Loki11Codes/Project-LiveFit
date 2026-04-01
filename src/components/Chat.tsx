@@ -319,7 +319,7 @@ export default function Chat({
       <div
         ref={viewportRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col scroll-smooth h-full no-scrollbar chat-viewport rounded-[inherit]"
+        className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col scroll-smooth no-scrollbar chat-viewport rounded-[inherit]"
       >
         <div className="w-full flex flex-col chat-content-v-inset">
           {isLoadingHistory ? (
