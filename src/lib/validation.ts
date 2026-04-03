@@ -175,7 +175,7 @@ export type ChatAttachmentPayloadInput = z.infer<
 export const ChatRequestSchema = z
   .object({
     prompt: z.string().max(4000),
-    history: z.array(ChatHistoryMessageSchema).max(50),
+    history: z.array(ChatHistoryMessageSchema).max(200),
     images: z.array(ChatAttachmentPayloadSchema).max(6),
     clientDate: z
       .string()

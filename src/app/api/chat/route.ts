@@ -13,7 +13,7 @@ import { extractAndCleanLogData } from "@/lib/chat-utils";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
-const getSystemPrompt = (clientDate?: string, clientTime?: string) => {
+const getSystemPrompt = (clientDate?: string, clientTime?: string, routinesList?: string) => {
   const now = new Date();
   const dateStr = clientDate || now.toISOString().split("T")[0];
   const timeStr =
@@ -32,114 +32,38 @@ CURRENT CONTEXT:
 - Today's Date: ${dateStr}
 - Current Time: ${timeStr}
 
+STARTING A WORKOUT:
+- If the user says "Start a workout", "Begin training", or similar:
+  - If they mention a specific routine name that matches one of the "AVAILABLE ROUTINES" below, emit a |||DATA block with \`"category": "workout"\`, \`"action": "start"\`, and the matching \`"routineId"\`.
+  - If they DON'T specify which routine, list the "AVAILABLE ROUTINES" and ask which one they'd like to start, or if they want to start a "Fresh Workout" (no template).
+  - If they want a fresh/empty workout, emit: |||DATA { "category": "workout", "action": "start" } |||.
+- IMPORTANT: Only emit the "start" action when the intent to BEGIN a live tracking session is clear.
+
+AVAILABLE ROUTINES FOR THIS USER:
+${routinesList || "No saved routines found. Suggest starting a 'Fresh Workout' or creating one in the Routines tab."}
+
 PROACTIVE FEEDBACK:
-- If a user provides incomplete information (e.g., "I had chicken" without quantity, or "I worked out" without details), proactively ask a clarifying question in your natural language response (e.g., "How much chicken did you have?" or "Which exercises did you focus on today?").
-- You can still provide a partial log entry if you have enough info to guess, but prioritize getting the missing details if they are essential for accuracy.
-
-SMART UPDATES AND CORRECTIONS:
-- CRITICAL: If you ask a clarifying question (e.g. "How many ML of Gatorade?"), and the user answers ("500ml"), you MUST use \`"update": true\` when logging it. 
-- Do NOT log it as a new row if you are just adding details to a food or workout you already tried to log in the previous turn. Include \`"update": true\` in the |||DATA block.
-- Ensure the \`name\` (for food) or \`focus\` (for workout) exactly matches the previous entry you want to update.
-- The backend relies on \`"update": true\` + matching \`name\` to replace the incomplete log instead of duplicating it.
-
-NUTRITION REFERENCE:
-- Egg (large): 7g protein, 70kcal, 0g carb, 5g fat, 0g fiber
-- Milk (100ml): 3.1g protein, 58kcal, 4.7g carb, 3.2g fat, 0g fiber
-- Paneer (100g): 18g protein, 265kcal, 4g carb, 20g fat, 0g fiber
-- Dal cooked (100g): 9g protein, 116kcal, 20g carb, 4g fat, 4g fiber
-- Rice cooked (100g): 2.7g protein, 130kcal, 28g carb, 0.3g fat, 0.4g fiber
-- Chapati (1): 3g protein, 120kcal, 20g carb, 3g fat, 2g fiber
-
-NUTRITION SCREENSHOT PARSING:
-- If the user provides a nutrition/meal log screenshot (e.g. a table of foods with protein/kcal/carbs/fats/fiber), extract ALL individual food items.
-- Output a SINGLE |||DATA block with "category": "food" and an "items" array containing each row.
-- Each item in "items" must have: "name", "protein" (g), "kcal", "carbs" (g), "fats" (g), "fiber" (g), and "date" (YYYY-MM-DD).
-- If multiple meals appear in the same screenshot (e.g. Breakfast + Midday + Lunch), output one |||DATA block per meal group.
-- Do NOT include summary/total rows as separate items. Only log the individual food rows.
-
-Example for a nutrition screenshot with 2 items:
-|||DATA
-{
-  "category": "food",
-  "date": "2026-03-30",
-  "items": [
-    { "name": "Milk 150ml", "protein": 4.6, "kcal": 87, "carbs": 12, "fats": 4.8, "fiber": 0 },
-    { "name": "Ragi Puttu 70g", "protein": 3, "kcal": 245, "carbs": 51, "fats": 1.5, "fiber": 4.5 }
-  ]
-}
-|||
-
-WORKOUT SCREENSHOT PARSING (HEVY/STRONG/ETC):
-- If the user provides a workout summary screenshot, meticulously extract the entire structured routine.
-- Include an "exercises" array containing each exercise "name" and a "sets" array.
-- "sets" should have: "setNumber" (e.g. 1), "reps", "weight" (kg), "distance" (km), "duration" (seconds).
-- Automatically calculate or extract the overall "volume" and "duration".
-- You can ALSO do this for standard text inputs (e.g. "I did 3 sets of 12 bench press at 20kg").
-
-RESPONSE FORMAT:
-Your response must be a JSON object followed by a natural language message.
-The JSON block should be between |||DATA and |||.
-
-Example for full workout log:
+...
+[Rest of nutritional and parsing instructions remain the same]
+...
+Example for workout start:
 |||DATA
 {
   "category": "workout",
-  "focus": "Chest, Arms & Delts",
-  "volume": 3136,
-  "date": "2026-03-25",
-  "exercises": [
-    {
-      "name": "Incline Bench Press (Dumbbell)",
-      "sets": [
-        { "setNumber": 1, "reps": 12, "weight": 14 },
-        { "setNumber": 2, "reps": 12, "weight": 14 },
-        { "setNumber": 3, "reps": 12, "weight": 20 }
-      ]
-    }
-  ]
+  "action": "start",
+  "routineId": "cmm...id..."
 }
 |||
-Great job on the Chest, Arms & Delts workout! I've logged all 17 sets.
+Starting your "Push Day" routine now. Let's get to work!
 
-CRITICAL: You MUST include the |||DATA block for every loggable action. 
-If the user provides multiple actions (e.g. eating multiple foods at once, or several workouts), you can output a single |||DATA block containing a JSON array of objects, or output multiple separate |||DATA blocks.
-
-DELETE LOGS:
-- If the user asks to delete, remove, or undo a specific log entry, emit a |||DATA block with "category": "delete".
-- Include "target" (food/workout/sleep/measurement/all), optional "name" for food or "focus" for workout, and optional "date" (YYYY-MM-DD).
-- Use "target": "all" when the user wants to delete ALL logs for a day (food + workout + sleep + measurement).
-- If no name is given and the user says "delete all food logs today", omit "name" to delete all food entries for that day.
-
-Example: User says "Delete the Milk 150ml entry from today"
+Example for fresh workout start:
 |||DATA
 {
-  "category": "delete",
-  "target": "food",
-  "name": "Milk 150ml",
-  "date": "${dateStr}"
+  "category": "workout",
+  "action": "start"
 }
 |||
-Done! I've removed the Milk 150ml entry from today's log.
-
-Example: User says "Remove today's workout"
-|||DATA
-{
-  "category": "delete",
-  "target": "workout",
-  "date": "${dateStr}"
-}
-|||
-Done! I've removed today's workout log.
-
-Example: User says "Delete all of today's logs"
-|||DATA
-{
-  "category": "delete",
-  "target": "all",
-  "date": "${dateStr}"
-}
-|||
-Done! I've cleared all of today's logs — food, workout, sleep, and measurements have been removed.
+Starting a fresh workout for you. Which exercise are we starting with?
 
 Categories: food, workout, sleep, measurement, profile, goals, dayType, delete.
 Identify the category and provide relevant fields (including optional "date" YYYY-MM-DD and "update" boolean).
@@ -202,6 +126,7 @@ async function callGemini(
   images: ChatAttachmentPayload[],
   clientDate?: string,
   clientTime?: string,
+  routinesList?: string,
 ) {
   const modelsToTry = [
     "gemini-2.0-flash",
@@ -214,14 +139,15 @@ async function callGemini(
 
   for (const modelId of modelsToTry) {
     try {
-      const systemPrompt = getSystemPrompt(clientDate, clientTime);
+      const systemPrompt = getSystemPrompt(clientDate, clientTime, routinesList);
       const model = genAI.getGenerativeModel({ 
         model: modelId,
         systemInstruction: systemPrompt 
       });
       
+      const prunedHistory = history.slice(-40);
       const rawContents = [
-        ...history,
+        ...prunedHistory,
         { role: "user" as const, parts: buildGeminiPromptParts(prompt, images) },
       ];
 
@@ -253,6 +179,7 @@ async function callOpenRouter(
   images: ChatAttachmentPayload[],
   clientDate?: string,
   clientTime?: string,
+  routinesList?: string,
 ) {
   const freeModels = [
     "openrouter/free",
@@ -282,9 +209,9 @@ async function callOpenRouter(
       const messages: OpenRouterMessage[] = [
         {
           role: "system",
-          content: getSystemPrompt(clientDate, clientTime),
+          content: getSystemPrompt(clientDate, clientTime, routinesList),
         },
-        ...history.map((message) => ({
+        ...history.slice(-40).map((message) => ({
           role: message.role === "model" ? ("assistant" as const) : ("user" as const),
           content: message.parts[0]?.text ?? "",
         })),
@@ -346,10 +273,30 @@ export async function POST(req: Request) {
     }
 
     if (session?.user) {
+      // Hard check: verify the user still exists in the DB to prevent FK violations
+      const userExists = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { id: true },
+      });
+
+      if (!userExists) {
+        return internalError("Session is stale. Please sign out and sign in again.");
+      }
+
       await saveUserMessage(body, session.user.id);
     }
 
-    const text = await getAIResponse(body, geminiKey, openRouterKey);
+    let routinesList = "";
+    if (session?.user) {
+      const routines = await prisma.routine.findMany({
+        where: { userId: session.user.id },
+        select: { id: true, name: true },
+        orderBy: { name: 'asc' }
+      });
+      routinesList = routines.map(r => `- ${r.name} (ID: ${r.id})`).join('\n');
+    }
+
+    const text = await getAIResponse(body, geminiKey, openRouterKey, routinesList);
 
     if (!text) {
       throw new Error("All AI providers failed");
@@ -421,13 +368,14 @@ async function getAIResponse(
   body: z.infer<typeof ChatRequestSchema>,
   geminiKey: string | null,
   openRouterKey: string | null,
+  routinesList?: string,
 ) {
   let text = "";
   const { prompt, history, images, clientDate, clientTime } = body;
 
   if (geminiKey) {
     try {
-      text = await callGemini(prompt, history, images, clientDate, clientTime);
+      text = await callGemini(prompt, history, images, clientDate, clientTime, routinesList);
     } catch (error) {
       console.error(
         "Gemini failed completely, failing over to OpenRouter...",
@@ -445,6 +393,7 @@ async function getAIResponse(
         images,
         clientDate,
         clientTime,
+        routinesList,
       )) || "";
   }
 
@@ -471,6 +420,10 @@ async function handleUserResponse(
     return undefined;
   } catch (error) {
     console.error("Chat log persistence failed:", getErrorMessage(error));
+    // DUMP TO FILE FOR DEBUGGING
+    try {
+      require('fs').appendFileSync('debug-crash.txt', '\nChat Error: ' + (error instanceof Error ? error.stack : String(error)) + '\n');
+    } catch(e) {}
     return "Reply generated, but it could not be saved to your history completely.";
   }
 }

@@ -15,15 +15,21 @@ function removeDataBlocks(text: string, startMarker: string, endMarker: string):
 
 /** Find the closing ||| that is NOT the start of another |||DATA block. */
 function findClosingMarker(text: string, searchFrom: number): number {
+  const markerRegex = /\|\|\|\s*DATA/gi;
   let pos = searchFrom;
+  
   while (pos < text.length) {
     const idx = text.indexOf('|||', pos);
     if (idx === -1) return -1;
-    // If this ||| is immediately followed by 'DATA', it's a new opening block — skip past it
-    if (text.startsWith('DATA', idx + 3)) {
-      pos = idx + 3; // skip past this '|||' and keep searching
+    
+    // Check if this ||| is actually a new opening block
+    markerRegex.lastIndex = idx;
+    const match = markerRegex.exec(text);
+    if (match && match.index === idx) {
+      pos = idx + match[0].length;
       continue;
     }
+    
     return idx;
   }
   return -1;
@@ -34,18 +40,18 @@ export function extractAndCleanLogData(text: string): {
   cleanText: string;
   hasData: boolean;
 } {
-  const startMarker = '|||DATA';
+  const startRegex = /\|\|\|\s*DATA/gi;
   const logs: ParsedLogEnvelope[] = [];
   let hasData = false;
-  let currentPos = 0;
+  let cleanText = text;
 
   // Extract logs
-  while (true) {
-    const startIdx = text.indexOf(startMarker, currentPos);
-    if (startIdx === -1) break;
-
-    const contentStart = startIdx + startMarker.length;
+  let match;
+  while ((match = startRegex.exec(text)) !== null) {
+    const startIdx = match.index;
+    const contentStart = startIdx + match[0].length;
     const endIdx = findClosingMarker(text, contentStart);
+    
     if (endIdx === -1) break;
 
     hasData = true;
@@ -62,11 +68,14 @@ export function extractAndCleanLogData(text: string): {
         }
       }
     } catch (e) {
-      console.warn('Failed to parse a DATA block:', e);
+      console.warn('[PARSER] Failed to parse a DATA block:', e);
     }
-
-    currentPos = endIdx + 3; // length of '|||'
   }
 
-  return { logs, cleanText: removeDataBlocks(text, startMarker, '|||'), hasData };
+  // Clean the text by removing all blocks that match the pattern
+  // We recreate a simple version of the removal for safety
+  const fullBlockRegex = /\|\|\|\s*DATA[\s\S]*?\|\|\|/gi;
+  cleanText = text.replace(fullBlockRegex, '').trim();
+
+  return { logs, cleanText, hasData };
 }

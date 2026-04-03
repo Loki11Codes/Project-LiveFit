@@ -16,7 +16,7 @@ import { QuickChips } from "./Chat/QuickChips";
 import { ChatInput } from "./Chat/ChatInput";
 
 interface ChatProps {
-  readonly onLogParsed: () => void;
+  readonly onLogParsed: (logs?: import("@/lib/persistence").ParsedLogEnvelope[], hasData?: boolean) => void;
   readonly isNewUser?: boolean;
   readonly initialMessage?: string | null;
   readonly onMessageSent?: () => void;
@@ -230,11 +230,11 @@ export default function Chat({
 
   const processChatResponse = (data: ChatResponse) => {
     if (data.text) {
-      const { hasData, cleanText } = extractAndCleanLogData(data.text);
+      const { hasData, cleanText, logs } = extractAndCleanLogData(data.text);
 
-      if (hasData) {
-        onLogParsed();
-      } else {
+      onLogParsed?.(logs, hasData);
+
+      if (!hasData) {
         // Safety Fallback: AI sometimes forgets the DATA block but confirms in text.
         const stateKeywords = [
           "training",
@@ -249,7 +249,7 @@ export default function Chat({
         ];
         const lowerText = cleanText.toLowerCase();
         if (stateKeywords.some((kw) => lowerText.includes(kw))) {
-          onLogParsed();
+          onLogParsed([]);
         }
       }
 

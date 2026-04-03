@@ -105,28 +105,35 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
 
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             {session ? (
-              <div className="hidden sm:flex nav-profile-card items-center gap-1.5">
-                <div className="flex items-center gap-1.5 mb-0.5 leading-none">
-                  <span className="nav-profile-status">Online</span>
-                  <motion.div
-                    animate={{ scale: [1, 1.25, 1] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                    className="flex items-center justify-center"
-                  >
-                    <Heart className="w-2.5 h-2.5 fill-red-500 text-red-500" />
-                  </motion.div>
+              <>
+                {/* Desktop Profile */}
+                <div className="hidden sm:flex nav-profile-card items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 mb-0.5 leading-none">
+                    <span className="nav-profile-status">Online</span>
+                    <motion.div
+                      animate={{ scale: [1, 1.25, 1] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      className="flex items-center justify-center"
+                    >
+                      <Heart className="w-2.5 h-2.5 fill-red-500 text-red-500" />
+                    </motion.div>
+                  </div>
+                  <span className="nav-profile-name">
+                    {(session.user?.name || 'USER').toUpperCase()}
+                  </span>
                 </div>
-                <span className="nav-profile-name">
-                  {session.user?.name === 'akash' ? 'AKASH BHAT' : (session.user?.name || 'AKASH BHAT').toUpperCase()}
-                </span>
-              </div>
+                {/* Mobile Profile Icon */}
+                <div className="sm:hidden w-10 h-10 rounded-2xl bg-[var(--surface-sub)] border border-[var(--border)] flex items-center justify-center text-[var(--accent)]">
+                   <User className="w-5 h-5" />
+                </div>
+              </>
             ) : (
               <Link 
                 href="/auth/signin"
-                className="save-btn px-8"
+                className="save-btn px-4 sm:px-8"
               >
                 <LogIn className="w-4 h-4" />
-                <span className="hidden sm:inline">Sign In</span>
+                <span className="hidden sm:inline ml-2">Sign In</span>
               </Link>
             )}
             

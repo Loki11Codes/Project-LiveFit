@@ -57,9 +57,14 @@ export function toMeasurementPayload(form: MeasurementForm): MeasurementPayload 
 }
 
 export function getTodayFoodLogs(foodLogs: FoodLog[]): FoodLog[] {
-  const today = new Date();
-
-  return foodLogs.filter((log) => isSameCalendarDay(new Date(log.time), today));
+  // Use local midnight (local browser date) as the anchor
+  const now = new Date();
+  const dateStr = getLocalDateKey(now);
+  
+  return foodLogs.filter((log) => {
+    const logStr = getLocalDateKey(log.time);
+    return logStr === dateStr;
+  });
 }
 
 export function sumNutrition(foodLogs: FoodLog[]) {

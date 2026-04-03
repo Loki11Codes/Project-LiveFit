@@ -13,7 +13,7 @@ import HistoryTab from "@/components/Tabs/HistoryTab";
 import BodyTab from "@/components/Tabs/BodyTab";
 import ProfileTab from "@/components/Tabs/ProfileTab";
 import { RoutinesTab } from "@/components/RoutinesTab";
-import { WorkoutSession } from "@/components/WorkoutSession";
+import { WorkoutSession } from "../components/WorkoutSession";
 import {
   buildHistoryRows,
   buildDayTypeMap,
@@ -79,10 +79,10 @@ export default function Home() {
     const workoutSession = {
       name: routine.name,
       startTime: Date.now(),
-      exercises: routine.exercises.map((e: any) => ({
+      exercises: (routine.exercises || []).map((e: any) => ({
         id: crypto.randomUUID(),
         exerciseId: e.exerciseId || e.id,
-        name: e.exercise?.name || e.name, // name of development
+        name: e.exercise?.name || e.name, 
         sets: e.sets
           ? e.sets.map((s: any) => ({ ...s, isCompleted: false }))
           : Array.from({ length: Number(e.targetSets) || 3 }).map((_, i) => ({
@@ -110,14 +110,21 @@ export default function Home() {
       return;
     }
 
-    // Construct the summary message for chat
-    let summaryText = `I finished my "${session.name}" workout! It took me ${durationMinutes} minutes.\n\nSummary:\n`;
+    let totalVolume = 0;
+    completedExercises.forEach((ex) => {
+      ex.sets
+        .filter((s) => s.isCompleted)
+        .forEach((s) => {
+          totalVolume += (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0);
+        });
+    });
 
     const workoutPayload = {
       category: "workout",
       data: {
         focus: session.name,
-        time: new Date().toISOString(),
+        date: new Date().toISOString(),
+        volume: totalVolume,
         exercises: completedExercises.map((ex, idx: number) => ({
           name: ex.name,
           order: idx,
@@ -126,18 +133,26 @@ export default function Home() {
             .map((s, sIdx: number) => ({
               setNumber: sIdx + 1,
               weight: parseFloat(s.weight) || 0,
-              reps: parseInt(s.reps) || 0,
+              reps: parseInt(s.reps, 10) || 0,
             })),
         })),
       },
     };
 
+    // Save directly instead of waiting for AI to echo it
+    fetch("/api/logs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify([workoutPayload]),
+    })
+      .then(() => refreshDashboard())
+      .catch((err) => console.error("Failed to directly save workout log", err));
+
+    let summaryText = `I finished my "${session.name}" workout! It took me ${durationMinutes} minutes.\n\nSummary:\n`;
     completedExercises.forEach((ex) => {
       const sets = ex.sets.filter((s) => s.isCompleted);
       summaryText += `- ${ex.name}: ${sets.length} sets completed\n`;
     });
-
-    summaryText += `\n|||DATA ${JSON.stringify(workoutPayload)} |||`;
 
     setChatDraft(summaryText);
     setDashboard((prev) => ({ ...prev, activeWorkout: null }));
@@ -216,6 +231,51 @@ export default function Home() {
     });
   };
 
+  async function handleLogParsed(envelopes?: any[], hasData?: boolean) {
+    console.log("[DEBUG] Chat envelopes received:", envelopes);
+    
+    if (hasData && (!envelopes || envelopes.length === 0)) {
+      console.warn("[PARSER] Data blocks were detected but failed to parse correctly.");
+    }
+
+    // Small delay to ensure server transaction is committed before we fetch
+    setTimeout(() => {
+      void refreshDashboard();
+    }, 200);
+    
+    if (envelopes && envelopes.length > 0) {
+      const workoutAction = envelopes.find(e => e.category === 'workout' && e.action === 'start');
+      if (workoutAction) {
+        console.log("[DEBUG] Workout start intent detected:", workoutAction);
+        const name = workoutAction.name || workoutAction.focus || workoutAction.data?.name || "Fresh Workout";
+        if (workoutAction.routineId) {
+           void handleStartWorkoutById(workoutAction.routineId, name);
+        } else {
+           handleStartWorkout({ name, exercises: [] });
+        }
+      }
+    }
+  }
+
+  function handleUpdateWorkout(updated: ActiveWorkoutSession) {
+    setDashboard((prev) => ({ ...prev, activeWorkout: updated }));
+  }
+
+  async function handleStartWorkoutById(id: string, name?: string) {
+    try {
+      const res = await fetch(`/api/routines?id=${id}`);
+      if (res.ok) {
+        const routine = await res.json();
+        handleStartWorkout(routine);
+        return;
+      }
+    } catch (err) {
+      console.error("Failed to start routine by ID", err);
+    }
+    // Fallback
+    handleStartWorkout({ name: name || "Routine", exercises: [] });
+  }
+
   useEffect(() => {
     let cancelled = false;
 
@@ -233,14 +293,17 @@ export default function Home() {
       };
     }
 
-    void fetchDashboardData()
-      .then((nextState) => {
+    void fetchRawDashboardData()
+      .then((data) => {
         if (cancelled) {
           return;
         }
 
         startTransition(() => {
-          setDashboard(nextState);
+          setDashboard(prev => ({
+            ...prev,
+            ...data,
+          }));
         });
       })
       .catch((error) => {
@@ -278,20 +341,24 @@ export default function Home() {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
-  const refreshDashboard = async () => {
+  async function refreshDashboard() {
     if (!session?.user?.id) {
       return;
     }
 
     try {
-      const nextState = await fetchDashboardData();
+      const data = await fetchRawDashboardData();
       startTransition(() => {
-        setDashboard(nextState);
+        setDashboard(prev => ({
+          ...prev,
+          ...data,
+          measurements: toMeasurementForm(data.latestMeasurement),
+        }));
       });
     } catch (error) {
       const message = getClientErrorMessage(error);
-      console.error("Failed to refresh dashboard:", message);
-      toast.error(`Unable to refresh dashboard: ${message}`);
+      console.error("Failed to refresh dashboard data:", message);
+      toast.error(message);
     }
   };
 
@@ -374,7 +441,7 @@ export default function Home() {
             {activeTab === "chat" && (
               <div className="chat-sidebar-layout">
                 <Chat
-                  onLogParsed={refreshDashboard}
+                  onLogParsed={handleLogParsed}
                   isNewUser={
                     !dashboard.profile?.age || !dashboard.profile?.height
                   }
@@ -456,12 +523,11 @@ export default function Home() {
         <AnimatePresence>
           {dashboard.activeWorkout && (
             <WorkoutSession
+              key="active-workout-overlay"
               session={dashboard.activeWorkout}
               onFinish={handleFinishWorkout}
               onDiscard={handleDiscardWorkout}
-              onUpdate={(updated: ActiveWorkoutSession) =>
-                setDashboard((prev) => ({ ...prev, activeWorkout: updated }))
-              }
+              onUpdate={handleUpdateWorkout}
             />
           )}
         </AnimatePresence>
@@ -470,7 +536,7 @@ export default function Home() {
   );
 }
 
-async function fetchDashboardData(): Promise<DashboardState> {
+async function fetchRawDashboardData(): Promise<Omit<DashboardState, "activeWorkout" | "measurements">> {
   const [
     logs,
     latestMeasurementResponse,
@@ -503,13 +569,11 @@ async function fetchDashboardData(): Promise<DashboardState> {
   return {
     logs,
     latestMeasurement,
-    measurements: toMeasurementForm(latestMeasurement),
     goals,
     profile,
     analytics,
     dayType: getCurrentDayType(dayTypesByDay),
     dayTypesByDay,
-    activeWorkout: null,
   };
 }
 

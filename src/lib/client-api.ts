@@ -19,7 +19,10 @@ export async function requestJson<T>(
   input: RequestInfo | URL,
   init?: RequestInit
 ): Promise<T> {
-  const response = await fetch(input, init);
+  const response = await fetch(input, {
+    cache: 'no-store',
+    ...init,
+  });
   const body = await parseResponseBody(response);
 
   if (!response.ok) {

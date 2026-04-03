@@ -27,6 +27,8 @@ export type ParsedLogEnvelope = {
  */
 export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: string, clientDate?: string): Promise<void> {
   if (envelopes.length === 0) return;
+  console.log(`[PERSISTENCE] Starting persistence for ${envelopes.length} envelopes for user ${userId}`);
+  console.log(`[PERSISTENCE] Processing ${envelopes.length} envelopes for user ${userId}`);
 
   for (const envelope of envelopes) {
     if (!envelope.category) continue;
@@ -34,12 +36,15 @@ export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: str
     const category = envelope.category;
     const logData = envelope.data || envelope;
 
+    console.log(`[PERSISTENCE] Category: ${category}, Data:`, JSON.stringify(logData).substring(0, 500));
+
     try {
       await prisma.$transaction(async (tx) => {
         await handleCategoryPersistence(tx, category, logData, userId, clientDate);
       });
+      console.log(`[PERSISTENCE] ${category} saved successfully.`);
     } catch (error) {
-      console.error(`Persistence failed for ${category}:`, getErrorMessage(error));
+      console.error(`[PERSISTENCE] ERROR for ${category}:`, getErrorMessage(error));
       throw error;
     }
   }

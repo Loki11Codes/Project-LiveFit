@@ -4,11 +4,32 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 // GET all routines for the user
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (id) {
+      const routine = await prisma.routine.findUnique({
+        where: { id, userId: session.user.id },
+        include: {
+          exercises: {
+            include: { exercise: true },
+            orderBy: { order: "asc" },
+          },
+        },
+      });
+
+      if (!routine) {
+        return NextResponse.json({ error: "Routine not found" }, { status: 404 });
+      }
+
+      return NextResponse.json(routine);
     }
 
     const routines = await prisma.routine.findMany({

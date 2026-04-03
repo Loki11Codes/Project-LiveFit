@@ -73,7 +73,19 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user && token.id) {
-        session.user.id = token.id;
+        // Verify user still exists in database to prevent foreign key errors with stale JWTs
+        const userExists = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { id: true }
+        });
+        
+        if (!userExists) {
+          // If the user was deleted from the database but the JWT remains,
+          // invalidate the session to force them to sign out/in again.
+          throw new Error("Session invalidated: User no longer exists in the database.");
+        }
+        
+        session.user.id = token.id as string;
       }
       return session;
     },

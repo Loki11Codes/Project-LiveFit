@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { unauthorized, internalError, badRequest } from '@/lib/api';
 import { z } from 'zod';
+import { persistLogData, type ParsedLogEnvelope } from '@/lib/persistence';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -106,5 +107,26 @@ export async function DELETE(req: Request) {
   } catch (error) {
     console.error('Failed to delete log:', error);
     return internalError('Unable to delete log');
+  }
+}
+
+export async function POST(req: Request) {
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user) {
+    return unauthorized();
+  }
+
+  try {
+    const list = await req.json() as ParsedLogEnvelope[];
+    if (!Array.isArray(list)) {
+      return badRequest('Expected an array of log envelopes');
+    }
+
+    await persistLogData(list, session.user.id);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Failed to post logs:', error);
+    return internalError('Unable to save logs');
   }
 }
