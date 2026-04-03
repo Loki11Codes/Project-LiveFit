@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { startTransition, useEffect, useState } from "react";
 import type { BodyMeasurement } from "@prisma/client";
@@ -13,6 +13,7 @@ import HistoryTab from "@/components/Tabs/HistoryTab";
 import BodyTab from "@/components/Tabs/BodyTab";
 import ProfileTab from "@/components/Tabs/ProfileTab";
 import { RoutinesTab } from "@/components/RoutinesTab";
+import { WorkoutSession } from "@/components/WorkoutSession";
 import {
   buildHistoryRows,
   buildDayTypeMap,
@@ -37,6 +38,7 @@ import {
   EMPTY_MEASUREMENT_FORM,
   type AnalyticsResponse,
   type AppTheme,
+  type ActiveWorkoutSession,
   type DayTypeEntryRecord,
   type DashboardState,
   type DayType,
@@ -55,6 +57,7 @@ const INITIAL_DASHBOARD_STATE: DashboardState = {
   analytics: EMPTY_ANALYTICS,
   dayType: "Rest",
   dayTypesByDay: EMPTY_DAY_TYPES_BY_DAY,
+  activeWorkout: null,
 };
 
 export default function Home() {
@@ -72,13 +75,98 @@ export default function Home() {
 
   const todaysFood = getTodayFoodLogs(dashboard.logs.food);
   // ...
-  const handleStartWorkout = (routine: {
-    name: string;
-    exercises: { exercise: { name: string } }[];
-  }) => {
-    const workoutMsg = `I'm starting my "${routine.name}" workout. Here is the plan: ${routine.exercises.map((e) => e.exercise.name).join(", ")}. Let's record the sets as I go!`;
-    setChatDraft(workoutMsg);
+  const handleStartWorkout = (routine: any) => {
+    const workoutSession = {
+      name: routine.name,
+      startTime: Date.now(),
+      exercises: routine.exercises.map((e: any) => ({
+        id: crypto.randomUUID(),
+        exerciseId: e.exerciseId || e.id,
+        name: e.exercise?.name || e.name, // name of development
+        sets: e.sets
+          ? e.sets.map((s: any) => ({ ...s, isCompleted: false }))
+          : Array.from({ length: Number(e.targetSets) || 3 }).map((_, i) => ({
+              id: crypto.randomUUID(),
+              weight: "",
+              reps: e.targetReps || "",
+              isCompleted: false,
+            })),
+      })),
+    };
+    setDashboard((prev) => ({ ...prev, activeWorkout: workoutSession }));
+    // Don't switch tab automatically, WorkoutSession will be an overlay
+  };
+
+  const handleFinishWorkout = (session: ActiveWorkoutSession) => {
+    const durationMinutes = Math.floor(
+      (Date.now() - session.startTime) / 60000,
+    );
+    const completedExercises = session.exercises.filter((ex) =>
+      ex.sets.some((s) => s.isCompleted),
+    );
+
+    if (completedExercises.length === 0) {
+      setDashboard((prev) => ({ ...prev, activeWorkout: null }));
+      return;
+    }
+
+    // Construct the summary message for chat
+    let summaryText = `I finished my "${session.name}" workout! It took me ${durationMinutes} minutes.\n\nSummary:\n`;
+
+    const workoutPayload = {
+      category: "workout",
+      data: {
+        focus: session.name,
+        time: new Date().toISOString(),
+        exercises: completedExercises.map((ex, idx: number) => ({
+          name: ex.name,
+          order: idx,
+          sets: ex.sets
+            .filter((s) => s.isCompleted)
+            .map((s, sIdx: number) => ({
+              setNumber: sIdx + 1,
+              weight: parseFloat(s.weight) || 0,
+              reps: parseInt(s.reps) || 0,
+            })),
+        })),
+      },
+    };
+
+    completedExercises.forEach((ex) => {
+      const sets = ex.sets.filter((s) => s.isCompleted);
+      summaryText += `- ${ex.name}: ${sets.length} sets completed\n`;
+    });
+
+    summaryText += `\n|||DATA ${JSON.stringify(workoutPayload)} |||`;
+
+    setChatDraft(summaryText);
+    setDashboard((prev) => ({ ...prev, activeWorkout: null }));
     handleTabChange("chat");
+  };
+
+  const handleDiscardWorkout = () => {
+    if (confirm("Are you sure you want to discard your workout?")) {
+      setDashboard((prev) => ({ ...prev, activeWorkout: null }));
+    }
+  };
+
+  const handleDeleteWorkout = async (id: string) => {
+    if (!confirm("Delete this workout log? This can't be undone.")) return;
+    // Optimistic remove from UI
+    setDashboard((prev) => ({
+      ...prev,
+      logs: { ...prev.logs, workouts: prev.logs.workouts.filter((w) => w.id !== id) },
+    }));
+    try {
+      await fetch("/api/logs", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: "workout", id }),
+      });
+    } catch (err) {
+      console.error("Failed to delete workout", err);
+      void refreshDashboard();
+    }
   };
   const nutrition = sumNutrition(todaysFood);
   const latestSleep = getLatestSleepLog(dashboard.logs.sleep);
@@ -165,6 +253,26 @@ export default function Home() {
       cancelled = true;
     };
   }, [session?.user?.id]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("active_workout");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setDashboard(prev => ({ ...prev, activeWorkout: parsed }));
+      } catch (e) {
+        console.warn("Failed to load active workout from storage", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (dashboard.activeWorkout) {
+      localStorage.setItem("active_workout", JSON.stringify(dashboard.activeWorkout));
+    } else {
+      localStorage.removeItem("active_workout");
+    }
+  }, [dashboard.activeWorkout]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -312,6 +420,7 @@ export default function Home() {
                 protein={nutrition.protein}
                 workouts={dashboard.logs.workouts}
                 sleepLogs={dashboard.logs.sleep}
+                onDeleteWorkout={handleDeleteWorkout}
               />
             )}
 
@@ -342,6 +451,19 @@ export default function Home() {
               />
             )}
           </motion.div>
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {dashboard.activeWorkout && (
+            <WorkoutSession
+              session={dashboard.activeWorkout}
+              onFinish={handleFinishWorkout}
+              onDiscard={handleDiscardWorkout}
+              onUpdate={(updated: ActiveWorkoutSession) =>
+                setDashboard((prev) => ({ ...prev, activeWorkout: updated }))
+              }
+            />
+          )}
         </AnimatePresence>
       </div>
     </main>
@@ -387,6 +509,7 @@ async function fetchDashboardData(): Promise<DashboardState> {
     analytics,
     dayType: getCurrentDayType(dayTypesByDay),
     dayTypesByDay,
+    activeWorkout: null,
   };
 }
 

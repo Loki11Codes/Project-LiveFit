@@ -81,3 +81,33 @@ export async function POST(req: Request) {
     );
   }
 }
+
+// DELETE a routine by id
+export async function DELETE(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "Routine id is required" }, { status: 400 });
+    }
+
+    // Ensure the routine belongs to the current user before deleting
+    const existing = await prisma.routine.findFirst({
+      where: { id, userId: session.user.id },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: "Routine not found" }, { status: 404 });
+    }
+
+    await prisma.routine.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting routine:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}

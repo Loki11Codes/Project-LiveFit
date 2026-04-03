@@ -1,19 +1,31 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Search, Dumbbell, X, Play } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Dumbbell,
+  X,
+  Play,
+  Trash2,
+  ArrowLeft,
+  ChevronRight,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface RoutinesTabProps {
-  readonly onStart?: (routine: any) => void;  
+  readonly onStart?: (routine: any) => void;
 }
 
 export function RoutinesTab({ onStart }: RoutinesTabProps) {
-  const [view, setView] = useState<"list" | "create">("list");
+  const [view, setView] = useState<"list" | "create" | "preview">("list");
   const [routines, setRoutines] = useState<any[]>([]);
   const [exercises, setExercises] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Preview state — a local working copy of the routine being previewed/edited
+  const [previewRoutine, setPreviewRoutine] = useState<any | null>(null);
 
   // Builder State
   const [newRoutineName, setNewRoutineName] = useState("");
@@ -27,7 +39,6 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
 
   const fetchData = async () => {
     try {
-      // We will fetch routines and exercises from the API
       const [routinesRes, exercisesRes] = await Promise.all([
         fetch("/api/routines"),
         fetch("/api/exercises"),
@@ -41,7 +52,126 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
     }
   };
 
-  const handleAddExercise = (exercise: any)   => {
+  // ── Preview / Pre-workout editor ──────────────────────────────────────────
+
+  const openPreview = (routine: any) => {
+    // Deep-clone so edits don't mutate the saved routine list
+    setPreviewRoutine({
+      ...routine,
+      exercises: routine.exercises.map((e: any) => ({
+        ...e,
+        // Give each entry a stable local key in case exercise obj differs
+        _localId: crypto.randomUUID(),
+        sets: Array.from({ length: Number(e.targetSets) || 3 }).map((_, i) => ({
+          id: crypto.randomUUID(),
+          weight: "",
+          reps: e.targetReps || "",
+          isCompleted: false,
+        })),
+      })),
+    });
+    setView("preview");
+  };
+
+  const addPreviewSet = (localId: string) => {
+    setPreviewRoutine((prev: any) => ({
+      ...prev,
+      exercises: prev.exercises.map((e: any) => {
+        if (e._localId === localId) {
+          const lastSet = e.sets[e.sets.length - 1];
+          return {
+            ...e,
+            sets: [
+              ...e.sets,
+              {
+                id: crypto.randomUUID(),
+                weight: lastSet?.weight || "",
+                reps: lastSet?.reps || "",
+                isCompleted: false,
+              },
+            ],
+          };
+        }
+        return e;
+      }),
+    }));
+  };
+
+  const removePreviewSet = (localId: string, setId: string) => {
+    if (!confirm("Are you sure you want to delete this set?")) return;
+    setPreviewRoutine((prev: any) => ({
+      ...prev,
+      exercises: prev.exercises.map((e: any) =>
+        e._localId === localId
+          ? { ...e, sets: e.sets.filter((s: any) => s.id !== setId) }
+          : e
+      ),
+    }));
+  };
+
+  const updatePreviewSet = (
+    localId: string,
+    setId: string,
+    field: string,
+    value: string
+  ) => {
+    setPreviewRoutine((prev: any) => ({
+      ...prev,
+      exercises: prev.exercises.map((e: any) => {
+        if (e._localId === localId) {
+          return {
+            ...e,
+            sets: e.sets.map((s: any) =>
+              s.id === setId ? { ...s, [field]: value } : s
+            ),
+          };
+        }
+        return e;
+      }),
+    }));
+  };
+
+  const removePreviewExercise = (localId: string) => {
+    if (!confirm("Are you sure you want to remove this exercise?")) return;
+    setPreviewRoutine((prev: any) => ({
+      ...prev,
+      exercises: prev.exercises.filter((e: any) => e._localId !== localId),
+    }));
+  };
+
+  const addPreviewExercise = (exercise: any) => {
+    setPreviewRoutine((prev: any) => ({
+      ...prev,
+      exercises: [
+        ...prev.exercises,
+        {
+          _localId: crypto.randomUUID(),
+          exercise: { name: exercise.name },
+          exerciseId: exercise.id,
+          targetSets: 3,
+          targetReps: "8-12",
+          sets: Array.from({ length: 3 }).map(() => ({
+            id: crypto.randomUUID(),
+            weight: "",
+            reps: "8-12",
+            isCompleted: false,
+          })),
+        },
+      ],
+    }));
+    setIsSearching(false);
+    setSearchQuery("");
+  };
+
+  const handleStartPreview = () => {
+    if (previewRoutine) {
+      onStart?.(previewRoutine);
+    }
+  };
+
+  // ── Create builder ─────────────────────────────────────────────────────────
+
+  const handleAddExercise = (exercise: any) => {
     setSelectedExercises([
       ...selectedExercises,
       {
@@ -56,21 +186,33 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
   };
 
   const handleRemoveExercise = (id: string) => {
+    if (!confirm("Are you sure you want to remove this exercise?")) return;
     setSelectedExercises(
-      selectedExercises.filter((e) => e.routineExerciseId !== id),
+      selectedExercises.filter((e) => e.routineExerciseId !== id)
     );
   };
 
   const updateSetRep = (
     id: string,
     field: "targetSets" | "targetReps",
-    value: string | number,
+    value: string | number
   ) => {
     setSelectedExercises(
       selectedExercises.map((e) =>
-        e.routineExerciseId === id ? { ...e, [field]: value } : e,
-      ),
+        e.routineExerciseId === id ? { ...e, [field]: value } : e
+      )
     );
+  };
+
+  const handleDeleteRoutine = async (id: string) => {
+    if (!confirm("Delete this routine? This can't be undone.")) return;
+    setRoutines((prev) => prev.filter((r) => r.id !== id));
+    try {
+      await fetch(`/api/routines?id=${id}`, { method: "DELETE" });
+    } catch (err) {
+      console.error("Failed to delete routine", err);
+      fetchData();
+    }
   };
 
   const handleSaveRoutine = async () => {
@@ -95,7 +237,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
         setView("list");
         setNewRoutineName("");
         setSelectedExercises([]);
-        fetchData(); // Refresh list
+        fetchData();
       }
     } catch (err) {
       console.error("Failed to save routine", err);
@@ -113,8 +255,24 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
   const filteredExercises = exercises.filter(
     (e) =>
       e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      e.category.toLowerCase().includes(searchQuery.toLowerCase()),
+      e.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // ── Header title / back button based on view ───────────────────────────────
+  function getHeaderTitle() {
+    if (view === "preview") return previewRoutine?.name ?? "Routine";
+    if (view === "create") return "Create Routine";
+    return "My Routines";
+  }
+
+  function getHeaderSub() {
+    if (view === "preview") return `${previewRoutine?.exercises?.length ?? 0} exercises`;
+    if (view === "create") return "Build a custom workout";
+    return "Your saved workout templates";
+  }
+
+  const headerTitle = getHeaderTitle();
+  const headerSub = getHeaderSub();
 
   return (
     <div className="flex-1 w-full max-w-2xl mx-auto flex flex-col pt-safe-top tracking-tight text-[var(--foreground)] min-h-[100dvh] pb-24 px-4 sm:px-6">
@@ -125,44 +283,59 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
         className="w-full flex items-center justify-between py-6 sticky top-0 bg-[var(--background)]/[0.85] backdrop-blur-md z-30 border-b border-[var(--border)]"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-gradient)] flex items-center justify-center shadow-lg transform rotate-3">
-            <Dumbbell className="w-5 h-5 text-white" />
-          </div>
+          {view === "list" ? (
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-gradient)] flex items-center justify-center shadow-lg transform rotate-3">
+              <Dumbbell className="w-5 h-5 text-white" />
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                setView("list");
+                setPreviewRoutine(null);
+                setSearchQuery("");
+              }}
+              className="p-2.5 bg-[var(--surface)] rounded-xl border border-[var(--border)] text-[var(--foreground-muted)] hover:text-[var(--foreground)] transition-colors active:scale-95"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
           <div>
             <h1 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[var(--foreground)] to-[var(--foreground-muted)]">
-              {view === "list" ? "My Routines" : "Create Routine"}
+              {headerTitle}
             </h1>
             <p className="text-sm font-medium text-[var(--foreground-muted)]">
-              {view === "list"
-                ? "Your saved workout templates"
-                : "Build a custom workout"}
+              {headerSub}
             </p>
           </div>
         </div>
 
-        {view === "list" ? (
-          routines.length > 0 && (
-            <button
-              onClick={() => setView("create")}
-              className="flex items-center gap-2 px-4 py-2 bg-[var(--surface)] text-[var(--accent)] font-semibold rounded-full border border-[var(--border)] shadow-sm active:scale-95 transition-transform"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">New Routine</span>
-            </button>
-          )
-        ) : (
+        {view === "list" && routines.length > 0 && (
           <button
-            onClick={() => setView("list")}
-            className="p-2 bg-[var(--surface)] text-[var(--foreground-muted)] rounded-full border border-[var(--border)] shadow-sm active:scale-95 transition-transform"
+            onClick={() => setView("create")}
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--surface)] text-[var(--accent)] font-semibold rounded-full border border-[var(--border)] shadow-sm active:scale-95 transition-transform"
           >
-            <X className="w-5 h-5" />
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">New Routine</span>
+          </button>
+        )}
+
+        {view === "preview" && (
+          <button
+            onClick={handleStartPreview}
+            disabled={!previewRoutine?.exercises?.length}
+            className="flex items-center gap-2 px-5 py-2.5 bg-[var(--accent)] text-white font-bold rounded-xl shadow-lg shadow-[var(--accent)]/25 active:scale-95 transition-all disabled:opacity-40"
+          >
+            <Play className="w-4 h-4 fill-current" />
+            Start
           </button>
         )}
       </motion.div>
 
       <div className="py-6 flex flex-col gap-6 relative">
         <AnimatePresence mode="wait">
-          {view === "list" ? (
+
+          {/* ── LIST VIEW ──────────────────────────────────────────────────── */}
+          {view === "list" && (
             <motion.div
               key="list"
               initial={{ opacity: 0, x: -20 }}
@@ -188,35 +361,192 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                 </div>
               ) : (
                 routines.map((routine) => (
-                  <div
+                  <motion.div
+                    layout
                     key={routine.id}
-                    className="p-5 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm flex flex-col gap-4"
+                    className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden"
                   >
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-bold">{routine.name}</h3>
+                    {/* Tappable card body → opens preview */}
+                    <button
+                      onClick={() => openPreview(routine)}
+                      className="w-full p-5 flex items-center justify-between gap-4 text-left hover:bg-[var(--surface2)]/40 transition-colors active:bg-[var(--surface2)]/60"
+                    >
+                      <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                        <h3 className="text-lg font-bold">{routine.name}</h3>
+                        <p className="text-sm font-semibold text-[var(--foreground-muted)] uppercase tracking-wider">
+                          {routine.exercises.length} Exercises
+                        </p>
+                        <div className="text-sm text-[var(--foreground)]/70 leading-relaxed truncate">
+                          {routine.exercises
+                            .map((e: any) => e.exercise.name)
+                            .join(", ")}
+                        </div>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-[var(--foreground-muted)] shrink-0" />
+                    </button>
+
+                    {/* Action row */}
+                    <div className="flex items-center gap-2 border-t border-[var(--border)]/60 px-5 py-3">
                       <button
-                        onClick={() => onStart?.(routine)}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-[var(--accent)]/10 text-[var(--accent)] rounded-lg font-semibold text-sm active:scale-95 transition-transform"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onStart?.(routine);
+                        }}
+                        className="flex-1 flex items-center justify-center gap-2 py-2 bg-[var(--accent)]/10 text-[var(--accent)] rounded-xl font-bold text-sm active:scale-95 transition-all"
                       >
                         <Play className="w-3.5 h-3.5 fill-current" />
-                        Start
+                        Start Workout
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteRoutine(routine.id);
+                        }}
+                        className="p-2.5 text-[var(--foreground-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all active:scale-95"
+                        title="Delete routine"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <p className="text-sm font-semibold text-[var(--foreground-muted)] uppercase tracking-wider">
-                        {routine.exercises.length} Exercises
-                      </p>
-                      <div className="text-sm text-[var(--foreground)]/80 leading-relaxed truncate">
-                        {routine.exercises
-                          .map((e: any) => e.exercise.name)
-                          .join(", ")}
-                      </div>
-                    </div>
-                  </div>
+                  </motion.div>
                 ))
               )}
             </motion.div>
-          ) : (
+          )}
+
+          {/* ── PREVIEW / PRE-WORKOUT EDITOR ──────────────────────────────── */}
+          {view === "preview" && previewRoutine && (
+            <motion.div
+              key="preview"
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 30 }}
+              className="flex flex-col gap-5"
+            >
+              <p className="text-xs font-bold text-[var(--foreground-muted)] uppercase tracking-widest px-1">
+                Customize before you start — changes only apply to this session.
+              </p>
+
+              {previewRoutine.exercises.map((ex: any, idx: number) => (
+                <motion.div
+                  layout
+                  key={ex._localId}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden"
+                >
+                  {/* Exercise header */}
+                  <div className="flex items-center gap-3 p-4 border-b border-[var(--border)]/50">
+                    <span className="w-7 h-7 shrink-0 rounded-lg bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center font-black text-xs">
+                      {idx + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-base leading-tight">
+                        {ex.exercise?.name || ex.customName}
+                      </h3>
+                      <p className="text-xs text-[var(--foreground-muted)]">
+                        {ex.exercise?.category || ex.category} ·{" "}
+                        {ex.exercise?.equipment || ex.equipment || "Standard"}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => removePreviewExercise(ex._localId)}
+                      className="p-1.5 text-[var(--foreground-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Sets List */}
+                  <div className="px-4 pb-4">
+                    {/* Table Header */}
+                    <div className="grid grid-cols-[2.5rem_1fr_1fr_2.5rem] gap-2 py-2 text-[10px] font-bold text-[var(--foreground-muted)] uppercase tracking-widest text-center">
+                      <div>Set</div>
+                      <div>Weight (kg)</div>
+                      <div>Reps</div>
+                      <div></div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <AnimatePresence mode="popLayout">
+                        {ex.sets?.map((set: any, sIdx: number) => (
+                          <motion.div
+                            layout
+                            key={set.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20, scale: 0.95 }}
+                            className="grid grid-cols-[2.5rem_1fr_1fr_2.5rem] gap-2 items-center transition-all duration-300 rounded-xl p-1"
+                          >
+                            <div className="text-center font-bold text-sm text-[var(--foreground-muted)]">
+                              {sIdx + 1}
+                            </div>
+                            <input
+                              type="number"
+                              placeholder="0"
+                              value={set.weight}
+                              onChange={(e) =>
+                                updatePreviewSet(ex._localId, set.id, "weight", e.target.value)
+                              }
+                              className="w-full bg-[var(--surface2)] border border-[var(--border)] rounded-lg py-2.5 text-center font-bold text-sm outline-none focus:border-[var(--accent)] transition-all"
+                            />
+                            <input
+                              type="number"
+                              placeholder="0"
+                              value={set.reps}
+                              onChange={(e) =>
+                                updatePreviewSet(ex._localId, set.id, "reps", e.target.value)
+                              }
+                              className="w-full bg-[var(--surface2)] border border-[var(--border)] rounded-lg py-2.5 text-center font-bold text-sm outline-none focus:border-[var(--accent)] transition-all"
+                            />
+                            {/* Delete set */}
+                            <button
+                              onClick={() => removePreviewSet(ex._localId, set.id)}
+                              className="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--foreground-muted)] hover:text-red-500 hover:bg-red-500/10 transition-all"
+                              title="Remove set"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    </div>
+
+                    <button
+                      onClick={() => addPreviewSet(ex._localId)}
+                      className="w-full mt-4 py-2.5 border-2 border-dashed border-[var(--border)] rounded-xl text-[var(--foreground-muted)] font-bold text-sm hover:border-[var(--accent)]/30 hover:text-[var(--accent)] transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
+                    >
+                      <Plus className="w-4 h-4" /> Add Set
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+
+              {/* Add Exercise button */}
+              <button
+                onClick={() => setIsSearching(true)}
+                className="w-full py-4 rounded-2xl bg-[var(--accent)]/5 border-2 border-dashed border-[var(--accent)]/20 text-[var(--accent)] font-bold text-base flex items-center justify-center gap-2 hover:bg-[var(--accent)]/10 transition-all active:scale-[0.98]"
+              >
+                <Plus className="w-5 h-5" /> Add Exercise
+              </button>
+
+              {/* Big start CTA */}
+              <div className="pb-12">
+                <button
+                  onClick={handleStartPreview}
+                  disabled={!previewRoutine.exercises.length}
+                  className="w-full py-5 rounded-2xl font-black tracking-wide text-[16px] bg-[var(--accent)] text-white shadow-[0_8px_30px_rgba(123,94,167,0.35)] active:scale-[0.98] transition-all disabled:opacity-40 flex items-center justify-center gap-3"
+                >
+                  <Play className="w-5 h-5 fill-white" />
+                  Start Workout
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── CREATE VIEW ────────────────────────────────────────────────── */}
+          {view === "create" && (
             <motion.div
               key="create"
               initial={{ opacity: 0, x: 20 }}
@@ -295,7 +625,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                               {e.name}
                             </h4>
                             <p className="text-xs text-[var(--foreground-muted)] font-medium">
-                              {e.muscleGroup || e.category} •{" "}
+                              {e.muscleGroup || e.category} ·{" "}
                               {e.equipment || "Machine"}
                             </p>
                           </div>
@@ -317,7 +647,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                                 updateSetRep(
                                   e.routineExerciseId,
                                   "targetSets",
-                                  ev.target.value,
+                                  ev.target.value
                                 )
                               }
                               className="w-full bg-transparent border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-semibold outline-none focus:border-[var(--accent)]"
@@ -339,7 +669,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                                 updateSetRep(
                                   e.routineExerciseId,
                                   "targetReps",
-                                  ev.target.value,
+                                  ev.target.value
                                 )
                               }
                               className="w-full bg-transparent border border-[var(--border)] rounded-xl px-3 py-2 text-sm font-semibold outline-none focus:border-[var(--accent)]"
@@ -368,7 +698,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
         </AnimatePresence>
       </div>
 
-      {/* Search Overlay */}
+      {/* ── EXERCISE SEARCH OVERLAY (shared between create & preview) ──────── */}
       <AnimatePresence>
         {isSearching && (
           <motion.div
@@ -380,26 +710,24 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
             <div className="flex flex-col gap-0 sticky top-0 z-10 bg-[var(--surface)] border-b border-[var(--border)] shadow-md">
               <div className="flex items-center gap-3 p-4">
                 <button
-                  onClick={() => setIsSearching(false)}
+                  onClick={() => {
+                    setIsSearching(false);
+                    setSearchQuery("");
+                  }}
                   className="p-2.5 bg-[var(--surface2)] rounded-full text-[var(--foreground)] hover:bg-[var(--surface2)]/80 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
-                <div className="flex-1 relative flex items-center gap-2">
-                  <div className="flex-1 relative">
-                    <Search className="w-4 h-4 text-[var(--foreground-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      autoFocus
-                      placeholder="Search exercises..."
-                      className="w-full pl-9 pr-4 py-2 bg-[var(--surface2)] rounded-xl outline-none font-medium text-[15px] placeholder:text-[var(--foreground-muted)]/60 h-11 border border-transparent focus:border-[var(--accent)]/30 transition-all"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <button className="px-5 h-11 bg-[var(--accent)] text-[var(--accent-inv)] font-bold rounded-xl shadow-lg active:scale-95 transition-all text-sm">
-                    Search
-                  </button>
+                <div className="flex-1 relative">
+                  <Search className="w-4 h-4 text-[var(--foreground-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    autoFocus
+                    placeholder="Search exercises..."
+                    className="w-full pl-9 pr-4 py-2 bg-[var(--surface2)] rounded-xl outline-none font-medium text-[15px] placeholder:text-[var(--foreground-muted)]/60 h-11 border border-transparent focus:border-[var(--accent)]/30 transition-all"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
                 </div>
               </div>
             </div>
@@ -409,13 +737,17 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                 {filteredExercises.map((ex) => (
                   <button
                     key={ex.id}
-                    onClick={() => handleAddExercise(ex)}
+                    onClick={() =>
+                      view === "preview"
+                        ? addPreviewExercise(ex)
+                        : handleAddExercise(ex)
+                    }
                     className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] active:scale-95 transition-transform text-left"
                   >
                     <div>
                       <h4 className="font-bold text-[15px]">{ex.name}</h4>
                       <p className="text-xs text-[var(--foreground-muted)] mt-0.5">
-                        {ex.category} • {ex.equipment || "Machine"}
+                        {ex.category} · {ex.equipment || "Machine"}
                       </p>
                     </div>
                     <div className="w-8 h-8 rounded-full bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)]">
@@ -436,5 +768,3 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
     </div>
   );
 }
-
-

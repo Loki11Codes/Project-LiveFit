@@ -25,6 +25,26 @@ export type WorkoutLogWithRelations = WorkoutLog & {
   })[];
 };
 
+export type TrackedSet = {
+  id: string;
+  weight: string;
+  reps: string;
+  isCompleted: boolean;
+};
+
+export type TrackedExercise = {
+  id: string; // unique ID for this instance in the workout
+  exerciseId: string; // reference to the Exercise model
+  name: string;
+  sets: TrackedSet[];
+};
+
+export type ActiveWorkoutSession = {
+  name: string;
+  startTime: number; // timestamp
+  exercises: TrackedExercise[];
+};
+
 export type AppTheme = "light" | "dark";
 export type DayType = "Rest" | "Training" | "Lite";
 export type TabId =
@@ -171,6 +191,7 @@ export type DashboardState = {
   analytics: AnalyticsResponse | null;
   dayType: DayType;
   dayTypesByDay: DayTypeMap;
+  activeWorkout: ActiveWorkoutSession | null;
 };
 
 export const DEFAULT_GOALS: GoalsState = {

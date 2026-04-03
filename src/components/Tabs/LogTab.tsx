@@ -13,6 +13,7 @@ import {
   Leaf,
   ChevronDown,
   ChevronUp,
+  Trash2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cardVariants, rowVariants } from '@/lib/animations';
@@ -23,6 +24,7 @@ interface LogTabProps {
   readonly protein: number;
   readonly workouts: WorkoutLogWithRelations[];
   readonly sleepLogs: SleepLog[];
+  readonly onDeleteWorkout?: (id: string) => void;
 }
 
 
@@ -31,6 +33,7 @@ export default function LogTab({
   protein,
   workouts,
   sleepLogs,
+  onDeleteWorkout,
 }: LogTabProps) {
   const [expandedWorkouts, setExpandedWorkouts] = React.useState<Record<string, boolean>>({});
 
@@ -147,7 +150,7 @@ export default function LogTab({
                 >
                   <button
                     onClick={() => toggleWorkout(workout.id)}
-                    className="flex items-start justify-between p-4 hover:bg-[var(--surface2)]/50 transition-colors text-left"
+                    className="flex-1 flex items-start justify-between p-4 hover:bg-[var(--surface2)]/50 transition-colors text-left"
                   >
                     <div className="flex-1">
                       <div className="log-row-name flex items-center gap-2 font-bold">
@@ -183,6 +186,15 @@ export default function LogTab({
                       </div>
                     )}
                   </button>
+                  {onDeleteWorkout && (
+                    <button
+                      onClick={() => onDeleteWorkout(workout.id)}
+                      className="p-3 self-start m-2 text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all shrink-0"
+                      title="Delete workout"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
 
                   <AnimatePresence>
                     {expandedWorkouts[workout.id] && workout.exercises.length > 0 && (
