@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { GET, POST } from './route';
 import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prisma';
@@ -26,7 +26,8 @@ describe('Routines API', () => {
     it('returns 401 if unauthorized', async () => {
       vi.mocked(getServerSession).mockResolvedValueOnce(null);
       
-      const res = await GET();
+      const req = new Request('http://localhost/api/routines');
+      const res = await GET(req);
       expect(res.status).toBe(401);
       const data = await res.json();
       expect(data.error).toBe('Unauthorized');
@@ -38,7 +39,8 @@ describe('Routines API', () => {
       const mockRoutines = [{ id: 'r1', name: 'Push' }];
       vi.mocked(prisma.routine.findMany).mockResolvedValueOnce(mockRoutines as any);
 
-      const res = await GET();
+      const req = new Request('http://localhost/api/routines');
+      const res = await GET(req);
       expect(res.status).toBe(200);
       const data = await res.json();
       expect(data).toEqual(mockRoutines);
@@ -51,7 +53,8 @@ describe('Routines API', () => {
       vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as any);
       vi.mocked(prisma.routine.findMany).mockRejectedValueOnce(new Error('DB Error'));
 
-      const res = await GET();
+      const req = new Request('http://localhost/api/routines');
+      const res = await GET(req);
       expect(res.status).toBe(500);
     });
   });

@@ -25,7 +25,7 @@ function findClosingMarker(text: string, searchFrom: number): number {
     // Check if this ||| is actually a new opening block
     markerRegex.lastIndex = idx;
     const match = markerRegex.exec(text);
-    if (match && match.index === idx) {
+    if (match?.index === idx) {
       pos = idx + match[0].length;
       continue;
     }
@@ -75,7 +75,7 @@ export function extractAndCleanLogData(text: string): {
   // Clean the text by removing all blocks that match the pattern
   // We recreate a simple version of the removal for safety
   const fullBlockRegex = /\|\|\|\s*DATA[\s\S]*?\|\|\|/gi;
-  cleanText = text.replace(fullBlockRegex, '').trim();
+  cleanText = text.replaceAll(fullBlockRegex, '').trim();
 
   return { logs, cleanText, hasData };
 }
