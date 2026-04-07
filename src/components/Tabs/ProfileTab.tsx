@@ -133,7 +133,7 @@ export default function ProfileTab({
                     Avg Pro
                   </div>
                   <div className="text-[20px] font-extralight tracking-tighter text-(--text)">
-                    {analytics?.averages.protein.toFixed(0) || 0}g
+                    {(analytics?.averages.protein ?? 0).toFixed(0)}g
                   </div>
                 </div>
                 <div className="p-4 bg-(--surface2) rounded-2xl border border-(--border)/30 text-center">
@@ -141,7 +141,7 @@ export default function ProfileTab({
                     Avg Kcal
                   </div>
                   <div className="text-[20px] font-extralight tracking-tighter text-(--text)">
-                    {analytics?.averages.kcal.toFixed(0) || 0}
+                    {(analytics?.averages.kcal ?? 0).toFixed(0)}
                   </div>
                 </div>
               </div>

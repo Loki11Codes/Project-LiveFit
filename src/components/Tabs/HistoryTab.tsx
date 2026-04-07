@@ -511,5 +511,6 @@ function getWeightDelta(weightTrend: WeightTrendPoint[]): number | null {
 }
 
 function roundNumber(value: number): string {
+  if (value === undefined || value === null) return "0";
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
