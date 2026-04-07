@@ -1500,3 +1500,23 @@ body {
 .animate-suggestion-pop {
   animation: suggestion-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
+
+.muscle-tag {
+  font-size: 8px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(var(--accent-rgb), 0.08);
+  color: var(--accent);
+  border: 1px solid rgba(var(--accent-rgb), 0.1);
+}
+
+.glass-premium.hover-glow:hover {
+  border-color: rgba(var(--accent-rgb), 0.3);
+  box-shadow: 
+    0 20px 40px -15px rgba(0, 0, 0, 0.1),
+    0 0 20px -5px rgba(var(--accent-rgb), 0.1);
+  transform: translateY(-2px);
+}

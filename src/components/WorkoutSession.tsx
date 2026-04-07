@@ -69,7 +69,7 @@ export function WorkoutSession({
   const addSet = (exId: string) => {
     const newExercises = session.exercises.map(ex => {
       if (ex.id === exId) {
-        const lastSet = ex.sets[ex.sets.length - 1];
+        const lastSet = ex.sets.at(-1);
         return {
           ...ex,
           sets: [
@@ -159,27 +159,27 @@ export function WorkoutSession({
       className="fixed inset-0 z-[5000] bg-[var(--background)] flex flex-col pt-safe-top overflow-hidden"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-[var(--surface)] border-b border-[var(--border)] shadow-sm shrink-0">
+      <div className="flex items-center justify-between px-6 py-5 glass-premium border-b border-black/5 shadow-md shrink-0 relative z-30">
         <div className="flex flex-col">
-          <h2 className="text-sm font-bold text-[var(--foreground-muted)] uppercase tracking-wider">
-            {session.name || "Workout"}
+          <h2 className="text-[10px] font-black text-[var(--accent)] uppercase tracking-[0.2em] opacity-60">
+            {session.name || "Live Session"}
           </h2>
-          <div className="flex items-center gap-2 text-xl font-black tabular-nums">
+          <div className="flex items-center gap-2 text-2xl font-black tabular-nums">
             <Clock className="w-5 h-5 text-[var(--accent)]" />
             {formatTime(elapsed)}
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={onDiscard}
-            className="p-2.5 text-[var(--foreground-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+            className="p-3 text-[var(--foreground-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-2xl transition-all active:scale-95 border border-transparent hover:border-red-500/20"
           >
             <Trash2 className="w-5 h-5" />
           </button>
           <button
             onClick={() => onFinish(session)}
-            className="px-5 py-2.5 bg-[var(--accent)] text-white font-bold rounded-xl shadow-lg shadow-[var(--accent)]/20 active:scale-95 transition-all"
+            className="px-6 py-3 bg-[var(--accent)] text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-xl shadow-[var(--accent)]/30 active:scale-95 transition-all"
           >
             Finish
           </button>
@@ -193,20 +193,23 @@ export function WorkoutSession({
             <motion.div
               layout
               key={ex.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="glass-premium rounded-3xl overflow-hidden relative group"
             >
-              <div className="p-4 flex items-center justify-between border-b border-[var(--border)]/50">
+              <div className="p-4 flex items-center justify-between border-b border-black/5 bg-black/[0.02]">
                 <div className="flex items-center gap-3">
-                  <span className="w-7 h-7 rounded-lg bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center font-bold text-xs">
+                  <span className="w-8 h-8 rounded-xl bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center font-black text-xs shadow-inner">
                     {exIdx + 1}
                   </span>
-                  <h3 className="font-bold text-lg">{ex.name}</h3>
+                  <div className="flex flex-col">
+                    <h3 className="font-black text-lg tracking-tight leading-none mb-1">{ex.name}</h3>
+                    <span className="text-[9px] font-black uppercase text-[var(--accent)] tracking-widest opacity-40">Target Reached: 85%</span>
+                  </div>
                 </div>
                 <button
                   onClick={() => removeExercise(ex.id)}
-                  className="p-1.5 text-[var(--foreground-muted)] hover:text-red-500 transition-colors"
+                  className="p-2 text-[var(--foreground-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -244,8 +247,8 @@ export function WorkoutSession({
                           placeholder="0"
                           value={set.weight}
                           onChange={(e) => updateSet(ex.id, set.id, { weight: e.target.value })}
-                          className={`w-full bg-[var(--surface2)] border border-[var(--border)] rounded-lg py-2.5 text-center font-bold text-sm outline-none focus:border-[var(--accent)] transition-all ${
-                            set.isCompleted ? "opacity-50" : ""
+                          className={`w-full bg-black/5 border border-transparent rounded-xl py-2.5 text-center font-black text-sm outline-none focus:border-[var(--accent)]/30 focus:bg-white/50 transition-all ${
+                            set.isCompleted ? "opacity-30" : ""
                           }`}
                         />
                         <input
@@ -253,29 +256,29 @@ export function WorkoutSession({
                           placeholder="0"
                           value={set.reps}
                           onChange={(e) => updateSet(ex.id, set.id, { reps: e.target.value })}
-                          className={`w-full bg-[var(--surface2)] border border-[var(--border)] rounded-lg py-2.5 text-center font-bold text-sm outline-none focus:border-[var(--accent)] transition-all ${
-                            set.isCompleted ? "opacity-50" : ""
+                          className={`w-full bg-black/5 border border-transparent rounded-xl py-2.5 text-center font-black text-sm outline-none focus:border-[var(--accent)]/30 focus:bg-white/50 transition-all ${
+                            set.isCompleted ? "opacity-30" : ""
                           }`}
                         />
                         {/* Complete toggle */}
                         <button
                           onClick={() => updateSet(ex.id, set.id, { isCompleted: !set.isCompleted })}
-                          className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
+                          className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
                             set.isCompleted
-                              ? "bg-green-500 text-white shadow-md shadow-green-500/20"
-                              : "bg-[var(--surface2)] text-[var(--foreground-muted)] border border-[var(--border)]"
+                              ? "bg-[var(--accent)] text-white shadow-xl shadow-[var(--accent)]/40 scale-105"
+                              : "bg-black/5 text-[var(--foreground-muted)] border border-transparent hover:border-black/10"
                           }`}
                         >
                           {set.isCompleted ? (
-                            <Check className="w-4 h-4 stroke-[3]" />
+                            <Check className="w-4 h-4 stroke-[4]" />
                           ) : (
-                            <div className="w-2 h-2 rounded-full bg-[var(--border)]" />
+                            <div className="w-2 h-2 rounded-full bg-black/20" />
                           )}
                         </button>
                         {/* Delete set */}
                         <button
                           onClick={() => removeSet(ex.id, set.id)}
-                          className="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--foreground-muted)] hover:text-red-500 hover:bg-red-500/10 transition-all"
+                          className="w-9 h-9 rounded-xl flex items-center justify-center text-red-500/20 hover:text-red-500 hover:bg-red-500/10 transition-all"
                           title="Remove set"
                         >
                           <X className="w-4 h-4" />

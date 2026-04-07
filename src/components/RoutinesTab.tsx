@@ -360,56 +360,76 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                   </button>
                 </div>
               ) : (
-                routines.map((routine) => (
-                  <motion.div
-                    layout
-                    key={routine.id}
-                    className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden"
-                  >
-                    {/* Tappable card body → opens preview */}
-                    <button
-                      onClick={() => openPreview(routine)}
-                      className="w-full p-5 flex items-center justify-between gap-4 text-left hover:bg-[var(--surface2)]/40 transition-colors active:bg-[var(--surface2)]/60"
-                    >
-                      <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-                        <h3 className="text-lg font-bold">{routine.name}</h3>
-                        <p className="text-sm font-semibold text-[var(--foreground-muted)] uppercase tracking-wider">
-                          {routine.exercises.length} Exercises
-                        </p>
-                        <div className="text-sm text-[var(--foreground)]/70 leading-relaxed truncate">
-                          {routine.exercises
-                            .map((e: any) => e.exercise.name)
-                            .join(", ")}
-                        </div>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-[var(--foreground-muted)] shrink-0" />
-                    </button>
+                routines.map((routine, rIdx) => {
+                  const muscleGroups = Array.from(new Set(
+                    routine.exercises
+                      .map((e: any) => e.exercise?.muscleGroup || e.exercise?.category || "Misc")
+                      .filter(Boolean)
+                  )).slice(0, 3);
 
-                    {/* Action row */}
-                    <div className="flex items-center gap-2 border-t border-[var(--border)]/60 px-5 py-3">
+                  return (
+                    <motion.div
+                      layout
+                      key={routine.id}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: rIdx * 0.05 }}
+                      className="glass-premium hover-glow rounded-3xl overflow-hidden group mb-1"
+                    >
+                      {/* Tappable card body → opens preview */}
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onStart?.(routine);
-                        }}
-                        className="flex-1 flex items-center justify-center gap-2 py-2 bg-[var(--accent)]/10 text-[var(--accent)] rounded-xl font-bold text-sm active:scale-95 transition-all"
+                        onClick={() => openPreview(routine)}
+                        className="w-full p-5 flex items-center justify-between gap-4 text-left transition-colors relative z-10"
                       >
-                        <Play className="w-3.5 h-3.5 fill-current" />
-                        Start Workout
+                        <div className="flex flex-col gap-2 flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-black tracking-tight">{routine.name}</h3>
+                            <div className="flex gap-1">
+                              {muscleGroups.map((mg: any) => (
+                                <span key={mg} className="muscle-tag">{mg}</span>
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-[10px] font-black text-[var(--accent)] uppercase tracking-[0.2em] opacity-60">
+                            {routine.exercises.length} Exercises • Intensive
+                          </p>
+                          <div className="text-[11px] font-bold text-[var(--foreground-muted)] leading-relaxed truncate opacity-40">
+                            {routine.exercises
+                              .map((e: any) => e.exercise.name)
+                              .join(", ")}
+                          </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-[var(--accent)]/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                          <ChevronRight className="w-5 h-5 text-[var(--accent)]" />
+                        </div>
                       </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteRoutine(routine.id);
-                        }}
-                        className="p-2.5 text-[var(--foreground-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all active:scale-95"
-                        title="Delete routine"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </motion.div>
-                ))
+
+                      {/* Action row */}
+                      <div className="flex items-center gap-2 border-t border-black/5 px-5 py-3.5 bg-black/5">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onStart?.(routine);
+                          }}
+                          className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[var(--accent)] text-white rounded-xl font-black text-xs shadow-lg shadow-[var(--accent)]/20 active:scale-95 transition-all"
+                        >
+                          <Play className="w-3.5 h-3.5 fill-current" />
+                          Start Workout
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteRoutine(routine.id);
+                          }}
+                          className="p-2.5 text-[var(--foreground-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all active:scale-95"
+                          title="Delete routine"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  );
+                })
               )}
             </motion.div>
           )}
@@ -434,7 +454,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden"
+                  className="glass-premium rounded-3xl overflow-hidden mb-2"
                 >
                   {/* Exercise header */}
                   <div className="flex items-center gap-3 p-4 border-b border-[var(--border)]/50">
@@ -489,7 +509,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                               onChange={(e) =>
                                 updatePreviewSet(ex._localId, set.id, "weight", e.target.value)
                               }
-                              className="w-full bg-[var(--surface2)] border border-[var(--border)] rounded-lg py-2.5 text-center font-bold text-sm outline-none focus:border-[var(--accent)] transition-all"
+                              className="w-full bg-black/5 border border-transparent rounded-xl py-2.5 text-center font-black text-sm outline-none focus:border-[var(--accent)]/30 focus:bg-white/50 transition-all"
                             />
                             <input
                               type="number"
@@ -498,7 +518,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                               onChange={(e) =>
                                 updatePreviewSet(ex._localId, set.id, "reps", e.target.value)
                               }
-                              className="w-full bg-[var(--surface2)] border border-[var(--border)] rounded-lg py-2.5 text-center font-bold text-sm outline-none focus:border-[var(--accent)] transition-all"
+                              className="w-full bg-black/5 border border-transparent rounded-xl py-2.5 text-center font-black text-sm outline-none focus:border-[var(--accent)]/30 focus:bg-white/50 transition-all"
                             />
                             {/* Delete set */}
                             <button
@@ -734,26 +754,29 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
 
             <div className="flex-1 overflow-y-auto p-4 content-scroll">
               <div className="flex flex-col gap-2 pb-safe-bottom">
-                {filteredExercises.map((ex) => (
-                  <button
+                {filteredExercises.map((ex, exIdx) => (
+                  <motion.button
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: exIdx * 0.03 }}
                     key={ex.id}
                     onClick={() =>
                       view === "preview"
                         ? addPreviewExercise(ex)
                         : handleAddExercise(ex)
                     }
-                    className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] active:scale-95 transition-transform text-left"
+                    className="flex items-center justify-between p-4 glass-premium hover-glow rounded-2xl active:scale-95 transition-all text-left"
                   >
-                    <div>
-                      <h4 className="font-bold text-[15px]">{ex.name}</h4>
-                      <p className="text-xs text-[var(--foreground-muted)] mt-0.5">
+                    <div className="flex flex-col gap-1">
+                      <h4 className="font-black text-[15px]">{ex.name}</h4>
+                      <p className="text-[10px] font-black text-[var(--foreground-muted)] uppercase tracking-wider opacity-40">
                         {ex.category} · {ex.equipment || "Machine"}
                       </p>
                     </div>
                     <div className="w-8 h-8 rounded-full bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)]">
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-4 h-4 stroke-[3]" />
                     </div>
-                  </button>
+                  </motion.button>
                 ))}
                 {filteredExercises.length === 0 && (
                   <div className="p-8 text-center text-[var(--foreground-muted)] font-medium">
