@@ -422,8 +422,10 @@ async function handleUserResponse(
     console.error("Chat log persistence failed:", getErrorMessage(error));
     // DUMP TO FILE FOR DEBUGGING
     try {
-      require('fs').appendFileSync('debug-crash.txt', '\nChat Error: ' + (error instanceof Error ? error.stack : String(error)) + '\n');
-    } catch(e) {}
+      require('node:fs').appendFileSync('debug-crash.txt', '\nChat Error: ' + (error instanceof Error ? error.stack : String(error)) + '\n');
+    } catch(e) {
+      console.error("Failed to dump error to debug log:", e);
+    }
     return "Reply generated, but it could not be saved to your history completely.";
   }
 }

@@ -115,7 +115,7 @@ export default function Home() {
       ex.sets
         .filter((s) => s.isCompleted)
         .forEach((s) => {
-          totalVolume += (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0);
+          totalVolume += (Number.parseFloat(s.weight) || 0) * (Number.parseInt(s.reps, 10) || 0);
         });
     });
 
@@ -132,8 +132,8 @@ export default function Home() {
             .filter((s) => s.isCompleted)
             .map((s, sIdx: number) => ({
               setNumber: sIdx + 1,
-              weight: parseFloat(s.weight) || 0,
-              reps: parseInt(s.reps, 10) || 0,
+              weight: Number.parseFloat(s.weight) || 0,
+              reps: Number.parseInt(s.reps, 10) || 0,
             })),
         })),
       },
@@ -280,32 +280,29 @@ export default function Home() {
     let cancelled = false;
 
     if (!session?.user?.id) {
-      Promise.resolve().then(() => {
-        if (!cancelled) {
-          startTransition(() => {
-            setDashboard(INITIAL_DASHBOARD_STATE);
-          });
-        }
-      });
-
+      if (!cancelled) {
+        startTransition(() => {
+          setDashboard(INITIAL_DASHBOARD_STATE);
+        });
+      }
       return () => {
         cancelled = true;
       };
     }
 
-    void fetchRawDashboardData()
-      .then((data) => {
-        if (cancelled) {
-          return;
-        }
+    const applyData = (data: Omit<DashboardState, "activeWorkout" | "measurements">) => {
+      if (cancelled) return;
+      const updateFn = (prev: DashboardState) => ({
+        ...prev,
+        ...data,
+      });
+      startTransition(() => {
+        setDashboard(updateFn);
+      });
+    };
 
-        startTransition(() => {
-          setDashboard(prev => ({
-            ...prev,
-            ...data,
-          }));
-        });
-      })
+    void fetchRawDashboardData()
+      .then(applyData)
       .catch((error) => {
         const message = getClientErrorMessage(error);
         console.error("Failed to fetch dashboard data:", message);

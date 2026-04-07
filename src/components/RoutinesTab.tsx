@@ -25,7 +25,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   // Preview state — a local working copy of the routine being previewed/edited
-  const [previewRoutine, setPreviewRoutine] = useState<any | null>(null);
+  const [previewRoutine, setPreviewRoutine] = useState<any>(null);
 
   // Builder State
   const [newRoutineName, setNewRoutineName] = useState("");
@@ -99,14 +99,16 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
 
   const removePreviewSet = (localId: string, setId: string) => {
     if (!confirm("Are you sure you want to delete this set?")) return;
-    setPreviewRoutine((prev: any) => ({
-      ...prev,
-      exercises: prev.exercises.map((e: any) =>
-        e._localId === localId
-          ? { ...e, sets: e.sets.filter((s: any) => s.id !== setId) }
-          : e
-      ),
-    }));
+    
+    const removeSetFromExercise = (e: any) => {
+      if (e._localId !== localId) return e;
+      return { ...e, sets: e.sets.filter((s: any) => s.id !== setId) };
+    };
+
+    setPreviewRoutine((prev: any) => {
+      if (!prev) return prev;
+      return { ...prev, exercises: prev.exercises.map(removeSetFromExercise) };
+    });
   };
 
   const updatePreviewSet = (
@@ -115,20 +117,18 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
     field: string,
     value: string
   ) => {
-    setPreviewRoutine((prev: any) => ({
-      ...prev,
-      exercises: prev.exercises.map((e: any) => {
-        if (e._localId === localId) {
-          return {
-            ...e,
-            sets: e.sets.map((s: any) =>
-              s.id === setId ? { ...s, [field]: value } : s
-            ),
-          };
-        }
-        return e;
-      }),
-    }));
+    const editSetField = (e: any) => {
+      if (e._localId !== localId) return e;
+      const newSets = e.sets.map((s: any) =>
+        s.id === setId ? { ...s, [field]: value } : s
+      );
+      return { ...e, sets: newSets };
+    };
+
+    setPreviewRoutine((prev: any) => {
+      if (!prev) return prev;
+      return { ...prev, exercises: prev.exercises.map(editSetField) };
+    });
   };
 
   const removePreviewExercise = (localId: string) => {
