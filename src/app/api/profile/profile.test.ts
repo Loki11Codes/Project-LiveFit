@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { GET, POST } from "./route";
 import prisma from "@/lib/prisma";
@@ -8,8 +8,8 @@ vi.mock("next-auth", () => ({
   getServerSession: vi.fn(),
 }));
 
-vi.mock("@/lib/prisma", () => ({
-  default: {
+vi.mock("@/lib/prisma", () => {
+  const models = {
     userProfile: {
       findUnique: vi.fn(),
       upsert: vi.fn(),
@@ -22,8 +22,17 @@ vi.mock("@/lib/prisma", () => ({
       update: vi.fn(),
       findUnique: vi.fn(),
     },
-  },
-}));
+    bodyMeasurement: {
+      findFirst: vi.fn().mockResolvedValue(null),
+    },
+  };
+  return {
+    default: {
+      ...models,
+      $transaction: vi.fn((cb: (tx: typeof models) => Promise<unknown>) => cb(models)),
+    },
+  };
+});
 
 describe("Profile API Route", () => {
   beforeEach(() => {

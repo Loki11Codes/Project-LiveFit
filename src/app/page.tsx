@@ -183,6 +183,42 @@ export default function Home() {
       void refreshDashboard();
     }
   };
+
+  const handleDeleteFood = async (id: string) => {
+    if (!confirm("Delete this food entry?")) return;
+    setDashboard((prev) => ({
+      ...prev,
+      logs: { ...prev.logs, food: prev.logs.food.filter((f) => f.id !== id) },
+    }));
+    try {
+      await fetch("/api/logs", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: "food", id }),
+      });
+    } catch (err) {
+      console.error("Failed to delete food", err);
+      void refreshDashboard();
+    }
+  };
+
+  const handleDeleteSleep = async (id: string) => {
+    if (!confirm("Delete this sleep entry?")) return;
+    setDashboard((prev) => ({
+      ...prev,
+      logs: { ...prev.logs, sleep: prev.logs.sleep.filter((s) => s.id !== id) },
+    }));
+    try {
+      await fetch("/api/logs", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: "sleep", id }),
+      });
+    } catch (err) {
+      console.error("Failed to delete sleep", err);
+      void refreshDashboard();
+    }
+  };
   const nutrition = sumNutrition(todaysFood);
   const latestSleep = getLatestSleepLog(dashboard.logs.sleep);
   const trackedDayCount = getTrackedDayCount(dashboard.logs);
@@ -464,8 +500,11 @@ export default function Home() {
                     fats={nutrition.fats}
                     fatsTarget={dashboard.goals.fatsTarget}
                     fiber={nutrition.fiber}
+                    water={nutrition.water}
+                    waterTarget={dashboard.goals.waterTarget ?? 3}
                     weight={dashboard.latestMeasurement?.weight ?? "--"}
                     sleep={latestSleep?.hours ?? "--"}
+                    sleepTarget={dashboard.goals.sleepTarget ?? 8}
                     day={trackedDayCount || 1}
                     dayType={dashboard.dayType}
                     setDayType={handleDayTypeChange}
@@ -481,11 +520,21 @@ export default function Home() {
                 workouts={dashboard.logs.workouts}
                 sleepLogs={dashboard.logs.sleep}
                 onDeleteWorkout={handleDeleteWorkout}
+                onDeleteFood={handleDeleteFood}
+                onDeleteSleep={handleDeleteSleep}
               />
             )}
 
             {activeTab === "history" && (
-              <HistoryTab history={history} analytics={dashboard.analytics} />
+              <HistoryTab
+                history={history}
+                analytics={dashboard.analytics}
+                kcalTarget={dashboard.goals.kcalTarget}
+                proteinTarget={getProteinTarget(
+                  dashboard.goals,
+                  dashboard.dayType,
+                )}
+              />
             )}
 
             {activeTab === "routines" && (

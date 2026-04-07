@@ -25,10 +25,17 @@ import type { AnalyticsResponse, HistoryRow, NutritionStat, WeightTrendPoint } f
 interface HistoryTabProps {
   readonly history: HistoryRow[];
   readonly analytics: AnalyticsResponse | null;
+  readonly kcalTarget: number;
+  readonly proteinTarget: number;
 }
 
 
-export default function HistoryTab({ history, analytics }: HistoryTabProps) {
+export default function HistoryTab({
+  history,
+  analytics,
+  kcalTarget,
+  proteinTarget,
+}: HistoryTabProps) {
   const nutritionStats = analytics?.nutritionStats ?? [];
   const weightTrend = analytics?.weightTrend ?? [];
   const weightDelta = getWeightDelta(weightTrend);
@@ -101,7 +108,12 @@ export default function HistoryTab({ history, analytics }: HistoryTabProps) {
                 animate="visible"
                 custom={index}
               >
-                <NutritionDayCard stat={stat} nutritionStats={nutritionStats} />
+                <NutritionDayCard
+                  stat={stat}
+                  nutritionStats={nutritionStats}
+                  kcalTarget={kcalTarget}
+                  proteinTarget={proteinTarget}
+                />
               </motion.div>
             ))}
           </div>
@@ -377,14 +389,20 @@ function WeightTrendCard({
 function NutritionDayCard({
   stat,
   nutritionStats,
+  kcalTarget,
+  proteinTarget,
 }: {
   readonly stat: NutritionStat;
   readonly nutritionStats: NutritionStat[];
+  readonly kcalTarget: number;
+  readonly proteinTarget: number;
 }) {
-  const maxProtein = Math.max(...nutritionStats.map((entry) => entry.protein), 1);
-  const maxKcal = Math.max(...nutritionStats.map((entry) => entry.kcal), 1);
+  const maxProtein = Math.max(...nutritionStats.map((entry) => entry.protein), proteinTarget, 1);
+  const maxKcal = Math.max(...nutritionStats.map((entry) => entry.kcal), kcalTarget, 1);
   const proteinHeight = `${Math.max((stat.protein / maxProtein) * 100, 8)}%`;
   const kcalHeight = `${Math.max((stat.kcal / maxKcal) * 100, 8)}%`;
+  const proteinTargetPos = `${(proteinTarget / maxProtein) * 100}%`;
+  const kcalTargetPos = `${(kcalTarget / maxKcal) * 100}%`;
 
   return (
     <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface2)]/60 p-4">
@@ -392,20 +410,28 @@ function NutritionDayCard({
         {stat.day}
       </div>
       <div className="h-[100px] flex items-end justify-center gap-2">
-        <div className="flex h-full w-full max-w-[42px] flex-col justify-end">
+        <div className="flex h-full w-full max-w-[42px] flex-col justify-end relative">
           <motion.div
             className="rounded-t-[14px] bg-[var(--accent)]"
             initial={{ height: 0 }}
             animate={{ height: proteinHeight }}
             transition={{ delay: 0.3, type: 'spring', damping: 15, stiffness: 80 }}
           />
+          <div 
+            className="absolute left-0 right-0 border-t border-dashed border-[var(--text-muted)] opacity-40 z-10"
+            style={{ bottom: proteinTargetPos }}
+          />
         </div>
-        <div className="flex h-full w-full max-w-[42px] flex-col justify-end">
+        <div className="flex h-full w-full max-w-[42px] flex-col justify-end relative">
           <motion.div
             className="rounded-t-[14px] bg-[var(--amber)]"
             initial={{ height: 0 }}
             animate={{ height: kcalHeight }}
             transition={{ delay: 0.4, type: 'spring', damping: 15, stiffness: 80 }}
+          />
+          <div 
+            className="absolute left-0 right-0 border-t border-dashed border-[var(--amber)] opacity-60 z-10"
+            style={{ bottom: kcalTargetPos }}
           />
         </div>
       </div>

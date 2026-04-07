@@ -33,6 +33,9 @@ interface SidebarProps {
   readonly fiber: number;
   readonly weight: number | string;
   readonly sleep: number | string;
+  readonly sleepTarget: number;
+  readonly water: number;
+  readonly waterTarget: number;
   readonly day: number;
   readonly dayType: DayType;
   readonly setDayType: (type: DayType) => void;
@@ -50,6 +53,9 @@ export default function Sidebar({
   fiber,
   weight,
   sleep,
+  sleepTarget,
+  water,
+  waterTarget,
   day,
   dayType,
   setDayType,
@@ -108,27 +114,19 @@ export default function Sidebar({
       unit: "kg",
       color: "#a86b12",
     },
-    { icon: Moon, label: "Sleep", value: sleep, unit: "hrs", color: "#6b7ea8" },
     {
-      icon: Flame,
-      label: "Calories",
-      value: calories,
-      unit: "kcal",
-      color: "#e67e22",
-    },
-    {
-      icon: Wheat,
-      label: "Carbs",
-      value: carbs.toFixed(1),
-      unit: carbsTarget ? `g / ${carbsTarget}g` : "g",
-      color: "#e6ac50",
+      icon: Moon,
+      label: "Sleep",
+      value: sleep,
+      unit: isMounted ? ` / ${sleepTarget}h` : "hrs",
+      color: "#6b7ea8",
     },
     {
       icon: Droplets,
-      label: "Fats",
-      value: fats.toFixed(1),
-      unit: fatsTarget ? `g / ${fatsTarget}g` : "g",
-      color: "#d4a23a",
+      label: "Water",
+      value: water.toFixed(1),
+      unit: waterTarget ? ` / ${waterTarget}L` : "L",
+      color: "#3b82f6",
     },
     {
       icon: Salad,
@@ -137,7 +135,20 @@ export default function Sidebar({
       unit: "g",
       color: "#4db382",
     },
-    { icon: Calendar, label: "Day", value: day, unit: "", color: "#7b5ea7" },
+    {
+      icon: Wheat,
+      label: "Carbs",
+      value: carbs.toFixed(1),
+      unit: carbsTarget ? ` / ${carbsTarget}g` : "g",
+      color: "#e6ac50",
+    },
+    {
+      icon: Droplets,
+      label: "Fats",
+      value: fats.toFixed(1),
+      unit: fatsTarget ? ` / ${fatsTarget}g` : "g",
+      color: "#d4a23a",
+    },
     {
       icon: Calendar,
       label: "Date",
@@ -215,36 +226,36 @@ export default function Sidebar({
           </div>
         </GlassPopover>
 
-        {/* ── STATS SECTION ── */}
-        <div className="flex-1 flex flex-col justify-center border-y border-[rgba(0,0,0,0.06)] py-2 my-2 min-h-0">
-          <div className="overflow-hidden">
-            {statsRows.map((row, index) => (
+        {/* ── STATS SECTION (2-COL GRID) ── */}
+        <div className="flex-1 flex flex-col justify-center border-y border-[rgba(0,0,0,0.06)] py-1.5 my-1 min-h-0">
+          <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+            {statsRows.map((row) => (
               <button
                 key={row.label}
                 type="button"
-                className={`w-full flex justify-between items-center py-1.5 cursor-pointer hover:bg-[rgba(0,0,0,0.02)] px-1 rounded-md transition-all ${index < statsRows.length - 1 ? "border-b border-[rgba(0,0,0,0.02)]" : ""}`}
+                className="flex justify-between items-center py-1.5 cursor-pointer hover:bg-[rgba(0,0,0,0.02)] px-1 relative rounded-md transition-all after:absolute after:bottom-0 after:left-1 after:right-1 after:h-[1px] after:bg-[rgba(0,0,0,0.02)] last:after:hidden"
                 onClick={() => setActiveMetric(row.label)}
                 suppressHydrationWarning
               >
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-1.5 min-w-0">
                   <row.icon
-                    className="w-3.5 h-3.5"
+                    className="w-3 h-3 flex-shrink-0"
                     style={{ color: row.color }}
                     strokeWidth={2}
                   />
-                  <span className="text-[9px] font-bold uppercase opacity-50 tracking-wide text-left">
+                  <span className="text-[8.5px] font-bold uppercase opacity-50 tracking-tight text-left truncate">
                     {row.label}
                   </span>
                 </div>
-                <div className="flex items-baseline gap-1.5">
+                <div className="flex items-baseline gap-1 flex-shrink-0">
                   <span
-                    className="text-[11px] font-black"
+                    className="text-[10px] font-black"
                     style={{ color: row.color }}
                   >
                     {row.value}
                   </span>
                   {row.unit && (
-                    <span className="text-[9px] opacity-30 font-bold">
+                    <span className="text-[8px] opacity-30 font-bold truncate max-w-[40px]">
                       {row.unit}
                     </span>
                   )}

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
+import { calculateDailyTargets } from "@/lib/recommendations";
 
 const SIDEBAR_TABS = [
   { id: "profile", label: "General & Profile", icon: User },
@@ -43,12 +44,16 @@ export default function SettingsPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [prof, go] = await Promise.all([
+        const [prof, go, measure] = await Promise.all([
           requestJson<UserProfile>("/api/profile"),
           requestJson<GoalsState>("/api/profile?type=goals"),
+          requestJson<{ weight: number }[]>("/api/measurements"),
         ]);
         if (prof) setProfileData(prof);
         if (go) setGoalsData(go);
+        if (measure && measure.length > 0) {
+          setProfileData(prev => ({ ...prev, weight: measure[0].weight } as any));
+        }
       } catch (e) {
         console.error("Failed to load settings data", e);
       }
@@ -91,6 +96,32 @@ export default function SettingsPage() {
       console.error(e);
       toast.error("Failed to save settings");
     }
+  };
+  
+  const handleRecalculateMacros = () => {
+    const targets = calculateDailyTargets({
+      gender: profileData.gender,
+      age: profileData.age,
+      height: profileData.height,
+      weight: (profileData as any).weight,
+      activityPreference: profileData.activityPreference,
+      primaryGoal: profileData.primaryGoal,
+      dietaryPreference: profileData.dietaryPreference
+    });
+    
+    if (!targets) {
+      toast.error("Complete your profile (age, weight, height, gender) to recalculate macros.");
+      return;
+    }
+    
+    setGoalsData(prev => ({
+      ...prev,
+      kcalTarget: targets.kcalTarget,
+      proteinTarget: targets.proteinTarget,
+      carbsTarget: targets.carbsTarget,
+      fatsTarget: targets.fatsTarget
+    }));
+    toast.success("Macros recalculated based on your profile!");
   };
 
   return (
@@ -195,6 +226,7 @@ export default function SettingsPage() {
                     profile={profileData}
                     onChangeGoal={handleGoalChange}
                     onChangeProfile={handleProfileChange}
+                    onRecalculate={handleRecalculateMacros}
                   />
                 )}
                 {activeTab === "notifications" && (
@@ -482,11 +514,13 @@ function NutritionPanel({
   profile,
   onChangeGoal,
   onChangeProfile,
+  onRecalculate,
 }: Readonly<{
   goals: Partial<GoalsState>;
   profile: Partial<UserProfile>;
   onChangeGoal: (f: keyof GoalsState, v: GoalFieldValue) => void;
   onChangeProfile: (f: string, v: ProfileFieldValue) => void;
+  onRecalculate: () => void;
 }>) {
   return (
     <div className="space-y-10">
@@ -505,15 +539,18 @@ function NutritionPanel({
             onChangeGoal("kcalTarget", Number.parseFloat(v) || null)
           }
         />
-        <FormField
-          label="Water Intake (Liters)"
-          type="number"
-          placeholder="3.5"
-          value={goals.waterTarget ?? ""}
-          onChange={(v) =>
-            onChangeGoal("waterTarget", Number.parseFloat(v) || null)
-          }
-        />
+        <div className="flex flex-col gap-2">
+          <label htmlFor="recalculate-btn" className="text-[12px] font-bold uppercase tracking-widest text-(--text-muted) ml-1">
+            Recalculate
+          </label>
+          <button
+            id="recalculate-btn"
+            onClick={onRecalculate}
+            className="h-12 w-full rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 text-[13px] font-bold uppercase tracking-wider text-amber-600 transition hover:bg-amber-500/10 dark:text-amber-400"
+          >
+            Update from Profile
+          </button>
+        </div>
       </div>
 
       <hr className="border-black/5 " />

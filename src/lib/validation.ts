@@ -101,6 +101,7 @@ export const FoodItemSchema = z.object({
   carbs: optionalFiniteNumber,
   fats: optionalFiniteNumber,
   fiber: optionalFiniteNumber,
+  water: optionalFiniteNumber,
   date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)

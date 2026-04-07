@@ -1,4 +1,4 @@
-﻿ 
+ 
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import Sidebar from "./Sidebar";
@@ -26,10 +26,15 @@ describe("Sidebar Component", () => {
     calories: 1500,
     calorieTarget: 2000,
     carbs: 150,
+    carbsTarget: 300,
     fats: 50,
+    fatsTarget: 80,
     fiber: 25,
+    water: 2,
+    waterTarget: 3,
     weight: 70,
     sleep: 8,
+    sleepTarget: 8,
     day: 1,
     dayType: "Rest" as const,
     setDayType: vi.fn(),

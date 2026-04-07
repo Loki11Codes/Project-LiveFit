@@ -1,4 +1,4 @@
-import type { BodyMeasurement, FoodLog, SleepLog } from '@prisma/client';
+import type { BodyMeasurement, SleepLog } from '@prisma/client';
 import {
   EMPTY_MEASUREMENT_FORM,
   type DayType,
@@ -10,7 +10,21 @@ import {
   type MeasurementForm,
   type MeasurementPayload,
   type TabId,
+  type FoodLog,
 } from '@/lib/types';
+
+type DailySummary = {
+  dayKey: string;
+  date: Date;
+  protein: number;
+  kcal: number;
+  carbs: number;
+  fats: number;
+  fiber: number;
+  water: number;
+  sleep: number | null;
+  workoutFocuses: Set<string>;
+};
 
 const VALID_TABS = new Set<TabId>(['chat', 'log', 'routines', 'history', 'body', 'profile']);
 
@@ -75,6 +89,7 @@ export function sumNutrition(foodLogs: FoodLog[]) {
       carbs: totals.carbs + (log.carbs ?? 0),
       fats: totals.fats + (log.fats ?? 0),
       fiber: totals.fiber + (log.fiber ?? 0),
+      water: totals.water + (log.water ?? 0),
     }),
     {
       protein: 0,
@@ -82,6 +97,7 @@ export function sumNutrition(foodLogs: FoodLog[]) {
       carbs: 0,
       fats: 0,
       fiber: 0,
+      water: 0,
     }
   );
 }
@@ -113,17 +129,6 @@ export function buildHistoryRows(
   goals: GoalsState,
   dayTypesByDay: DayTypeMap
 ): HistoryRow[] {
-  type DailySummary = {
-    dayKey: string;
-    date: Date;
-    protein: number;
-    kcal: number;
-    carbs: number;
-    fats: number;
-    fiber: number;
-    sleep: number | null;
-    workoutFocuses: Set<string>;
-  };
 
   const grouped = new Map<string, DailySummary>();
 
@@ -136,6 +141,7 @@ export function buildHistoryRows(
     entry.carbs += log.carbs ?? 0;
     entry.fats += log.fats ?? 0;
     entry.fiber += log.fiber ?? 0;
+    entry.water += log.water ?? 0;
     grouped.set(key, entry);
   }
 
@@ -168,6 +174,7 @@ export function buildHistoryRows(
       carbs: round(entry.carbs),
       fats: round(entry.fats),
       fiber: round(entry.fiber),
+      water: round(entry.water),
       workout:
         entry.workoutFocuses.size > 0
           ? Array.from(entry.workoutFocuses).join(', ')
@@ -207,17 +214,7 @@ export function getProteinTarget(goals: GoalsState, dayType: DayType): number {
   }
 }
 
-function createDailySummary(value: Date | string): {
-  dayKey: string;
-  date: Date;
-  protein: number;
-  kcal: number;
-  carbs: number;
-  fats: number;
-  fiber: number;
-  sleep: number | null;
-  workoutFocuses: Set<string>;
-} {
+function createDailySummary(value: Date | string): DailySummary {
   return {
     dayKey: getLocalDateKey(value),
     date: new Date(value),
@@ -226,6 +223,7 @@ function createDailySummary(value: Date | string): {
     carbs: 0,
     fats: 0,
     fiber: 0,
+    water: 0,
     sleep: null,
     workoutFocuses: new Set<string>(),
   };

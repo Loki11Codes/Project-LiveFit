@@ -1,6 +1,5 @@
 import type {
   BodyMeasurement,
-  FoodLog,
   SleepLog,
   WorkoutLog,
   WorkoutExercise,
@@ -10,7 +9,6 @@ import type {
 
 export type {
   BodyMeasurement,
-  FoodLog,
   SleepLog,
   WorkoutLog,
   WorkoutExercise,
@@ -156,12 +154,18 @@ export type ChatAttachmentPayload = {
   name: string;
 };
 
-export type ChatAttachment = ChatAttachmentPayload & {
+export type FoodLog = {
   id: string;
-  previewUrl: string;
+  userId: string;
+  name: string;
+  protein: number;
+  kcal: number;
+  carbs: number | null;
+  fats: number | null;
+  fiber: number | null;
+  water: number | null;
+  time: string | Date;
 };
-
-;
 
 export type ParsedLogEnvelope = {
   category?: string;
@@ -179,6 +183,7 @@ export type HistoryRow = {
   carbs: number;
   fats: number;
   fiber: number;
+  water: number;
   workout: string;
 };
 

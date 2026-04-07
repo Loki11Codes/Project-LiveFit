@@ -138,7 +138,7 @@ async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInpu
 
       if (existing) {
 
-        await tx.foodLog.update({
+        await (tx.foodLog as any).update({
           where: { id: existing.id },
           data: {
             kcal: validated.kcal,
@@ -146,13 +146,14 @@ async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInpu
             carbs: validated.carbs,
             fats: validated.fats,
             fiber: validated.fiber,
+            water: validated.water,
           },
         });
         return;
       }
     }
 
-    await tx.foodLog.create({
+    await (tx.foodLog as any).create({
       data: {
         userId,
         name: validated.name,
@@ -161,6 +162,7 @@ async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInpu
         carbs: validated.carbs,
         fats: validated.fats,
         fiber: validated.fiber,
+        water: validated.water,
         time: validated.date ? new Date(validated.date) : undefined,
       },
     });

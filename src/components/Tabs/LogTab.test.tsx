@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import LogTab from './LogTab';
@@ -14,8 +14,8 @@ vi.mock('framer-motion', () => ({
 describe('LogTab Component', () => {
   const defaultProps = {
     foodLog: [
-      { id: 'f1', name: 'Chicken Breast', protein: 30, kcal: 165, carbs: 0, fats: 3, fiber: 0, time: new Date('2026-03-18T12:00:00Z'), userId: 'u1' },
-      { id: 'f2', name: 'Rice', protein: 5, kcal: 200, carbs: 45, fats: 1, fiber: 2, time: new Date('2026-03-18T12:30:00Z'), userId: 'u1' },
+      { id: 'f1', name: 'Chicken Breast', protein: 30, kcal: 165, carbs: 0, fats: 3, fiber: 0, water: 0, time: new Date('2026-03-18T12:00:00Z'), userId: 'u1' },
+      { id: 'f2', name: 'Rice', protein: 5, kcal: 200, carbs: 45, fats: 1, fiber: 2, water: 0, time: new Date('2026-03-18T12:30:00Z'), userId: 'u1' },
     ],
     protein: 35,
     workouts: [

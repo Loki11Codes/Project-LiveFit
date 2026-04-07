@@ -25,6 +25,8 @@ interface LogTabProps {
   readonly workouts: WorkoutLogWithRelations[];
   readonly sleepLogs: SleepLog[];
   readonly onDeleteWorkout?: (id: string) => void;
+  readonly onDeleteFood?: (id: string) => void;
+  readonly onDeleteSleep?: (id: string) => void;
 }
 
 
@@ -34,6 +36,8 @@ export default function LogTab({
   workouts,
   sleepLogs,
   onDeleteWorkout,
+  onDeleteFood,
+  onDeleteSleep,
 }: LogTabProps) {
   const [expandedWorkouts, setExpandedWorkouts] = React.useState<Record<string, boolean>>({});
 
@@ -109,8 +113,17 @@ export default function LogTab({
                       </span>
                     </div>
                   </div>
-                  <div className="log-row-val whitespace-nowrap text-[18px] font-extralight tracking-tighter text-[var(--text)]">
+                  <div className="log-row-val whitespace-nowrap text-[18px] font-extralight tracking-tighter text-[var(--text)] group relative pr-8">
                     {food.protein}g
+                    {onDeleteFood && (
+                      <button
+                        onClick={() => onDeleteFood(food.id)}
+                        className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 text-[var(--text-muted)] hover:text-[var(--red)] transition-all bg-[var(--surface2)] rounded-lg"
+                        title="Delete food log"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </motion.div>
               ))
@@ -176,25 +189,30 @@ export default function LogTab({
                         )}
                       </div>
                     </div>
-                    {workout.exercises.length > 0 && (
-                      <div className="ml-2 mt-1">
-                        {expandedWorkouts[workout.id] ? (
-                          <ChevronUp className="w-4 h-4 text-[var(--text-muted)]" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4 text-[var(--text-muted)]" />
-                        )}
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2 pr-4">
+                      {onDeleteWorkout && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteWorkout(workout.id);
+                          }}
+                          className="p-2 text-[var(--text-muted)] hover:text-[var(--red)] hover:bg-[var(--red-bg)]/20 rounded-xl transition-all shrink-0"
+                          title="Delete workout"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      {workout.exercises.length > 0 && (
+                        <div className="mt-1">
+                          {expandedWorkouts[workout.id] ? (
+                            <ChevronUp className="w-4 h-4 text-[var(--text-muted)]" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 text-[var(--text-muted)]" />
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </button>
-                  {onDeleteWorkout && (
-                    <button
-                      onClick={() => onDeleteWorkout(workout.id)}
-                      className="p-3 self-start m-2 text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all shrink-0"
-                      title="Delete workout"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
 
                   <AnimatePresence>
                     {expandedWorkouts[workout.id] && workout.exercises.length > 0 && (
@@ -286,9 +304,18 @@ export default function LogTab({
                         ` | ${sleep.bedTime ?? '--'} to ${sleep.wakeTime ?? '--'}`}
                     </div>
                   </div>
-                  <div className="log-row-val text-[16px]">
+                  <div className="log-row-val text-[16px] group relative pr-8">
                     {sleep.hours}
                     <span className="text-[12px]"> hrs</span>
+                    {onDeleteSleep && (
+                      <button
+                        onClick={() => onDeleteSleep(sleep.id)}
+                        className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 text-[var(--text-muted)] hover:text-[var(--red)] transition-all bg-[var(--surface2)] rounded-lg"
+                        title="Delete sleep log"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </motion.div>
               ))
