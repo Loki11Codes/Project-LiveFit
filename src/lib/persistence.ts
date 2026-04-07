@@ -173,7 +173,7 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
 
   const parsed = WorkoutLogSchema.safeParse(data);
   if (!parsed.success) {
-    console.error('[PERSISTENCE] Workout validation failed:', JSON.stringify(parsed.error.format(), null, 2));
+    console.error('[PERSISTENCE] Workout validation failed:', JSON.stringify(parsed.error.issues, null, 2));
     console.warn('Skipping invalid workout log from AI:', parsed.error);
     return;
   }
