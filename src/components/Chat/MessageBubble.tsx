@@ -50,7 +50,7 @@ export function MessageBubble({ msg, isFirstInGroup, isNewUser, onDelete }: Read
         </div>
       </div>
       <div
-        className={`flex flex-col max-w-[80%] group ${
+        className={`flex flex-col max-w-[95%] group ${
           msg.role === "user" ? "items-end" : "items-start"
         }`}
       >

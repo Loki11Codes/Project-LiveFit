@@ -65,7 +65,7 @@ function MacroBar({
   const fPct = (fCal / total) * 100;
 
   return (
-    <div className="flex flex-col gap-2 py-2.5 bg-black/5 rounded-2xl px-4 border border-black/5 mb-2.5">
+    <div className="flex flex-col gap-2 py-2.5 bg-black/5 rounded-2xl px-4 border border-black/5 h-full">
       <div className="flex items-center justify-between text-[10px] font-black uppercase">
         <span className="opacity-40 tracking-tighter">Balance</span>
         <span>{Math.round(total)} Kcal</span>
@@ -101,7 +101,7 @@ function WeeklyConsistency({ stats }: Readonly<{ stats: any[] }>) {
   const max = Math.max(...last7.map((s) => s.protein || 0), 100);
 
   return (
-    <div className="flex flex-col gap-2 py-3 bg-black/5 rounded-2xl px-4 border border-black/5 mb-3">
+    <div className="flex flex-col gap-2 py-3 bg-black/5 rounded-2xl px-4 border border-black/5 h-full">
       <div className="flex items-center justify-between text-[10px] font-black uppercase">
         <span className="opacity-40 tracking-tighter">7-Day Consistency</span>
         <span className="text-[var(--accent)]">Protein</span>
@@ -233,16 +233,28 @@ function ProactiveCoach({
   }
 
   return (
-    <div className="flex flex-col gap-3 mb-4 animate-dashboard-in stagger-4">
-      <div className="glass-premium p-3 rounded-2xl border border-white/5">
-        <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-full bg-[var(--accent)]/10 flex items-center justify-center flex-none">
-            {React.createElement(icon, { className: "w-4 h-4 text-[var(--accent)]" })}
+    <div className="flex flex-col gap-3 mb-4 animate-dashboard-in stagger-4 flex-shrink-0">
+      <div className="glass-premium rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden group/insight">
+        {/* Decorative Glow */}
+        <div 
+          className="absolute -top-4 -right-4 w-16 h-16 blur-2xl opacity-20 transition-opacity group-hover/insight:opacity-40 bg-[var(--accent)] pointer-events-none"
+        />
+
+        <div className="flex items-center justify-between relative z-10">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-[var(--accent)]/10 border border-[var(--accent)]/20">
+              {React.createElement(icon, { className: "w-4 h-4 text-[var(--accent)]" })}
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text)] opacity-40">
+              Coach Tip
+            </span>
           </div>
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[10px] font-black uppercase opacity-30 tracking-widest leading-none">Coach Tip</span>
-            <p className="text-[10.5px] font-bold leading-tight mt-1">{tip}</p>
-          </div>
+        </div>
+
+        <div className="space-y-1 relative z-10 text-[var(--text)]">
+          <p className="text-[12px] leading-relaxed opacity-80 font-medium">
+            {tip}
+          </p>
         </div>
       </div>
 
@@ -507,9 +519,10 @@ export default function Sidebar({
 
   return (
     <GlassPane noPadding className="sidebar-scroll-container">
-      <div className="flex flex-col h-full !p-4 !gap-0">
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex flex-col flex-1 !p-4 !pb-0 !gap-0 overflow-y-auto no-scrollbar relative">
         {/* ── HEADER ── */}
-        <div className="flex items-center justify-between mb-5 flex-none animate-dashboard-in stagger-1">
+        <div className="flex items-center justify-between mb-3 flex-none animate-dashboard-in stagger-1">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-lg bg-[rgba(0,0,0,0.04)] flex items-center justify-center">
               <Target className="w-3 h-3 text-[var(--accent)]" strokeWidth={3} />
@@ -521,7 +534,7 @@ export default function Sidebar({
           <Zap className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500 animate-pulse opacity-40" />
         </div>
 
-        <div className="flex flex-col gap-3 mb-5 flex-none animate-dashboard-in stagger-1">
+        <div className="grid grid-cols-2 gap-3 mb-3 flex-none animate-dashboard-in stagger-1">
 
           <GlassMetric
             icon={Beef}
@@ -573,18 +586,15 @@ export default function Sidebar({
           </div>
         </GlassPopover>
 
-        {/* ── MACRO DISTRIBUTION (SPACE SAVING BAR) ── */}
-        <MacroBar p={protein} c={carbs} f={fats} />
-
-        {/* ── WEEKLY CONSISTENCY (SPARKLINE) ── */}
-        <div className="animate-dashboard-in stagger-2">
+        <div className="grid grid-cols-2 gap-3 animate-dashboard-in stagger-2 mb-1">
+          <MacroBar p={protein} c={carbs} f={fats} />
           {analytics?.nutritionStats && (
             <WeeklyConsistency stats={analytics.nutritionStats} />
           )}
         </div>
 
         {/* ── STATS SECTION (LIVE ASSISTANT OR GRID) ── */}
-        <div className="border-y border-[rgba(0,0,0,0.06)] py-2.5 my-1">
+        <div className="border-y border-[rgba(0,0,0,0.06)] py-2 my-0.5">
           {activeWorkout ? (
             <WorkoutLiveAssistant session={activeWorkout} />
           ) : (
@@ -656,7 +666,7 @@ export default function Sidebar({
         <RecentActivity logs={logs} />
 
         {/* ── AI COCHING / INSIGHTS ── */}
-        <div className="flex flex-col gap-3 py-4 border-t border-[rgba(0,0,0,0.06)] mt-2">
+        <div className="flex flex-col gap-2 py-3 border-t border-[rgba(0,0,0,0.06)] mt-1">
           {aiInsights && aiInsights.length > 0 ? (
             <AnimatePresence mode="popLayout">
               {aiInsights.map((insight) => (
@@ -678,9 +688,10 @@ export default function Sidebar({
             />
           )}
         </div>
+      </div>
 
-        <div className="flex flex-col gap-2 mt-auto flex-none border-t border-black/5 pt-3 animate-dashboard-in stagger-5">
-          <div className="sidebar-daytype-pills relative flex p-1 gap-1 bg-[rgba(0,0,0,0.04)] rounded-xl overflow-hidden">
+      <div className="flex flex-col gap-2 p-4 pt-3 flex-none border-t border-black/5 animate-dashboard-in stagger-5 relative z-20">
+        <div className="sidebar-daytype-pills relative flex p-1 gap-1 bg-[rgba(0,0,0,0.04)] rounded-xl overflow-hidden">
             {dayTypes.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}

@@ -79,6 +79,15 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Hide scrollbars elegantly */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
 body {
   font-family:
     "Inter",
@@ -109,7 +118,7 @@ body {
 
 .main-layout {
   width: 100%;
-  max-width: 1280px;
+  max-width: 1600px;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -151,7 +160,7 @@ body {
 @media (min-width: 1024px) {
   .chat-sidebar-layout {
     display: grid;
-    grid-template-columns: 1fr 380px;
+    grid-template-columns: 1fr minmax(400px, 35%); /* Give sidebar much more horizontal space */
     align-items: stretch;
     height: 100%; /* Fill the single-screen-layout */
     gap: 12px;
@@ -170,7 +179,7 @@ body {
 
 @media (min-width: 1024px) {
   .sidebar-scroll-container {
-    width: 380px;
+    width: 100%; /* Take the grid track width instead of hard 380px */
     flex-shrink: 0;
     height: 100%;
     overflow-y: hidden !important; /* STRICT NO SCROLL */
@@ -791,7 +800,7 @@ body {
 }
 
 .chat-msg-bubble {
-  max-width: 85%;
+  max-width: 100%; /* Let Tailwind handle parent constraints */
   padding: 10px 14px;
   border-radius: 16px;
   font-size: 13.5px;
