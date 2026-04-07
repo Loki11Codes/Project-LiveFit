@@ -222,6 +222,7 @@ export default function Home() {
   const nutrition = sumNutrition(todaysFood);
   const latestSleep = getLatestSleepLog(dashboard.logs.sleep);
   const trackedDayCount = getTrackedDayCount(dashboard.logs);
+  const hasLoggedWorkoutToday = dashboard.logs.workouts.some(w => getLocalDateKey(w.time) === getLocalDateKey(new Date()));
   const history = buildHistoryRows(
     dashboard.logs,
     dashboard.goals,
@@ -505,9 +506,11 @@ export default function Home() {
                     weight={dashboard.latestMeasurement?.weight ?? "--"}
                     sleep={latestSleep?.hours ?? "--"}
                     sleepTarget={dashboard.goals.sleepTarget ?? 8}
-                    day={trackedDayCount || 1}
                     dayType={dashboard.dayType}
                     setDayType={handleDayTypeChange}
+                    hasWorkout={hasLoggedWorkoutToday}
+                    analytics={dashboard.analytics}
+                    logs={dashboard.logs}
                   />
                 </div>
               </div>

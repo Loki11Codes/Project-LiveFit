@@ -7,7 +7,6 @@ import {
   Flame,
   Scale,
   Moon,
-  Calendar,
   Target,
   Wheat,
   Droplets,
@@ -36,9 +35,201 @@ interface SidebarProps {
   readonly sleepTarget: number;
   readonly water: number;
   readonly waterTarget: number;
-  readonly day: number;
   readonly dayType: DayType;
   readonly setDayType: (type: DayType) => void;
+  readonly hasWorkout: boolean;
+  readonly analytics: any | null;
+  readonly logs: any;
+}
+
+function MacroBar({
+  p,
+  c,
+  f,
+}: Readonly<{ p: number; c: number; f: number }>) {
+  const pCal = p * 4;
+  const cCal = c * 4;
+  const fCal = f * 9;
+  const total = pCal + cCal + fCal || 1;
+
+  const pPct = (pCal / total) * 100;
+  const cPct = (cCal / total) * 100;
+  const fPct = (fCal / total) * 100;
+
+  return (
+    <div className="flex flex-col gap-2 py-2.5 bg-black/5 rounded-2xl px-4 border border-black/5 mb-2.5">
+      <div className="flex items-center justify-between text-[10px] font-black uppercase">
+        <span className="opacity-40 tracking-tighter">Balance</span>
+        <span>{Math.round(total)} Kcal</span>
+      </div>
+      <div className="flex h-1.5 w-full rounded-full overflow-hidden bg-black/5">
+        <div style={{ width: `${pPct}%` }} className="h-full bg-[#8b4513]" />
+        <div style={{ width: `${cPct}%` }} className="h-full bg-[#e6ac50]" />
+        <div style={{ width: `${fPct}%` }} className="h-full bg-[#d4a23a]" />
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#8b4513]" />
+            <span className="text-[9px] font-black opacity-30">P {Math.round(pPct)}%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#e6ac50]" />
+            <span className="text-[9px] font-black opacity-30">C {Math.round(cPct)}%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#d4a23a]" />
+            <span className="text-[9px] font-black opacity-30">F {Math.round(fPct)}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function WeeklyConsistency({ stats }: Readonly<{ stats: any[] }>) {
+  const last7 = (stats || []).slice(-7);
+  const max = Math.max(...last7.map((s) => s.protein || 0), 100);
+
+  return (
+    <div className="flex flex-col gap-2 py-3 bg-black/5 rounded-2xl px-4 border border-black/5 mb-3">
+      <div className="flex items-center justify-between text-[10px] font-black uppercase">
+        <span className="opacity-40 tracking-tighter">7-Day Consistency</span>
+        <span className="text-[var(--accent)]">Protein</span>
+      </div>
+      <div className="flex items-end justify-between h-10 gap-1.5 px-1">
+        {Array.from({ length: 7 }).map((_, i) => {
+          const dayData = last7[i];
+          const height = dayData ? (dayData.protein / max) * 100 : 5;
+          return (
+            <div
+              key={i}
+              className="flex-1 bg-[rgba(0,0,0,0.06)] rounded-t-sm relative group"
+              style={{ height: "100%" }}
+            >
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: `${height}%` }}
+                className="absolute bottom-0 left-0 right-0 bg-[var(--accent)] opacity-60 rounded-t-sm group-hover:opacity-100 transition-opacity"
+              />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function RecentActivity({ logs }: Readonly<{ logs: any }>) {
+  const activities: any[] = [];
+  
+  if (logs?.food) {
+    logs.food.slice(-2).forEach((f: any) => activities.push({ 
+      id: f.id, 
+      type: "food", 
+      label: f.name, 
+      time: new Date(f.time),
+      icon: Beef 
+    }));
+  }
+  if (logs?.workouts) {
+    logs.workouts.slice(-1).forEach((w: any) => activities.push({ 
+      id: w.id, 
+      type: "workout", 
+      label: w.name, 
+      time: new Date(w.time),
+      icon: Flame 
+    }));
+  }
+  if (logs.water && logs.water.length > 0) {
+     activities.push({ 
+       id: "water-latest", 
+       type: "water", 
+       label: "Hydration logged", 
+        time: new Date(), 
+        icon: Droplets 
+      });
+   }
+
+  const sorted = activities.sort((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 3);
+
+  if (sorted.length === 0) return null;
+
+  return (
+    <div className="flex flex-col gap-2.5 py-3">
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] font-black uppercase opacity-30 tracking-widest">
+          Recent Activity
+        </span>
+        <div className="h-[1px] flex-1 bg-black/5" />
+      </div>
+      <div className="flex flex-col gap-2">
+        {sorted.map((act) => (
+          <div key={act.id} className="flex items-center gap-2.5 px-1">
+            <div className="w-6 h-6 rounded-lg bg-[rgba(0,0,0,0.03)] flex items-center justify-center">
+              <act.icon className="w-3 h-3 opacity-40" />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[9px] font-black truncate">{act.label}</span>
+              <span className="text-[7px] opacity-30 font-bold uppercase">
+                {act.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProactiveCoach({ protein, calories, hasWorkout, dayType }: any) {
+  let tip = "You're doing great! Keep up the consistency.";
+  let icon = Target;
+
+  if (protein < 50) {
+    tip = "Protein is low. A quick Greek yogurt or shake would help you hit your target.";
+    icon = Beef;
+  } else if (!hasWorkout && dayType === "Training") {
+    tip = "Training day! Don't forget to log your session when you're done.";
+    icon = Flame;
+  } else if (calories > 2500) {
+    tip = "Calories are climbing. Focus on high-volume, low-kcal veggies for your next meal.";
+    icon = Salad;
+  }
+
+  return (
+    <div className="glass-premium p-3 rounded-2xl border border-white/5 mb-4 animate-dashboard-in stagger-4">
+      <div className="flex items-start gap-3">
+        <div className="w-8 h-8 rounded-full bg-[var(--accent)]/10 flex items-center justify-center flex-none">
+          {React.createElement(icon, { className: "w-4 h-4 text-[var(--accent)]" })}
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[10px] font-black uppercase opacity-30 tracking-widest leading-none">Coach Tip</span>
+          <p className="text-[10.5px] font-bold leading-tight mt-1">{tip}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WaterRing({ percentage }: { percentage: number }) {
+  const radius = 7;
+  const circum = 2 * Math.PI * radius;
+  const offset = circum - (percentage / 100) * circum;
+
+  return (
+    <div className="relative w-4 h-4 mr-1">
+      <svg className="w-full h-full -rotate-90">
+        <circle cx="8" cy="8" r={radius} fill="none" stroke="currentColor" strokeWidth="2" className="opacity-10" />
+        <circle 
+          cx="8" cy="8" r={radius} fill="none" stroke="currentColor" strokeWidth="2" 
+          strokeDasharray={circum} strokeDashoffset={offset} strokeLinecap="round"
+          className="text-blue-500"
+        />
+      </svg>
+    </div>
+  );
 }
 
 export default function Sidebar({
@@ -56,10 +247,12 @@ export default function Sidebar({
   sleepTarget,
   water,
   waterTarget,
-  day,
   dayType,
   setDayType,
-}: SidebarProps) {
+  hasWorkout,
+  analytics,
+  logs,
+}: Readonly<SidebarProps>) {
   const [isMounted, setIsMounted] = useState(false);
   const [activeMetric, setActiveMetric] = useState<string | null>(null);
 
@@ -79,6 +272,17 @@ export default function Sidebar({
   const stableDateLabel = isMounted ? currentDateLabel : getServerDateLabel();
   const proteinPct = Math.min((protein / proteinTarget) * 100, 100);
   const caloriePct = Math.min((calories / calorieTarget) * 100, 100);
+
+  // TREND CALCULATION
+  const weightTrend = analytics?.weightTrend || [];
+  const weightDelta = weightTrend.length >= 2 
+    ? Number(weight) - weightTrend[weightTrend.length - 2].weight
+    : 0;
+
+  const sleepLogs = logs?.sleep || [];
+  const sleepDelta = sleepLogs.length >= 2
+    ? Number(sleep) - Number(sleepLogs[sleepLogs.length - 2].hours)
+    : 0;
 
   const dayTypes: Array<{ id: DayType; label: string; icon: LucideIcon }> = [
     { id: "Rest", label: "Rest", icon: Moon },
@@ -100,33 +304,42 @@ export default function Sidebar({
     calorieStatus = "near";
   }
 
+  const isWaterHit = water >= waterTarget;
+
   const statsRows: Array<{
     icon: LucideIcon;
     label: string;
     value: string | number;
+    delta?: number;
     unit: string;
     color: string;
+    hit: boolean;
   }> = [
     {
       icon: Scale,
       label: "Weight",
-      value: weight,
+      value: weight === "--" ? 0 : weight,
+      delta: weightDelta,
       unit: "kg",
       color: "#a86b12",
+      hit: false,
     },
     {
       icon: Moon,
       label: "Sleep",
-      value: sleep,
-      unit: isMounted ? ` / ${sleepTarget}h` : "hrs",
+      value: sleep === "--" ? 0 : sleep,
+      delta: sleepDelta,
+      unit: " hrs",
       color: "#6b7ea8",
+      hit: Number(sleep) >= sleepTarget,
     },
     {
       icon: Droplets,
       label: "Water",
       value: (water ?? 0).toFixed(1),
-      unit: waterTarget ? ` / ${waterTarget}L` : "L",
+      unit: "L",
       color: "#3b82f6",
+      hit: isWaterHit,
     },
     {
       icon: Salad,
@@ -134,46 +347,43 @@ export default function Sidebar({
       value: (fiber ?? 0).toFixed(1),
       unit: "g",
       color: "#4db382",
+      hit: false,
     },
     {
       icon: Wheat,
       label: "Carbs",
       value: (carbs ?? 0).toFixed(1),
-      unit: carbsTarget ? ` / ${carbsTarget}g` : "g",
+      unit: "g",
       color: "#e6ac50",
+      hit: false,
     },
     {
       icon: Droplets,
       label: "Fats",
       value: (fats ?? 0).toFixed(1),
-      unit: fatsTarget ? ` / ${fatsTarget}g` : "g",
+      unit: "g",
       color: "#d4a23a",
-    },
-    {
-      icon: Calendar,
-      label: "Date",
-      value: stableDateLabel,
-      unit: "",
-      color: "#7b5ea7",
+      hit: false,
     },
   ];
 
   return (
     <GlassPane noPadding className="sidebar-scroll-container">
       <div className="flex flex-col h-full !p-4 !gap-0">
-        {/* ── DAILY PROGRESS ── */}
-        <div className="flex flex-col gap-4 mb-6 flex-none">
-          <div className="flex items-center gap-2.5">
-            <div className="w-5 h-5 rounded bg-[rgba(0,0,0,0.04)] flex items-center justify-center">
-              <Target
-                className="w-3 h-3 text-[var(--accent)]"
-                strokeWidth={2.5}
-              />
+        {/* ── HEADER ── */}
+        <div className="flex items-center justify-between mb-5 flex-none animate-dashboard-in stagger-1">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-lg bg-[rgba(0,0,0,0.04)] flex items-center justify-center">
+              <Target className="w-3 h-3 text-[var(--accent)]" strokeWidth={3} />
             </div>
-            <span className="text-[9px] font-black uppercase tracking-widest opacity-60">
-              Progress Today
+            <span className="text-[9px] font-black uppercase tracking-widest opacity-30">
+              {stableDateLabel}
             </span>
           </div>
+          <Zap className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500 animate-pulse opacity-40" />
+        </div>
+
+        <div className="flex flex-col gap-3 mb-5 flex-none animate-dashboard-in stagger-1">
 
           <GlassMetric
             icon={Beef}
@@ -213,7 +423,6 @@ export default function Sidebar({
                 +12% vs last week
               </span>
             </div>
-            {/* Placeholder for real chart/log data */}
             <div className="h-32 bg-[rgba(0,0,0,0.02)] rounded-2xl flex items-center justify-center border border-[var(--border)] border-dashed">
               <span className="text-[10px] opacity-40 uppercase tracking-widest">
                 Trend Chart Visualization
@@ -226,36 +435,62 @@ export default function Sidebar({
           </div>
         </GlassPopover>
 
-        {/* ── STATS SECTION (2-COL GRID) ── */}
-        <div className="flex-1 flex flex-col justify-center border-y border-[rgba(0,0,0,0.06)] py-1.5 my-1 min-h-0">
-          <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-            {statsRows.map((row) => (
+        {/* ── MACRO DISTRIBUTION (SPACE SAVING BAR) ── */}
+        <MacroBar p={protein} c={carbs} f={fats} />
+
+        {/* ── WEEKLY CONSISTENCY (SPARKLINE) ── */}
+        <div className="animate-dashboard-in stagger-2">
+          {analytics?.nutritionStats && (
+            <WeeklyConsistency stats={analytics.nutritionStats} />
+          )}
+        </div>
+
+        {/* ── STATS SECTION (3-COL COMPACT GRID) ── */}
+        <div className="border-y border-[rgba(0,0,0,0.06)] py-2.5 my-1">
+          <div className="grid grid-cols-3 gap-x-2 gap-y-2">
+            {statsRows.map((row: any) => (
               <button
                 key={row.label}
                 type="button"
-                className="flex justify-between items-center py-1.5 cursor-pointer hover:bg-[rgba(0,0,0,0.02)] px-1 relative rounded-md transition-all after:absolute after:bottom-0 after:left-1 after:right-1 after:h-[1px] after:bg-[rgba(0,0,0,0.02)] last:after:hidden"
+                className={`flex flex-col gap-1 p-2 rounded-xl border transition-all hover:bg-[rgba(0,0,0,0.02)] ${
+                  row.hit
+                    ? "bg-green-500/5 border-green-500/10"
+                    : "bg-black/5 border-transparent"
+                }`}
                 onClick={() => setActiveMetric(row.label)}
                 suppressHydrationWarning
               >
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <row.icon
-                    className="w-3 h-3 flex-shrink-0"
-                    style={{ color: row.color }}
-                    strokeWidth={2}
-                  />
-                  <span className="text-[8.5px] font-bold uppercase opacity-50 tracking-tight text-left truncate">
+                <div className="flex items-center gap-1 min-w-0">
+                  {row.label === "Water" ? (
+                    <WaterRing percentage={Math.min((water / waterTarget) * 100, 100)} />
+                  ) : (
+                    <row.icon
+                      className="w-2 h-2 flex-shrink-0"
+                      style={{ color: row.color }}
+                      strokeWidth={3}
+                    />
+                  )}
+                  <span className="text-[7.5px] font-black uppercase opacity-20 tracking-tighter truncate">
                     {row.label}
                   </span>
+                  {row.delta !== undefined && row.delta !== 0 && (
+                    <span className={`metric-delta ${row.delta > 0 ? 'pos' : 'neg'}`}>
+                      {row.delta > 0 ? '+' : ''}{row.delta.toFixed(1)}
+                    </span>
+                  )}
+                  {row.hit && (
+                    <Zap className="w-1.5 h-1.5 text-green-500 fill-green-500 ml-auto flex-shrink-0" />
+                  )}
                 </div>
-                <div className="flex items-baseline gap-1 flex-shrink-0">
+                <div className="flex items-baseline gap-0.5 min-w-0">
                   <span
-                    className="text-[10px] font-black"
+                    className="text-[10px] font-black truncate"
                     style={{ color: row.color }}
                   >
                     {row.value}
                   </span>
                   {row.unit && (
-                    <span className="text-[8px] opacity-30 font-bold truncate max-w-[40px]">
+                    <span className="text-[7px] opacity-30 font-bold truncate">
                       {row.unit}
                     </span>
                   )}
@@ -265,16 +500,29 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* ── TRAINING MODE ── */}
-        <div className="flex flex-col gap-3 mt-4 flex-none">
-          <div className="flex items-center gap-2.5">
-            <div className="w-5 h-5 rounded bg-[rgba(168,107,18,0.1)] flex items-center justify-center">
-              <Zap className="w-3 h-3 text-[var(--amber)]" strokeWidth={2.5} />
-            </div>
-            <span className="text-[9px] font-black uppercase tracking-widest opacity-60">
-              Training Mode
+        {/* ── GOAL INDICATOR (WORKOUT) ── */}
+        {hasWorkout && (
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-xl my-1 mb-2">
+            <Zap className="w-2.5 h-2.5 text-green-500 fill-green-500" />
+            <span className="text-[8.5px] font-black uppercase text-green-700 opacity-60">
+              Workout Logged
             </span>
           </div>
+        )}
+
+        {/* ── RECENT ACTIVITY FEED ── */}
+        <div className="animate-dashboard-in stagger-3">
+          <RecentActivity logs={logs} />
+        </div>
+
+        <ProactiveCoach 
+          protein={protein} 
+          calories={calories} 
+          hasWorkout={hasWorkout} 
+          dayType={dayType} 
+        />
+
+        <div className="flex flex-col gap-2 mt-auto flex-none border-t border-black/5 pt-3 animate-dashboard-in stagger-5">
           <div className="sidebar-daytype-pills relative flex p-1 gap-1 bg-[rgba(0,0,0,0.04)] rounded-xl overflow-hidden">
             {dayTypes.map(({ id, label, icon: Icon }) => (
               <button
@@ -293,7 +541,7 @@ export default function Sidebar({
                   />
                 )}
                 <Icon
-                  className="w-4 h-4 relative z-20"
+                  className="w-3.5 h-3.5 relative z-20"
                   strokeWidth={2}
                   style={{
                     color:

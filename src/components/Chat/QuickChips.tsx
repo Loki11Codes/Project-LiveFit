@@ -13,14 +13,20 @@ export function QuickChip({ icon: Icon, label, color, onClick }: QuickChipProps)
   return (
     <motion.button
       type="button"
-      whileHover={{ scale: 1.05, translateY: -2 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: 1.02, translateY: -1 }}
+      whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className="chat-quick-chip"
+      style={{ 
+        backgroundColor: color ? `${color}15` : undefined, // 15 = ~8% opacity hex
+        borderColor: color ? `${color}30` : undefined,
+      }}
       suppressHydrationWarning
     >
-      <Icon className="w-4 h-4" style={{ color }} strokeWidth={2} />
-      {label}
+      <Icon className="w-3.5 h-3.5" style={{ color }} strokeWidth={2.5} />
+      <span style={{ color: color ? color : 'inherit', filter: 'brightness(0.8)' }}>
+        {label}
+      </span>
     </motion.button>
   );
 }

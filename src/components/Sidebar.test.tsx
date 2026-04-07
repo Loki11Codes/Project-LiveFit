@@ -35,9 +35,11 @@ describe("Sidebar Component", () => {
     weight: 70,
     sleep: 8,
     sleepTarget: 8,
-    day: 1,
     dayType: "Rest" as const,
     setDayType: vi.fn(),
+    hasWorkout: false,
+    analytics: null,
+    logs: {},
   };
 
   beforeEach(() => {
