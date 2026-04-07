@@ -27,6 +27,8 @@ vi.mock('@google/generative-ai', () => ({
 vi.mock('@/lib/prisma', () => ({
   default: {
     chatMessage: { create: vi.fn() },
+    user: { findUnique: vi.fn().mockResolvedValue({ id: 'user-1' }) },
+    routine: { findMany: vi.fn().mockResolvedValue([]) },
   },
 }));
 

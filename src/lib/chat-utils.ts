@@ -60,10 +60,21 @@ export function extractAndCleanLogData(text: string): {
 
     try {
       if (jsonText) {
-        const parsed = JSON.parse(jsonText);
+        let parsed = JSON.parse(jsonText);
+        
+        // Handle case where AI wraps the envelope in another level like { data: { ... } }
+        if (parsed?.data?.category && !parsed.category) {
+          parsed = {
+            category: parsed.data.category,
+            data: parsed.data.data ?? parsed.data,
+            date: parsed.data.date ?? parsed.date,
+            update: parsed.data.update ?? parsed.update,
+          };
+        }
+
         if (Array.isArray(parsed)) {
           logs.push(...(parsed as ParsedLogEnvelope[]));
-        } else if (parsed) {
+        } else if (parsed?.category) {
           logs.push(parsed as ParsedLogEnvelope);
         }
       }
@@ -72,10 +83,40 @@ export function extractAndCleanLogData(text: string): {
     }
   }
 
+  // Pass 2: Fallback to standard markdown JSON blocks if no DATA markers matched
+  // (or if they were used instead of the markers)
+  const codeBlockRegex = /```json\s+([\s\S]*?)```/gi;
+  while ((match = codeBlockRegex.exec(text)) !== null) {
+    const jsonText = match[1].trim();
+    try {
+      let parsed = JSON.parse(jsonText);
+      // Unwrapping logic
+      if (parsed?.data?.category && !parsed.category) {
+        parsed = {
+          category: parsed.data.category,
+          data: parsed.data.data ?? parsed.data,
+          date: parsed.data.date ?? parsed.date,
+          update: parsed.data.update ?? parsed.update,
+        };
+      }
+      
+      if (parsed?.category && !logs.some(l => JSON.stringify(l) === JSON.stringify(parsed))) {
+        logs.push(parsed as ParsedLogEnvelope);
+        hasData = true;
+      }
+    } catch (e) {
+      // Ignore errors in non-DATA code blocks
+    }
+  }
+
   // Clean the text by removing all blocks that match the pattern
-  // We recreate a simple version of the removal for safety
   const fullBlockRegex = /\|\|\|\s*DATA[\s\S]*?\|\|\|/gi;
-  cleanText = text.replaceAll(fullBlockRegex, '').trim();
+  const jsonCodeBlockRegex = /```json[\s\S]*?```/gi;
+  
+  cleanText = text
+    .replaceAll(fullBlockRegex, '')
+    .replaceAll(jsonCodeBlockRegex, '')
+    .trim();
 
   return { logs, cleanText, hasData };
 }

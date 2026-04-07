@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { RoutinesTab } from './RoutinesTab';
@@ -78,7 +78,7 @@ describe('RoutinesTab Component', () => {
     await waitFor(() => {
       expect(screen.getByText('Push Day')).toBeDefined();
     });
-    const startBtn = screen.getByText('Start');
+    const startBtn = screen.getByText('Start Workout');
     fireEvent.click(startBtn);
     expect(onStartMock).toHaveBeenCalledWith(mockRoutines[0]);
   });
@@ -122,7 +122,7 @@ describe('RoutinesTab Component', () => {
     fireEvent.change(searchInput, { target: { value: 'Squat' } });
     
     // Result should show Squat but not Bench Press
-    expect(screen.getByText('Legs • Barbell')).toBeDefined(); // Squat subtitle
+    expect(screen.getByText('Legs · Barbell')).toBeDefined(); // Squat subtitle
     
     // Click it to add
     const addSquatBtn = screen.getByText(/Squat/).closest('button');

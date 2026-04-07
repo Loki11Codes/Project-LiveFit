@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -97,6 +97,7 @@ describe('Auth Options', () => {
     });
 
     it('session maps token id to user id', async () => {
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: 'tid' } as any);
       const sessionCb = authOptions.callbacks?.session as any;
       const session = { user: { name: 'hi' } };
       const token = { id: 'tid' };

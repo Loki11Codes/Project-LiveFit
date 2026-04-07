@@ -111,8 +111,8 @@ export type FoodItemInput = z.infer<typeof FoodItemSchema>;
 
 // Workout Log Validation
 export const WorkoutSetSchema = z.object({
-  setNumber: z.number().int(),
-  reps: z.number().int().optional(),
+  setNumber: z.number().int().optional(),
+  reps: optionalFiniteNumber,
   weight: optionalFiniteNumber,
   distance: optionalFiniteNumber,
   duration: z.number().int().optional(),
@@ -126,7 +126,7 @@ export const WorkoutExerciseSchema = z.object({
 export type WorkoutExerciseInput = z.infer<typeof WorkoutExerciseSchema>;
 
 export const WorkoutLogSchema = z.object({
-  focus: trimmedString.min(1).max(120),
+  focus: trimmedString.min(1, "Focus is required").max(120).default("Workout"),
   volume: optionalFiniteNumber,
   details: trimmedString.max(2000).optional(),
   date: z
