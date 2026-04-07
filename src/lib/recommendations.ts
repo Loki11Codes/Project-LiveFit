@@ -5,11 +5,14 @@ export interface ProfileStats {
   weight?: number | null;
   activityPreference?: string | null;
   primaryGoal?: string | null;
+  dietaryPreference?: string | null;
 }
 
 export interface RecommendedTargets {
   kcalTarget: number;
   proteinTarget: number;
+  carbsTarget: number;
+  fatsTarget: number;
 }
 
 /**
@@ -49,21 +52,43 @@ export function calculateDailyTargets(stats: ProfileStats): RecommendedTargets |
   if (!bmr) return null;
 
   const tdee = bmr * getActivityMultiplier(stats.activityPreference);
-  const goal = (stats.primaryGoal || '').toLowerCase();
-  
+  const goal = (stats.primaryGoal || "").toLowerCase();
+  const diet = (stats.dietaryPreference || "").toLowerCase();
+
   let kcalTarget = tdee;
   let proteinMultiplier = 1.6; // Default 1.6g per kg
 
-  if (goal.includes('loss') || goal.includes('cut')) {
+  if (goal.includes("loss") || goal.includes("cut")) {
     kcalTarget -= 500;
     proteinMultiplier = 2; // Higher protein to preserve muscle on cut
-  } else if (goal.includes('gain') || goal.includes('bulk')) {
+  } else if (goal.includes("gain") || goal.includes("bulk")) {
     kcalTarget += 300;
     proteinMultiplier = 1.8; // Sufficient for growth
   }
 
+  const proteinTarget = Math.round((stats.weight || 0) * proteinMultiplier);
+  const proteinKcal = proteinTarget * 4;
+  const remainingKcal = Math.max(0, kcalTarget - proteinKcal);
+
+  // Split remaining calories based on diet strategy (percentage of remaining)
+  let carbPercentage = 0.5; // Balanced 50/50 fallback
+  let fatPercentage = 0.5;
+
+  if (diet.includes("keto")) {
+    carbPercentage = 0.05; // ~5% of remaining for keto (extremely low)
+    fatPercentage = 0.95;
+  } else if (diet.includes("low carb") || diet.includes("paleo")) {
+    carbPercentage = 0.25;
+    fatPercentage = 0.75;
+  } else if (diet.includes("vegan") || diet.includes("vegetarian")) {
+    carbPercentage = 0.6; // Often higher carb
+    fatPercentage = 0.4;
+  }
+
   return {
     kcalTarget: Math.round(kcalTarget),
-    proteinTarget: Math.round((stats.weight || 0) * proteinMultiplier),
+    proteinTarget,
+    carbsTarget: Math.round((remainingKcal * carbPercentage) / 4),
+    fatsTarget: Math.round((remainingKcal * fatPercentage) / 9),
   };
 }

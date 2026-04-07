@@ -56,4 +56,71 @@ describe('recommendation utility', () => {
     expect(targets?.kcalTarget).toBe(3098);
     expect(targets?.proteinTarget).toBe(144);
   });
+
+  // ── Diet Strategy: Macro-Ratio Splits ───────────────────────────
+
+  it('produces balanced 50/50 carb/fat split by default', () => {
+    const t = calculateDailyTargets(maleProfile)!;
+    // Protein: 128g => 512 kcal. Remaining: 2797.75 - 512 = 2285.75
+    // carbs: (2285.75 * 0.5) / 4 = 285.72 => 286
+    expect(t.carbsTarget).toBe(286);
+    // fats: (2285.75 * 0.5) / 9 = 127.0 => 127
+    expect(t.fatsTarget).toBe(127);
+  });
+
+  it('produces a keto split (5% carb / 95% fat)', () => {
+    const t = calculateDailyTargets({ ...maleProfile, dietaryPreference: 'Keto' })!;
+    // Remaining: 2285.75
+    // carbs: (2285.75 * 0.05) / 4 = 28.57 => 29
+    expect(t.carbsTarget).toBe(29);
+    // fats: (2285.75 * 0.95) / 9 = 241.27 => 241
+    expect(t.fatsTarget).toBe(241);
+  });
+
+  it('produces a low-carb split (25% carb / 75% fat)', () => {
+    const t = calculateDailyTargets({ ...maleProfile, dietaryPreference: 'Low Carb' })!;
+    // carbs: (2285.75 * 0.25) / 4 = 142.86 => 143
+    expect(t.carbsTarget).toBe(143);
+    // fats: (2285.75 * 0.75) / 9 = 190.48 => 190
+    expect(t.fatsTarget).toBe(190);
+  });
+
+  it('produces a paleo split (same as low-carb)', () => {
+    const t = calculateDailyTargets({ ...maleProfile, dietaryPreference: 'Paleo' })!;
+    expect(t.carbsTarget).toBe(143);
+    expect(t.fatsTarget).toBe(190);
+  });
+
+  it('produces a vegan split (60% carb / 40% fat)', () => {
+    const t = calculateDailyTargets({ ...maleProfile, dietaryPreference: 'Vegan' })!;
+    // carbs: (2285.75 * 0.6) / 4 = 342.86 => 343
+    expect(t.carbsTarget).toBe(343);
+    // fats: (2285.75 * 0.4) / 9 = 101.59 => 102
+    expect(t.fatsTarget).toBe(102);
+  });
+
+  it('produces a vegetarian split (same as vegan)', () => {
+    const t = calculateDailyTargets({ ...maleProfile, dietaryPreference: 'Vegetarian' })!;
+    expect(t.carbsTarget).toBe(343);
+    expect(t.fatsTarget).toBe(102);
+  });
+
+  it('handles keto + fat loss combo correctly', () => {
+    const t = calculateDailyTargets({
+      ...maleProfile,
+      primaryGoal: 'Fat loss',
+      dietaryPreference: 'Keto',
+    })!;
+    expect(t.kcalTarget).toBe(2298);
+    expect(t.proteinTarget).toBe(160);
+    // remaining: 2297.75 - (160*4) = 1657.75
+    // carbs: (1657.75 * 0.05) / 4 = 20.72 => 21
+    expect(t.carbsTarget).toBe(21);
+    // fats: (1657.75 * 0.95) / 9 = 174.98 => 175
+    expect(t.fatsTarget).toBe(175);
+  });
+
+  it('returns null for incomplete profile', () => {
+    expect(calculateDailyTargets({ gender: 'Male' })).toBeNull();
+  });
 });

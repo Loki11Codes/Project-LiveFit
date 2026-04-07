@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useSyncExternalStore, useState, useEffect } from "react";
@@ -27,7 +27,9 @@ interface SidebarProps {
   readonly calories: number;
   readonly calorieTarget: number;
   readonly carbs: number;
+  readonly carbsTarget?: number | null;
   readonly fats: number;
+  readonly fatsTarget?: number | null;
   readonly fiber: number;
   readonly weight: number | string;
   readonly sleep: number | string;
@@ -42,7 +44,9 @@ export default function Sidebar({
   calories,
   calorieTarget,
   carbs,
+  carbsTarget,
   fats,
+  fatsTarget,
   fiber,
   weight,
   sleep,
@@ -116,14 +120,14 @@ export default function Sidebar({
       icon: Wheat,
       label: "Carbs",
       value: carbs.toFixed(1),
-      unit: "g",
+      unit: carbsTarget ? `g / ${carbsTarget}g` : "g",
       color: "#e6ac50",
     },
     {
       icon: Droplets,
       label: "Fats",
       value: fats.toFixed(1),
-      unit: "g",
+      unit: fatsTarget ? `g / ${fatsTarget}g` : "g",
       color: "#d4a23a",
     },
     {

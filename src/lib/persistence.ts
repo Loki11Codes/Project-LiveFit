@@ -428,6 +428,7 @@ export async function syncUserGoals(tx: Prisma.TransactionClient, userId: string
     weight: latestMeasurement.weight,
     activityPreference: profile.activityPreference,
     primaryGoal: profile.primaryGoal,
+    dietaryPreference: profile.dietaryPreference,
   });
 
   if (targets) {
@@ -437,13 +438,19 @@ export async function syncUserGoals(tx: Prisma.TransactionClient, userId: string
         userId,
         kcalTarget: targets.kcalTarget,
         proteinTarget: targets.proteinTarget,
+        carbsTarget: targets.carbsTarget,
+        fatsTarget: targets.fatsTarget,
       },
       update: {
         kcalTarget: targets.kcalTarget,
         proteinTarget: targets.proteinTarget,
+        carbsTarget: targets.carbsTarget,
+        fatsTarget: targets.fatsTarget,
       },
     });
-    console.log(`[PERSISTENCE] Synchronized goals for ${userId}: ${targets.kcalTarget} kcal, ${targets.proteinTarget}g protein`);
+    console.log(
+      `[PERSISTENCE] Synchronized goals for ${userId}: ${targets.kcalTarget} kcal, ${targets.proteinTarget}g P, ${targets.carbsTarget}g C, ${targets.fatsTarget}g F`
+    );
   }
 }
 

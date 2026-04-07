@@ -361,7 +361,7 @@ export default function Home() {
 
   const handleSaveMeasurements = async () => {
     try {
-      const latestMeasurement = await requestJson<BodyMeasurement>(
+      await requestJson<BodyMeasurement>(
         "/api/measurements",
         {
           method: "POST",
@@ -460,7 +460,9 @@ export default function Home() {
                     calories={nutrition.calories}
                     calorieTarget={dashboard.goals.kcalTarget}
                     carbs={nutrition.carbs}
+                    carbsTarget={dashboard.goals.carbsTarget}
                     fats={nutrition.fats}
+                    fatsTarget={dashboard.goals.fatsTarget}
                     fiber={nutrition.fiber}
                     weight={dashboard.latestMeasurement?.weight ?? "--"}
                     sleep={latestSleep?.hours ?? "--"}
