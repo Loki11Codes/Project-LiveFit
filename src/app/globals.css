@@ -1480,3 +1480,23 @@ body {
 .stagger-3 { animation-delay: 0.3s; }
 .stagger-4 { animation-delay: 0.4s; }
 .stagger-5 { animation-delay: 0.5s; }
+
+@keyframes workout-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.15); }
+  70% { box-shadow: 0 0 0 8px rgba(var(--accent-rgb), 0); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0); }
+}
+
+.workout-pulse-active {
+  animation: workout-pulse 2s infinite;
+}
+
+@keyframes suggestion-pop {
+  0% { transform: scale(0.95); opacity: 0; }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-suggestion-pop {
+  animation: suggestion-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}

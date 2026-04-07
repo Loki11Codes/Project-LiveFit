@@ -100,5 +100,30 @@ describe("Sidebar Component", () => {
       expect(screen.getByText("Past 7 Days")).toBeInTheDocument();
     }
   });
+
+  it("renders WorkoutLiveAssistant when a session is active", () => {
+    const activeWorkout = {
+      name: "Upper Body Power",
+      startTime: Date.now() - 1000 * 60 * 10, // 10 mins ago
+      exercises: [
+        {
+          id: "ex-1",
+          exerciseId: "bench",
+          name: "Bench Press",
+          sets: [
+            { id: "s1", weight: "80", reps: "8", isCompleted: true },
+            { id: "s2", weight: "80", reps: "8", isCompleted: false },
+          ]
+        }
+      ]
+    };
+    render(<Sidebar {...defaultProps} activeWorkout={activeWorkout} />);
+    
+    expect(screen.getByText("Live Session")).toBeInTheDocument();
+    expect(screen.getByText("Upper Body Power")).toBeInTheDocument();
+    expect(screen.getByText("1 / 2 Sets")).toBeInTheDocument();
+    // Stats rows like "Weight" should be hidden
+    expect(screen.queryByText("Weight")).not.toBeInTheDocument();
+  });
 });
 

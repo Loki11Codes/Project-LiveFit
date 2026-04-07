@@ -12,8 +12,12 @@ import {
   Droplets,
   Salad,
   Zap,
+  Clock,
+  Plus,
+  CheckCircle,
   type LucideIcon,
 } from "lucide-react";
+import { getSmartSuggestion } from "@/lib/meal-suggestions";
 import { motion } from "framer-motion";
 import type { DayType } from "@/lib/types";
 import { GlassPane } from "./Shared/GlassPane";
@@ -40,6 +44,7 @@ interface SidebarProps {
   readonly hasWorkout: boolean;
   readonly analytics: any | null;
   readonly logs: any;
+  readonly activeWorkout?: import("@/lib/types").ActiveWorkoutSession | null;
 }
 
 function MacroBar({
@@ -152,7 +157,7 @@ function RecentActivity({ logs }: Readonly<{ logs: any }>) {
       });
    }
 
-  const sorted = activities.sort((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 3);
+  const sorted = activities.toSorted((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 3);
 
   if (sorted.length === 0) return null;
 
@@ -183,7 +188,33 @@ function RecentActivity({ logs }: Readonly<{ logs: any }>) {
   );
 }
 
-function ProactiveCoach({ protein, calories, hasWorkout, dayType }: any) {
+function ProactiveCoach({
+  protein,
+  proteinTarget,
+  calories,
+  calorieTarget,
+  hasWorkout,
+  dayType,
+}: Readonly<{
+  protein: number;
+  proteinTarget: number;
+  calories: number;
+  calorieTarget: number;
+  hasWorkout: boolean;
+  dayType: DayType;
+}>) {
+  const [logged, setLogged] = useState(false);
+  const suggestion = getSmartSuggestion(protein, proteinTarget, calories, calorieTarget);
+  
+  if (logged) {
+    return (
+      <div className="glass-premium p-3 rounded-2xl border border-green-500/10 mb-4 animate-dashboard-in flex items-center gap-2">
+        <CheckCircle className="w-4 h-4 text-green-500" />
+        <span className="text-[10px] font-bold text-green-700/60 uppercase">Suggestion Logged</span>
+      </div>
+    );
+  }
+
   let tip = "You're doing great! Keep up the consistency.";
   let icon = Target;
 
@@ -199,16 +230,55 @@ function ProactiveCoach({ protein, calories, hasWorkout, dayType }: any) {
   }
 
   return (
-    <div className="glass-premium p-3 rounded-2xl border border-white/5 mb-4 animate-dashboard-in stagger-4">
-      <div className="flex items-start gap-3">
-        <div className="w-8 h-8 rounded-full bg-[var(--accent)]/10 flex items-center justify-center flex-none">
-          {React.createElement(icon, { className: "w-4 h-4 text-[var(--accent)]" })}
-        </div>
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[10px] font-black uppercase opacity-30 tracking-widest leading-none">Coach Tip</span>
-          <p className="text-[10.5px] font-bold leading-tight mt-1">{tip}</p>
+    <div className="flex flex-col gap-3 mb-4 animate-dashboard-in stagger-4">
+      <div className="glass-premium p-3 rounded-2xl border border-white/5">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 rounded-full bg-[var(--accent)]/10 flex items-center justify-center flex-none">
+            {React.createElement(icon, { className: "w-4 h-4 text-[var(--accent)]" })}
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] font-black uppercase opacity-30 tracking-widest leading-none">Coach Tip</span>
+            <p className="text-[10.5px] font-bold leading-tight mt-1">{tip}</p>
+          </div>
         </div>
       </div>
+
+      {suggestion && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-premium p-3 rounded-2xl border border-[var(--accent)]/20 bg-gradient-to-br from-[var(--accent)]/[0.03] to-transparent relative overflow-hidden"
+        >
+          <div className="flex flex-col gap-2 relative z-10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <div className="w-5 h-5 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center">
+                  <suggestion.icon className="w-3 h-3 text-[var(--accent)]" />
+                </div>
+                <span className="text-[9px] font-black uppercase text-[var(--accent)] tracking-tighter">
+                  {suggestion.benefit}
+                </span>
+              </div>
+              <button 
+                onClick={() => setLogged(true)}
+                className="flex items-center gap-1 py-1 px-2.5 bg-[var(--accent)] text-white rounded-lg shadow-sm active:scale-95 transition-all"
+              >
+                <Plus className="w-2.5 h-2.5 stroke-[4]" />
+                <span className="text-[9px] font-black uppercase">Log</span>
+              </button>
+            </div>
+            
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[11px] font-black">{suggestion.name}</span>
+              <div className="flex items-center gap-2 text-[9px] font-bold opacity-30">
+                <span>{suggestion.protein}g Protein</span>
+                <span className="w-1 h-1 rounded-full bg-current" />
+                <span>{suggestion.calories} kcal</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }
@@ -228,6 +298,68 @@ function WaterRing({ percentage }: { percentage: number }) {
           className="text-blue-500"
         />
       </svg>
+    </div>
+  );
+}
+
+function WorkoutLiveAssistant({ session }: { readonly session: import("@/lib/types").ActiveWorkoutSession }) {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    const update = () => setElapsed(Math.floor((Date.now() - session.startTime) / 1000));
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [session.startTime]);
+
+  const format = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  const totalSets = session.exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
+  const completedSets = session.exercises.reduce((sum, ex) => sum + ex.sets.filter(s => s.isCompleted).length, 0);
+  const currentEx = session.exercises.find(ex => ex.sets.some(s => !s.isCompleted)) || session.exercises.at(-1);
+
+  return (
+    <div className="glass-premium p-3.5 rounded-2xl border border-[var(--accent)]/30 mb-4 animate-dashboard-in stagger-2 relative overflow-hidden group workout-pulse-active">
+      <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)]/5 to-transparent pointer-events-none" />
+      <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+        <Flame className="w-12 h-12 text-[var(--accent)] rotate-12" />
+      </div>
+      
+      <div className="flex items-center justify-between mb-3 relative z-10">
+        <div className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] animate-pulse shadow-[0_0_10px_rgba(var(--accent-rgb),0.5)]" />
+          <span className="text-[11px] font-black uppercase tracking-widest text-[var(--accent)]">Live Session</span>
+        </div>
+        <div className="text-sm font-black tabular-nums flex items-center gap-1.5 py-1 px-2.5 bg-[var(--accent)]/10 rounded-lg border border-[var(--accent)]/10">
+          <Clock className="w-3.5 h-3.5 text-[var(--accent)]" />
+          {format(elapsed)}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1 mb-4 relative z-10">
+        <h4 className="text-xs font-black truncate">{session.name || "Active Workout"}</h4>
+        <p className="text-[10px] font-bold opacity-40 truncate">
+          Next: {currentEx?.name || "Finishing up..."}
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-2 relative z-10">
+        <div className="flex items-center justify-between text-[9px] font-black uppercase opacity-40">
+          <span>Progress</span>
+          <span>{completedSets} / {totalSets} Sets</span>
+        </div>
+        <div className="h-1.5 w-full bg-black/5 rounded-full overflow-hidden">
+          <motion.div 
+            initial={{ width: 0 }}
+            animate={{ width: `${(completedSets / totalSets) * 100}%` }}
+            className="h-full bg-[var(--accent)]"
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -252,6 +384,7 @@ export default function Sidebar({
   hasWorkout,
   analytics,
   logs,
+  activeWorkout,
 }: Readonly<SidebarProps>) {
   const [isMounted, setIsMounted] = useState(false);
   const [activeMetric, setActiveMetric] = useState<string | null>(null);
@@ -445,59 +578,63 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* ── STATS SECTION (3-COL COMPACT GRID) ── */}
+        {/* ── STATS SECTION (LIVE ASSISTANT OR GRID) ── */}
         <div className="border-y border-[rgba(0,0,0,0.06)] py-2.5 my-1">
-          <div className="grid grid-cols-3 gap-x-2 gap-y-2">
-            {statsRows.map((row: any) => (
-              <button
-                key={row.label}
-                type="button"
-                className={`flex flex-col gap-1 p-2 rounded-xl border transition-all hover:bg-[rgba(0,0,0,0.02)] ${
-                  row.hit
-                    ? "bg-green-500/5 border-green-500/10"
-                    : "bg-black/5 border-transparent"
-                }`}
-                onClick={() => setActiveMetric(row.label)}
-                suppressHydrationWarning
-              >
-                <div className="flex items-center gap-1 min-w-0">
-                  {row.label === "Water" ? (
-                    <WaterRing percentage={Math.min((water / waterTarget) * 100, 100)} />
-                  ) : (
-                    <row.icon
-                      className="w-2 h-2 flex-shrink-0"
+          {activeWorkout ? (
+            <WorkoutLiveAssistant session={activeWorkout} />
+          ) : (
+            <div className="grid grid-cols-3 gap-x-2 gap-y-2">
+              {statsRows.map((row: any) => (
+                <button
+                  key={row.label}
+                  type="button"
+                  className={`flex flex-col gap-1 p-2 rounded-xl border transition-all hover:bg-[rgba(0,0,0,0.02)] ${
+                    row.hit
+                      ? "bg-green-500/5 border-green-500/10"
+                      : "bg-black/5 border-transparent"
+                  }`}
+                  onClick={() => setActiveMetric(row.label)}
+                  suppressHydrationWarning
+                >
+                  <div className="flex items-center gap-1 min-w-0">
+                    {row.label === "Water" ? (
+                      <WaterRing percentage={Math.min((water / waterTarget) * 100, 100)} />
+                    ) : (
+                      <row.icon
+                        className="w-2 h-2 flex-shrink-0"
+                        style={{ color: row.color }}
+                        strokeWidth={3}
+                      />
+                    )}
+                    <span className="text-[7.5px] font-black uppercase opacity-20 tracking-tighter truncate">
+                      {row.label}
+                    </span>
+                    {row.delta !== undefined && row.delta !== 0 && (
+                      <span className={`metric-delta ${row.delta > 0 ? 'pos' : 'neg'}`}>
+                        {row.delta > 0 ? '+' : ''}{row.delta.toFixed(1)}
+                      </span>
+                    )}
+                    {row.hit && (
+                      <Zap className="w-1.5 h-1.5 text-green-500 fill-green-500 ml-auto flex-shrink-0" />
+                    )}
+                  </div>
+                  <div className="flex items-baseline gap-0.5 min-w-0">
+                    <span
+                      className="text-[10px] font-black truncate"
                       style={{ color: row.color }}
-                      strokeWidth={3}
-                    />
-                  )}
-                  <span className="text-[7.5px] font-black uppercase opacity-20 tracking-tighter truncate">
-                    {row.label}
-                  </span>
-                  {row.delta !== undefined && row.delta !== 0 && (
-                    <span className={`metric-delta ${row.delta > 0 ? 'pos' : 'neg'}`}>
-                      {row.delta > 0 ? '+' : ''}{row.delta.toFixed(1)}
+                    >
+                      {row.value}
                     </span>
-                  )}
-                  {row.hit && (
-                    <Zap className="w-1.5 h-1.5 text-green-500 fill-green-500 ml-auto flex-shrink-0" />
-                  )}
-                </div>
-                <div className="flex items-baseline gap-0.5 min-w-0">
-                  <span
-                    className="text-[10px] font-black truncate"
-                    style={{ color: row.color }}
-                  >
-                    {row.value}
-                  </span>
-                  {row.unit && (
-                    <span className="text-[7px] opacity-30 font-bold truncate">
-                      {row.unit}
-                    </span>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
+                    {row.unit && (
+                      <span className="text-[7px] opacity-30 font-bold truncate">
+                        {row.unit}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* ── GOAL INDICATOR (WORKOUT) ── */}
@@ -517,7 +654,9 @@ export default function Sidebar({
 
         <ProactiveCoach 
           protein={protein} 
+          proteinTarget={proteinTarget}
           calories={calories} 
+          calorieTarget={calorieTarget}
           hasWorkout={hasWorkout} 
           dayType={dayType} 
         />
