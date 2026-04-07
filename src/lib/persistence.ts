@@ -15,6 +15,8 @@ import {
   type GoalInput,
 } from './validation';
 import { getErrorMessage, getLocalDateKey } from './dashboard';
+import { calculateDailyTargets } from './recommendations';
+
 
 export type ParsedLogEnvelope = {
   category?: string;
@@ -30,8 +32,8 @@ export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: str
   console.log(`[PERSISTENCE] Starting persistence for ${envelopes.length} envelopes for user ${userId}`);
   console.log(`[PERSISTENCE] Processing ${envelopes.length} envelopes for user ${userId}`);
 
-  for (const envelope of envelopes) {
-    if (!envelope.category) continue;
+  const results = await Promise.allSettled(envelopes.map(async (envelope) => {
+    if (!envelope.category) return;
 
     const category = envelope.category;
     const logData = envelope.data || envelope;
@@ -47,6 +49,11 @@ export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: str
       console.error(`[PERSISTENCE] ERROR for ${category}:`, getErrorMessage(error));
       throw error;
     }
+  }));
+
+  const firstError = results.find((r): r is PromiseRejectedResult => r.status === 'rejected');
+  if (firstError?.reason) {
+    throw firstError.reason;
   }
 }
 
@@ -101,11 +108,11 @@ async function handleCategoryPersistence(
 
 async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInput[], userId: string): Promise<void> {
 
-  for (const item of items) {
+  await Promise.all(items.map(async (item) => {
     const parsed = FoodItemSchema.safeParse(item);
     if (!parsed.success) {
       console.warn('Skipping invalid food log from AI:', parsed.error);
-      continue;
+      return;
     }
     const validated = parsed.data;
     const logDate = validated.date ? new Date(validated.date) : new Date();
@@ -141,7 +148,7 @@ async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInpu
             fiber: validated.fiber,
           },
         });
-        continue;
+        return;
       }
     }
 
@@ -157,13 +164,14 @@ async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInpu
         time: validated.date ? new Date(validated.date) : undefined,
       },
     });
-  }
+  }));
 }
 
 async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogInput, userId: string): Promise<void> {
 
   const parsed = WorkoutLogSchema.safeParse(data);
   if (!parsed.success) {
+    console.error('[PERSISTENCE] Workout validation failed:', JSON.stringify(parsed.error.format(), null, 2));
     console.warn('Skipping invalid workout log from AI:', parsed.error);
     return;
   }
@@ -184,8 +192,8 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
           order: exIdx,
           sets: ex.sets
             ? {
-                create: ex.sets.map((set) => ({
-                  setNumber: set.setNumber,
+                create: ex.sets.map((set, setIdx) => ({
+                  setNumber: set.setNumber ?? setIdx + 1,
                   reps: set.reps,
                   weight: set.weight,
                   distance: set.distance,
@@ -339,6 +347,7 @@ async function persistMeasurement(tx: Prisma.TransactionClient, data: Measuremen
           bodyFat: validated.bodyFat,
         },
       });
+      await syncUserGoals(tx, userId);
       return;
     }
   }
@@ -358,7 +367,9 @@ async function persistMeasurement(tx: Prisma.TransactionClient, data: Measuremen
       time: validated.date ? new Date(validated.date) : undefined,
     },
   });
+  await syncUserGoals(tx, userId);
 }
+
 
 async function persistProfileUpdate(tx: Prisma.TransactionClient, raw: UserProfileInput, userId: string): Promise<void> {
 
@@ -373,7 +384,11 @@ async function persistProfileUpdate(tx: Prisma.TransactionClient, raw: UserProfi
     create: { userId, ...validated },
     update: validated,
   });
+
+  // Automatically recalculate goals when profile changes
+  await syncUserGoals(tx, userId);
 }
+
 
 async function persistGoalUpdate(tx: Prisma.TransactionClient, raw: GoalInput, userId: string): Promise<void> {
 
@@ -389,6 +404,49 @@ async function persistGoalUpdate(tx: Prisma.TransactionClient, raw: GoalInput, u
     update: validated,
   });
 }
+
+/**
+ * Utility to keep Goal table in sync with UserProfile and latest weight.
+ */
+export async function syncUserGoals(tx: Prisma.TransactionClient, userId: string): Promise<void> {
+  const [profile, latestMeasurement] = await Promise.all([
+    tx.userProfile.findUnique({ where: { userId } }),
+    tx.bodyMeasurement.findFirst({
+      where: { userId, weight: { not: null } },
+      orderBy: { time: 'desc' },
+    }),
+  ]);
+
+  if (!profile || !latestMeasurement?.weight) {
+    return; // Cannot calculate without profile + weight
+  }
+
+  const targets = calculateDailyTargets({
+    gender: profile.gender,
+    age: profile.age,
+    height: profile.height,
+    weight: latestMeasurement.weight,
+    activityPreference: profile.activityPreference,
+    primaryGoal: profile.primaryGoal,
+  });
+
+  if (targets) {
+    await tx.goal.upsert({
+      where: { userId },
+      create: {
+        userId,
+        kcalTarget: targets.kcalTarget,
+        proteinTarget: targets.proteinTarget,
+      },
+      update: {
+        kcalTarget: targets.kcalTarget,
+        proteinTarget: targets.proteinTarget,
+      },
+    });
+    console.log(`[PERSISTENCE] Synchronized goals for ${userId}: ${targets.kcalTarget} kcal, ${targets.proteinTarget}g protein`);
+  }
+}
+
 
 async function persistDayTypeUpdate(tx: Prisma.TransactionClient, raw: unknown, userId: string, clientDate?: string): Promise<void> {
 

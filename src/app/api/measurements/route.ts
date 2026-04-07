@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { MeasurementSchema } from '@/lib/validation';
 import { parseJsonBody, unauthorized, internalError } from '@/lib/api';
+import { syncUserGoals } from '@/lib/persistence';
 
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
@@ -45,20 +46,27 @@ export async function POST(req: Request) {
 
   try {
     const data = parsedBody.data;
-    const measurement = await prisma.bodyMeasurement.create({
-      data: {
-        userId: session.user.id,
-        weight: data.weight ?? null,
-        waist: data.waist ?? null,
-        chest: data.chest ?? null,
-        arms: data.arms ?? null,
-        thighs: data.thighs ?? null,
-        hips: data.hips ?? null,
-        calves: data.calves ?? null,
-        neck: data.neck ?? null,
-        bodyFat: data.bodyFat ?? null,
-      },
+    const measurement = await prisma.$transaction(async (tx) => {
+      const m = await tx.bodyMeasurement.create({
+        data: {
+          userId: session.user.id,
+          weight: data.weight ?? null,
+          waist: data.waist ?? null,
+          chest: data.chest ?? null,
+          arms: data.arms ?? null,
+          thighs: data.thighs ?? null,
+          hips: data.hips ?? null,
+          calves: data.calves ?? null,
+          neck: data.neck ?? null,
+          bodyFat: data.bodyFat ?? null,
+        },
+      });
+
+      // Recalculate goals whenever weight is updated
+      await syncUserGoals(tx, session.user.id);
+      return m;
     });
+
     return NextResponse.json(measurement);
   } catch (error) {
     console.error('Failed to create measurement:', error);

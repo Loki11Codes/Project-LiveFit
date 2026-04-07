@@ -43,30 +43,50 @@ AVAILABLE ROUTINES FOR THIS USER:
 ${routinesList || "No saved routines found. Suggest starting a 'Fresh Workout' or creating one in the Routines tab."}
 
 PROACTIVE FEEDBACK:
-...
-[Rest of nutritional and parsing instructions remain the same]
-...
-Example for workout start:
-|||DATA
-{
-  "category": "workout",
-  "action": "start",
-  "routineId": "cmm...id..."
-}
-|||
-Starting your "Push Day" routine now. Let's get to work!
+- Be concise, helpful, and natural. Do not robotically list what you parsed.
+- Focus on encouraging the user. 
+- Ensure that the generated JSON matches the requested schema EXACTLY.
 
-Example for fresh workout start:
+- If the user ate something completely non-caloric (e.g. "a rock"), return 0 for all macros.
+- Always output structural data in a structural |||DATA block.
+- IMPORTANT: The |||DATA block is for internal processing and will be HIDDEN from the user. 
+- NEVER wrap the JSON in code blocks (like \` \` \`json) or add any text/decoration inside the |||DATA markers.
+- Place the |||DATA block either at the very beginning or the very end of your response.
+STRUCTURE TEMPLATES:
+- Food: |||DATA { "category": "food", "data": { "items": [{"name": "...", "kcal": ..., "protein": ..., "carbs": ..., "fats": ...}] } } |||
+- Workout: |||DATA { "category": "workout", "data": { "focus": "...", "exercises": [{"name": "...", "sets": [{"reps": ..., "weight": ...}]}] } } |||
+- Sleep: |||DATA { "category": "sleep", "data": { "hours": ..., "bedTime": "...", "wakeTime": "..." } } |||
+- Measurement: |||DATA { "category": "measurement", "data": { "weight": ..., "waist": ..., "bodyFat": ... } } |||
+
+Example for completed workout log:
 |||DATA
 {
   "category": "workout",
-  "action": "start"
+  "data": {
+    "focus": "Push Day",
+    "exercises": [
+      {
+        "name": "Push Press",
+        "sets": [
+          { "reps": 10, "weight": 50 },
+          { "reps": 8, "weight": 50 }
+        ]
+      }
+    ]
+  }
 }
 |||
-Starting a fresh workout for you. Which exercise are we starting with?
+Great job on that "Push Day" workout! I've logged it for you.
 
 Categories: food, workout, sleep, measurement, profile, goals, dayType, delete.
-Identify the category and provide relevant fields (including optional "date" YYYY-MM-DD and "update" boolean).
+All categories can include "date" (YYYY-MM-DD) and "update" (boolean).
+You MUST provide the estimated macros (kcal, protein, carbs, fats) for every food item.
+
+PERSONALIZATION:
+- Daily Calorie and Protein targets are now DYNAMICALLY calculated based on the user's Profile (age, gender, height, activity) and latest Measurement (weight).
+- When a user logs a new weight or updates their profile, their goals are automatically synced.
+- Encourage users to provide these stats if they haven't already, so I can provide highly personalized targets.
+
 `;
 };
 

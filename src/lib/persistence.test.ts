@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { persistLogData } from './persistence';
 import prisma from './prisma';
@@ -17,7 +17,7 @@ describe('persistence utility', () => {
     workoutLog: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn() },
     sleepLog: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn() },
     bodyMeasurement: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn() },
-    userProfile: { upsert: vi.fn() },
+    userProfile: { findUnique: vi.fn(), upsert: vi.fn() },
     goal: { upsert: vi.fn() },
     dayTypeEntry: { upsert: vi.fn() },
     exercise: { findFirst: vi.fn() },
@@ -148,9 +148,29 @@ describe('persistence utility', () => {
     });
 
     it('persists goal updates', async () => {
-      const envelopes = [{ category: 'goals', data: { targetWeight: 75 } }];
+      const envelopes = [{ category: 'goals', data: { kcalTarget: 2500, proteinTarget: 150 } }];
       await persistLogData(envelopes, userId);
       expect(mockTx.goal.upsert).toHaveBeenCalled();
+    });
+
+    it('triggers goal sync on profile update', async () => {
+      // Mock existing weight measurement
+      mockTx.bodyMeasurement.findFirst.mockResolvedValue({ id: 'm1', userId, weight: 80 });
+      // Mock the profile find
+      mockTx.userProfile.findUnique.mockResolvedValue({
+        userId, age: 30, gender: 'Male', height: 180, activityPreference: 'Moderate', primaryGoal: 'Muscle Gain'
+      });
+
+      const envelopes = [{ category: 'profile', data: { age: 30, gender: 'Male' } }];
+      await persistLogData(envelopes, userId);
+
+      // Verify goals were upserted with Mifflin-St Jeor calculation
+      // BMR (10*80 + 6.25*180 - 5*30 + 5) = 800+1125-150+5 = 1780
+      // TDEE (1780 * 1.55) = 2759
+      // Gain (+300) = 3059
+      expect(mockTx.goal.upsert).toHaveBeenCalledWith(expect.objectContaining({
+        create: expect.objectContaining({ kcalTarget: 3059, proteinTarget: 144 })
+      }));
     });
 
     it('persists dayType updates', async () => {

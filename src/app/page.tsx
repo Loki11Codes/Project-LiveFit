@@ -370,13 +370,7 @@ export default function Home() {
         },
       );
       toast.success("Measurements saved.");
-      startTransition(() => {
-        setDashboard((current) => ({
-          ...current,
-          latestMeasurement,
-          measurements: toMeasurementForm(latestMeasurement),
-        }));
-      });
+      await refreshDashboard();
     } catch (error) {
       const message = getClientErrorMessage(error);
       console.error("Failed to save measurements:", message);

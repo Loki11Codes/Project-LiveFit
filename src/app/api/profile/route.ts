@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { UserProfileSchema, GoalSchema } from "@/lib/validation";
 import { unauthorized, internalError } from "@/lib/api";
+import { syncUserGoals } from "@/lib/persistence";
 import { type Session } from "next-auth";
 
 // Distinguish between Goal update and Profile update based on fields
@@ -91,28 +92,35 @@ async function handleProfileUpdate(session: Session, body: unknown) {
 
   const { name, phone, username, ...profileData } = parsed.data;
 
-  const profile = await prisma.userProfile.upsert({
-    where: { userId: session.user.id },
-    create: {
-      userId: session.user.id,
-      ...profileData,
-    },
-    update: profileData,
+  const result = await prisma.$transaction(async (tx) => {
+    const profile = await tx.userProfile.upsert({
+      where: { userId: session.user.id },
+      create: {
+        userId: session.user.id,
+        ...profileData,
+      },
+      update: profileData,
+    });
+
+    const userUpdate: Record<string, string | null> = {};
+    if (name !== undefined) userUpdate.name = name;
+    if (phone !== undefined) userUpdate.phone = phone;
+    if (username !== undefined) userUpdate.username = username;
+
+    if (Object.keys(userUpdate).length > 0) {
+      await tx.user.update({
+        where: { id: session.user.id },
+        data: userUpdate,
+      });
+    }
+
+    // Recalculate goals whenever profile changes
+    await syncUserGoals(tx, session.user.id);
+
+    return { ...profile, name, phone, username };
   });
 
-  const userUpdate: Record<string, string | null> = {};
-  if (name !== undefined) userUpdate.name = name;
-  if (phone !== undefined) userUpdate.phone = phone;
-  if (username !== undefined) userUpdate.username = username;
-
-  if (Object.keys(userUpdate).length > 0) {
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: userUpdate,
-    });
-  }
-
-  return NextResponse.json({ ...profile, name, phone, username });
+  return NextResponse.json(result);
 }
 
 export async function POST(req: Request) {
