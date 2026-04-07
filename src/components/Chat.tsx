@@ -26,6 +26,7 @@ interface ChatProps {
     calories: number;
     calorieTarget: number;
   };
+  readonly userContext?: import("@/lib/types").AIContext;
   readonly input: string;
   readonly setInput: (val: string) => void;
 }
@@ -42,6 +43,7 @@ export default function Chat({
   initialMessage,
   onMessageSent,
   nudgeStatus,
+  userContext,
   input,
   setInput,
 }: ChatProps) {
@@ -206,6 +208,7 @@ export default function Chat({
           images: images.map(toPayload),
           clientDate,
           clientTime,
+          userContext,
         }),
       });
 

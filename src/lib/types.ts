@@ -148,10 +148,36 @@ export type InlineNotice = {
   message: string;
 };
 
+export type AIInsight = {
+  id: string;
+  type: "nutrition" | "workout" | "general" | "habit";
+  title: string;
+  description: string;
+  actionLabel?: string;
+  actionTab?: TabId;
+};
+
+export type AIContext = {
+  profile: UserProfile | null;
+  goals: GoalsState;
+  analytics: AnalyticsResponse | null;
+  dayType: DayType;
+  todaysStats: {
+    protein: number;
+    kcal: number;
+    water: number;
+  };
+};
+
 export type ChatAttachmentPayload = {
   base64: string;
   mediaType: string;
   name: string;
+};
+
+export type ChatAttachment = ChatAttachmentPayload & {
+  id: string;
+  previewUrl: string;
 };
 
 export type FoodLog = {
@@ -197,6 +223,7 @@ export type DashboardState = {
   dayType: DayType;
   dayTypesByDay: DayTypeMap;
   activeWorkout: ActiveWorkoutSession | null;
+  aiInsights: AIInsight[];
 };
 
 export const DEFAULT_GOALS: GoalsState = {

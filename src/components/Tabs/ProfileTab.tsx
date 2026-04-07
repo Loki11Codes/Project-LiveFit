@@ -44,33 +44,31 @@ export default function ProfileTab({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* User Card */}
         <motion.div
-          className="card shadow-lg border-(--border) relative overflow-hidden group"
+          className="glass-premium p-6 rounded-[32px] relative overflow-hidden group hover-glow"
           variants={cardVariants}
           initial="hidden"
           animate="visible"
           custom={0}
         >
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-10">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-(--surface2) rounded-lg">
-                <User className="w-5 h-5" style={{ color: "#7b5ea7" }} />
+              <div className="p-2.5 bg-black/[0.03] dark:bg-white/[0.03] rounded-xl group-hover:bg-[var(--accent)]/5 transition-colors">
+                <User className="w-5 h-5 text-[#7b5ea7]" />
               </div>
               <div>
-                <div className="card-label mb-0">User Profile</div>
-                <p className="text-[11px] text-(--text-muted) mt-0.5 tracking-tight uppercase font-medium">
-                  Account Settings & Details
-                </p>
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Identity</div>
+                <h2 className="text-sm font-black tracking-tight uppercase">User Profile</h2>
               </div>
             </div>
             {session?.user && (
               <motion.div
-                className="p-1 px-3 bg-(--green-bg) text-(--green) rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm border border-(--green)/10"
+                className="px-3 py-1 bg-[#4db382]/10 text-[#4db382] rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 border border-[#4db382]/20 shadow-lg shadow-[#4db382]/5"
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.3, type: "spring", damping: 15 }}
               >
-                <ShieldCheck className="w-3 h-3" />
-                Verified
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Verified Elite
               </motion.div>
             )}
           </div>
@@ -78,7 +76,7 @@ export default function ProfileTab({
           {session?.user ? (
             <div className="flex flex-col gap-10 py-2">
               <motion.div
-                className="flex items-center gap-5 p-4 bg-(--surface2) rounded-2xl border border-(--border)/30"
+                className="flex items-center gap-6 p-5 bg-black/[0.02] dark:bg-white/[0.02] rounded-3xl border border-black/5 dark:border-white/5 relative z-10"
                 variants={rowVariants}
                 initial="hidden"
                 animate="visible"
@@ -90,97 +88,97 @@ export default function ProfileTab({
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.2, type: "spring", damping: 15 }}
                 >
+                  <div className="absolute inset-0 bg-[#7b5ea7]/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                   {session.user.image ? (
                     <Image
                       src={session.user.image}
                       alt="Profile"
                       width={80}
                       height={80}
-                      className="w-20 h-20 rounded-2xl border-2 border-(--bg) shadow-md group-hover:scale-105 transition-transform duration-500"
+                      className="w-20 h-20 rounded-2xl border-2 border-white/10 shadow-2xl relative z-10 group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
-                    <div className="w-20 h-20 rounded-2xl bg-(--bg) border border-(--border) flex items-center justify-center">
+                    <div className="w-20 h-20 rounded-2xl bg-black/[0.05] dark:bg-white/[0.05] border border-white/5 flex items-center justify-center relative z-10">
                       <User
-                        className="w-8 h-8 opacity-40"
-                        style={{ color: "#7b5ea7" }}
+                        className="w-8 h-8 opacity-40 text-[#7b5ea7]"
                       />
                     </div>
                   )}
                 </motion.div>
                 <div className="min-w-0">
-                  <div className="text-[16px] font-semibold tracking-tight truncate">
+                  <div className="text-[20px] font-black tracking-tighter leading-none mb-2">
                     {session.user.name}
                   </div>
-                  <div className="flex items-center gap-1.5 text-[11px] text-(--text-muted) mt-1 truncate">
-                    <Mail className="w-3 h-3" style={{ color: "#6b7ea8" }} />
+                  <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider opacity-40 truncate">
+                    <Mail className="w-3.5 h-3.5" />
                     {session.user.email}
                   </div>
                 </div>
               </motion.div>
 
               {/* Activity Stats Section */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="p-4 bg-(--surface2) rounded-2xl border border-(--border)/30 text-center">
-                  <div className="text-[10px] uppercase tracking-wider text-(--text-muted) font-bold mb-1.5 opacity-60">
-                    Days
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-4 bg-black/[0.03] dark:bg-white/[0.03] rounded-2xl border border-black/5 dark:border-white/5 text-center transition-all hover:bg-black/[0.05] dark:hover:bg-white/[0.05]">
+                  <div className="text-[9px] uppercase tracking-[0.2em] font-black opacity-30 mb-2">
+                    Active Days
                   </div>
-                  <div className="text-[20px] font-extralight tracking-tighter text-(--text)">
+                  <div className="text-[24px] font-black tracking-tighter leading-none">
                     {trackedDayCount}
                   </div>
                 </div>
-                <div className="p-4 bg-(--surface2) rounded-2xl border border-(--border)/30 text-center">
-                  <div className="text-[10px] uppercase tracking-wider text-(--text-muted) font-bold mb-1.5 opacity-60">
-                    Avg Pro
+                <div className="p-4 bg-black/[0.03] dark:bg-white/[0.03] rounded-2xl border border-black/5 dark:border-white/5 text-center transition-all hover:bg-black/[0.05] dark:hover:bg-white/[0.05]">
+                  <div className="text-[9px] uppercase tracking-[0.2em] font-black opacity-30 mb-2">
+                    Avg Pro (g)
                   </div>
-                  <div className="text-[20px] font-extralight tracking-tighter text-(--text)">
-                    {(analytics?.averages.protein ?? 0).toFixed(0)}g
+                  <div className="text-[24px] font-black tracking-tighter leading-none text-[#7b5ea7]">
+                    {(analytics?.averages.protein ?? 0).toFixed(0)}
                   </div>
                 </div>
-                <div className="p-4 bg-(--surface2) rounded-2xl border border-(--border)/30 text-center">
-                  <div className="text-[10px] uppercase tracking-wider text-(--text-muted) font-bold mb-1.5 opacity-60">
+                <div className="p-4 bg-black/[0.03] dark:bg-white/[0.03] rounded-2xl border border-black/5 dark:border-white/5 text-center transition-all hover:bg-black/[0.05] dark:hover:bg-white/[0.05]">
+                  <div className="text-[9px] uppercase tracking-[0.2em] font-black opacity-30 mb-2">
                     Avg Kcal
                   </div>
-                  <div className="text-[20px] font-extralight tracking-tighter text-(--text)">
+                  <div className="text-[24px] font-black tracking-tighter leading-none text-[#4db382]">
                     {(analytics?.averages.kcal ?? 0).toFixed(0)}
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 mt-8">
-                <motion.button
-                  onClick={() => router.push("/settings")}
-                  className="save-btn w-full py-4"
-                  variants={rowVariants}
-                  initial="hidden"
-                  animate="visible"
-                  custom={1}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                >
-                  <Settings
-                    className="w-4.5 h-4.5"
-                    style={{ color: "#7b5ea7" }}
-                  />
-                  <span>Settings</span>
-                </motion.button>
-
-                <motion.button
-                  onClick={() => signOut()}
-                  className="danger-btn w-full py-4"
-                  variants={rowVariants}
-                  initial="hidden"
-                  animate="visible"
-                  custom={2}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                >
-                  <LogOut
-                    className="w-4.5 h-4.5"
-                    style={{ color: "#ffffff" }}
-                  />
-                  <span>Sign Out</span>
-                </motion.button>
-              </div>
+                <div className="flex flex-col gap-3 mt-8">
+                  <motion.button
+                    onClick={() => router.push("/settings")}
+                    className="w-full py-4 glass-premium rounded-2xl flex items-center justify-center gap-3 transition-all hover:bg-white/10 group/btn"
+                    variants={rowVariants}
+                    initial="hidden"
+                    animate="visible"
+                    custom={1}
+                    whileHover={{ scale: 1.01, translateY: -2 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
+                    <div className="p-2 bg-black/[0.05] dark:bg-white/[0.05] rounded-xl group-hover/btn:bg-[#7b5ea7]/20 transition-colors">
+                      <Settings
+                        className="w-4 h-4 text-[#7b5ea7]"
+                      />
+                    </div>
+                    <span className="text-xs font-black uppercase tracking-widest opacity-60">App Settings</span>
+                  </motion.button>
+  
+                  <motion.button
+                    onClick={() => signOut()}
+                    className="w-full py-4 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 rounded-2xl flex items-center justify-center gap-3 transition-all group/logout"
+                    variants={rowVariants}
+                    initial="hidden"
+                    animate="visible"
+                    custom={2}
+                    whileHover={{ scale: 1.01, translateY: -2 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
+                    <div className="p-1 px-3 bg-red-500/10 text-red-500 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 group-hover/logout:bg-red-500/20 transition-colors">
+                      <LogOut className="w-3.5 h-3.5" />
+                      Sign Out
+                    </div>
+                  </motion.button>
+                </div>
             </div>
           ) : (
             <EmptyState
@@ -201,31 +199,29 @@ export default function ProfileTab({
         </motion.div>
 
         <motion.div
-          className="card shadow-lg border-(--border) relative overflow-hidden"
+          className="glass-premium p-6 rounded-[32px] relative overflow-hidden hover-glow"
           variants={cardVariants}
           initial="hidden"
           animate="visible"
           custom={1}
         >
           <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 bg-(--surface2) rounded-lg">
-              <Target className="w-5 h-5" style={{ color: "#4db382" }} />
+            <div className="p-2.5 bg-black/[0.03] dark:bg-white/[0.03] rounded-xl">
+              <Target className="w-5 h-5 text-[#4db382]" />
             </div>
             <div>
-              <div className="card-label mb-0">Daily Targets</div>
-              <p className="text-[11px] text-(--text-muted) mt-0.5 tracking-tight uppercase font-medium">
-                Fine-tune your nutritional goals
-              </p>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Optimization</div>
+              <h3 className="text-sm font-black tracking-tight uppercase">Daily Targets</h3>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2 relative z-10">
             <div className="flex flex-col gap-1.5">
-              <div className="text-[10px] tracking-[0.05em] uppercase text-(--text-muted) font-bold">
-                Training Protein (g)
+              <div className="text-[9px] font-black uppercase tracking-widest opacity-30">
+                Training Protein
               </div>
-              <div className="measure-input w-full flex items-center bg-transparent border-none px-0 text-[15px] font-semibold text-(--text)">
-                {goals.proteinTraining || "--"}
+              <div className="text-[16px] font-black tracking-tighter text-[#7b5ea7]">
+                {goals.proteinTraining || "--"}<span className="text-[10px] ml-0.5 opacity-40 uppercase tracking-widest">g</span>
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
@@ -265,21 +261,19 @@ export default function ProfileTab({
 
         {/* Personal Info Card */}
         <motion.div
-          className="card shadow-lg border-(--border) relative overflow-hidden"
+          className="glass-premium p-6 rounded-[32px] relative overflow-hidden hover-glow"
           variants={cardVariants}
           initial="hidden"
           animate="visible"
           custom={2}
         >
           <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 bg-(--surface2) rounded-lg">
-              <Info className="w-5 h-5" style={{ color: "#6b7ea8" }} />
+            <div className="p-2.5 bg-black/[0.03] dark:bg-white/[0.03] rounded-xl">
+              <Info className="w-5 h-5 text-[#6b7ea8]" />
             </div>
             <div>
-              <div className="card-label mb-0">Personal Info</div>
-              <p className="text-[11px] text-(--text-muted) mt-0.5 tracking-tight uppercase font-medium">
-                Your physical details
-              </p>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Physiology</div>
+              <h3 className="text-sm font-black tracking-tight uppercase">Personal Info</h3>
             </div>
           </div>
 
@@ -329,21 +323,19 @@ export default function ProfileTab({
 
         {/* Workout Split Card */}
         <motion.div
-          className="card shadow-lg border-(--border) relative overflow-hidden"
+          className="glass-premium p-6 rounded-[32px] relative overflow-hidden hover-glow"
           variants={cardVariants}
           initial="hidden"
           animate="visible"
           custom={3}
         >
           <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 bg-(--surface2) rounded-lg">
-              <Dumbbell className="w-5 h-5" style={{ color: "#c0392b" }} />
+            <div className="p-2.5 bg-black/[0.03] dark:bg-white/[0.03] rounded-xl">
+              <Dumbbell className="w-5 h-5 text-[#c0392b]" />
             </div>
             <div>
-              <div className="card-label mb-0">Workout Split</div>
-              <p className="text-[11px] text-(--text-muted) mt-0.5 tracking-tight uppercase font-medium">
-                Your weekly routine
-              </p>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Strategy</div>
+              <h3 className="text-sm font-black tracking-tight uppercase">Workout Split</h3>
             </div>
           </div>
 

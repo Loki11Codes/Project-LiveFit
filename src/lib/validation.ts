@@ -186,6 +186,19 @@ export const ChatRequestSchema = z
       .string()
       .regex(/^\d{2}:\d{2}$/)
       .optional(),
+    userContext: z
+      .object({
+        profile: z.any().nullable(),
+        goals: z.any(),
+        analytics: z.any().nullable(),
+        dayType: z.string(),
+        todaysStats: z.object({
+          protein: z.number(),
+          kcal: z.number(),
+          water: z.number(),
+        }),
+      })
+      .optional(),
   })
   .superRefine((value, ctx) => {
     if (!value.prompt.trim() && value.images.length === 0) {

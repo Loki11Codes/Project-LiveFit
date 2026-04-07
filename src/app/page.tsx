@@ -46,6 +46,7 @@ import {
   type LogsResponse,
   type MeasurementForm,
   type TabId,
+  type AIInsight,
 } from "@/lib/types";
 
 const INITIAL_DASHBOARD_STATE: DashboardState = {
@@ -58,6 +59,7 @@ const INITIAL_DASHBOARD_STATE: DashboardState = {
   dayType: "Rest",
   dayTypesByDay: EMPTY_DAY_TYPES_BY_DAY,
   activeWorkout: null,
+  aiInsights: [],
 };
 
 export default function Home() {
@@ -275,12 +277,22 @@ export default function Home() {
       console.warn("[PARSER] Data blocks were detected but failed to parse correctly.");
     }
 
-    // Small delay to ensure server transaction is committed before we fetch
-    setTimeout(() => {
-      void refreshDashboard();
-    }, 200);
-    
     if (envelopes && envelopes.length > 0) {
+      // Filter for insights
+      const insights = envelopes
+        .filter((e) => e.category === "insight" && e.data)
+        .map((e) => ({
+          ...e.data,
+          id: crypto.randomUUID(),
+        } as AIInsight));
+
+      if (insights.length > 0) {
+        setDashboard((prev) => ({
+          ...prev,
+          aiInsights: [...insights, ...prev.aiInsights].slice(0, 3), // Keep latest 3
+        }));
+      }
+
       const workoutAction = envelopes.find(e => e.category === 'workout' && e.action === 'start');
       if (workoutAction) {
         console.log("[DEBUG] Workout start intent detected:", workoutAction);
@@ -292,6 +304,11 @@ export default function Home() {
         }
       }
     }
+
+    // Small delay to ensure server transaction is committed before we fetch
+    setTimeout(() => {
+      void refreshDashboard();
+    }, 200);
   }
 
   function handleUpdateWorkout(updated: ActiveWorkoutSession) {
@@ -486,6 +503,17 @@ export default function Home() {
                     calories: nutrition.calories,
                     calorieTarget: dashboard.goals.kcalTarget,
                   }}
+                  userContext={{
+                    profile: dashboard.profile,
+                    goals: dashboard.goals,
+                    analytics: dashboard.analytics,
+                    dayType: dashboard.dayType,
+                    todaysStats: {
+                      protein: nutrition.protein,
+                      kcal: nutrition.calories,
+                      water: nutrition.water,
+                    },
+                  }}
                 />
                 <div className="ui-pane h-full overflow-hidden flex flex-col">
                   <Sidebar
@@ -511,6 +539,7 @@ export default function Home() {
                     hasWorkout={hasLoggedWorkoutToday}
                     analytics={dashboard.analytics}
                     logs={dashboard.logs}
+                    activeWorkout={dashboard.activeWorkout}
                   />
                 </div>
               </div>
@@ -619,6 +648,7 @@ async function fetchRawDashboardData(): Promise<Omit<DashboardState, "activeWork
     analytics,
     dayType: getCurrentDayType(dayTypesByDay),
     dayTypesByDay,
+    aiInsights: [], // Insights are session-based from Chat responses
   };
 }
 

@@ -18,11 +18,12 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { getSmartSuggestion } from "@/lib/meal-suggestions";
-import { motion } from "framer-motion";
-import type { DayType } from "@/lib/types";
+import { motion, AnimatePresence } from "framer-motion";
+import type { AIInsight, DayType, TabId } from "@/lib/types";
 import { GlassPane } from "./Shared/GlassPane";
 import { GlassMetric } from "./Shared/GlassMetric";
 import { GlassPopover } from "./Shared/GlassPopover";
+import { AIInsightCard } from "./Dashboard/AIInsightCard";
 
 interface SidebarProps {
   readonly protein: number;
@@ -45,6 +46,8 @@ interface SidebarProps {
   readonly analytics: any | null;
   readonly logs: any;
   readonly activeWorkout?: import("@/lib/types").ActiveWorkoutSession | null;
+  readonly aiInsights?: AIInsight[];
+  readonly onTabChange?: (tab: TabId) => void;
 }
 
 function MacroBar({
@@ -385,6 +388,8 @@ export default function Sidebar({
   analytics,
   logs,
   activeWorkout,
+  aiInsights,
+  onTabChange,
 }: Readonly<SidebarProps>) {
   const [isMounted, setIsMounted] = useState(false);
   const [activeMetric, setActiveMetric] = useState<string | null>(null);
@@ -648,18 +653,31 @@ export default function Sidebar({
         )}
 
         {/* ── RECENT ACTIVITY FEED ── */}
-        <div className="animate-dashboard-in stagger-3">
-          <RecentActivity logs={logs} />
-        </div>
+        <RecentActivity logs={logs} />
 
-        <ProactiveCoach 
-          protein={protein} 
-          proteinTarget={proteinTarget}
-          calories={calories} 
-          calorieTarget={calorieTarget}
-          hasWorkout={hasWorkout} 
-          dayType={dayType} 
-        />
+        {/* ── AI COCHING / INSIGHTS ── */}
+        <div className="flex flex-col gap-3 py-4 border-t border-[rgba(0,0,0,0.06)] mt-2">
+          {aiInsights && aiInsights.length > 0 ? (
+            <AnimatePresence mode="popLayout">
+              {aiInsights.map((insight) => (
+                <AIInsightCard 
+                  key={insight.id} 
+                  insight={insight} 
+                  onAction={onTabChange}
+                />
+              ))}
+            </AnimatePresence>
+          ) : (
+            <ProactiveCoach 
+              protein={protein} 
+              proteinTarget={proteinTarget}
+              calories={calories} 
+              calorieTarget={calorieTarget}
+              hasWorkout={hasWorkout} 
+              dayType={dayType} 
+            />
+          )}
+        </div>
 
         <div className="flex flex-col gap-2 mt-auto flex-none border-t border-black/5 pt-3 animate-dashboard-in stagger-5">
           <div className="sidebar-daytype-pills relative flex p-1 gap-1 bg-[rgba(0,0,0,0.04)] rounded-xl overflow-hidden">

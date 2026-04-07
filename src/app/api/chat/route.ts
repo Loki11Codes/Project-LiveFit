@@ -13,7 +13,12 @@ import { extractAndCleanLogData } from "@/lib/chat-utils";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
-const getSystemPrompt = (clientDate?: string, clientTime?: string, routinesList?: string) => {
+const getSystemPrompt = (
+  clientDate?: string,
+  clientTime?: string,
+  routinesList?: string,
+  userContext?: z.infer<typeof ChatRequestSchema>["userContext"]
+) => {
   const now = new Date();
   const dateStr = clientDate || now.toISOString().split("T")[0];
   const timeStr =
@@ -24,13 +29,33 @@ const getSystemPrompt = (clientDate?: string, clientTime?: string, routinesList?
       minute: "2-digit",
     });
 
+  let contextStr = "";
+  if (userContext) {
+    const { profile, goals, analytics, dayType, todaysStats } = userContext;
+    contextStr = `
+USER CONTEXT & PROGRESS:
+- Goals: kcal: ${goals.kcalTarget}, protein: ${goals.proteinTarget}g, water: ${goals.waterTarget}L
+- Today's Progress: kcal: ${todaysStats.kcal}, protein: ${todaysStats.protein}g, water: ${todaysStats.water}L
+- Day Type: ${dayType}
+- Profile: Age: ${profile?.age || "--"}, Goal: ${profile?.primaryGoal || "--"}
+- Recent Performance: Avg calories: ${analytics?.averages.kcal.toFixed(0) || "--"}, Avg protein: ${analytics?.averages.protein.toFixed(0) || "--"}g
+`;
+  }
+
   return `
-You are the LiveFit AI - a concise fitness tracking assistant.
-Your goal is to parse user messages into structured log data and provide a helpful, natural response.
+You are the LiveFit AI - a professional, concise fitness coach and tracking assistant.
+Your goal is to parse user messages into structured log data and provide a helpful, natural, and PROACTIVE response.
 
 CURRENT CONTEXT:
 - Today's Date: ${dateStr}
 - Current Time: ${timeStr}
+${contextStr}
+
+PROACTIVE COACHING:
+- Beyond just logging, you should identify patterns or provide helpful tips based on "USER CONTEXT & PROGRESS".
+- If you have meaningful advice (e.g. "You're short on protein today", "You've been very consistent this week!", "Since it's a Rest day, focus on recovery"), you MUST also emit an "insight" |||DATA block.
+- Insight Structure: |||DATA { "category": "insight", "data": { "type": "nutrition"|"workout"|"habit", "title": "...", "description": "...", "actionLabel": "...", "actionTab": "..." } } |||
+- Only generate an "insight" if the user's message or context warrants a specific tip or recognition.
 
 STARTING A WORKOUT:
 - If the user says "Start a workout", "Begin training", or similar:
@@ -58,34 +83,28 @@ STRUCTURE TEMPLATES:
 - Sleep: |||DATA { "category": "sleep", "data": { "hours": ..., "bedTime": "...", "wakeTime": "..." } } |||
 - Measurement: |||DATA { "category": "measurement", "data": { "weight": ..., "waist": ..., "bodyFat": ... } } |||
 
-Example for completed workout log:
+Example for an Insight + Log:
 |||DATA
 {
-  "category": "workout",
+  "category": "insight",
   "data": {
-    "focus": "Push Day",
-    "exercises": [
-      {
-        "name": "Push Press",
-        "sets": [
-          { "reps": 10, "weight": 50 },
-          { "reps": 8, "weight": 50 }
-        ]
-      }
-    ]
+    "type": "nutrition",
+    "title": "Protein Optimization",
+    "description": "You are 40g away from your goal. Adding a Greek yogurt snack would perfect your recovery today.",
+    "actionLabel": "Log Snack",
+    "actionTab": "chat"
   }
 }
 |||
-Great job on that "Push Day" workout! I've logged it for you.
+Logged that yogurt for you! You are now much closer to your protein goal. Great focus on recovery.
 
-Categories: food, workout, sleep, measurement, profile, goals, dayType, delete.
+Categories: food, workout, sleep, measurement, profile, goals, dayType, delete, insight.
 All categories can include "date" (YYYY-MM-DD) and "update" (boolean).
 You MUST provide the estimated macros (kcal, protein, carbs, fats) for every food item.
 
 PERSONALIZATION:
-- Daily Calorie and Protein targets are now DYNAMICALLY calculated based on the user's Profile (age, gender, height, activity) and latest Measurement (weight).
-- When a user logs a new weight or updates their profile, their goals are automatically synced.
-- Encourage users to provide these stats if they haven't already, so I can provide highly personalized targets.
+- Daily Calorie and Protein targets are now DYNAMICALLY calculated based on the user's Profile and progress.
+- Encourage users to provide these stats if they haven't already.
 
 `;
 };
@@ -140,14 +159,18 @@ function sanitizeGeminiHistory(history: Array<{ role: "user" | "model"; parts: G
   return contents;
 }
 
-async function callGemini(
-  prompt: string,
-  history: ChatHistoryMessage[],
-  images: ChatAttachmentPayload[],
-  clientDate?: string,
-  clientTime?: string,
-  routinesList?: string,
-) {
+type ChatParams = {
+  prompt: string;
+  history: ChatHistoryMessage[];
+  images: ChatAttachmentPayload[];
+  clientDate?: string;
+  clientTime?: string;
+  routinesList?: string;
+  userContext?: z.infer<typeof ChatRequestSchema>["userContext"];
+};
+
+async function callGemini(params: ChatParams) {
+  const { prompt, history, images, clientDate, clientTime, routinesList, userContext } = params;
   const modelsToTry = [
     "gemini-2.0-flash",
     "gemini-1.5-flash",
@@ -159,7 +182,7 @@ async function callGemini(
 
   for (const modelId of modelsToTry) {
     try {
-      const systemPrompt = getSystemPrompt(clientDate, clientTime, routinesList);
+      const systemPrompt = getSystemPrompt(clientDate, clientTime, routinesList, userContext);
       const model = genAI.getGenerativeModel({ 
         model: modelId,
         systemInstruction: systemPrompt 
@@ -193,14 +216,9 @@ async function callGemini(
 }
 
 async function callOpenRouter(
-  prompt: string,
-  history: ChatHistoryMessage[],
-  openRouterKey: string,
-  images: ChatAttachmentPayload[],
-  clientDate?: string,
-  clientTime?: string,
-  routinesList?: string,
+  params: ChatParams & { openRouterKey: string }
 ) {
+  const { prompt, history, images, clientDate, clientTime, routinesList, userContext, openRouterKey } = params;
   const freeModels = [
     "openrouter/free",
     "google/gemini-2.0-flash-lite-preview-02-05:free",
@@ -229,7 +247,7 @@ async function callOpenRouter(
       const messages: OpenRouterMessage[] = [
         {
           role: "system",
-          content: getSystemPrompt(clientDate, clientTime, routinesList),
+          content: getSystemPrompt(clientDate, clientTime, routinesList, userContext),
         },
         ...history.slice(-40).map((message) => ({
           role: message.role === "model" ? ("assistant" as const) : ("user" as const),
@@ -316,7 +334,7 @@ export async function POST(req: Request) {
       routinesList = routines.map(r => `- ${r.name} (ID: ${r.id})`).join('\n');
     }
 
-    const text = await getAIResponse(body, geminiKey, openRouterKey, routinesList);
+    const text = await getAIResponse(body, geminiKey, openRouterKey, routinesList, body.userContext);
 
     if (!text) {
       throw new Error("All AI providers failed");
@@ -389,13 +407,14 @@ async function getAIResponse(
   geminiKey: string | null,
   openRouterKey: string | null,
   routinesList?: string,
+  userContext?: z.infer<typeof ChatRequestSchema>["userContext"]
 ) {
   let text = "";
   const { prompt, history, images, clientDate, clientTime } = body;
 
   if (geminiKey) {
     try {
-      text = await callGemini(prompt, history, images, clientDate, clientTime, routinesList);
+      text = await callGemini({ prompt, history, images, clientDate, clientTime, routinesList, userContext });
     } catch (error) {
       console.error(
         "Gemini failed completely, failing over to OpenRouter...",
@@ -406,7 +425,7 @@ async function getAIResponse(
 
   if (!text && openRouterKey) {
     text =
-      (await callOpenRouter(
+      (await callOpenRouter({
         prompt,
         history,
         openRouterKey,
@@ -414,7 +433,8 @@ async function getAIResponse(
         clientDate,
         clientTime,
         routinesList,
-      )) || "";
+        userContext
+      })) || "";
   }
 
   return text;
