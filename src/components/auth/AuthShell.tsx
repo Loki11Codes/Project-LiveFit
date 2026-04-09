@@ -60,8 +60,8 @@ export function AuthShell({
       {/* Fixed Background Layers */}
       <div className="fixed inset-0 z-0 bg-[radial-gradient(circle_at_8%_0%,#ffe7b8,transparent_33%),radial-gradient(circle_at_100%_100%,#baf2ef,transparent_38%),linear-gradient(180deg,#fffef8,#f7fbff_58%,#ecfeff)]" />
       <div className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.04)_1px,transparent_1px)] bg-size-[34px_34px] opacity-45" />
-      <div className="pointer-events-none fixed -left-20 top-8 z-0 h-80 w-80 rounded-full bg-amber-300/35 blur-[110px]" />
-      <div className="pointer-events-none fixed -bottom-14 -right-20 z-0 h-96 w-96 rounded-full bg-cyan-300/35 blur-[120px]" />
+      <div className="pointer-events-none fixed -left-20 top-8 z-0 h-80 w-80 rounded-full bg-[var(--burn-amber)]/20 blur-[110px]" />
+      <div className="pointer-events-none fixed -bottom-14 -right-20 z-0 h-96 w-96 rounded-full bg-[var(--iq-blue)]/20 blur-[120px]" />
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-340 flex-col justify-center px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <Link
@@ -145,7 +145,7 @@ export function AuthShell({
               {bottomText}{" "}
               <Link
                 href={bottomLinkHref}
-                className="font-semibold text-zinc-900 underline decoration-amber-400/80 underline-offset-4 hover:text-amber-600"
+                className="font-semibold text-zinc-900 underline decoration-[var(--burn-amber)]/60 underline-offset-4 hover:text-[var(--burn-amber)]"
               >
                 {bottomLinkLabel}
               </Link>

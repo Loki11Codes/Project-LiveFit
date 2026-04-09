@@ -6,16 +6,19 @@ import { RoutinesTab } from './RoutinesTab';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, style, ...props }: any) => <div {...props} style={style}>{children}</div>,
-    button: ({ children, style, ...props }: any) => <button {...props} style={style}>{children}</button>,
+    div: ({ children, style, layout, initial, animate, exit, transition, ...props }: any) => 
+      <div {...props} style={style}>{children}</div>,
+    button: ({ children, style, layout, initial, animate, exit, transition, ...props }: any) => 
+      <button {...props} style={style}>{children}</button>,
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
 // Mock globalThis.crypto.randomUUID
+let uuidCounter = 0;
 Object.defineProperty(globalThis, 'crypto', {
   value: {
-    randomUUID: () => 'test-uuid-123',
+    randomUUID: () => `test-uuid-${uuidCounter++}`,
   },
 });
 
@@ -177,6 +180,163 @@ describe('RoutinesTab Component', () => {
             method: 'POST',
             body: expect.stringContaining('New Test Routine')
         }));
+    });
+  });
+
+  describe('Routine Management', () => {
+    it('deletes a routine after confirmation', async () => {
+      vi.spyOn(globalThis, 'confirm').mockImplementation(() => true);
+      const deleteFetchMock = vi.fn().mockResolvedValue({ ok: true });
+      globalThis.fetch = vi.fn((url, options: any) => {
+        if (options?.method === 'DELETE') return deleteFetchMock();
+        if (url === '/api/routines') return Promise.resolve({ ok: true, json: () => Promise.resolve(mockRoutines) });
+        if (url === '/api/exercises') return Promise.resolve({ ok: true, json: () => Promise.resolve(mockExercises) });
+        return Promise.resolve({ ok: false });
+      }) as any;
+
+      render(<RoutinesTab />);
+      await waitFor(() => expect(screen.getByText('Push Day')).toBeDefined());
+
+      const deleteBtn = screen.getByTitle('Delete routine');
+      fireEvent.click(deleteBtn);
+
+      expect(globalThis.confirm).toHaveBeenCalledWith(expect.stringContaining('Delete this routine?'));
+      expect(deleteFetchMock).toHaveBeenCalled();
+      
+      // Should be removed from UI immediately
+      await waitFor(() => {
+        expect(screen.queryByText('Push Day')).toBeNull();
+      });
+    });
+
+    it('reloads data if deletion fails', async () => {
+      vi.spyOn(globalThis, 'confirm').mockImplementation(() => true);
+      const deleteFetchMock = vi.fn().mockResolvedValue({ ok: false });
+      const fetchSpy = vi.fn((url, options: any) => {
+        if (options?.method === 'DELETE') return deleteFetchMock();
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockRoutines) });
+      }) as any;
+      globalThis.fetch = fetchSpy;
+
+      render(<RoutinesTab />);
+      await waitFor(() => expect(screen.getByText('Push Day')).toBeDefined());
+
+      const deleteBtn = screen.getByTitle('Delete routine');
+      fireEvent.click(deleteBtn);
+
+      await waitFor(() => {
+        expect(deleteFetchMock).toHaveBeenCalled();
+        // Since it failed, fetchData should be called again (which happens after failed fetch in catch/finally)
+        // More importantly, the item should still be visible because fetchData reloads the original list
+        expect(screen.getByText('Push Day')).toBeDefined();
+      });
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('handles fetch failures gracefully', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      globalThis.fetch = vi.fn(() => Promise.reject(new Error('Network error'))) as any;
+
+      render(<RoutinesTab />);
+      
+      await waitFor(() => {
+        expect(screen.queryByText('Push Day')).toBeNull();
+        expect(screen.getByText('No Routines Yet')).toBeDefined();
+        expect(consoleSpy).toHaveBeenCalledWith('Failed to load routine data', expect.any(Error));
+      });
+    });
+  });
+
+  describe('Preview Mode', () => {
+    beforeEach(async () => {
+      render(<RoutinesTab onStart={vi.fn()} />);
+      await waitFor(() => expect(screen.getByText('Push Day')).toBeDefined());
+      // Click routine card to open preview (the main button)
+      const routineBtn = screen.getByText('Push Day').closest('button');
+      if (routineBtn) fireEvent.click(routineBtn);
+    });
+
+    it('opens preview and shows exercise details', async () => {
+      await waitFor(() => {
+        expect(screen.getByText('Bench Press')).toBeDefined();
+        expect(screen.getByText('Customize before you start — changes only apply to this session.')).toBeDefined();
+      });
+    });
+
+    it('updates set weight and reps', async () => {
+      const weightInput = screen.getAllByPlaceholderText('0')[0];
+      fireEvent.change(weightInput, { target: { value: '60' } });
+      expect(weightInput).toHaveValue(60);
+
+      const repsInput = screen.getAllByPlaceholderText('0')[1]; // Second input in the row
+      fireEvent.change(repsInput, { target: { value: '12' } });
+      expect(repsInput).toHaveValue(12);
+    });
+
+    it('adds and removes a set', async () => {
+      vi.spyOn(globalThis, 'confirm').mockImplementation(() => true);
+      
+      // Initially 3 sets
+      const getSetRows = () => screen.getAllByPlaceholderText('0').length / 2; // 2 inputs per set
+      expect(getSetRows()).toBe(3);
+
+      const addSetBtn = screen.getByTitle('Add set');
+      fireEvent.click(addSetBtn);
+      
+      await waitFor(() => expect(getSetRows()).toBe(4));
+
+      // Remove set
+      const removeSetBtns = screen.getAllByTitle('Remove set');
+      fireEvent.click(removeSetBtns[0]);
+      
+      expect(globalThis.confirm).toHaveBeenCalledWith(expect.stringContaining('delete this set?'));
+      await waitFor(() => expect(getSetRows()).toBe(3));
+    });
+
+    it('adds and removes an exercise in preview', async () => {
+      vi.spyOn(globalThis, 'confirm').mockImplementation(() => true);
+
+      // Add exercise
+      const addExerciseBtn = screen.getByText('Add Exercise');
+      fireEvent.click(addExerciseBtn);
+
+      const searchInput = screen.getByPlaceholderText('Search exercises...');
+      fireEvent.change(searchInput, { target: { value: 'Squat' } });
+      
+      const squatBtn = screen.getByText(/Squat/).closest('button');
+      if (squatBtn) fireEvent.click(squatBtn);
+
+      await waitFor(() => expect(screen.getByText('Squat')).toBeDefined());
+
+      // Remove exercise
+      const removeExerciseBtns = screen.getAllByTitle('Remove exercise');
+      fireEvent.click(removeExerciseBtns[0]);
+
+      expect(globalThis.confirm).toHaveBeenCalledWith(expect.stringContaining('remove this exercise?'));
+      await waitFor(() => expect(screen.queryByText('Bench Press')).toBeNull());
+    });
+
+    it('starts workout with customized routine', async () => {
+      const onStartMock = vi.fn();
+      cleanup();
+      render(<RoutinesTab onStart={onStartMock} />);
+      await waitFor(() => expect(screen.getByText('Push Day')).toBeDefined());
+      
+      fireEvent.click(screen.getByText('Push Day').closest('button')!);
+      
+      const startBtn = screen.getByText('Start Workout');
+      fireEvent.click(startBtn);
+
+      expect(onStartMock).toHaveBeenCalledWith(expect.objectContaining({
+        name: 'Push Day',
+        exercises: expect.arrayContaining([
+          expect.objectContaining({
+            exercise: expect.objectContaining({ name: 'Bench Press' }),
+            sets: expect.any(Array)
+          })
+        ])
+      }));
     });
   });
 });

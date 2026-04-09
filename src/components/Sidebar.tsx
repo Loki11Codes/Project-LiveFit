@@ -65,28 +65,28 @@ function MacroBar({
   const fPct = (fCal / total) * 100;
 
   return (
-    <div className="flex flex-col gap-2 py-2.5 bg-black/5 rounded-2xl px-4 border border-black/5 h-full">
+    <div className="flex flex-col gap-2 py-2 bg-[var(--surface2)] rounded-2xl px-4 border border-[var(--border)] h-full">
       <div className="flex items-center justify-between text-[10px] font-black uppercase">
         <span className="opacity-40 tracking-tighter">Balance</span>
         <span>{Math.round(total)} Kcal</span>
       </div>
-      <div className="flex h-1.5 w-full rounded-full overflow-hidden bg-black/5">
-        <div style={{ width: `${pPct}%` }} className="h-full bg-[#8b4513]" />
-        <div style={{ width: `${cPct}%` }} className="h-full bg-[#e6ac50]" />
-        <div style={{ width: `${fPct}%` }} className="h-full bg-[#d4a23a]" />
+      <div className="flex h-1.5 w-full rounded-full overflow-hidden bg-[var(--surface2)]">
+        <div style={{ width: `${pPct}%` }} className="h-full bg-[var(--green)]" />
+        <div style={{ width: `${cPct}%` }} className="h-full bg-[var(--amber)]" />
+        <div style={{ width: `${fPct}%` }} className="h-full bg-[#d4a23a] opacity-50" />
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#8b4513]" />
+            <div className="w-1.5 h-1.5 rounded-full bg-[var(--green)]" />
             <span className="text-[9px] font-black opacity-30">P {Math.round(pPct)}%</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#e6ac50]" />
+            <div className="w-1.5 h-1.5 rounded-full bg-[var(--amber)]" />
             <span className="text-[9px] font-black opacity-30">C {Math.round(cPct)}%</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#d4a23a]" />
+            <div className="w-1.5 h-1.5 rounded-full bg-[#d4a23a] opacity-50" />
             <span className="text-[9px] font-black opacity-30">F {Math.round(fPct)}%</span>
           </div>
         </div>
@@ -101,10 +101,10 @@ function WeeklyConsistency({ stats }: Readonly<{ stats: any[] }>) {
   const max = Math.max(...last7.map((s) => s.protein || 0), 100);
 
   return (
-    <div className="flex flex-col gap-2 py-3 bg-black/5 rounded-2xl px-4 border border-black/5 h-full">
+    <div className="flex flex-col gap-1.5 py-2.5 bg-[var(--surface2)] rounded-2xl px-4 border border-[var(--border)] h-full">
       <div className="flex items-center justify-between text-[10px] font-black uppercase">
         <span className="opacity-40 tracking-tighter">7-Day Consistency</span>
-        <span className="text-[var(--accent)]">Protein</span>
+        <span className="text-[var(--green)]">Protein</span>
       </div>
       <div className="flex items-end justify-between h-10 gap-1.5 px-1">
         {Array.from({ length: 7 }).map((_, i) => {
@@ -113,13 +113,13 @@ function WeeklyConsistency({ stats }: Readonly<{ stats: any[] }>) {
           return (
             <div
               key={i}
-              className="flex-1 bg-[rgba(0,0,0,0.06)] rounded-t-sm relative group"
+              className="flex-1 bg-[var(--surface2)] rounded-t-sm relative group"
               style={{ height: "100%" }}
             >
               <motion.div
                 initial={{ height: 0 }}
                 animate={{ height: `${height}%` }}
-                className="absolute bottom-0 left-0 right-0 bg-[var(--accent)] opacity-60 rounded-t-sm group-hover:opacity-100 transition-opacity"
+                className="absolute bottom-0 left-0 right-0 bg-[var(--green)] opacity-60 rounded-t-sm group-hover:opacity-100 transition-opacity"
               />
             </div>
           );
@@ -165,17 +165,17 @@ function RecentActivity({ logs }: Readonly<{ logs: any }>) {
   if (sorted.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-2.5 py-3">
+    <div className="flex flex-col gap-2 py-2.5">
       <div className="flex items-center gap-2">
         <span className="text-[10px] font-black uppercase opacity-30 tracking-widest">
           Recent Activity
         </span>
-        <div className="h-[1px] flex-1 bg-black/5" />
+        <div className="h-[1px] flex-1 bg-[var(--border)]" />
       </div>
       <div className="flex flex-col gap-2">
         {sorted.map((act) => (
           <div key={act.id} className="flex items-center gap-2.5 px-1">
-            <div className="w-6 h-6 rounded-lg bg-[rgba(0,0,0,0.03)] flex items-center justify-center">
+            <div className="w-6 h-6 rounded-lg bg-[var(--surface2)] flex items-center justify-center">
               <act.icon className="w-3 h-3 opacity-40" />
             </div>
             <div className="flex flex-col min-w-0">
@@ -211,9 +211,9 @@ function ProactiveCoach({
   
   if (logged) {
     return (
-      <div className="glass-premium p-3 rounded-2xl border border-green-500/10 mb-4 animate-dashboard-in flex items-center gap-2">
-        <CheckCircle className="w-4 h-4 text-green-500" />
-        <span className="text-[10px] font-bold text-green-700/60 uppercase">Suggestion Logged</span>
+      <div className="glass-premium p-2.5 rounded-2xl border border-[var(--green)]/10 mb-3 animate-dashboard-in flex items-center gap-2">
+        <CheckCircle className="w-4 h-4 text-[var(--green)]" />
+        <span className="text-[10px] font-bold text-[var(--green)]/60 uppercase">Suggestion Logged</span>
       </div>
     );
   }
@@ -233,8 +233,8 @@ function ProactiveCoach({
   }
 
   return (
-    <div className="flex flex-col gap-3 mb-4 animate-dashboard-in stagger-4 flex-shrink-0">
-      <div className="glass-premium rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden group/insight">
+    <div className="flex flex-col gap-2.5 mb-3 animate-dashboard-in stagger-4 flex-shrink-0">
+      <div className="glass-premium rounded-2xl p-3.5 flex flex-col gap-2.5 relative overflow-hidden group/insight">
         {/* Decorative Glow */}
         <div 
           className="absolute -top-4 -right-4 w-16 h-16 blur-2xl opacity-20 transition-opacity group-hover/insight:opacity-40 bg-[var(--accent)] pointer-events-none"
@@ -262,7 +262,7 @@ function ProactiveCoach({
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-premium p-3 rounded-2xl border border-[var(--accent)]/20 bg-gradient-to-br from-[var(--accent)]/[0.03] to-transparent relative overflow-hidden"
+          className="glass-premium p-2.5 rounded-2xl border border-[var(--accent)]/20 bg-gradient-to-br from-[var(--accent)]/[0.03] to-transparent relative overflow-hidden"
         >
           <div className="flex flex-col gap-2 relative z-10">
             <div className="flex items-center justify-between">
@@ -310,7 +310,7 @@ function WaterRing({ percentage }: { percentage: number }) {
         <circle 
           cx="8" cy="8" r={radius} fill="none" stroke="currentColor" strokeWidth="2" 
           strokeDasharray={circum} strokeDashoffset={offset} strokeLinecap="round"
-          className="text-blue-500"
+          className="text-[var(--accent)]"
         />
       </svg>
     </div>
@@ -367,11 +367,11 @@ function WorkoutLiveAssistant({ session }: { readonly session: import("@/lib/typ
           <span>Progress</span>
           <span>{completedSets} / {totalSets} Sets</span>
         </div>
-        <div className="h-1.5 w-full bg-black/5 rounded-full overflow-hidden">
+        <div className="h-1.5 w-full bg-[var(--surface2)] rounded-full overflow-hidden">
           <motion.div 
             initial={{ width: 0 }}
             animate={{ width: `${(completedSets / totalSets) * 100}%` }}
-            className="h-full bg-[var(--accent)]"
+            className="h-full bg-[var(--red)]"
           />
         </div>
       </div>
@@ -522,9 +522,9 @@ export default function Sidebar({
       <div className="flex flex-col h-full overflow-hidden">
         <div className="flex flex-col flex-1 !p-4 !pb-0 !gap-0 overflow-y-auto no-scrollbar relative">
         {/* ── HEADER ── */}
-        <div className="flex items-center justify-between mb-3 flex-none animate-dashboard-in stagger-1">
+        <div className="flex items-center justify-between mb-2 flex-none animate-dashboard-in stagger-1">
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-lg bg-[rgba(0,0,0,0.04)] flex items-center justify-center">
+            <div className="w-5 h-5 rounded-lg bg-[var(--surface2)] flex items-center justify-center">
               <Target className="w-3 h-3 text-[var(--accent)]" strokeWidth={3} />
             </div>
             <span className="text-[9px] font-black uppercase tracking-widest opacity-30">
@@ -534,7 +534,7 @@ export default function Sidebar({
           <Zap className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500 animate-pulse opacity-40" />
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-3 flex-none animate-dashboard-in stagger-1">
+        <div className="grid grid-cols-2 gap-3 mb-2 flex-none animate-dashboard-in stagger-1">
 
           <GlassMetric
             icon={Beef}
@@ -544,7 +544,7 @@ export default function Sidebar({
             percentage={proteinPct}
             status={proteinStatus as any}
             nudge={proteinPct < 50}
-            iconColor="#8b4513"
+            iconColor="var(--green)"
             onClick={() => setActiveMetric("Protein")}
           />
 
@@ -556,7 +556,7 @@ export default function Sidebar({
             percentage={caloriePct}
             status={calorieStatus as any}
             nudge={caloriePct < 50}
-            iconColor="#e67e22"
+            iconColor="var(--amber)"
             onClick={() => setActiveMetric("Calories")}
           />
         </div>
@@ -586,7 +586,7 @@ export default function Sidebar({
           </div>
         </GlassPopover>
 
-        <div className="grid grid-cols-2 gap-3 animate-dashboard-in stagger-2 mb-1">
+        <div className="grid grid-cols-2 gap-3 animate-dashboard-in stagger-2 mb-0.5">
           <MacroBar p={protein} c={carbs} f={fats} />
           {analytics?.nutritionStats && (
             <WeeklyConsistency stats={analytics.nutritionStats} />
@@ -594,7 +594,7 @@ export default function Sidebar({
         </div>
 
         {/* ── STATS SECTION (LIVE ASSISTANT OR GRID) ── */}
-        <div className="border-y border-[rgba(0,0,0,0.06)] py-2 my-0.5">
+        <div className="border-y border-[var(--border)] py-1.5 my-0.5">
           {activeWorkout ? (
             <WorkoutLiveAssistant session={activeWorkout} />
           ) : (
@@ -603,10 +603,10 @@ export default function Sidebar({
                 <button
                   key={row.label}
                   type="button"
-                  className={`flex flex-col gap-1 p-2 rounded-xl border transition-all hover:bg-[rgba(0,0,0,0.02)] ${
+                  className={`flex flex-col gap-1 p-2 rounded-[var(--radius-md)] border transition-all hover:bg-[var(--surface2)] ${
                     row.hit
-                      ? "bg-green-500/5 border-green-500/10"
-                      : "bg-black/5 border-transparent"
+                      ? "bg-[var(--nutri-green)]/10 border-[var(--nutri-green)]/20"
+                      : "bg-[var(--surface2)] border-transparent"
                   }`}
                   onClick={() => setActiveMetric(row.label)}
                   suppressHydrationWarning
@@ -630,7 +630,7 @@ export default function Sidebar({
                       </span>
                     )}
                     {row.hit && (
-                      <Zap className="w-1.5 h-1.5 text-green-500 fill-green-500 ml-auto flex-shrink-0" />
+                      <Zap className="w-1.5 h-1.5 text-[var(--nutri-green)] fill-[var(--nutri-green)] ml-auto flex-shrink-0" />
                     )}
                   </div>
                   <div className="flex items-baseline gap-0.5 min-w-0">
@@ -654,9 +654,9 @@ export default function Sidebar({
 
         {/* ── GOAL INDICATOR (WORKOUT) ── */}
         {hasWorkout && (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-xl my-1 mb-2">
-            <Zap className="w-2.5 h-2.5 text-green-500 fill-green-500" />
-            <span className="text-[8.5px] font-black uppercase text-green-700 opacity-60">
+          <div className="flex items-center gap-2 px-3 py-1 bg-[var(--energy-coral)]/10 border border-[var(--energy-coral)]/20 rounded-[var(--radius-md)] my-0.5 mb-1.5">
+            <Zap className="w-2.5 h-2.5 text-[var(--energy-coral)] fill-[var(--energy-coral)]" />
+            <span className="text-[8.5px] font-black uppercase text-[var(--energy-coral)] opacity-60">
               Workout Logged
             </span>
           </div>
@@ -666,7 +666,7 @@ export default function Sidebar({
         <RecentActivity logs={logs} />
 
         {/* ── AI COCHING / INSIGHTS ── */}
-        <div className="flex flex-col gap-2 py-3 border-t border-[rgba(0,0,0,0.06)] mt-1">
+        <div className="flex flex-col gap-1.5 py-2 border-t border-[var(--border)] mt-0.5">
           {aiInsights && aiInsights.length > 0 ? (
             <AnimatePresence mode="popLayout">
               {aiInsights.map((insight) => (
@@ -690,8 +690,8 @@ export default function Sidebar({
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 p-4 pt-3 flex-none border-t border-black/5 animate-dashboard-in stagger-5 relative z-20">
-        <div className="sidebar-daytype-pills relative flex p-1 gap-1 bg-[rgba(0,0,0,0.04)] rounded-xl overflow-hidden">
+      <div className="flex flex-col gap-1.5 p-3 pt-2 flex-none border-t border-black/5 animate-dashboard-in stagger-5 relative z-20">
+        <div className="sidebar-daytype-pills relative flex p-1 gap-1 bg-[var(--surface2)] rounded-xl overflow-hidden">
             {dayTypes.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}

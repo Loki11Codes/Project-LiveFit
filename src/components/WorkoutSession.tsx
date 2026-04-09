@@ -161,11 +161,11 @@ export function WorkoutSession({
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-5 glass-premium border-b border-black/5 shadow-md shrink-0 relative z-30">
         <div className="flex flex-col">
-          <h2 className="text-[10px] font-black text-[var(--accent)] uppercase tracking-[0.2em] opacity-60">
+          <h2 className="text-[10px] font-black text-[var(--red)] uppercase tracking-[0.2em] opacity-60">
             {session.name || "Live Session"}
           </h2>
           <div className="flex items-center gap-2 text-2xl font-black tabular-nums">
-            <Clock className="w-5 h-5 text-[var(--accent)]" />
+            <Clock className="w-5 h-5 text-[var(--red)]" />
             {formatTime(elapsed)}
           </div>
         </div>
@@ -173,13 +173,13 @@ export function WorkoutSession({
         <div className="flex items-center gap-3">
           <button
             onClick={onDiscard}
-            className="p-3 text-[var(--foreground-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-2xl transition-all active:scale-95 border border-transparent hover:border-red-500/20"
+            className="p-3 text-[var(--foreground-muted)] hover:text-[var(--energy-coral)] hover:bg-[var(--energy-coral)]/10 rounded-[var(--radius-md)] transition-all active:scale-95 border border-transparent hover:border-[var(--energy-coral)]/20"
           >
             <Trash2 className="w-5 h-5" />
           </button>
           <button
             onClick={() => onFinish(session)}
-            className="px-6 py-3 bg-[var(--accent)] text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-xl shadow-[var(--accent)]/30 active:scale-95 transition-all"
+            className="px-6 py-3 bg-[var(--energy-coral)] text-white font-black uppercase text-xs tracking-widest rounded-[var(--radius-md)] shadow-xl shadow-[var(--energy-coral)]/30 active:scale-95 transition-all"
           >
             Finish
           </button>
@@ -195,21 +195,21 @@ export function WorkoutSession({
               key={ex.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="glass-premium rounded-3xl overflow-hidden relative group"
+              className="glass-premium rounded-[var(--radius-lg)] overflow-hidden relative group"
             >
               <div className="p-4 flex items-center justify-between border-b border-black/5 bg-black/[0.02]">
                 <div className="flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-xl bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center font-black text-xs shadow-inner">
+                  <span className="w-8 h-8 rounded-[var(--radius-md)] bg-[var(--energy-coral)]/10 text-[var(--energy-coral)] flex items-center justify-center font-black text-xs shadow-inner">
                     {exIdx + 1}
                   </span>
                   <div className="flex flex-col">
                     <h3 className="font-black text-lg tracking-tight leading-none mb-1">{ex.name}</h3>
-                    <span className="text-[9px] font-black uppercase text-[var(--accent)] tracking-widest opacity-40">Target Reached: 85%</span>
+                    <span className="text-[9px] font-black uppercase text-[var(--red)] tracking-widest opacity-40">Target Reached: 85%</span>
                   </div>
                 </div>
                 <button
                   onClick={() => removeExercise(ex.id)}
-                  className="p-2 text-[var(--foreground-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                  className="p-2 text-[var(--foreground-muted)] hover:text-[var(--energy-coral)] hover:bg-[var(--energy-coral)]/10 rounded-[var(--radius-sm)] transition-all opacity-0 group-hover:opacity-100"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -235,8 +235,8 @@ export function WorkoutSession({
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20, scale: 0.95 }}
-                        className={`grid grid-cols-[2.5rem_1fr_1fr_2.5rem_2.5rem] gap-2 items-center transition-all duration-300 rounded-xl p-1 ${
-                          set.isCompleted ? "bg-green-500/5" : ""
+                        className={`grid grid-cols-[2.5rem_1fr_1fr_2.5rem_2.5rem] gap-2 items-center transition-all duration-300 rounded-[var(--radius-md)] p-1 ${
+                          set.isCompleted ? "bg-[var(--nutri-green)]/5" : ""
                         }`}
                       >
                         <div className="text-center font-bold text-sm text-[var(--foreground-muted)]">
@@ -247,7 +247,7 @@ export function WorkoutSession({
                           placeholder="0"
                           value={set.weight}
                           onChange={(e) => updateSet(ex.id, set.id, { weight: e.target.value })}
-                          className={`w-full bg-black/5 border border-transparent rounded-xl py-2.5 text-center font-black text-sm outline-none focus:border-[var(--accent)]/30 focus:bg-white/50 transition-all ${
+                          className={`w-full bg-black/5 border border-transparent rounded-[var(--radius-md)] py-2.5 text-center font-black text-sm outline-none focus:border-[var(--energy-coral)]/30 focus:bg-white/50 transition-all ${
                             set.isCompleted ? "opacity-30" : ""
                           }`}
                         />
@@ -256,7 +256,7 @@ export function WorkoutSession({
                           placeholder="0"
                           value={set.reps}
                           onChange={(e) => updateSet(ex.id, set.id, { reps: e.target.value })}
-                          className={`w-full bg-black/5 border border-transparent rounded-xl py-2.5 text-center font-black text-sm outline-none focus:border-[var(--accent)]/30 focus:bg-white/50 transition-all ${
+                          className={`w-full bg-black/5 border border-transparent rounded-xl py-2.5 text-center font-black text-sm outline-none focus:border-[var(--red)]/30 focus:bg-white/50 transition-all ${
                             set.isCompleted ? "opacity-30" : ""
                           }`}
                         />
@@ -265,7 +265,7 @@ export function WorkoutSession({
                           onClick={() => updateSet(ex.id, set.id, { isCompleted: !set.isCompleted })}
                           className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
                             set.isCompleted
-                              ? "bg-[var(--accent)] text-white shadow-xl shadow-[var(--accent)]/40 scale-105"
+                              ? "bg-[var(--red)] text-white shadow-xl shadow-[var(--red)]/40 scale-105"
                               : "bg-black/5 text-[var(--foreground-muted)] border border-transparent hover:border-black/10"
                           }`}
                         >
@@ -290,7 +290,7 @@ export function WorkoutSession({
 
                 <button
                   onClick={() => addSet(ex.id)}
-                  className="w-full mt-4 py-2.5 border-2 border-dashed border-[var(--border)] rounded-xl text-[var(--foreground-muted)] font-bold text-sm hover:border-[var(--accent)]/30 hover:text-[var(--accent)] transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
+                  className="w-full mt-4 py-2.5 border-2 border-dashed border-[var(--border)] rounded-xl text-[var(--foreground-muted)] font-bold text-sm hover:border-[var(--red)]/30 hover:text-[var(--red)] transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
                 >
                   <Plus className="w-4 h-4" /> Add Set
                 </button>
@@ -300,7 +300,7 @@ export function WorkoutSession({
 
           <button
             onClick={() => setIsSearching(true)}
-            className="w-full py-5 rounded-3xl bg-[var(--accent)]/5 border-2 border-dashed border-[var(--accent)]/20 text-[var(--accent)] font-bold text-lg flex items-center justify-center gap-2 hover:bg-[var(--accent)]/10 transition-all active:scale-[0.98]"
+            className="w-full py-5 rounded-3xl bg-[var(--red)]/5 border-2 border-dashed border-[var(--red)]/20 text-[var(--red)] font-bold text-lg flex items-center justify-center gap-2 hover:bg-[var(--red)]/10 transition-all active:scale-[0.98]"
           >
             <Plus className="w-6 h-6" /> Add Exercise
           </button>

@@ -94,7 +94,7 @@ const SpeechWaveform = ({ isRecording }: { isRecording: boolean }) => {
       {bars.map((bar) => (
         <motion.div
           key={bar.id}
-          className="w-1 bg-(--accent) rounded-t-sm"
+          className="w-1 bg-[var(--accent)] rounded-t-sm"
           animate={{
             height: bar.heightSteps,
           }}
@@ -221,9 +221,9 @@ export function ChatInput({
               return (
                 <div key={attachment.id} className="chat-attachment-thumb">
                   {isAudio ? (
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-(--surface2) rounded-lg border border-(--border) relative top-0.5">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--surface2)] rounded-lg border border-[var(--border)] relative top-0.5">
                       <Mic
-                        className="w-4 h-4 text-(--accent)"
+                        className="w-4 h-4 text-[var(--accent)]"
                         strokeWidth={2}
                       />
                       <span className="text-[12px] font-medium max-w-25 truncate">
@@ -280,8 +280,7 @@ export function ChatInput({
           suppressHydrationWarning
         >
           <ImageIcon
-            className="w-5 h-5"
-            style={{ color: "#7b5ea7" }}
+            className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors"
             strokeWidth={2}
           />
         </motion.button>
@@ -289,7 +288,7 @@ export function ChatInput({
         <div className="chat-input-box relative overflow-hidden flex items-center pr-1">
           <input
             ref={textInputRef}
-            className="chat-input-field flex-1 pr-12 bg-transparent"
+            className="chat-input-field flex-1 pr-12 bg-transparent text-sm"
             type="text"
             placeholder={
               isRecording
@@ -344,7 +343,7 @@ export function ChatInput({
                   whileTap={{ scale: 0.95 }}
                   onClick={stopRecording}
                   aria-label="Stop recording"
-                  className="chat-send-btn-square bg-[#e74c3c]! shadow-[0_0_15px_rgba(231,76,60,0.4)]"
+                  className="chat-send-btn-square bg-[var(--red)] shadow-[0_0_15px_rgba(255,107,107,0.4)]"
                   suppressHydrationWarning
                 >
                   <Square
@@ -363,12 +362,11 @@ export function ChatInput({
                   whileTap={{ scale: 0.95 }}
                   onClick={startRecording}
                   aria-label="Start recording"
-                  className="chat-send-btn-square bg-(--surface2)!"
+                  className="chat-send-btn-square bg-[var(--surface2)]"
                   suppressHydrationWarning
                 >
                   <Mic
-                    className="w-5 h-5"
-                    style={{ color: "#7b5ea7" }}
+                    className="w-5 h-5 text-[var(--accent)]"
                     strokeWidth={2}
                   />
                 </motion.button>

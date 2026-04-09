@@ -49,7 +49,7 @@ export default function SignIn() {
     <AuthShell
       badge="Sign In"
       title="Welcome back"
-      subtitle="Re-open your LiveFit workspace and keep your momentum moving."
+      subtitle="Re-open your Caloriq workspace and keep your momentum moving."
       panelTitle="Your progress stays in motion"
       panelDescription="Log in to review streaks, update meals, and keep your fitness insights synchronized in one place."
       panelPoints={[

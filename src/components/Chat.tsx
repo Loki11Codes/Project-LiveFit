@@ -52,8 +52,8 @@ export default function Chat({
       id: "welcome-msg",
       role: "model",
       text: isNewUser
-        ? "Welcome to LiveFit! 👋 I'm your AI assistant. To help you set your targets, could you tell me your age, gender, height, and primary fitness goal?"
-        : 'Good morning! 👋 I\'m your LiveFit AI - speak naturally to log anything.\n\n🔍 "Had 3 egg omelette and 150ml milk for breakfast"\n💪 "Finished chest day, 3200kg volume, 8 PRs"\n😴 "Slept 7.5h, bed at 11pm, woke at 6:30"\n⚖️ "Weight 70.5kg this morning"',
+        ? "Welcome to Caloriq! 👋 I'm your AI assistant. To help you set your targets, could you tell me your age, gender, height, and primary fitness goal?"
+        : 'Good morning! 👋 I\'m your Caloriq AI - speak naturally to log anything.\n\n🔍 "Had 3 egg omelette and 150ml milk for breakfast"\n💪 "Finished chest day, 3200kg volume, 8 PRs"\n😴 "Slept 7.5h, bed at 11pm, woke at 6:30"\n⚖️ "Weight 70.5kg this morning"',
       timestamp: "",
     },
   ]);
@@ -329,7 +329,7 @@ export default function Chat({
             <div className="flex justify-center py-6" data-testid="chat-loader">
               <Activity
                 className="w-6 h-6 animate-pulse"
-                style={{ color: "#e67e22" }}
+                style={{ color: "var(--accent)" }}
                 strokeWidth={2.5}
               />
             </div>

@@ -390,6 +390,11 @@ export default function Home() {
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
   }, [theme]);
 
   async function refreshDashboard() {
@@ -458,7 +463,7 @@ export default function Home() {
 
   return (
     <main
-      className={`flex flex-col items-center bg-(--bg) w-full overflow-x-hidden ${activeTab === "chat" ? "h-screen overflow-hidden" : "min-h-screen"}`}
+      className={`flex flex-col items-center bg-[var(--bg)] w-full overflow-x-hidden ${activeTab === "chat" ? "h-screen overflow-hidden" : "min-h-screen"}`}
     >
       <Navbar
         activeTab={activeTab}

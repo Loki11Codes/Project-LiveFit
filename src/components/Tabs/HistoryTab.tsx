@@ -60,7 +60,7 @@ export default function HistoryTab({
       </div>
 
       <motion.div
-        className="glass-premium p-6 rounded-[32px] overflow-hidden"
+        className="glass-premium p-6 rounded-[var(--radius-lg)] overflow-hidden"
         variants={cardVariants}
         initial="hidden"
         animate="visible"
@@ -68,7 +68,7 @@ export default function HistoryTab({
       >
         <div className="flex items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-black/[0.03] dark:bg-white/[0.03] rounded-xl">
+            <div className="p-2.5 bg-[var(--surface2)] rounded-xl">
               <TrendingUp className="w-5 h-5 text-[var(--trend-up)]" />
             </div>
             <div>
@@ -78,7 +78,7 @@ export default function HistoryTab({
           </div>
           <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] opacity-40">
             <span className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)]" /> Protein
+              <span className="w-2.5 h-2.5 rounded-full bg-[var(--green)]" /> Protein
             </span>
             <span className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[var(--amber)]" /> Calories
@@ -116,7 +116,7 @@ export default function HistoryTab({
       </motion.div>
 
       <motion.div
-        className="glass-premium p-6 rounded-[32px] overflow-hidden"
+        className="glass-premium p-6 rounded-[var(--radius-lg)] overflow-hidden"
         variants={cardVariants}
         initial="hidden"
         animate="visible"
@@ -124,7 +124,7 @@ export default function HistoryTab({
       >
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-black/[0.03] dark:bg-white/[0.03] rounded-xl">
+            <div className="p-2.5 bg-[var(--surface2)] rounded-xl">
               <Calendar className="w-5 h-5 text-[var(--accent)]" />
             </div>
             <div>
@@ -137,15 +137,15 @@ export default function HistoryTab({
           </div>
         </div>
 
-        <div className="overflow-x-auto rounded-[24px] border border-black/5 dark:border-white/5">
+        <div className="overflow-x-auto rounded-[var(--radius-md)] border border-[var(--border)] dark:border-white/5">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-black/[0.03] dark:bg-white/[0.03]">
+              <tr className="bg-[var(--surface2)]">
                 <th className="py-4 px-4 font-black text-[9px] tracking-[0.2em] text-[var(--text-muted)] uppercase text-left">Day</th>
                 <th className="py-4 px-4 font-black text-[9px] tracking-[0.2em] text-[var(--text-muted)] uppercase text-center">Type</th>
-                <th className="py-4 px-4 font-black text-[9px] tracking-[0.2em] text-[var(--accent)] uppercase text-center">Protein</th>
+                <th className="py-4 px-4 font-black text-[9px] tracking-[0.2em] text-[var(--green)] uppercase text-center">Protein</th>
                 <th className="py-4 px-4 font-black text-[9px] tracking-[0.2em] text-[var(--amber)] uppercase text-center">Kcal</th>
-                <th className="py-4 px-4 font-black text-[9px] tracking-[0.2em] text-[var(--trend-up)] uppercase text-center">Workout</th>
+                <th className="py-4 px-4 font-black text-[9px] tracking-[0.2em] text-[var(--red)] uppercase text-center">Workout</th>
                 <th className="py-4 px-4 font-black text-[9px] tracking-[0.2em] text-[var(--text-muted)] uppercase text-center">Sleep</th>
               </tr>
             </thead>
@@ -164,13 +164,13 @@ export default function HistoryTab({
                     <td className="py-4 px-4 text-[10px] text-center font-black uppercase tracking-widest opacity-40">
                       {entry.type}
                     </td>
-                    <td className="py-4 px-4 text-[16px] font-black tracking-tight text-center text-[var(--accent)]">
+                    <td className="py-4 px-4 text-[16px] font-black tracking-tight text-center text-[var(--green)]">
                       {entry.protein}g
                     </td>
                     <td className="py-4 px-4 text-[16px] font-black tracking-tight text-center text-[var(--amber)]">
                       {entry.kcal}
                     </td>
-                    <td className="py-4 px-4 text-[12px] font-black text-center opacity-60">
+                    <td className="py-4 px-4 text-[12px] font-black text-center text-[var(--red)]">
                       {entry.workout}
                     </td>
                     <td className="py-4 px-4 text-[12px] font-black text-center opacity-40">
@@ -209,9 +209,9 @@ function AnalyticsMetricCard({
   readonly suffix?: string;
 }) {
   return (
-    <div className="glass-premium hover-glow p-6 rounded-[32px] h-full transition-all group">
+    <div className="glass-premium hover-glow p-6 rounded-[var(--radius-lg)] h-full transition-all group">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2.5 bg-black/[0.03] dark:bg-white/[0.03] rounded-xl group-hover:bg-[var(--accent)]/5 transition-colors">
+        <div className="p-2.5 bg-[var(--surface2)] rounded-xl group-hover:bg-[var(--accent)]/5 transition-colors">
           <Icon className="w-5 h-5" style={{ color: tone }} />
         </div>
         <div>
@@ -258,9 +258,9 @@ function WeightTrendCard({
   const { color: deltaBadge, text: deltaText } = getWeightStatus();
 
   return (
-    <div className="glass-premium hover-glow p-6 rounded-[32px] h-full group overflow-hidden">
+    <div className="glass-premium hover-glow p-6 rounded-[var(--radius-lg)] h-full group overflow-hidden">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2.5 bg-black/[0.03] dark:bg-white/[0.03] rounded-xl">
+        <div className="p-2.5 bg-[var(--surface2)] rounded-xl">
           <Scale className="w-5 h-5 text-[var(--accent)]" />
         </div>
         <div>
@@ -319,14 +319,14 @@ function NutritionDayCard({
   const kcalTargetPos = `${(kcalTarget / maxKcal) * 100}%`;
 
   return (
-    <div className="rounded-[28px] border border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02] p-4 transition-all hover:bg-black/[0.04] dark:hover:bg-white/[0.04] group">
+    <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface2)] p-4 transition-all hover:bg-[var(--surface2)] group">
       <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30 mb-4 text-center">
         {stat.day}
       </div>
       <div className="h-[120px] flex items-end justify-center gap-3">
         <div className="flex h-full w-full max-w-[42px] flex-col justify-end relative group/bar">
           <motion.div
-            className="rounded-[12px] bg-[var(--accent)] shadow-lg shadow-accent/20"
+            className="rounded-[12px] bg-[var(--green)] shadow-lg shadow-[var(--green)]/20"
             initial={{ height: 0 }}
             animate={{ height: proteinHeight }}
             transition={{ delay: 0.3, type: 'spring', damping: 15, stiffness: 80 }}
@@ -351,10 +351,10 @@ function NutritionDayCard({
       </div>
       <div className="mt-4 grid grid-cols-2 gap-1 text-center">
         <div>
-          <div className="text-[14px] font-black tracking-tight text-[var(--accent)]">
+          <div className="text-[14px] font-black tracking-tight text-[var(--green)]">
             {roundNumber(stat.protein)}
           </div>
-          <div className="text-[8px] font-black uppercase tracking-[0.1em] opacity-30">
+          <div className="text-[8px] font-black uppercase tracking-[0.1em] opacity-30 text-[var(--green)]">
             PRO
           </div>
         </div>

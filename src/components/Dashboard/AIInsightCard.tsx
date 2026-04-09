@@ -41,7 +41,7 @@ export const AIInsightCard: React.FC<AIInsightCardProps> = ({ insight, onAction 
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      className="glass-premium rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden group/insight"
+      className="glass-premium rounded-2xl p-3.5 flex flex-col gap-2.5 relative overflow-hidden group/insight"
     >
       {/* Decorative Glow */}
       <div 
@@ -62,10 +62,10 @@ export const AIInsightCard: React.FC<AIInsightCardProps> = ({ insight, onAction 
       </div>
 
       <div className="space-y-1">
-        <h4 className="text-[14px] font-bold tracking-tight text-(--text-main)">
+        <h4 className="text-[13px] font-bold tracking-tight text-(--text-main)">
           {insight.title}
         </h4>
-        <p className="text-[12px] leading-relaxed opacity-60 font-medium">
+        <p className="text-[11.5px] leading-relaxed opacity-60 font-medium">
           {insight.description}
         </p>
       </div>

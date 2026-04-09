@@ -45,7 +45,7 @@ export function MessageBubble({ msg, isFirstInGroup, isNewUser, onDelete }: Read
           {msg.role === "model" ? (
             <Activity className="w-4.5 h-4.5 text-[var(--accent-inv)]" strokeWidth={3} />
           ) : (
-            <User className="w-5 h-5" style={{ color: "#7b5ea7" }} strokeWidth={2.5} />
+            <User className="w-5 h-5 text-[var(--text-muted)]" strokeWidth={2.5} />
           )}
         </div>
       </div>
@@ -92,7 +92,7 @@ export function MessageBubble({ msg, isFirstInGroup, isNewUser, onDelete }: Read
             <div>
               <p>
                 Good morning! 👋{" "}
-                <span className="chat-accent-text">I&apos;m your LiveFit AI</span> -
+                <span className="chat-accent-text">I&apos;m your Caloriq AI</span> -
                 speak naturally to log anything.
               </p>
               <div className="chat-bullet-list">

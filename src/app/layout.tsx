@@ -11,7 +11,7 @@ const workSans = Work_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'LiveFit - AI Fitness Tracker',
+  title: 'Caloriq - AI Fitness & Nutrition',
   description: 'AI-powered nutrition and fitness tracking application',
 };
 

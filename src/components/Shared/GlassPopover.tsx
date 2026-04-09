@@ -29,7 +29,7 @@ export function GlassPopover({ isOpen, onClose, children, title }: GlassPopoverP
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)] p-6 z-[101]"
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] p-6 z-[101]"
           >
             {title && (
               <div className="mb-4">
@@ -41,7 +41,7 @@ export function GlassPopover({ isOpen, onClose, children, title }: GlassPopoverP
             <button 
               type="button"
               onClick={onClose}
-              className="mt-6 w-full py-2 bg-[var(--accent-muted)] text-[var(--accent)] font-bold rounded-xl text-xs hover:opacity-80 transition-opacity"
+              className="mt-6 w-full py-2 bg-[var(--accent-muted)] text-[var(--accent)] font-bold rounded-[var(--radius-md)] text-xs hover:opacity-80 transition-opacity"
             >
               Close
             </button>

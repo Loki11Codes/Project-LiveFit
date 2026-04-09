@@ -78,10 +78,10 @@ export default function SignUp() {
   return (
     <AuthShell
       badge="Create Account"
-      title="Build your LiveFit profile"
+      title="Build your Caloriq profile"
       subtitle="Start with a few details and unlock daily tracking, nutrition insights, and guided progress from day one."
       panelTitle="Train smarter, not noisier"
-      panelDescription="LiveFit gives you a practical fitness command center so your habits and outcomes stay visible every day."
+      panelDescription="Caloriq gives you a practical fitness command center so your habits and outcomes stay visible every day."
       panelPoints={[
         "Clear daily goals for nutrition and body metrics",
         "Personalized analytics that learn from your log history",

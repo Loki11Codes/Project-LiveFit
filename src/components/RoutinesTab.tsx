@@ -208,7 +208,8 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
     if (!confirm("Delete this routine? This can't be undone.")) return;
     setRoutines((prev) => prev.filter((r) => r.id !== id));
     try {
-      await fetch(`/api/routines?id=${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/routines?id=${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete routine");
     } catch (err) {
       console.error("Failed to delete routine", err);
       fetchData();
@@ -473,6 +474,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                     <button
                       onClick={() => removePreviewExercise(ex._localId)}
                       className="p-1.5 text-[var(--foreground-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                      title="Remove exercise"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -536,6 +538,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                     <button
                       onClick={() => addPreviewSet(ex._localId)}
                       className="w-full mt-4 py-2.5 border-2 border-dashed border-[var(--border)] rounded-xl text-[var(--foreground-muted)] font-bold text-sm hover:border-[var(--accent)]/30 hover:text-[var(--accent)] transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
+                      title="Add set"
                     >
                       <Plus className="w-4 h-4" /> Add Set
                     </button>

@@ -18,8 +18,8 @@ export function QuickChip({ icon: Icon, label, color, onClick }: QuickChipProps)
       onClick={onClick}
       className="chat-quick-chip"
       style={{ 
-        backgroundColor: color ? `${color}15` : undefined, // 15 = ~8% opacity hex
-        borderColor: color ? `${color}30` : undefined,
+        backgroundColor: color ? `${color}15` : 'var(--surface2)', 
+        borderColor: color ? `${color}30` : 'var(--border)',
       }}
       suppressHydrationWarning
     >
@@ -41,37 +41,37 @@ export function QuickChips({ onSelect }: QuickChipsProps) {
       <QuickChip
         icon={Coffee}
         label="Breakfast"
-        color="#e6ac50"
+        color="var(--nutri-green)"
         onClick={() => onSelect("Log my breakfast")}
       />
       <QuickChip
         icon={Dumbbell}
         label="Workout"
-        color="#c0392b"
+        color="var(--energy-coral)"
         onClick={() => onSelect("Record my training session")}
       />
       <QuickChip
         icon={Moon}
         label="Sleep"
-        color="#6b7ea8"
+        color="var(--iq-blue-light)"
         onClick={() => onSelect("Show my sleep data")}
       />
       <QuickChip
         icon={Info}
         label="Protein left?"
-        color="#4db382"
+        color="var(--nutri-green)"
         onClick={() => onSelect("How is my protein intake?")}
       />
       <QuickChip
         icon={ImageIcon}
         label="Summary"
-        color="#7b5ea7"
+        color="var(--iq-blue)"
         onClick={() => onSelect("Give me a summary")}
       />
       <QuickChip
         icon={Trash2}
-        label="Delete Log"
-        color="#e74c3c"
+        label="Delete"
+        color="var(--burn-amber)"
         onClick={() => onSelect("Delete my last food log from today")}
       />
     </div>

@@ -58,7 +58,7 @@ export default function LogTab({
         >
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-2">
-              <Utensils className="w-5 h-5" style={{ color: '#e6ac50' }} />
+              <Utensils className="w-5 h-5" style={{ color: 'var(--green)' }} />
               <div className="card-label mb-0">Food Log</div>
             </div>
             <span className="flex items-baseline gap-1.5">
@@ -89,26 +89,26 @@ export default function LogTab({
                     </div>
                     <div className="log-row-meta flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                       <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" style={{ color: '#a86b12' }} />
+                        <Clock className="w-3 h-3" style={{ color: 'var(--amber)' }} />
                         {new Date(food.time).toLocaleTimeString([], {
                           hour: '2-digit',
                           minute: '2-digit',
                         })}
                       </span>
                       <span className="flex items-center gap-1">
-                        <Flame className="w-3 h-3" style={{ color: '#e67e22' }} />
+                        <Flame className="w-3 h-3" style={{ color: 'var(--amber)' }} />
                         {food.kcal ?? '?'} kcal
                       </span>
                       <span className="flex items-center gap-1 text-[var(--amber)]">
-                        <Wheat className="w-3 h-3" style={{ color: '#e6ac50' }} />
+                        <Wheat className="w-3 h-3" style={{ color: 'var(--amber)' }} />
                         {food.carbs ?? '?'}g
                       </span>
                       <span className="flex items-center gap-1 text-[var(--red)]">
-                        <Droplets className="w-3 h-3" style={{ color: '#d4a23a' }} />
+                        <Droplets className="w-3 h-3" style={{ color: 'var(--red)' }} />
                         {food.fats ?? '?'}g
                       </span>
                       <span className="flex items-center gap-1 text-[var(--green)]">
-                        <Leaf className="w-3 h-3" style={{ color: '#4db382' }} />
+                        <Leaf className="w-3 h-3" style={{ color: 'var(--green)' }} />
                         {food.fiber ?? '?'}g
                       </span>
                     </div>
@@ -118,7 +118,7 @@ export default function LogTab({
                     {onDeleteFood && (
                       <button
                         onClick={() => onDeleteFood(food.id)}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 text-[var(--text-muted)] hover:text-[var(--red)] transition-all bg-[var(--surface2)] rounded-lg"
+                        className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 text-[var(--text-muted)] hover:text-[var(--energy-coral)] transition-all bg-[var(--surface2)] rounded-[var(--radius-sm)]"
                         title="Delete food log"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -132,7 +132,7 @@ export default function LogTab({
                 icon={Utensils}
                 message="No food logged yet"
                 description="Use the Chat tab to log your meals and track nutrition automatically."
-                iconColor="#e6ac50"
+                iconColor="var(--green)"
               />
             )}
           </div>
@@ -147,7 +147,7 @@ export default function LogTab({
           custom={1}
         >
           <div className="flex items-center gap-2 mb-6">
-            <Dumbbell className="w-5 h-5" style={{ color: '#c0392b' }} />
+            <Dumbbell className="w-5 h-5" style={{ color: 'var(--red)' }} />
             <div className="card-label mb-0">Workout</div>
           </div>
           <div className="space-y-3">
@@ -155,7 +155,7 @@ export default function LogTab({
               workouts.slice(0, 5).map((workout, index) => (
                 <motion.div
                   key={workout.id}
-                  className="flex flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface2)]/30"
+                  className="flex flex-col overflow-hidden rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface2)]/30"
                   variants={rowVariants}
                   initial="hidden"
                   animate="visible"
@@ -167,19 +167,19 @@ export default function LogTab({
                   >
                     <div className="flex-1">
                       <div className="log-row-name flex items-center gap-2 font-bold">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#c0392b]" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-[var(--red)]" />
                         {workout.focus}
                       </div>
                       <div className="log-row-meta flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                         <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" style={{ color: '#a86b12' }} />
+                          <Clock className="w-3 h-3" style={{ color: 'var(--amber)' }} />
                           {new Date(workout.time).toLocaleDateString([], {
                             month: 'short',
                             day: 'numeric',
                           })}
                         </span>
                         <span className="flex items-center gap-1 font-semibold text-[var(--accent)]">
-                          <Flame className="w-3 h-3" style={{ color: '#e67e22' }} />
+                          <Flame className="w-3 h-3" style={{ color: 'var(--amber)' }} />
                           {workout.volume ?? '--'} kg
                         </span>
                         {workout.exercises.length > 0 && (
@@ -196,7 +196,7 @@ export default function LogTab({
                             e.stopPropagation();
                             onDeleteWorkout(workout.id);
                           }}
-                          className="p-2 text-[var(--text-muted)] hover:text-[var(--red)] hover:bg-[var(--red-bg)]/20 rounded-xl transition-all shrink-0"
+                          className="p-2 text-[var(--text-muted)] hover:text-[var(--energy-coral)] hover:bg-[var(--energy-coral)]/10 rounded-[var(--radius-md)] transition-all shrink-0"
                           title="Delete workout"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -259,7 +259,7 @@ export default function LogTab({
                 icon={Dumbbell}
                 message="No workouts logged"
                 description="Nothing logged yet. Start a session and log it via the Chat tab."
-                iconColor="#c0392b"
+                iconColor="var(--red)"
                 compact
               />
             )}
@@ -275,7 +275,7 @@ export default function LogTab({
           custom={2}
         >
           <div className="flex items-center gap-2 mb-6">
-            <Moon className="w-5 h-5" style={{ color: '#6b7ea8' }} />
+            <Moon className="w-5 h-5" style={{ color: 'var(--amber)' }} />
             <div className="card-label mb-0">Sleep</div>
           </div>
           <div className="space-y-2">
@@ -292,7 +292,7 @@ export default function LogTab({
                 >
                   <div>
                     <div className="log-row-name flex items-center gap-2">
-                      <Clock className="w-4 h-4" style={{ color: '#a86b12' }} />
+                      <Clock className="w-4 h-4" style={{ color: 'var(--amber)' }} />
                       Duration
                     </div>
                     <div className="log-row-meta">
@@ -310,7 +310,7 @@ export default function LogTab({
                     {onDeleteSleep && (
                       <button
                         onClick={() => onDeleteSleep(sleep.id)}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 text-[var(--text-muted)] hover:text-[var(--red)] transition-all bg-[var(--surface2)] rounded-lg"
+                        className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 text-[var(--text-muted)] hover:text-[var(--energy-coral)] transition-all bg-[var(--surface2)] rounded-[var(--radius-sm)]"
                         title="Delete sleep log"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -324,7 +324,7 @@ export default function LogTab({
                 icon={Moon}
                 message="No sleep records"
                 description="No sleep logged yet. Track your rest to optimize recovery."
-                iconColor="#6b7ea8"
+                iconColor="var(--amber)"
                 compact
               />
             )}

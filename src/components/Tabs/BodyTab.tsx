@@ -36,15 +36,15 @@ const measurementFields: Array<{
   icon: LucideIcon;
   color: string;
 }> = [
-  { key: 'weight', label: 'Weight', unit: 'kg', icon: Weight, color: '#a86b12' },
-  { key: 'waist', label: 'Waist', unit: 'cm', icon: Ruler, color: '#e6ac50' },
-  { key: 'chest', label: 'Chest', unit: 'cm', icon: User, color: '#7b5ea7' },
-  { key: 'arms', label: 'Arms', unit: 'cm', icon: Activity, color: '#e67e22' },
-  { key: 'thighs', label: 'Thighs', unit: 'cm', icon: Activity, color: '#e67e22' },
-  { key: 'hips', label: 'Hips', unit: 'cm', icon: Activity, color: '#e67e22' },
-  { key: 'calves', label: 'Calves', unit: 'cm', icon: Activity, color: '#e67e22' },
-  { key: 'neck', label: 'Neck', unit: 'cm', icon: Activity, color: '#e67e22' },
-  { key: 'bodyFat', label: 'Body Fat', unit: '%', icon: Activity, color: '#e67e22' },
+  { key: 'weight', label: 'Weight', unit: 'kg', icon: Weight, color: 'var(--burn-amber)' },
+  { key: 'waist', label: 'Waist', unit: 'cm', icon: Ruler, color: 'var(--burn-amber)' },
+  { key: 'chest', label: 'Chest', unit: 'cm', icon: User, color: 'var(--iq-blue)' },
+  { key: 'arms', label: 'Arms', unit: 'cm', icon: Activity, color: 'var(--energy-coral)' },
+  { key: 'thighs', label: 'Thighs', unit: 'cm', icon: Activity, color: 'var(--energy-coral)' },
+  { key: 'hips', label: 'Hips', unit: 'cm', icon: Activity, color: 'var(--energy-coral)' },
+  { key: 'calves', label: 'Calves', unit: 'cm', icon: Activity, color: 'var(--energy-coral)' },
+  { key: 'neck', label: 'Neck', unit: 'cm', icon: Activity, color: 'var(--energy-coral)' },
+  { key: 'bodyFat', label: 'Body Fat', unit: '%', icon: Activity, color: 'var(--energy-coral)' },
 ];
 
 
@@ -87,7 +87,7 @@ export default function BodyTab({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Log Measurements Card */}
         <motion.div
-          className="glass-premium hover-glow p-6 rounded-[32px] overflow-hidden"
+          className="glass-premium hover-glow p-6 rounded-[var(--radius-lg)] overflow-hidden"
           variants={cardVariants}
           initial="hidden"
           animate="visible"
@@ -121,7 +121,7 @@ export default function BodyTab({
                 </div>
                 <div className="relative group">
                   <input
-                    className="w-full bg-black/5 dark:bg-white/5 border border-transparent rounded-[14px] px-4 py-3 text-sm font-black outline-none focus:border-[var(--accent)]/30 focus:bg-white/50 dark:focus:bg-black/50 transition-all placeholder:opacity-20"
+                    className="w-full bg-[var(--surface2)] border border-transparent rounded-[14px] px-4 py-3 text-sm font-black outline-none focus:border-[var(--accent)]/30 focus:bg-[var(--bg)] transition-all placeholder:opacity-20"
                     type="number"
                     step="0.1"
                     placeholder="0.0"
@@ -144,7 +144,7 @@ export default function BodyTab({
           </div>
 
           <motion.button
-            className="mt-8 w-full p-4 bg-[var(--accent)] text-white rounded-2xl flex items-center justify-center gap-3 font-black text-xs uppercase tracking-widest shadow-xl shadow-[var(--accent)]/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+            className="mt-8 w-full p-4 bg-[var(--accent)] text-white rounded-[var(--radius-md)] flex items-center justify-center gap-3 font-black text-xs uppercase tracking-widest shadow-xl shadow-[var(--accent)]/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
             onClick={handleSaveMeasurements}
           >
             <Save className="w-4 h-4" />
@@ -155,15 +155,15 @@ export default function BodyTab({
 
         {/* Latest Stats Card */}
         <motion.div
-          className="glass-premium p-6 rounded-[32px] overflow-hidden relative"
+          className="glass-premium p-6 rounded-[var(--radius-lg)] overflow-hidden relative"
           variants={cardVariants}
           initial="hidden"
           animate="visible"
           custom={1}
         >
           <div className="flex items-center gap-3 mb-8">
-            <div className="p-2.5 bg-black/[0.03] dark:bg-white/[0.03] rounded-xl">
-              <History className="w-5 h-5 text-[#c0392b]" />
+            <div className="p-2.5 bg-[var(--surface2)] rounded-xl">
+              <History className="w-5 h-5 text-[var(--energy-coral)]" />
             </div>
             <div>
               <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Your Progress</div>
@@ -187,14 +187,14 @@ export default function BodyTab({
                 return (
                   <motion.div
                     key={key}
-                    className="flex items-center justify-between py-3.5 px-4 glass-premium rounded-2xl mb-1.5 transition-all group hover:bg-white/5 active:scale-[0.99]"
+                    className="flex items-center justify-between py-3.5 px-4 glass-premium rounded-[var(--radius-md)] mb-1.5 transition-all group hover:bg-white/5 active:scale-[0.99]"
                     variants={rowVariants}
                     initial="hidden"
                     animate="visible"
                     custom={index}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-black/[0.03] dark:bg-white/[0.03] flex items-center justify-center">
+                      <div className="w-9 h-9 rounded-xl bg-[var(--surface2)] flex items-center justify-center">
                         <Icon className="w-4 h-4" style={{ color }} />
                       </div>
                       <div className="flex flex-col">
@@ -224,12 +224,12 @@ export default function BodyTab({
               })}
 
               <motion.div
-                className="mt-6 flex items-center gap-2.5 text-[10px] text-[var(--text-muted)] font-black uppercase tracking-[0.1em] bg-[var(--surface2)]/30 p-3 rounded-xl border border-[var(--border)]/20"
+                className="mt-6 flex items-center gap-2.5 text-[10px] text-[var(--text-muted)] font-black uppercase tracking-[0.1em] bg-[var(--surface2)]/30 p-3 rounded-[var(--radius-md)] border border-[var(--border)]/20"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
               >
-                <Calendar className="w-3.5 h-3.5 opacity-80" style={{ color: '#7b5ea7' }} />
+                <Calendar className="w-3.5 h-3.5 opacity-80" style={{ color: 'var(--iq-blue)' }} />
                 Updated:{' '}
                 {new Date(latestMeasurement.time).toLocaleDateString(undefined, {
                   month: 'short',
@@ -243,7 +243,7 @@ export default function BodyTab({
               icon={Ruler}
               message="No data recorded"
               description="Log your first measurements via the Chat or directly here to see trends."
-              iconColor="#e6ac50"
+              iconColor="var(--burn-amber)"
             />
           )}
 
@@ -254,7 +254,7 @@ export default function BodyTab({
       {/* Measurement History Table */}
       {measurementHistory.length > 0 && (
         <motion.div
-          className="glass-premium p-6 rounded-[32px] overflow-hidden"
+          className="glass-premium p-6 rounded-[var(--radius-lg)] overflow-hidden"
           variants={cardVariants}
           initial="hidden"
           animate="visible"
@@ -274,10 +274,10 @@ export default function BodyTab({
             {measurementHistory.length} records
           </div>
 
-          <div className="overflow-x-auto rounded-[24px] border border-black/5 dark:border-white/5">
+          <div className="overflow-x-auto rounded-[var(--radius-md)] border border-black/5 dark:border-white/5">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-black/[0.03] dark:bg-white/[0.03]">
+                <tr className="bg-[var(--surface2)]">
                   <th className="py-4 px-4 font-black text-[9px] tracking-[0.2em] text-[var(--text-muted)] uppercase text-left">Date</th>
                   <th className="py-4 px-4 font-black text-[9px] tracking-[0.2em] text-[var(--accent)] uppercase text-center">Weight</th>
                   <th className="py-4 px-4 font-black text-[9px] tracking-[0.2em] text-[var(--text-muted)] uppercase text-center">Waist</th>
@@ -288,7 +288,7 @@ export default function BodyTab({
                   <th className="py-4 px-4 font-black text-[9px] tracking-[0.2em] text-[var(--text-muted)] uppercase text-center">BF%</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-black/5 dark:divide-white/5">
+              <tbody className="divide-y divide-[var(--border)]">
                 {measurementHistory.map((m, index) => (
                   <motion.tr
                     key={m.id}

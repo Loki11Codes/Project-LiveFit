@@ -12,7 +12,6 @@ import {
   Sun, 
   Moon, 
   LogIn, 
-  Activity,
   Heart,
   Dumbbell
 } from 'lucide-react';
@@ -36,12 +35,12 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
   const { data: session } = useSession();
   
   const tabs: NavbarTab[] = [
-    { id: 'chat', label: 'Chat', icon: MessageSquare, color: 'var(--text)' },
-    { id: 'log', label: 'Log', icon: ClipboardList, color: '#4db382' },
-    { id: 'routines', label: 'Routines', icon: Dumbbell, color: '#3b82f6' },
-    { id: 'history', label: 'History', icon: BarChart3, color: '#c0392b' },
-    { id: 'body', label: 'Body', icon: Ruler, color: '#e6ac50' },
-    { id: 'profile', label: 'Profile', icon: User, color: '#7b5ea7' },
+    { id: 'chat', label: 'Chat', icon: MessageSquare, color: 'var(--iq-blue)' },
+    { id: 'log', label: 'Log', icon: ClipboardList, color: 'var(--nutri-green)' },
+    { id: 'routines', label: 'Routines', icon: Dumbbell, color: 'var(--energy-coral)' },
+    { id: 'history', label: 'History', icon: BarChart3, color: 'var(--burn-amber)' },
+    { id: 'body', label: 'Body', icon: Ruler, color: 'var(--text-muted)' },
+    { id: 'profile', label: 'Profile', icon: User, color: 'var(--text-muted)' },
   ];
 
   return (
@@ -49,7 +48,7 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
       <nav className="nav-bar-wrapper">
         <div className="navbar-inner">
           <Link href="/" className="flex items-center gap-3 group cursor-pointer transition-all duration-300 no-underline">
-            <div className="w-10 h-10 bg-[var(--accent)] rounded-2xl flex items-center justify-center shadow-lg shadow-[var(--accent)]/10 transition-all duration-500 group-hover:shadow-[var(--accent)]/30 overflow-hidden">
+            <div className="w-10 h-10 bg-[var(--iq-blue)] rounded-[13px] flex items-center justify-center shadow-lg transition-all duration-500 group-hover:shadow-[var(--accent)]/30 overflow-hidden">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={theme}
@@ -58,16 +57,21 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
                   exit={{ rotate: 180, opacity: 0, scale: 0.5 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                 >
-                  <Activity 
-                    className="w-5.5 h-5.5 text-[var(--accent-inv)] transition-transform duration-500 group-hover:scale-110" 
-                    strokeWidth={2.8} 
-                  />
+                  <svg width="24" height="24" viewBox="0 0 30 30" fill="none" className="transition-transform duration-500 group-hover:scale-110">
+                    <polyline 
+                      points="2,15 8,15 10,8 13,22 16,10 19,18 21,15 28,15" 
+                      stroke="white" 
+                      strokeWidth="2.8" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      fill="none"
+                    />
+                  </svg>
                 </motion.div>
               </AnimatePresence>
             </div>
-            <div className="text-2xl tracking-tight text-[var(--text)] hidden lg:block ml-2">
-              <span className="font-bold">Live</span>
-              <span className="italic font-light opacity-80">Fit</span>
+            <div className="text-2xl tracking-tighter text-[var(--text)] hidden lg:block ml-1 font-bold">
+              Calor<span className="text-[var(--iq-blue)]">iq</span>
             </div>
           </Link>
 

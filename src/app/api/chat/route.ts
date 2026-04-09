@@ -43,7 +43,7 @@ USER CONTEXT & PROGRESS:
   }
 
   return `
-You are the LiveFit AI - a professional, concise fitness coach and tracking assistant.
+You are Caloriq AI - a professional, concise fitness coach and tracking assistant.
 Your goal is to parse user messages into structured log data and provide a helpful, natural, and PROACTIVE response.
 
 CURRENT CONTEXT:
@@ -262,7 +262,7 @@ async function callOpenRouter(
           Authorization: `Bearer ${openRouterKey}`,
           "Content-Type": "application/json",
           "HTTP-Referer": "http://localhost:3000",
-          "X-Title": "LiveFit App",
+          "X-Title": "Caloriq App",
         },
         body: JSON.stringify({
           model: modelId,

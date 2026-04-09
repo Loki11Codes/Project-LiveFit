@@ -84,7 +84,7 @@ describe("Chat Components", () => {
     it("renders welcome message for new user", async () => {
       render(<Chat {...makeProps({ isNewUser: true })} />);
       await waitFor(() => {
-        expect(screen.getByText(/Welcome to LiveFit/i)).toBeDefined();
+        expect(screen.getByText(/Welcome to Caloriq/i)).toBeDefined();
       });
     });
 

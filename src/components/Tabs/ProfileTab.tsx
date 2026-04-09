@@ -44,7 +44,7 @@ export default function ProfileTab({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* User Card */}
         <motion.div
-          className="glass-premium p-6 rounded-[32px] relative overflow-hidden group hover-glow"
+          className="glass-premium p-6 rounded-[var(--radius-lg)] relative overflow-hidden group hover-glow"
           variants={cardVariants}
           initial="hidden"
           animate="visible"
@@ -52,8 +52,8 @@ export default function ProfileTab({
         >
           <div className="flex items-center justify-between mb-10">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-black/[0.03] dark:bg-white/[0.03] rounded-xl group-hover:bg-[var(--accent)]/5 transition-colors">
-                <User className="w-5 h-5 text-[#7b5ea7]" />
+              <div className="p-2.5 bg-black/[0.03] dark:bg-white/[0.03] rounded-xl group-hover:bg-[var(--iq-blue)]/5 transition-colors">
+                <User className="w-5 h-5 text-[var(--iq-blue)]" />
               </div>
               <div>
                 <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Identity</div>
@@ -62,7 +62,7 @@ export default function ProfileTab({
             </div>
             {session?.user && (
               <motion.div
-                className="px-3 py-1 bg-[#4db382]/10 text-[#4db382] rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 border border-[#4db382]/20 shadow-lg shadow-[#4db382]/5"
+                className="px-3 py-1 bg-[var(--nutri-green)]/10 text-[var(--nutri-green)] rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 border border-[var(--nutri-green)]/20 shadow-lg shadow-[var(--nutri-green)]/5"
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.3, type: "spring", damping: 15 }}
@@ -76,7 +76,7 @@ export default function ProfileTab({
           {session?.user ? (
             <div className="flex flex-col gap-10 py-2">
               <motion.div
-                className="flex items-center gap-6 p-5 bg-black/[0.02] dark:bg-white/[0.02] rounded-3xl border border-black/5 dark:border-white/5 relative z-10"
+                className="flex items-center gap-6 p-5 bg-black/[0.02] dark:bg-white/[0.02] rounded-[var(--radius-lg)] border border-black/5 dark:border-white/5 relative z-10"
                 variants={rowVariants}
                 initial="hidden"
                 animate="visible"
@@ -88,7 +88,7 @@ export default function ProfileTab({
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.2, type: "spring", damping: 15 }}
                 >
-                  <div className="absolute inset-0 bg-[#7b5ea7]/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute inset-0 bg-[var(--iq-blue)]/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                   {session.user.image ? (
                     <Image
                       src={session.user.image}
@@ -100,7 +100,7 @@ export default function ProfileTab({
                   ) : (
                     <div className="w-20 h-20 rounded-2xl bg-black/[0.05] dark:bg-white/[0.05] border border-white/5 flex items-center justify-center relative z-10">
                       <User
-                        className="w-8 h-8 opacity-40 text-[#7b5ea7]"
+                        className="w-8 h-8 opacity-40 text-[var(--iq-blue)]"
                       />
                     </div>
                   )}
@@ -118,7 +118,7 @@ export default function ProfileTab({
 
               {/* Activity Stats Section */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="p-4 bg-black/[0.03] dark:bg-white/[0.03] rounded-2xl border border-black/5 dark:border-white/5 text-center transition-all hover:bg-black/[0.05] dark:hover:bg-white/[0.05]">
+                <div className="p-4 bg-black/[0.03] dark:bg-white/[0.03] rounded-[var(--radius-md)] border border-black/5 dark:border-white/5 text-center transition-all hover:bg-black/[0.05] dark:hover:bg-white/[0.05]">
                   <div className="text-[9px] uppercase tracking-[0.2em] font-black opacity-30 mb-2">
                     Active Days
                   </div>
@@ -126,19 +126,19 @@ export default function ProfileTab({
                     {trackedDayCount}
                   </div>
                 </div>
-                <div className="p-4 bg-black/[0.03] dark:bg-white/[0.03] rounded-2xl border border-black/5 dark:border-white/5 text-center transition-all hover:bg-black/[0.05] dark:hover:bg-white/[0.05]">
+                <div className="p-4 bg-black/[0.03] dark:bg-white/[0.03] rounded-[var(--radius-md)] border border-black/5 dark:border-white/5 text-center transition-all hover:bg-black/[0.05] dark:hover:bg-white/[0.05]">
                   <div className="text-[9px] uppercase tracking-[0.2em] font-black opacity-30 mb-2">
                     Avg Pro (g)
                   </div>
-                  <div className="text-[24px] font-black tracking-tighter leading-none text-[#7b5ea7]">
+                  <div className="text-[24px] font-black tracking-tighter leading-none text-[var(--iq-blue)]">
                     {(analytics?.averages.protein ?? 0).toFixed(0)}
                   </div>
                 </div>
-                <div className="p-4 bg-black/[0.03] dark:bg-white/[0.03] rounded-2xl border border-black/5 dark:border-white/5 text-center transition-all hover:bg-black/[0.05] dark:hover:bg-white/[0.05]">
+                <div className="p-4 bg-black/[0.03] dark:bg-white/[0.03] rounded-[var(--radius-md)] border border-black/5 dark:border-white/5 text-center transition-all hover:bg-black/[0.05] dark:hover:bg-white/[0.05]">
                   <div className="text-[9px] uppercase tracking-[0.2em] font-black opacity-30 mb-2">
                     Avg Kcal
                   </div>
-                  <div className="text-[24px] font-black tracking-tighter leading-none text-[#4db382]">
+                  <div className="text-[24px] font-black tracking-tighter leading-none text-[var(--nutri-green)]">
                     {(analytics?.averages.kcal ?? 0).toFixed(0)}
                   </div>
                 </div>
@@ -147,7 +147,7 @@ export default function ProfileTab({
                 <div className="flex flex-col gap-3 mt-8">
                   <motion.button
                     onClick={() => router.push("/settings")}
-                    className="w-full py-4 glass-premium rounded-2xl flex items-center justify-center gap-3 transition-all hover:bg-white/10 group/btn"
+                    className="w-full py-4 glass-premium rounded-[var(--radius-md)] flex items-center justify-center gap-3 transition-all hover:bg-white/10 group/btn"
                     variants={rowVariants}
                     initial="hidden"
                     animate="visible"
@@ -155,9 +155,9 @@ export default function ProfileTab({
                     whileHover={{ scale: 1.01, translateY: -2 }}
                     whileTap={{ scale: 0.99 }}
                   >
-                    <div className="p-2 bg-black/[0.05] dark:bg-white/[0.05] rounded-xl group-hover/btn:bg-[#7b5ea7]/20 transition-colors">
+                    <div className="p-2 bg-black/[0.05] dark:bg-white/[0.05] rounded-[var(--radius-sm)] group-hover/btn:bg-[var(--iq-blue)]/20 transition-colors">
                       <Settings
-                        className="w-4 h-4 text-[#7b5ea7]"
+                        className="w-4 h-4 text-[var(--iq-blue)]"
                       />
                     </div>
                     <span className="text-xs font-black uppercase tracking-widest opacity-60">App Settings</span>
@@ -165,7 +165,7 @@ export default function ProfileTab({
   
                   <motion.button
                     onClick={() => signOut()}
-                    className="w-full py-4 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 rounded-2xl flex items-center justify-center gap-3 transition-all group/logout"
+                    className="w-full py-4 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 rounded-[var(--radius-md)] flex items-center justify-center gap-3 transition-all group/logout"
                     variants={rowVariants}
                     initial="hidden"
                     animate="visible"
@@ -185,7 +185,7 @@ export default function ProfileTab({
               icon={User}
               message="Join the community"
               description="Sign in to track your physical progress and save your nutritional targets over time."
-              iconColor="#7b5ea7"
+              iconColor="var(--iq-blue)"
               action={
                 <button onClick={() => signIn()} className="save-btn w-full">
                   <LogIn className="w-4 h-4 mr-1" />
@@ -199,7 +199,7 @@ export default function ProfileTab({
         </motion.div>
 
         <motion.div
-          className="glass-premium p-6 rounded-[32px] relative overflow-hidden hover-glow"
+          className="glass-premium p-6 rounded-[var(--radius-lg)] relative overflow-hidden hover-glow"
           variants={cardVariants}
           initial="hidden"
           animate="visible"
@@ -207,7 +207,7 @@ export default function ProfileTab({
         >
           <div className="flex items-center gap-3 mb-8">
             <div className="p-2.5 bg-black/[0.03] dark:bg-white/[0.03] rounded-xl">
-              <Target className="w-5 h-5 text-[#4db382]" />
+              <Target className="w-5 h-5 text-[var(--nutri-green)]" />
             </div>
             <div>
               <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Optimization</div>
@@ -220,7 +220,7 @@ export default function ProfileTab({
               <div className="text-[9px] font-black uppercase tracking-widest opacity-30">
                 Training Protein
               </div>
-              <div className="text-[16px] font-black tracking-tighter text-[#7b5ea7]">
+              <div className="text-[16px] font-black tracking-tighter text-[var(--iq-blue)]">
                 {goals.proteinTraining || "--"}<span className="text-[10px] ml-0.5 opacity-40 uppercase tracking-widest">g</span>
               </div>
             </div>
@@ -261,7 +261,7 @@ export default function ProfileTab({
 
         {/* Personal Info Card */}
         <motion.div
-          className="glass-premium p-6 rounded-[32px] relative overflow-hidden hover-glow"
+          className="glass-premium p-6 rounded-[var(--radius-lg)] relative overflow-hidden hover-glow"
           variants={cardVariants}
           initial="hidden"
           animate="visible"
@@ -269,7 +269,7 @@ export default function ProfileTab({
         >
           <div className="flex items-center gap-3 mb-8">
             <div className="p-2.5 bg-black/[0.03] dark:bg-white/[0.03] rounded-xl">
-              <Info className="w-5 h-5 text-[#6b7ea8]" />
+              <Info className="w-5 h-5 text-[var(--iq-blue-light)]" />
             </div>
             <div>
               <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Physiology</div>
@@ -323,7 +323,7 @@ export default function ProfileTab({
 
         {/* Workout Split Card */}
         <motion.div
-          className="glass-premium p-6 rounded-[32px] relative overflow-hidden hover-glow"
+          className="glass-premium p-6 rounded-[var(--radius-lg)] relative overflow-hidden hover-glow"
           variants={cardVariants}
           initial="hidden"
           animate="visible"
@@ -331,7 +331,7 @@ export default function ProfileTab({
         >
           <div className="flex items-center gap-3 mb-8">
             <div className="p-2.5 bg-black/[0.03] dark:bg-white/[0.03] rounded-xl">
-              <Dumbbell className="w-5 h-5 text-[#c0392b]" />
+              <Dumbbell className="w-5 h-5 text-[var(--energy-coral)]" />
             </div>
             <div>
               <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Strategy</div>
