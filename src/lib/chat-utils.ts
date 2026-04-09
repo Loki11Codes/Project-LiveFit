@@ -35,6 +35,43 @@ function findClosingMarker(text: string, searchFrom: number): number {
   return -1;
 }
 
+/** 
+ * Handle cases where AI wraps the envelope in another level like { data: { ... } }
+ * @param parsed The raw JSON object from AI
+ */
+function unWrapEnvelope(parsed: any): any {
+  if (parsed?.data?.category && !parsed.category) {
+    return {
+      category: parsed.data.category,
+      data: parsed.data.data ?? parsed.data,
+      date: parsed.data.date ?? parsed.date,
+      update: parsed.data.update ?? parsed.update,
+    };
+  }
+  return parsed;
+}
+
+/**
+ * Attempts to parse a JSON string and unwrap it if it's an AI-generated envelope.
+ * Returns the parsed object(s) or null if invalid.
+ */
+function parseLogContent(jsonText: string): ParsedLogEnvelope | ParsedLogEnvelope[] | null {
+  if (!jsonText) return null;
+  try {
+    let parsed = JSON.parse(jsonText);
+    parsed = Array.isArray(parsed) ? parsed.map(unWrapEnvelope) : unWrapEnvelope(parsed);
+    
+    // Validate that it looks like one or more envelopes
+    if (Array.isArray(parsed)) return parsed;
+    if (parsed?.category) return parsed;
+    
+    return null;
+  } catch (e) {
+    console.warn('[PARSER] Failed to parse log content:', e);
+    return null;
+  }
+}
+
 export function extractAndCleanLogData(text: string): {
   logs: ParsedLogEnvelope[];
   cleanText: string;
@@ -43,10 +80,9 @@ export function extractAndCleanLogData(text: string): {
   const startRegex = /\|\|\|\s*DATA/gi;
   const logs: ParsedLogEnvelope[] = [];
   let hasData = false;
-  let cleanText = text;
-
-  // Extract logs
   let match;
+
+  // Pass 1: Extract data via ||| DATA markers
   while ((match = startRegex.exec(text)) !== null) {
     const startIdx = match.index;
     const contentStart = startIdx + match[0].length;
@@ -54,69 +90,37 @@ export function extractAndCleanLogData(text: string): {
     
     if (endIdx === -1) break;
 
-    hasData = true;
-    let jsonText = text.substring(contentStart, endIdx).trim();
-    jsonText = jsonText.replace(/^```json/i, "").replace(/^```/i, "").replace(/```$/i, "").trim();
+    const jsonText = text.substring(contentStart, endIdx)
+      .replace(/^```json/i, "").replace(/^```/i, "").replace(/```$/i, "").trim();
 
-    try {
-      if (jsonText) {
-        let parsed = JSON.parse(jsonText);
-        
-        // Handle case where AI wraps the envelope in another level like { data: { ... } }
-        if (parsed?.data?.category && !parsed.category) {
-          parsed = {
-            category: parsed.data.category,
-            data: parsed.data.data ?? parsed.data,
-            date: parsed.data.date ?? parsed.date,
-            update: parsed.data.update ?? parsed.update,
-          };
-        }
-
-        if (Array.isArray(parsed)) {
-          logs.push(...(parsed as ParsedLogEnvelope[]));
-        } else if (parsed?.category) {
-          logs.push(parsed as ParsedLogEnvelope);
-        }
-      }
-    } catch (e) {
-      console.warn('[PARSER] Failed to parse a DATA block:', e);
+    const parsed = parseLogContent(jsonText);
+    if (parsed) {
+      hasData = true;
+      logs.push(...(Array.isArray(parsed) ? parsed : [parsed]));
     }
   }
 
-  // Pass 2: Fallback to standard markdown JSON blocks if no DATA markers matched
-  // (or if they were used instead of the markers)
+  // Pass 2: Fallback to standard markdown JSON blocks
   const codeBlockRegex = /```json\s+([\s\S]*?)```/gi;
   while ((match = codeBlockRegex.exec(text)) !== null) {
     const jsonText = match[1].trim();
-    try {
-      let parsed = JSON.parse(jsonText);
-      // Unwrapping logic
-      if (parsed?.data?.category && !parsed.category) {
-        parsed = {
-          category: parsed.data.category,
-          data: parsed.data.data ?? parsed.data,
-          date: parsed.data.date ?? parsed.date,
-          update: parsed.data.update ?? parsed.update,
-        };
-      }
-      
-      if (parsed?.category && !logs.some(l => JSON.stringify(l) === JSON.stringify(parsed))) {
-        logs.push(parsed as ParsedLogEnvelope);
-        hasData = true;
-      }
-    } catch (e) {
-      // Ignore errors in non-DATA code blocks
+    const parsed = parseLogContent(jsonText);
+    
+    if (parsed && !Array.isArray(parsed) && !logs.some(l => JSON.stringify(l) === JSON.stringify(parsed))) {
+      logs.push(parsed);
+      hasData = true;
     }
   }
 
-  // Clean the text by removing all blocks that match the pattern
+  // Clean the text by removing all blocks that match the patterns
   const fullBlockRegex = /\|\|\|\s*DATA[\s\S]*?\|\|\|/gi;
   const jsonCodeBlockRegex = /```json[\s\S]*?```/gi;
   
-  cleanText = text
+  const cleanText = text
     .replaceAll(fullBlockRegex, '')
     .replaceAll(jsonCodeBlockRegex, '')
     .trim();
 
   return { logs, cleanText, hasData };
 }
+
