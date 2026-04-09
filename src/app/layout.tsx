@@ -3,6 +3,7 @@ import { Work_Sans } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/Providers';
 import { CloudBackground } from '@/components/Shared/CloudBackground';
+import { AuthGuardian } from '@/components/auth/AuthGuardian';
 
 const workSans = Work_Sans({
   subsets: ['latin'],
@@ -41,6 +42,7 @@ export default function RootLayout({
       </head>
       <body className={workSans.className} suppressHydrationWarning>
         <Providers>
+          <AuthGuardian />
           <CloudBackground />
           {children}
         </Providers>

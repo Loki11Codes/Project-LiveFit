@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-auth-input-bg: var(--input-bg);
-  --color-auth-input-border: var(--input-border);
-  --color-auth-input-text: var(--input-text);
+  --color-auth-input-bg: var(--auth-input-bg);
+  --color-auth-input-border: var(--auth-input-border);
+  --color-auth-input-text: var(--auth-input-text);
   --color-auth-bg: var(--auth-bg);
-  --color-auth-surface: var(--surface);
-  --color-auth-surface2: var(--surface2);
-  --color-auth-border: var(--border);
-  --color-auth-text: var(--text);
-  --color-auth-text-muted: var(--text-muted);
+  --color-auth-surface: var(--auth-surface);
+  --color-auth-surface2: var(--auth-surface2);
+  --color-auth-border: var(--auth-border);
+  --color-auth-text: var(--auth-text);
+  --color-auth-text-muted: var(--auth-text-muted);
 }
 
 :root, [data-theme="light"] {
@@ -44,9 +44,16 @@
   --input-border: rgba(0, 0, 0, 0.08);
   --input-text: var(--carbon);
 
-  --auth-input-bg: var(--input-bg);
-  --auth-input-border: var(--input-border);
-  --auth-input-text: var(--input-text);
+  --auth-input-bg: #ffffff;
+  --auth-input-border: rgba(0, 0, 0, 0.08);
+  --auth-input-text: #1a1a1a;
+  --auth-bg: #fafaf9;
+  --auth-surface: #ffffff;
+  --auth-surface2: rgba(0, 0, 0, 0.04);
+  --auth-border: rgba(0, 0, 0, 0.08);
+  --auth-text: #1a1a1a;
+  --auth-text-muted: #555555;
+  --auth-bg-opacity: 0.8;
 
   /* 4px Spacing Grid System */
   --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
@@ -80,9 +87,16 @@
   --input-border: #27272a;
   --input-text: #ffffff;
 
-  --auth-input-bg: var(--input-bg);
-  --auth-input-border: var(--input-border);
-  --auth-input-text: var(--input-text);
+  --auth-input-bg: #09090b;
+  --auth-input-border: #27272a;
+  --auth-input-text: #ffffff;
+  --auth-bg: #0d0d0d;
+  --auth-surface: #141416;
+  --auth-surface2: #1e1e21;
+  --auth-border: #27272a;
+  --auth-text: #f5f5f5;
+  --auth-text-muted: #a1a1aa;
+  --auth-bg-opacity: 1;
 
   --green: var(--nutri-green);
   --green-bg: rgba(15, 110, 86, 0.15);

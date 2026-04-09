@@ -50,6 +50,7 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             name: user.name,
             image: user.image,
+            requirePasswordChange: user.requirePasswordChange,
           };
         } catch (error) {
           console.error('Auth check error:', getErrorMessage(error));
@@ -65,10 +66,17 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
+        token.requirePasswordChange = user.requirePasswordChange;
       }
+
+      // Handle session update to clear security flag without logout
+      if (trigger === "update" && session) {
+        token.requirePasswordChange = session.requirePasswordChange;
+      }
+
       return token;
     },
     async session({ session, token }) {
@@ -86,6 +94,7 @@ export const authOptions: NextAuthOptions = {
         }
         
         session.user.id = token.id;
+        session.user.requirePasswordChange = token.requirePasswordChange;
       }
       return session;
     },

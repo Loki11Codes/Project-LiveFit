@@ -223,7 +223,14 @@ export const SignupSchema = z
         "Invalid email address",
       )
       .max(160),
-    password: z.string().min(6).max(72),
+    password: z
+      .string()
+      .min(12, "Password must be at least 12 characters")
+      .max(72)
+      .regex(/[a-z]/, "Must contain at least one lowercase letter")
+      .regex(/[A-Z]/, "Must contain at least one uppercase letter")
+      .regex(/[0-9]/, "Must contain at least one number")
+      .regex(/[^A-Za-z0-9]/, "Must contain at least one special character"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {

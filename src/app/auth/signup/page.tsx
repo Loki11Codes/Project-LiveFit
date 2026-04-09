@@ -42,8 +42,11 @@ export default function SignUp() {
 
   const passwordChecks = useMemo(
     () => ({
-      minimumLength: password.length >= 6,
-      upperOrNumber: /[A-Z0-9]/.test(password),
+      minimumLength: password.length >= 12,
+      hasUpper: /[A-Z]/.test(password),
+      hasLower: /[a-z]/.test(password),
+      hasNumber: /[0-9]/.test(password),
+      hasSpecial: /[^A-Za-z0-9]/.test(password),
     }),
     [password],
   );
@@ -52,6 +55,12 @@ export default function SignUp() {
     e.preventDefault();
     if (password !== confirmPassword) {
       setError("Passwords don't match");
+      return;
+    }
+
+    const { minimumLength, hasUpper, hasLower, hasNumber, hasSpecial } = passwordChecks;
+    if (!minimumLength || !hasUpper || !hasLower || !hasNumber || !hasSpecial) {
+      setError("Password does not meet all security requirements");
       return;
     }
 
@@ -67,7 +76,9 @@ export default function SignUp() {
       });
 
       setSuccess("Account created. Redirecting to sign in.");
-      router.push("/auth/signin?success=1");
+      setTimeout(() => {
+        router.push("/auth/signin?success=1");
+      }, 1500);
     } catch (error) {
       setError(getClientErrorMessage(error));
     } finally {
@@ -204,25 +215,27 @@ export default function SignUp() {
           </div>
         </div>
 
-        <div className="rounded-2xl border-2 border-auth-input-border bg-auth-input-bg px-4 py-2 text-[12px] font-medium text-auth-text-muted transition-colors">
-          <p
-            className={
-              passwordChecks.minimumLength
-                ? "text-[#0f6e56] font-semibold"
-                : ""
-            }
-          >
-            Minimum 6 characters
-          </p>
-          <p
-            className={
-              passwordChecks.upperOrNumber
-                ? "text-[#0f6e56] font-semibold mt-0.5"
-                : "mt-0.5"
-            }
-          >
-            Contains an uppercase letter or a number
-          </p>
+        <div className="rounded-2xl border-2 border-auth-input-border bg-auth-input-bg p-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[11px] font-medium text-auth-text-muted transition-colors">
+          <div className={`flex items-center gap-2 ${passwordChecks.minimumLength ? "text-[#0f6e56] font-bold" : ""}`}>
+             <CheckCircle2 size={12} className={passwordChecks.minimumLength ? "text-[#0f6e56]" : "text-zinc-400"} />
+             At least 12 characters
+          </div>
+          <div className={`flex items-center gap-2 ${passwordChecks.hasUpper ? "text-[#0f6e56] font-bold" : ""}`}>
+             <CheckCircle2 size={12} className={passwordChecks.hasUpper ? "text-[#0f6e56]" : "text-zinc-400"} />
+             Uppercase letter [A-Z]
+          </div>
+          <div className={`flex items-center gap-2 ${passwordChecks.hasLower ? "text-[#0f6e56] font-bold" : ""}`}>
+             <CheckCircle2 size={12} className={passwordChecks.hasLower ? "text-[#0f6e56]" : "text-zinc-400"} />
+             Lowercase letter [a-z]
+          </div>
+          <div className={`flex items-center gap-2 ${passwordChecks.hasNumber ? "text-[#0f6e56] font-bold" : ""}`}>
+             <CheckCircle2 size={12} className={passwordChecks.hasNumber ? "text-[#0f6e56]" : "text-zinc-400"} />
+             At least one number
+          </div>
+          <div className={`flex items-center gap-2 ${passwordChecks.hasSpecial ? "text-[#0f6e56] font-bold" : ""}`}>
+             <CheckCircle2 size={12} className={passwordChecks.hasSpecial ? "text-[#0f6e56]" : "text-zinc-400"} />
+             Special character (@$!%*?&)
+          </div>
         </div>
 
         {error && (

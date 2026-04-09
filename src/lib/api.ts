@@ -33,6 +33,10 @@ export function internalError(message: string = 'Internal Server Error') {
   return apiError(message, 500);
 }
 
+export function success(message: string, details?: unknown) {
+  return NextResponse.json({ message, details });
+}
+
 export async function parseJsonBody<T>(
   req: Request,
   schema: ZodType<T>
