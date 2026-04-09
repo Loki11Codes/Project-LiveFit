@@ -20,6 +20,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { calculateDailyTargets } from "@/lib/recommendations";
+import { BRAND_COLORS, useTheme } from "@/components/Theme/ThemeProvider";
 
 const SIDEBAR_TABS = [
   { id: "profile", label: "General & Profile", icon: User },
@@ -313,10 +314,10 @@ function ToggleField({
         role="switch"
         aria-checked={checked}
         onClick={() => onChange?.(!checked)}
-        className={`relative h-6 w-11 rounded-full transition-colors cursor-pointer ${checked ? "bg-amber-500" : "bg-(--border)"}`}
+        className={`relative h-6 w-11 rounded-full transition-colors cursor-pointer shadow-inner ${checked ? "bg-[var(--accent)]" : "bg-(--border)"}`}
       >
         <div
-          className={`absolute top-1 max-h-4 min-h-4 w-4 rounded-full bg-(--surface) transition-transform ${checked ? "translate-x-5" : "translate-x-0"}`}
+          className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${checked ? "translate-x-5" : "translate-x-0"}`}
         />
       </button>
     </div>
@@ -334,6 +335,8 @@ function ProfilePanel({
   data: Partial<UserProfile>;
   onChange: (f: string, v: ProfileFieldValue) => void;
 }>) {
+  const { accentColor: themeAccent } = useTheme();
+  
   return (
     <div className="space-y-10">
       <SectionHeading
@@ -412,6 +415,83 @@ function ProfilePanel({
           />
         </div>
       </div>
+
+      <hr className="border-black/5 " />
+
+      <div>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-8 h-8 bg-[var(--accent)] rounded-[10px] flex items-center justify-center shadow-lg overflow-hidden">
+             <svg width="18" height="18" viewBox="0 0 30 30" fill="none">
+              <polyline 
+                points="2,15 8,15 10,8 13,22 16,10 19,18 21,15 28,15" 
+                stroke="white" 
+                strokeWidth="3" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                fill="none"
+              />
+            </svg>
+          </div>
+          <div className="text-xl tracking-tighter text-[var(--text)] font-bold">
+            Calor<span className="text-[var(--accent)]">iq</span>
+          </div>
+        </div>
+        <h3 className="text-lg font-bold mb-4 ml-0.5">Theme</h3>
+        <p className="text-[13px] text-[var(--text-muted)] mb-6 ml-0.5">Select your preferred accent color for the application.</p>
+        <div className="ml-0.5">
+          <AccentColorPicker 
+            value={data.accentColor || themeAccent} 
+            onChange={(hex) => onChange("accentColor", hex)} 
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AccentColorPicker({ 
+  value, 
+  onChange 
+}: Readonly<{ 
+  value: string; 
+  onChange: (hex: string) => void; 
+}>) {
+  const { setAccentColor } = useTheme();
+
+  const handleSelect = (hex: string) => {
+    onChange(hex);
+    // Preview immediately
+    setAccentColor(hex);
+  };
+
+  return (
+    <div className="flex flex-wrap gap-4">
+      {BRAND_COLORS.map((color) => {
+        const isActive = value === color.hex;
+        return (
+          <button
+            key={color.hex}
+            onClick={() => handleSelect(color.hex)}
+            className={`group relative flex flex-col items-center gap-3 transition-all ${isActive ? 'scale-105' : 'hover:scale-102'}`}
+          >
+            <div 
+              className={`w-14 h-14 rounded-2xl shadow-lg transition-all duration-300 border-2 ${isActive ? 'border-[var(--text)] ring-4 ring-[var(--accent)]/10' : 'border-transparent group-hover:border-black/10'}`}
+              style={{ backgroundColor: color.hex }}
+            >
+              {isActive && (
+                <div className="flex items-center justify-center h-full">
+                  <CheckCircle2 className="w-6 h-6 text-white drop-shadow-md" />
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col items-center">
+              <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-[var(--text)]' : 'text-[var(--text-muted)] opacity-40'}`}>
+                {color.name}
+              </span>
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 }

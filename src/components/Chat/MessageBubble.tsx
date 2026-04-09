@@ -92,7 +92,7 @@ export function MessageBubble({ msg, isFirstInGroup, isNewUser, onDelete }: Read
             <div>
               <p>
                 Good morning! 👋{" "}
-                <span className="chat-accent-text">I&apos;m your Caloriq AI</span> -
+                <span className="text-[var(--accent)] font-semibold">I&apos;m your Caloriq AI</span> -
                 speak naturally to log anything.
               </p>
               <div className="chat-bullet-list">

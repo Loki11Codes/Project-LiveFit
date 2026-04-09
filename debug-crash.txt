@@ -82,3 +82,15 @@ Chat Error: Error: Persistence failed
     at new Promise (<anonymous>)
     at runWithTimeout (file:///D:/LiveFit%20Project/Project-LiveFit/node_modules/@vitest/runner/dist/index.js:1627:10)
     at file:///D:/LiveFit%20Project/Project-LiveFit/node_modules/@vitest/runner/dist/index.js:2309:64
+
+Chat Error: Error: Persistence failed
+    at D:/LiveFit Project/Project-LiveFit/src/app/api/chat/route.test.ts:127:51
+    at file:///D:/LiveFit%20Project/Project-LiveFit/node_modules/@vitest/runner/dist/index.js:296:11
+    at file:///D:/LiveFit%20Project/Project-LiveFit/node_modules/@vitest/runner/dist/index.js:1258:26
+    at file:///D:/LiveFit%20Project/Project-LiveFit/node_modules/@vitest/runner/dist/index.js:1681:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///D:/LiveFit%20Project/Project-LiveFit/node_modules/@vitest/runner/dist/index.js:1678:10)
+    at file:///D:/LiveFit%20Project/Project-LiveFit/node_modules/@vitest/runner/dist/index.js:1660:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///D:/LiveFit%20Project/Project-LiveFit/node_modules/@vitest/runner/dist/index.js:1627:10)
+    at file:///D:/LiveFit%20Project/Project-LiveFit/node_modules/@vitest/runner/dist/index.js:2309:64

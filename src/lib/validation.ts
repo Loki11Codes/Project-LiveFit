@@ -57,6 +57,7 @@ export const UserProfileSchema = z.object({
   gender: z.string().max(20).nullable().optional(),
   height: optionalNullableFiniteNumber,
   startDay: z.number().int().min(1).nullable().optional(),
+  accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
   primaryGoal: z.string().max(100).nullable().optional(),
   dietaryPreference: z.string().max(100).nullable().optional(),
   activityPreference: z.string().max(100).nullable().optional(),

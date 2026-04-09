@@ -15,13 +15,12 @@ import {
   Heart,
   Dumbbell
 } from 'lucide-react';
-import type { AppTheme, TabId } from '@/lib/types';
+import { useTheme } from '@/components/Theme/ThemeProvider';
+import type { TabId } from '@/lib/types';
 
 interface NavbarProps {
   readonly activeTab: TabId;
   readonly setActiveTab: (tab: TabId) => void;
-  readonly theme: AppTheme;
-  readonly toggleTheme: (e?: React.MouseEvent) => void;
 }
 
 type NavbarTab = {
@@ -31,8 +30,9 @@ type NavbarTab = {
   color: string;
 };
 
-export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: NavbarProps) {
+export default function Navbar({ activeTab, setActiveTab }: NavbarProps) {
   const { data: session } = useSession();
+  const { theme, toggleTheme } = useTheme();
   
   const tabs: NavbarTab[] = [
     { id: 'chat', label: 'Chat', icon: MessageSquare, color: 'var(--iq-blue)' },
@@ -48,7 +48,7 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
       <nav className="nav-bar-wrapper">
         <div className="navbar-inner">
           <Link href="/" className="flex items-center gap-3 group cursor-pointer transition-all duration-300 no-underline">
-            <div className="w-10 h-10 bg-[var(--iq-blue)] rounded-[13px] flex items-center justify-center shadow-lg transition-all duration-500 group-hover:shadow-[var(--accent)]/30 overflow-hidden">
+            <div className="w-10 h-10 bg-[var(--accent)] rounded-[13px] flex items-center justify-center shadow-lg transition-all duration-500 group-hover:shadow-[var(--accent)]/30 overflow-hidden">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={theme}
@@ -71,7 +71,7 @@ export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme }: 
               </AnimatePresence>
             </div>
             <div className="text-2xl tracking-tighter text-[var(--text)] hidden lg:block ml-1 font-bold">
-              Calor<span className="text-[var(--iq-blue)]">iq</span>
+              Calor<span className="text-[var(--accent)]">iq</span>
             </div>
           </Link>
 

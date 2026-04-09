@@ -92,14 +92,8 @@ export default function SignUp() {
       bottomLinkHref="/auth/signin"
       illustration={<NutritionIllustration />}
     >
-      <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-        <div className="flex flex-col gap-2">
-          <label
-            htmlFor="name"
-            className="text-[12px] font-bold uppercase tracking-[0.16em] text-zinc-600 ml-1"
-          >
-            Full Name
-          </label>
+      <form onSubmit={handleSubmit} className="space-y-2.5 mt-1">
+        <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
           <div className="relative flex items-center">
             <User
               size={18}
@@ -113,22 +107,15 @@ export default function SignUp() {
                 setName(event.target.value);
                 if (error) setError("");
               }}
-              placeholder="Alex Carter"
+              placeholder="Full Name"
+              aria-label="Full Name"
               autoFocus
               required
               suppressHydrationWarning
-              className="h-12 w-full rounded-2xl border-2 border-zinc-300/80 bg-white/90 pl-11 pr-4 text-[15px] font-medium text-zinc-800 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100/50"
+              className="h-10 w-full rounded-2xl border-2 border-auth-input-border bg-auth-input-bg pl-11 pr-4 text-[14px] font-medium text-auth-input-text outline-none transition placeholder:text-zinc-500 focus:border-[#185fa5] focus:ring-4 focus:ring-[#185fa5]/10"
             />
           </div>
-        </div>
 
-        <div className="flex flex-col gap-2">
-          <label
-            htmlFor="email"
-            className="text-[12px] font-bold uppercase tracking-[0.16em] text-zinc-600 ml-1"
-          >
-            Email
-          </label>
           <div className="relative flex items-center">
             <Mail
               size={18}
@@ -142,99 +129,86 @@ export default function SignUp() {
                 setEmail(event.target.value);
                 if (error) setError("");
               }}
-              placeholder="you@example.com"
+              placeholder="Email Address"
+              aria-label="Email"
               required
               suppressHydrationWarning
-              className="h-12 w-full rounded-2xl border-2 border-zinc-300/80 bg-white/90 pl-11 pr-4 text-[15px] font-medium text-zinc-800 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100/50"
+              className="h-10 w-full rounded-2xl border-2 border-auth-input-border bg-auth-input-bg pl-11 pr-4 text-[14px] font-medium text-auth-input-text outline-none transition placeholder:text-zinc-500 focus:border-[#185fa5] focus:ring-4 focus:ring-[#185fa5]/10"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="password"
-              className="text-[12px] font-bold uppercase tracking-[0.16em] text-zinc-600 ml-1"
+        <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
+          <div className="relative flex items-center">
+            <Lock
+              size={18}
+              className="pointer-events-none absolute left-4 text-zinc-400"
+            />
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(event) => {
+                setPassword(event.target.value);
+                if (error) setError("");
+              }}
+              placeholder="New Password"
+              aria-label="Password"
+              minLength={6}
+              required
+              suppressHydrationWarning
+              className="h-10 w-full rounded-2xl border-2 border-auth-input-border bg-auth-input-bg pl-11 pr-12 text-[14px] font-medium text-auth-input-text outline-none transition placeholder:text-zinc-500 focus:border-[#185fa5] focus:ring-4 focus:ring-[#185fa5]/10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              suppressHydrationWarning
+              className="absolute right-4 text-zinc-400 hover:text-zinc-600 transition-colors"
             >
-              Password
-            </label>
-            <div className="relative flex items-center">
-              <Lock
-                size={18}
-                className="pointer-events-none absolute left-4 text-zinc-400"
-              />
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(event) => {
-                  setPassword(event.target.value);
-                  if (error) setError("");
-                }}
-                placeholder="At least 6 chars"
-                minLength={6}
-                required
-                suppressHydrationWarning
-                className="h-12 w-full rounded-2xl border-2 border-zinc-300/80 bg-white/90 pl-11 pr-12 text-[15px] font-medium text-zinc-800 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100/50"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                suppressHydrationWarning
-                className="absolute right-4 text-zinc-400 hover:text-zinc-600 transition-colors"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="confirmPassword"
-              className="text-[12px] font-bold uppercase tracking-[0.16em] text-zinc-600 ml-1"
-            >
-              Confirm Password
-            </label>
-            <div className="relative flex items-center">
-              <input
-                id="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(event) => {
-                  setConfirmPassword(event.target.value);
-                  if (error) setError("");
-                }}
-                placeholder="Re-enter password"
-                required
+          <div className="relative flex items-center">
+            <input
+              id="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(event) => {
+                setConfirmPassword(event.target.value);
+                if (error) setError("");
+              }}
+              placeholder="Confirm Password"
+              aria-label="Confirm Password"
+              required
+              suppressHydrationWarning
+              className={`h-10 w-full rounded-2xl border-2 pl-4 pr-12 text-[14px] font-medium outline-none transition ${
+                passwordMatch === false
+                  ? "border-rose-400 focus:border-rose-500 focus:ring-4 focus:ring-rose-100/50"
+                  : "border-auth-input-border bg-auth-input-bg text-auth-input-text placeholder:text-zinc-500 focus:border-[#185fa5] focus:ring-4 focus:ring-[#185fa5]/10"
+              }`}
+            />
+            <div className="absolute right-4 flex items-center gap-2">
+              {passwordMatch && (
+                <CheckCircle2 size={16} className="text-[#0f6e56]" />
+              )}
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 suppressHydrationWarning
-                className={`h-12 w-full rounded-2xl border-2 bg-white/90 pl-4 pr-12 text-[15px] font-medium text-zinc-800 outline-none transition ${
-                  passwordMatch === false
-                    ? "border-rose-400 focus:border-rose-500 focus:ring-4 focus:ring-rose-100/50"
-                    : "border-zinc-300/80 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100/50"
-                }`}
-              />
-              <div className="absolute right-4 flex items-center gap-2">
-                {passwordMatch && (
-                  <CheckCircle2 size={16} className="text-emerald-600" />
-                )}
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  suppressHydrationWarning
-                  className="text-zinc-400 hover:text-zinc-600 transition-colors"
-                >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
+                className={`text-zinc-400 transition-colors hover:text-auth-text`}
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border-2 border-zinc-200/80 bg-zinc-50/80 px-4 py-3 text-[13px] font-medium text-zinc-600">
+        <div className="rounded-2xl border-2 border-auth-input-border bg-auth-input-bg px-4 py-2 text-[12px] font-medium text-auth-text-muted transition-colors">
           <p
             className={
               passwordChecks.minimumLength
-                ? "text-emerald-700 font-semibold"
+                ? "text-[#0f6e56] font-semibold"
                 : ""
             }
           >
@@ -243,8 +217,8 @@ export default function SignUp() {
           <p
             className={
               passwordChecks.upperOrNumber
-                ? "text-emerald-700 font-semibold mt-1"
-                : "mt-1"
+                ? "text-[#0f6e56] font-semibold mt-0.5"
+                : "mt-0.5"
             }
           >
             Contains an uppercase letter or a number
@@ -261,7 +235,7 @@ export default function SignUp() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="rounded-2xl border-2 border-emerald-500/25 bg-emerald-50 px-4 py-3 text-[14px] font-medium text-emerald-700 mt-2"
+            className="rounded-2xl border-2 border-emerald-500/25 bg-emerald-50 px-4 py-3 text-[14px] font-medium text-[#0f6e56] mt-2"
           >
             {success}
           </motion.div>
@@ -271,31 +245,31 @@ export default function SignUp() {
           type="submit"
           disabled={loading}
           suppressHydrationWarning
-          className="inline-flex h-12 w-full mt-4 items-center justify-center gap-2 rounded-2xl bg-zinc-900 px-5 text-[14px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-500 shadow-md"
+          className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-[#185fa5] px-5 text-[13px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-[#378add] disabled:cursor-not-allowed disabled:bg-zinc-500 shadow-md"
         >
           {loading ? (
-            <Loader2 size={18} className="animate-spin" />
+            <Loader2 size={16} className="animate-spin" />
           ) : (
-            <UserPlus size={18} />
+            <UserPlus size={16} />
           )}
           {loading ? "Creating account" : "Create Account"}
         </button>
       </form>
 
-      <div className="my-6 flex items-center gap-4 text-[12px] font-bold uppercase tracking-[0.12em] text-zinc-400">
-        <span className="h-px flex-1 bg-zinc-300/80" />
-        <span>Or continue with</span>
-        <span className="h-px flex-1 bg-zinc-300/80" />
+      <div className="my-3 flex items-center gap-4 text-[10px] font-bold uppercase tracking-[0.12em] text-auth-text-muted">
+        <span className="h-px flex-1 bg-auth-border/50" />
+        <span>Social Access</span>
+        <span className="h-px flex-1 bg-auth-border/50" />
       </div>
 
       <button
         type="button"
         suppressHydrationWarning
         onClick={() => signIn("google", { callbackUrl: "/" })}
-        className="inline-flex h-12 w-full items-center justify-center gap-3 rounded-2xl border-2 border-zinc-300/80 bg-white px-5 text-[14px] font-semibold text-zinc-800 transition hover:border-zinc-400 hover:bg-zinc-50 shadow-sm"
+        className="inline-flex h-10 w-full items-center justify-center gap-3 rounded-2xl border-2 border-auth-border bg-auth-surface px-5 text-[13px] font-semibold text-auth-input-text transition hover:brightness-95 shadow-sm"
       >
         <GoogleMark />
-        Continue with Google
+        Google Sign In
       </button>
     </AuthShell>
   );

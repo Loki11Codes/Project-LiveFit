@@ -293,7 +293,7 @@ export function ChatInput({
             placeholder={
               isRecording
                 ? "Listening..."
-                : "Tell me what you ate, your workout... or tap mic ???"
+                : "Tell me what you ate, your workout... or tap mic to log"
             }
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -362,12 +362,12 @@ export function ChatInput({
                   whileTap={{ scale: 0.95 }}
                   onClick={startRecording}
                   aria-label="Start recording"
-                  className="chat-send-btn-square bg-[var(--surface2)]"
+                  className="chat-send-btn-square bg-[var(--accent)] shadow-sm"
                   suppressHydrationWarning
                 >
                   <Mic
-                    className="w-5 h-5 text-[var(--accent)]"
-                    strokeWidth={2}
+                    className="w-5 h-5 text-[var(--accent-inv)]"
+                    strokeWidth={2.5}
                   />
                 </motion.button>
               )}

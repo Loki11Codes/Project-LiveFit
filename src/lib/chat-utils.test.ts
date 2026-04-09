@@ -140,11 +140,31 @@ describe('extractAndCleanLogData', () => {
     expect(result.logs[0].category).toBe('food');
   });
 
+  it('matches DATA marker with a space (e.g., ||| DATA ... |||)', () => {
+    const input = '||| DATA{"category":"food","data":{}}|||';
+    const result = extractAndCleanLogData(input);
+    expect(result.hasData).toBe(true);
+    expect(result.logs[0].category).toBe('food');
+  });
+
   // ── findClosingMarker edge cases ──────────────────────────────────────────
 
   it('handles text with ||| but no valid DATA block opening', () => {
     const input = 'Some text ||| more text ||| end.';
     const result = extractAndCleanLogData(input);
+    expect(result.hasData).toBe(false);
+    expect(result.logs).toHaveLength(0);
+  });
+
+  // ── ReDoS / Performance ───────────────────────────────────────────────────
+
+  it('handles very large input with unclosed blocks efficiently (ReDoS safety)', () => {
+    const maliciousInput = '|||DATA' + 'a'.repeat(100000);
+    const start = Date.now();
+    const result = extractAndCleanLogData(maliciousInput);
+    const duration = Date.now() - start;
+
+    expect(duration).toBeLessThan(100); // Should be near-instant
     expect(result.hasData).toBe(false);
     expect(result.logs).toHaveLength(0);
   });

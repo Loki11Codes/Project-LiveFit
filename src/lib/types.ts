@@ -83,6 +83,7 @@ export type UserProfile = {
   workoutReminders?: boolean;
   mealLogging?: boolean;
   waterCheckIns?: boolean;
+  accentColor?: string;
   day1?: string | null;
   day2?: string | null;
   day3?: string | null;

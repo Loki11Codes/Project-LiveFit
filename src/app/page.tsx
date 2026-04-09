@@ -37,7 +37,6 @@ import {
   EMPTY_LOGS,
   EMPTY_MEASUREMENT_FORM,
   type AnalyticsResponse,
-  type AppTheme,
   type ActiveWorkoutSession,
   type DayTypeEntryRecord,
   type DashboardState,
@@ -68,7 +67,6 @@ export default function Home() {
   const router = useRouter();
 
   const activeTab = parseTab(searchParams.get("tab"));
-  const [theme, setTheme] = useState<AppTheme>("light");
   const [dashboard, setDashboard] = useState<DashboardState>(
     INITIAL_DASHBOARD_STATE,
   );
@@ -388,15 +386,6 @@ export default function Home() {
     }
   }, [dashboard.activeWorkout]);
 
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [theme]);
-
   async function refreshDashboard() {
     if (!session?.user?.id) {
       return;
@@ -437,30 +426,6 @@ export default function Home() {
     }
   };
 
-  const toggleTheme = (event?: React.MouseEvent) => {
-    const nextTheme = theme === "light" ? "dark" : "light";
-
-    if (!document.startViewTransition) {
-      setTheme(nextTheme);
-      return;
-    }
-
-    const x = event?.clientX ?? window.innerWidth / 2;
-    const y = event?.clientY ?? window.innerHeight / 2;
-
-    document.documentElement.style.setProperty("--transition-x", `${x}px`);
-    document.documentElement.style.setProperty("--transition-y", `${y}px`);
-    document.documentElement.classList.add("theme-transitioning");
-
-    const transition = document.startViewTransition(() => {
-      startTransition(() => setTheme(nextTheme));
-    });
-
-    transition.finished.finally(() => {
-      document.documentElement.classList.remove("theme-transitioning");
-    });
-  };
-
   return (
     <main
       className={`flex flex-col items-center bg-[var(--bg)] w-full overflow-x-hidden ${activeTab === "chat" ? "h-screen overflow-hidden" : "min-h-screen"}`}
@@ -468,8 +433,6 @@ export default function Home() {
       <Navbar
         activeTab={activeTab}
         setActiveTab={handleTabChange}
-        theme={theme}
-        toggleTheme={toggleTheme}
       />
 
       <div

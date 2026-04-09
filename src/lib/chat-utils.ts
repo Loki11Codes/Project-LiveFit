@@ -1,6 +1,6 @@
 import type { ParsedLogEnvelope } from './types';
 
-/** Strip all |||DATA...|||  marker blocks from the raw text. */
+/** Strip all |||DATA...||| marker blocks from the raw text. */
 function removeDataBlocks(text: string, startMarker: string, endMarker: string): string {
   let result = text;
   let sIdx = result.indexOf(startMarker);
@@ -37,7 +37,6 @@ function findClosingMarker(text: string, searchFrom: number): number {
 
 /** 
  * Handle cases where AI wraps the envelope in another level like { data: { ... } }
- * @param parsed The raw JSON object from AI
  */
 function unWrapEnvelope(parsed: any): any {
   if (parsed?.data?.category && !parsed.category) {
@@ -53,7 +52,6 @@ function unWrapEnvelope(parsed: any): any {
 
 /**
  * Attempts to parse a JSON string and unwrap it if it's an AI-generated envelope.
- * Returns the parsed object(s) or null if invalid.
  */
 function parseLogContent(jsonText: string): ParsedLogEnvelope | ParsedLogEnvelope[] | null {
   if (!jsonText) return null;
@@ -72,55 +70,116 @@ function parseLogContent(jsonText: string): ParsedLogEnvelope | ParsedLogEnvelop
   }
 }
 
-export function extractAndCleanLogData(text: string): {
-  logs: ParsedLogEnvelope[];
-  cleanText: string;
-  hasData: boolean;
-} {
-  const startRegex = /\|\|\|\s*DATA/gi;
-  const logs: ParsedLogEnvelope[] = [];
-  let hasData = false;
-  let match;
+interface Exclusion {
+  start: number;
+  end: number;
+}
 
-  // Pass 1: Extract data via ||| DATA markers
+/** 
+ * Pass 1: Extract and identify blocks via ||| DATA markers
+ */
+function extractDataMarkers(text: string, logs: ParsedLogEnvelope[], exclusions: Exclusion[]): boolean {
+  let hasData = false;
+  const startRegex = /\|\|\|\s*DATA/gi;
+  let match;
+  
   while ((match = startRegex.exec(text)) !== null) {
     const startIdx = match.index;
     const contentStart = startIdx + match[0].length;
     const endIdx = findClosingMarker(text, contentStart);
     
-    if (endIdx === -1) break;
+    if (endIdx === -1) continue;
 
-    const jsonText = text.substring(contentStart, endIdx)
-      .replace(/^```json/i, "").replace(/^```/i, "").replace(/```$/i, "").trim();
-
-    const parsed = parseLogContent(jsonText);
-    if (parsed) {
-      hasData = true;
-      logs.push(...(Array.isArray(parsed) ? parsed : [parsed]));
-    }
-  }
-
-  // Pass 2: Fallback to standard markdown JSON blocks
-  const codeBlockRegex = /```json\s+([\s\S]*?)```/gi;
-  while ((match = codeBlockRegex.exec(text)) !== null) {
-    const jsonText = match[1].trim();
-    const parsed = parseLogContent(jsonText);
+    hasData = true;
+    const blockEnd = endIdx + 3; // Length of '|||'
+    exclusions.push({ start: startIdx, end: blockEnd });
     
-    if (parsed && !Array.isArray(parsed) && !logs.some(l => JSON.stringify(l) === JSON.stringify(parsed))) {
-      logs.push(parsed);
-      hasData = true;
+    let jsonContent = text.substring(contentStart, endIdx).trim();
+    // Correctly handle backtick-fenced JSON with leading newlines
+    jsonContent = jsonContent.replace(/^```json/i, "").replace(/^```/i, "").replace(/```$/i, "").trim();
+
+    const parsed = parseLogContent(jsonContent);
+    if (parsed) {
+      if (Array.isArray(parsed)) logs.push(...parsed);
+      else logs.push(parsed);
     }
   }
-
-  // Clean the text by removing all blocks that match the patterns
-  const fullBlockRegex = /\|\|\|\s*DATA[\s\S]*?\|\|\|/gi;
-  const jsonCodeBlockRegex = /```json[\s\S]*?```/gi;
-  
-  const cleanText = text
-    .replaceAll(fullBlockRegex, '')
-    .replaceAll(jsonCodeBlockRegex, '')
-    .trim();
-
-  return { logs, cleanText, hasData };
+  return hasData;
 }
 
+/**
+ * Pass 2: Fallback to markdown JSON blocks not handled or within DATA blocks
+ */
+function extractJsonCodeBlocks(text: string, logs: ParsedLogEnvelope[], exclusions: Exclusion[]): boolean {
+  let hasData = false;
+  const startRegex = /```json\s*/gi;
+  let match;
+  
+  while ((match = startRegex.exec(text)) !== null) {
+    const startIdx = match.index;
+    const contentStart = startIdx + match[0].length;
+    const endIdx = text.indexOf('```', contentStart);
+
+    if (endIdx === -1) continue;
+
+    const blockEnd = endIdx + 3; 
+    
+    // Skip if this block is already inside a DATA block
+    if (!exclusions.some(ex => (startIdx >= ex.start && startIdx < ex.end))) {
+      hasData = true;
+      exclusions.push({ start: startIdx, end: blockEnd });
+      const jsonContent = text.substring(contentStart, endIdx).trim();
+      const parsed = parseLogContent(jsonContent);
+      
+      if (parsed && !Array.isArray(parsed) && !logs.some(l => JSON.stringify(l) === JSON.stringify(parsed))) {
+        logs.push(parsed);
+      }
+    }
+  }
+  return hasData;
+}
+
+/**
+ * Reconstruction of the text to remove identified log payloads.
+ */
+function buildCleanText(text: string, exclusions: Exclusion[]): string {
+  let cleanText = '';
+  let lastEnd = 0;
+  const sorted = [...exclusions].sort((a, b) => a.start - b.start);
+  
+  for (const ex of sorted) {
+    if (ex.start > lastEnd) {
+      cleanText += text.substring(lastEnd, ex.start);
+    }
+    lastEnd = Math.max(lastEnd, ex.end);
+  }
+  
+  if (lastEnd < text.length) {
+    cleanText += text.substring(lastEnd);
+  }
+
+  return cleanText.trim();
+}
+
+/**
+ * Main orchestrator for identifying and removing AI log payloads from response text.
+ */
+export function extractAndCleanLogData(text: string): {
+  logs: ParsedLogEnvelope[];
+  cleanText: string;
+  hasData: boolean;
+} {
+  const logs: ParsedLogEnvelope[] = [];
+  const exclusions: Exclusion[] = [];
+
+  const foundMarkers = extractDataMarkers(text, logs, exclusions);
+  const foundBlocks = extractJsonCodeBlocks(text, logs, exclusions);
+  
+  const cleanText = buildCleanText(text, exclusions);
+
+  return { 
+    logs, 
+    cleanText, 
+    hasData: foundMarkers || foundBlocks 
+  };
+}

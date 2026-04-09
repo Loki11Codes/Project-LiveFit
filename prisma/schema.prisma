@@ -148,6 +148,7 @@ model UserProfile {
   workoutReminders   Boolean @default(true)
   mealLogging        Boolean @default(false)
   waterCheckIns      Boolean @default(true)
+  accentColor        String  @default("#185fa5")
   day1               String?
   day2        String?
   day3        String?
