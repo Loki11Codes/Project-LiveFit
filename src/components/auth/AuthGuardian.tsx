@@ -14,12 +14,27 @@ export function AuthGuardian() {
   const router = useRouter();
 
   useEffect(() => {
-    // We only care about authenticated users who are NOT already on the reset page
-    if (status === "authenticated" && session?.user?.requirePasswordChange) {
-      if (pathname !== "/auth/reset-password") {
+    if (status !== "authenticated" || !session?.user) return;
+
+    const isResetPath = pathname === "/auth/reset-password";
+    const isOnboardingPath = pathname === "/onboarding";
+
+    // 1. Mandatory Password Reset (Highest Priority)
+    if (session.user.requirePasswordChange === true) {
+      if (!isResetPath) {
         console.warn("Security: Mandatory password reset detected. Redirecting...");
         router.push("/auth/reset-password");
       }
+      return;
+    }
+
+    // 2. Mandatory Onboarding
+    if (session.user.onboarded === false) {
+      if (!isOnboardingPath && !isResetPath) {
+        console.log("Onboarding: New user detected. Redirecting to tutorial...");
+        router.push("/onboarding");
+      }
+      return;
     }
   }, [session, status, pathname, router]);
 

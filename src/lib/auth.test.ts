@@ -87,28 +87,36 @@ describe('Auth Options', () => {
   });
 
   describe('Callbacks', () => {
-    it('jwt returns token with user id', async () => {
+    it('jwt returns token with user id and requirePasswordChange', async () => {
       const jwtCb = authOptions.callbacks?.jwt as any;
-      const result = await jwtCb({ token: { orig: true }, user: { id: 'user123' }});
-      expect(result).toEqual({ orig: true, id: 'user123' });
+      const result = await jwtCb({ token: { orig: true }, user: { id: 'user123', requirePasswordChange: true }});
+      expect(result).toEqual({ orig: true, id: 'user123', requirePasswordChange: true });
       
       const noUserResult = await jwtCb({ token: { orig: true }});
       expect(noUserResult).toEqual({ orig: true });
     });
 
-    it('session maps token id to user id', async () => {
-      vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: 'tid' } as any);
+    it('jwt handles session update trigger', async () => {
+      const jwtCb = authOptions.callbacks?.jwt as any;
+      const token = { id: 'u1', requirePasswordChange: true };
+      const session = { requirePasswordChange: false };
+      const result = await jwtCb({ token, trigger: "update", session });
+      expect(result.requirePasswordChange).toBe(false);
+    });
+
+    it('session maps token id and fetches latest status from DB', async () => {
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: 'tid', requirePasswordChange: false } as any);
       const sessionCb = authOptions.callbacks?.session as any;
       const session = { user: { name: 'hi' } };
-      const token = { id: 'tid' };
+      const token = { id: 'tid', requirePasswordChange: true }; // Token is stale
       const result = await sessionCb({ session, token });
+      
       expect(result.user.id).toBe('tid');
-
-      // Edge case: no user in session
-      const noSessionUser = { user: undefined };
-      const res2 = await sessionCb({ session: noSessionUser, token });
-      expect(res2).toEqual({ user: undefined });
+      expect(result.user.requirePasswordChange).toBe(false); // Should match DB, not token
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { id: 'tid' },
+        select: { id: true, requirePasswordChange: true }
+      });
     });
   });
 });
-

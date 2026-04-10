@@ -53,6 +53,8 @@ model User {
   profile        UserProfile?
   workoutLogs    WorkoutLog[]
   requirePasswordChange Boolean           @default(false)
+  onboarded             Boolean           @default(false)
+  hasSeenTutorial       Boolean           @default(false)
   routines             Routine[]
 }
 

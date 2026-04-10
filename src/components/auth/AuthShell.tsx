@@ -14,9 +14,9 @@ interface AuthShellProps {
   panelPoints: string[];
   children: ReactNode;
   illustration?: ReactNode;
-  bottomText: string;
-  bottomLinkLabel: string;
-  bottomLinkHref: string;
+  bottomText?: string;
+  bottomLinkLabel?: string;
+  bottomLinkHref?: string;
 }
 
 const shellVariants: Variants = {
@@ -182,15 +182,17 @@ export function AuthShell({
               {children}
             </div>
 
-            <p className="mt-2 text-center text-[12px] font-medium text-auth-text-muted">
-              {bottomText}{" "}
-              <Link
-                href={bottomLinkHref}
-                className="font-semibold underline decoration-[#185fa5]/60 underline-offset-4 hover:text-iq-blue-light transition-colors text-auth-text"
-              >
-                {bottomLinkLabel}
-              </Link>
-            </p>
+            {bottomText && bottomLinkHref && (
+              <p className="mt-2 text-center text-[12px] font-medium text-auth-text-muted">
+                {bottomText}{" "}
+                <Link
+                  href={bottomLinkHref}
+                  className="font-semibold underline decoration-[#185fa5]/60 underline-offset-4 hover:text-iq-blue-light transition-colors text-auth-text"
+                >
+                  {bottomLinkLabel}
+                </Link>
+              </p>
+            )}
           </motion.section>
         </motion.div>
       </div>

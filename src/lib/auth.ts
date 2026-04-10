@@ -51,6 +51,8 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             image: user.image,
             requirePasswordChange: user.requirePasswordChange,
+            onboarded: user.onboarded,
+            hasSeenTutorial: user.hasSeenTutorial,
           };
         } catch (error) {
           console.error('Auth check error:', getErrorMessage(error));
@@ -69,32 +71,48 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
+        // On initial sign in, use the values from the user object
         token.requirePasswordChange = user.requirePasswordChange;
+        token.onboarded = user.onboarded;
+        token.hasSeenTutorial = user.hasSeenTutorial;
       }
 
-      // Handle session update to clear security flag without logout
+      // Handle session update to clear security/onboarding flags without logout
       if (trigger === "update" && session) {
-        token.requirePasswordChange = session.requirePasswordChange;
+        if (typeof session.requirePasswordChange === 'boolean') {
+          token.requirePasswordChange = session.requirePasswordChange;
+        }
+        if (typeof session.onboarded === 'boolean') {
+          token.onboarded = session.onboarded;
+        }
+        if (typeof session.hasSeenTutorial === 'boolean') {
+          token.hasSeenTutorial = session.hasSeenTutorial;
+        }
       }
 
       return token;
     },
     async session({ session, token }) {
       if (session.user && token.id) {
-        // Verify user still exists in database to prevent foreign key errors with stale JWTs
-        const userExists = await prisma.user.findUnique({
+        // Source of Truth: Fetch latest flags from the database
+        const dbUser = await prisma.user.findUnique({
           where: { id: token.id },
-          select: { id: true }
+          select: { 
+            id: true, 
+            requirePasswordChange: true,
+            onboarded: true,
+            hasSeenTutorial: true 
+          }
         });
         
-        if (!userExists) {
-          // If the user was deleted from the database but the JWT remains,
-          // invalidate the session to force them to sign out/in again.
+        if (!dbUser) {
           throw new Error("Session invalidated: User no longer exists in the database.");
         }
         
         session.user.id = token.id;
-        session.user.requirePasswordChange = token.requirePasswordChange;
+        session.user.requirePasswordChange = dbUser.requirePasswordChange;
+        session.user.onboarded = dbUser.onboarded;
+        session.user.hasSeenTutorial = dbUser.hasSeenTutorial;
       }
       return session;
     },
