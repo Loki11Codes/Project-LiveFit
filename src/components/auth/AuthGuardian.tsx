@@ -18,6 +18,7 @@ export function AuthGuardian() {
 
     const isResetPath = pathname === "/auth/reset-password";
     const isOnboardingPath = pathname === "/onboarding";
+    const isVerifyPath = pathname === "/auth/verify";
 
     // 1. Mandatory Password Reset (Highest Priority)
     if (session.user.requirePasswordChange === true) {
@@ -28,13 +29,13 @@ export function AuthGuardian() {
       return;
     }
 
-    // 2. Mandatory Onboarding
+
+    // 3. Mandatory Onboarding
     if (session.user.onboarded === false) {
-      if (!isOnboardingPath && !isResetPath) {
+      if (!isOnboardingPath && !isResetPath && !isVerifyPath) {
         console.log("Onboarding: New user detected. Redirecting to tutorial...");
         router.push("/onboarding");
       }
-      return;
     }
   }, [session, status, pathname, router]);
 

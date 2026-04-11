@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { conflict, internalError, parseJsonBody } from '@/lib/api';
 import { SignupSchema } from '@/lib/validation';
 
+
 export async function POST(req: Request) {
   const parsedBody = await parseJsonBody(req, SignupSchema);
   if (!parsedBody.success) {
@@ -29,10 +30,12 @@ export async function POST(req: Request) {
         name,
         email: normalizedEmail,
         password: hashedPassword,
+        emailVerified: new Date(),
       },
     });
 
-    return NextResponse.json({ message: 'User created successfully', user: { id: user.id, email: user.email } });
+
+    return NextResponse.json({ message: 'User created successfully. Please verify your email.', user: { id: user.id, email: user.email } });
   } catch (error) {
     console.error('Signup error:', error);
     return internalError('Unable to create your account right now');
