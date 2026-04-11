@@ -37,23 +37,23 @@ interface ProfileStepProps {
 }
 
 export default function OnboardingPage() {
+  const [phase, setPhase] = useState<OnboardingStep>('tutorial');
+
+  if (phase === 'tutorial') {
+    return <TutorialPhase onComplete={() => setPhase('profile')} />;
+  }
+
+  return <ProfilePhase />;
+}
+
+// ============================================
+// TUTORIAL PHASE COMPONENT
+// ============================================
+function TutorialPhase({ onComplete }: { readonly onComplete: () => void }) {
   const { update } = useSession();
   const router = useRouter();
-  const [phase, setPhase] = useState<OnboardingStep>('tutorial');
   const [tutorialStep, setTutorialStep] = useState(0);
-  const [profileStep, setProfileStep] = useState(0);
   const [loading, setLoading] = useState(false);
-
-  // Profile Form State
-  const [formData, setFormData] = useState({
-    age: "" as number | "",
-    gender: "male",
-    height: "" as number | "",
-    activityLevel: "Moderately Active",
-    primaryGoal: "Maintenance",
-    initialWeight: "" as number | "",
-    dietaryPreference: "Balanced"
-  });
 
   const tutorialSlides = [
     {
@@ -77,10 +77,9 @@ export default function OnboardingPage() {
     if (tutorialStep < tutorialSlides.length - 1) {
       setTutorialStep(tutorialStep + 1);
     } else {
-      setPhase('profile');
+      onComplete();
     }
   };
-
 
   const handleSkipOnboarding = async () => {
     setLoading(true);
@@ -107,6 +106,93 @@ export default function OnboardingPage() {
     }
   };
 
+  return (
+    <AuthShell
+      badge="Onboarding"
+      title="Welcome to Caloriq"
+      subtitle="Let's take a quick look at how we'll help you reach your goals."
+      panelTitle="The Athlete's Platform"
+      panelDescription="Caloriq is built for high-performance tracking and intelligent insights."
+      panelPoints={[
+        "Advanced data visualization",
+        "Context-aware AI assistance",
+        "Seamless activity logging"
+      ]}
+      illustration={<div className="flex justify-center p-8 opacity-20"><ShieldCheck size={120} /></div>}
+    >
+      <div className="min-h-[350px] flex flex-col justify-between">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key="tutorial"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-8 py-4"
+          >
+            <div className="flex flex-col items-center text-center space-y-6">
+              <div className="p-6 rounded-3xl bg-auth-surface2/50 backdrop-blur-sm border border-auth-border">
+                {tutorialSlides[tutorialStep].icon}
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-xl font-bold text-auth-text">{tutorialSlides[tutorialStep].title}</h3>
+                <p className="text-sm text-auth-text-muted leading-relaxed max-w-[280px]">
+                  {tutorialSlides[tutorialStep].description}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-2">
+              {tutorialSlides.map((slide, i) => (
+                <div 
+                  key={slide.title} 
+                  className={`h-1.5 rounded-full transition-all duration-300 ${i === tutorialStep ? 'w-6 bg-[#185fa5]' : 'w-1.5 bg-auth-border'}`} 
+                />
+              ))}
+            </div>
+
+            <div className="flex items-center gap-3 pt-4">
+              <button
+                disabled={loading}
+                onClick={handleSkipOnboarding}
+                className="h-11 flex-1 rounded-2xl border border-auth-border text-xs font-bold uppercase tracking-wider text-auth-text-muted hover:bg-auth-surface2 transition-colors disabled:opacity-50"
+              >
+                Skip All
+              </button>
+              <button
+                disabled={loading}
+                onClick={handleNextTutorial}
+                className="h-11 flex-[2] rounded-2xl bg-[#185fa5] text-xs font-bold uppercase tracking-wider text-white hover:bg-[#378add] transition-colors flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+              >
+                {tutorialStep === tutorialSlides.length - 1 ? "Start Setup" : "Next"}
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </AuthShell>
+  );
+}
+
+// ============================================
+// PROFILE PHASE COMPONENT
+// ============================================
+function ProfilePhase() {
+  const { update } = useSession();
+  const router = useRouter();
+  const [profileStep, setProfileStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  const [formData, setFormData] = useState<FormDataMap>({
+    age: "",
+    gender: "male",
+    height: "",
+    activityLevel: "Moderately Active",
+    primaryGoal: "Maintenance",
+    initialWeight: "",
+    dietaryPreference: "Balanced"
+  });
+
   const handleFinishOnboarding = async () => {
     if (!formData.age || !formData.height || !formData.initialWeight) {
       alert("Please enter values for Age, Height, and Weight.");
@@ -121,7 +207,6 @@ export default function OnboardingPage() {
 
       // Synchronize the session locally to clear the onboarding gate
       await update({ onboarded: true, hasSeenTutorial: true });
-      
       router.push("/");
       router.refresh();
     } catch (error) {
@@ -144,73 +229,6 @@ export default function OnboardingPage() {
   }
 
   const handleNextAction = profileStep === 2 ? handleFinishOnboarding : () => setProfileStep(profileStep + 1);
-
-  if (phase === 'tutorial') {
-    return (
-      <AuthShell
-        badge="Onboarding"
-        title="Welcome to Caloriq"
-        subtitle="Let's take a quick look at how we'll help you reach your goals."
-        panelTitle="The Athlete's Platform"
-        panelDescription="Caloriq is built for high-performance tracking and intelligent insights."
-        panelPoints={[
-          "Advanced data visualization",
-          "Context-aware AI assistance",
-          "Seamless activity logging"
-        ]}
-        illustration={<div className="flex justify-center p-8 opacity-20"><ShieldCheck size={120} /></div>}
-      >
-        <div className="min-h-[350px] flex flex-col justify-between">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key="tutorial"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-8 py-4"
-            >
-              <div className="flex flex-col items-center text-center space-y-6">
-                <div className="p-6 rounded-3xl bg-auth-surface2/50 backdrop-blur-sm border border-auth-border">
-                  {tutorialSlides[tutorialStep].icon}
-                </div>
-                <div className="space-y-3">
-                  <h3 className="text-xl font-bold text-auth-text">{tutorialSlides[tutorialStep].title}</h3>
-                  <p className="text-sm text-auth-text-muted leading-relaxed max-w-[280px]">
-                    {tutorialSlides[tutorialStep].description}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-center gap-2">
-                {tutorialSlides.map((slide, i) => (
-                  <div 
-                    key={slide.title} 
-                    className={`h-1.5 rounded-full transition-all duration-300 ${i === tutorialStep ? 'w-6 bg-[#185fa5]' : 'w-1.5 bg-auth-border'}`} 
-                  />
-                ))}
-              </div>
-
-              <div className="flex items-center gap-3 pt-4">
-                <button
-                  onClick={handleSkipOnboarding}
-                  className="h-11 flex-1 rounded-2xl border border-auth-border text-xs font-bold uppercase tracking-wider text-auth-text-muted hover:bg-auth-surface2 transition-colors"
-                >
-                  Skip All
-                </button>
-                <button
-                  onClick={handleNextTutorial}
-                  className="h-11 flex-[2] rounded-2xl bg-[#185fa5] text-xs font-bold uppercase tracking-wider text-white hover:bg-[#378add] transition-colors flex items-center justify-center gap-2 shadow-lg"
-                >
-                  {tutorialStep === tutorialSlides.length - 1 ? "Start Setup" : "Next"}
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </AuthShell>
-    );
-  }
 
   return (
     <AuthShell
@@ -274,6 +292,9 @@ export default function OnboardingPage() {
   );
 }
 
+// ============================================
+// PROFILE SUB-COMPONENTS
+// ============================================
 function BioDataStep({ formData, setFormData }: ProfileStepProps) {
   return (
     <div className="space-y-4">
