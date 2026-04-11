@@ -3,7 +3,11 @@ import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { conflict, internalError, parseJsonBody } from '@/lib/api';
 import { SignupSchema } from '@/lib/validation';
-
+import { 
+  generateVerificationData, 
+  sendVerificationEmail, 
+  storeVerificationToken 
+} from '@/lib/email';
 
 export async function POST(req: Request) {
   const result = await parseJsonBody(req, SignupSchema);
@@ -22,17 +26,27 @@ export async function POST(req: Request) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Generate verification data early
+    const { otp, token, expires } = generateVerificationData();
+
     const user = await prisma.user.create({
       data: {
         name,
         email: normalizedEmail,
         password: hashedPassword,
-        emailVerified: new Date(),
+        emailVerified: null, // Force verification
       },
     });
 
+    // Store tokens in database
+    await storeVerificationToken(normalizedEmail, token, otp, expires);
+
+    // Send verification email (fallback to console in dev)
+    await sendVerificationEmail(normalizedEmail, name, otp, token);
+
     return NextResponse.json({ 
-      message: 'User created successfully.', 
+      message: 'User created successfully. Please check your email for a verification code.', 
       user: { id: user.id, email: user.email } 
     });
   } catch (error) {

@@ -8,10 +8,13 @@ import {
   TrendingUp,
   Beef,
   Flame,
+  LayoutGrid,
+  Trophy,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cardVariants, rowVariants } from '@/lib/animations';
 import EmptyState from '@/components/Shared/EmptyState';
+import PerformanceInsights from '@/components/Analytics/PerformanceInsights';
 import type { AnalyticsResponse, HistoryRow, NutritionStat, WeightTrendPoint } from '@/lib/types';
 
 interface HistoryTabProps {
@@ -28,6 +31,7 @@ export default function HistoryTab({
   kcalTarget,
   proteinTarget,
 }: HistoryTabProps) {
+  const [viewMode, setViewMode] = React.useState<'table' | 'performance'>('table');
   const nutritionStats = analytics?.nutritionStats ?? [];
   const weightTrend = analytics?.weightTrend ?? [];
   const weightDelta = getWeightDelta(weightTrend);
@@ -122,23 +126,57 @@ export default function HistoryTab({
         animate="visible"
         custom={4}
       >
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-[var(--surface2)] rounded-xl">
               <Calendar className="w-5 h-5 text-[var(--accent)]" />
             </div>
             <div>
               <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Timeline</div>
-              <h3 className="text-sm font-black tracking-tight uppercase">Activity History</h3>
+              <h3 className="text-sm font-black tracking-tight uppercase">Activity Logs</h3>
               <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mt-0.5">
                 {history.length} Days Tracking
               </div>
             </div>
           </div>
+
+          <div className="flex bg-[var(--surface2)] p-1 rounded-xl border border-[var(--border)]">
+            <button
+              onClick={() => setViewMode('table')}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
+                viewMode === 'table'
+                  ? 'bg-[var(--accent)] text-white shadow-lg'
+                  : 'opacity-40 hover:opacity-100'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              Table
+            </button>
+            <button
+              onClick={() => setViewMode('performance')}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
+                viewMode === 'performance'
+                  ? 'bg-[var(--accent)] text-white shadow-lg'
+                  : 'opacity-40 hover:opacity-100'
+              }`}
+            >
+              <Trophy className="w-3.5 h-3.5" />
+              Performance
+            </button>
+          </div>
         </div>
 
-        <div className="overflow-x-auto rounded-[var(--radius-md)] border border-[var(--border)] dark:border-white/5">
-          <table className="w-full border-collapse">
+        <AnimatePresence mode="wait">
+          {viewMode === 'table' ? (
+            <motion.div
+              key="table"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-x-auto rounded-[var(--radius-md)] border border-[var(--border)] dark:border-white/5"
+            >
+              <table className="w-full border-collapse">
             <thead>
               <tr className="bg-[var(--surface2)]">
                 <th className="py-4 px-4 font-black text-[9px] tracking-[0.2em] text-[var(--text-muted)] uppercase text-left">Day</th>
@@ -209,7 +247,19 @@ export default function HistoryTab({
               )}
             </tbody>
           </table>
-        </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="performance"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <PerformanceInsights history={history} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );

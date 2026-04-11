@@ -29,6 +29,15 @@ export function AuthGuardian() {
       return;
     }
 
+    // 2. Mandatory Email Verification
+    if (!session.user.emailVerified) {
+      if (!isVerifyPath && !isResetPath) {
+        console.warn("Security: Email not verified. Redirecting to verification...");
+        router.push("/auth/verify");
+      }
+      return;
+    }
+
 
     // 3. Mandatory Onboarding
     if (session.user.onboarded === false) {

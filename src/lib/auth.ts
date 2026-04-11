@@ -53,6 +53,7 @@ export const authOptions: NextAuthOptions = {
             requirePasswordChange: user.requirePasswordChange,
             onboarded: user.onboarded,
             hasSeenTutorial: user.hasSeenTutorial,
+            emailVerified: user.emailVerified,
           };
         } catch (error) {
           console.error('Auth check error:', getErrorMessage(error));
@@ -75,6 +76,7 @@ export const authOptions: NextAuthOptions = {
         token.requirePasswordChange = user.requirePasswordChange;
         token.onboarded = user.onboarded;
         token.hasSeenTutorial = user.hasSeenTutorial;
+        token.emailVerified = user.emailVerified;
       }
 
       // Handle session update to clear security/onboarding flags without logout
@@ -87,6 +89,9 @@ export const authOptions: NextAuthOptions = {
         }
         if (typeof session.hasSeenTutorial === 'boolean') {
           token.hasSeenTutorial = session.hasSeenTutorial;
+        }
+        if (session.emailVerified !== undefined) {
+          token.emailVerified = session.emailVerified;
         }
       }
 
@@ -101,7 +106,8 @@ export const authOptions: NextAuthOptions = {
             id: true, 
             requirePasswordChange: true,
             onboarded: true,
-            hasSeenTutorial: true 
+            hasSeenTutorial: true,
+            emailVerified: true 
           }
         });
         
@@ -113,6 +119,7 @@ export const authOptions: NextAuthOptions = {
         session.user.requirePasswordChange = dbUser.requirePasswordChange;
         session.user.onboarded = dbUser.onboarded;
         session.user.hasSeenTutorial = dbUser.hasSeenTutorial;
+        session.user.emailVerified = dbUser.emailVerified;
       }
       return session;
     },
