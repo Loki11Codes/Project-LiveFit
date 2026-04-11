@@ -80,8 +80,8 @@ export function WorkoutSession({
           return prev - 1;
         });
       }, 1000);
-    } else {
-      if (restIntervalRef.current) clearInterval(restIntervalRef.current);
+    } else if (restIntervalRef.current) {
+      clearInterval(restIntervalRef.current);
     }
     return () => {
       if (restIntervalRef.current) clearInterval(restIntervalRef.current);
@@ -186,9 +186,9 @@ export function WorkoutSession({
                 setIsRestActive(true);
                 
                 // Check for PR
-                const w = parseFloat(newSet.weight as string);
-                const r = parseInt(newSet.reps as string);
-                if (w && r) checkForPr(ex.exerciseId!, ex.name, w, r);
+                const w = Number.parseFloat(newSet.weight);
+                const r = Number.parseInt(newSet.reps, 10);
+                if (w && r) checkForPr(ex.exerciseId, ex.name, w, r);
               }
               
               return newSet;

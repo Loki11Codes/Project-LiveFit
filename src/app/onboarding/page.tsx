@@ -306,22 +306,54 @@ function BioDataStep({ formData, setFormData }: ProfileStepProps) {
       <div className="space-y-3">
         <div className="space-y-1.5">
           <span className="block text-[11px] font-bold uppercase tracking-wider text-auth-text-muted ml-1 mb-1.5">Gender</span>
-          <div className="grid grid-cols-2 gap-2">
-            {["male", "female"].map(g => (
-              <button
-                key={g}
-                onClick={() => setFormData({ ...formData, gender: g })}
-                className={`h-10 rounded-xl border-2 capitalize text-sm font-medium transition-all ${
-                  formData.gender === g 
-                    ? "border-[#185fa5] bg-[#185fa5]/5 text-[#185fa5]" 
-                    : "border-auth-input-border bg-auth-input-bg text-auth-text-muted"
-                }`}
-              >
-                {g}
-              </button>
-            ))}
+          <div className="grid grid-cols-3 gap-2">
+            {["male", "female", "others"].map(g => {
+              const isActive = g === 'others' 
+                ? !['male', 'female'].includes(formData.gender)
+                : formData.gender === g;
+                
+              return (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, gender: g === 'others' ? "" : g })}
+                  className={`h-10 rounded-xl border-2 capitalize text-sm font-black transition-all ${
+                    isActive
+                      ? "border-[#185fa5] bg-[#185fa5]/5 text-[#185fa5]" 
+                      : "border-auth-input-border bg-auth-input-bg text-auth-text-muted opacity-60"
+                  }`}
+                >
+                  {g === 'others' ? 'Others' : g}
+                </button>
+              );
+            })}
           </div>
         </div>
+
+        <AnimatePresence>
+          {!['male', 'female'].includes(formData.gender) && (
+            <motion.div
+              initial={{ height: 0, opacity: 0, marginTop: 0 }}
+              animate={{ height: "auto", opacity: 1, marginTop: 8 }}
+              exit={{ height: 0, opacity: 0, marginTop: 0 }}
+              className="overflow-hidden space-y-1.5"
+            >
+              <label htmlFor="customGender" className="text-[10px] font-black uppercase tracking-widest text-auth-text/40 ml-1">
+                Identity Preference
+              </label>
+              <input
+                id="customGender"
+                type="text"
+                maxLength={30}
+                value={formData.gender === "other" ? "" : formData.gender}
+                placeholder="How do you identify?"
+                onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                className="h-10 w-full rounded-xl border-2 border-[#185fa5]/30 bg-auth-input-bg px-4 text-sm font-bold text-auth-input-text focus:border-[#185fa5] outline-none transition placeholder:opacity-30"
+                autoFocus
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">

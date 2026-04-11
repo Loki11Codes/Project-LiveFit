@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Target, Calendar, Info } from 'lucide-react';
+import { TrendingUp, Target, Calendar } from 'lucide-react';
 import type { HistoryRow } from '@/lib/types';
 import { cardVariants } from '@/lib/animations';
 
@@ -179,11 +179,11 @@ export default function PerformanceInsights({ history }: PerformanceInsightsProp
   );
 }
 
-function VolumeChart({ data, labels }: { data: number[], labels: string[] }) {
+function VolumeChart({ data, labels }: { readonly data: number[], readonly labels: string[] }) {
   const max = Math.max(...data, 1000); // Scale to at least 1000kg
   const min = Math.min(...data);
   const range = max - min || 1;
-  const padding = 20;
+
 
   const points = useMemo(() => {
     return data.map((val, i) => {
@@ -194,7 +194,7 @@ function VolumeChart({ data, labels }: { data: number[], labels: string[] }) {
   }, [data, min, range, labels]);
 
   const pathData = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-  const areaData = `${pathData} L ${points[points.length-1].x} 100 L 0 100 Z`;
+  const areaData = `${pathData} L ${points.at(-1)?.x || 0} 100 L 0 100 Z`;
 
   return (
     <div className="relative w-full h-full group">
@@ -247,7 +247,7 @@ function VolumeChart({ data, labels }: { data: number[], labels: string[] }) {
       <div className="absolute bottom-[-25px] left-0 right-0 flex justify-between px-2">
         <span className="text-[7px] font-black uppercase opacity-30">{labels[0]}</span>
         <span className="text-[7px] font-black uppercase opacity-30">{labels[Math.floor(labels.length/2)]}</span>
-        <span className="text-[7px] font-black uppercase opacity-30">{labels[labels.length-1]}</span>
+        <span className="text-[7px] font-black uppercase opacity-30">{labels.at(-1)}</span>
       </div>
     </div>
   );

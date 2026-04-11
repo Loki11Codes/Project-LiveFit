@@ -6,12 +6,12 @@ import * as LucideIcons from "lucide-react";
 import type { AchievementTier } from "@/lib/achievements";
 
 interface AchievementCardProps {
-  title: string;
-  description: string;
-  tier: AchievementTier;
-  icon?: string;
-  unlockedAt?: Date;
-  isLocked?: boolean;
+  readonly title: string;
+  readonly description: string;
+  readonly tier: AchievementTier;
+  readonly icon?: string;
+  readonly unlockedAt?: Date;
+  readonly isLocked?: boolean;
 }
 
 export function AchievementCard({

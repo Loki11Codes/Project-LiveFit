@@ -393,12 +393,51 @@ function ProfilePanel({
             value={data.height || ""}
             onChange={(v) => onChange("height", Number.parseInt(v) || 0)}
           />
-          <FormField
-            label="Gender"
-            placeholder="Male / Female"
-            value={data.gender || ""}
-            onChange={(v) => onChange("gender", v)}
-          />
+          <div className="flex flex-col gap-2">
+            <label className="text-[12px] font-bold uppercase tracking-widest text-(--text-muted) ml-1">
+              Gender
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {["male", "female", "others"].map((g) => {
+                const isActive = g === "others"
+                  ? !["male", "female"].includes(data.gender || "")
+                  : data.gender === g;
+                return (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => onChange("gender", g === "others" ? "" : g)}
+                    className={`h-11 rounded-xl border-2 capitalize text-[13px] font-bold transition-all ${
+                      isActive
+                        ? "border-(--accent) bg-(--accent-bg) text-(--accent)"
+                        : "border-(--border) bg-transparent text-(--text-muted) opacity-60"
+                    }`}
+                  >
+                    {g === "others" ? "Others" : g}
+                  </button>
+                );
+              })}
+            </div>
+            <AnimatePresence>
+              {!["male", "female"].includes(data.gender || "") && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden pt-1"
+                >
+                  <input
+                    type="text"
+                    maxLength={30}
+                    value={data.gender === "other" ? "" : (data.gender || "")}
+                    placeholder="Enter gender identity"
+                    onChange={(e) => onChange("gender", e.target.value)}
+                    className="h-11 w-full rounded-xl border border-(--accent-border) bg-transparent px-4 text-[14px] font-medium outline-none transition focus:ring-4 focus:ring-(--accent-bg) placeholder:opacity-30"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 

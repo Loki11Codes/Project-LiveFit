@@ -31,22 +31,7 @@ const getSystemPrompt = (
       minute: "2-digit",
     });
 
-  let contextStr = "";
-  if (userContext) {
-    const { profile, goals, analytics, dayType, todaysStats } = userContext;
-    contextStr = `
-USER CONTEXT & PROGRESS:
-- Goals: kcal: ${goals.kcalTarget}, protein: ${goals.proteinTarget}g, water: ${goals.waterTarget}L
-- Today's Progress: kcal: ${todaysStats.kcal}, protein: ${todaysStats.protein}g, water: ${todaysStats.water}L
-- Day Type: ${dayType}
-- Profile: Age: ${profile?.age || "--"}, Goal: ${profile?.primaryGoal || "--"}
-- Recent Performance: Avg calories: ${analytics?.averages.kcal.toFixed(0) || "--"}, Avg protein: ${analytics?.averages.protein.toFixed(0) || "--"}g
-${userContext?.knowledge ? `
-LONG-TERM USER KNOWLEDGE:
-${userContext.knowledge.map(k => `- ${k.key}: ${k.value}`).join('\n')}
-` : ''}
-`;
-  }
+
 
   return `
 --- SYSTEM IDENTITY ---
@@ -367,53 +352,27 @@ export async function POST(req: Request) {
       return internalError("Image analysis is temporarily unavailable");
     }
 
-    if (session?.user) {
-      // Hard check: verify the user still exists in the DB to prevent FK violations
-      const userExists = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { id: true },
-      });
-
-      if (!userExists) {
-        return internalError("Session is stale. Please sign out and sign in again.");
-      }
-
-      await saveUserMessage(body, session.user.id);
+    const user = session?.user;
+    if (user) {
+      const error = await validateAndSaveUser(user.id, body);
+      if (error) return error;
     }
 
     let routinesList = "";
     if (session?.user) {
-      const routines = await prisma.routine.findMany({
-        where: { userId: session.user.id },
-        select: { id: true, name: true },
-        orderBy: { name: 'asc' }
-      });
-      routinesList = routines.map(r => `- ${r.name} (ID: ${r.id})`).join('\n');
-
-      // Fetch long-term knowledge
-      const knowledge = await prisma.userKnowledge.findMany({
-        where: { userId: session.user.id },
-        select: { key: true, value: true }
-      });
+      const fullContext = await fetchFullUserContext(session.user.id);
+      routinesList = fullContext.routinesList;
       
-      if (!body.userContext) {
-        body.userContext = {
-          profile: null,
-          goals: {},
-          analytics: null,
-          dayType: 'Rest',
-          todaysStats: { protein: 0, kcal: 0, water: 0 }
-        };
-      }
+      body.userContext ??= {
+        profile: null,
+        goals: {},
+        analytics: null,
+        dayType: 'Rest',
+        todaysStats: { protein: 0, kcal: 0, water: 0 }
+      };
       
-      body.userContext.knowledge = knowledge;
-
-      // Fetch PRs
-      const prs = await prisma.personalRecord.findMany({
-        where: { userId: session.user.id },
-        include: { exercise: { select: { name: true } } }
-      });
-      body.userContext.prs = prs;
+      body.userContext.knowledge = fullContext.knowledge;
+      body.userContext.prs = fullContext.prs;
     }
 
     const text = await getAIResponse(body, geminiKey, openRouterKey, routinesList, body.userContext);
@@ -446,6 +405,21 @@ export async function POST(req: Request) {
       "The AI service is unavailable right now. Please try again.",
     );
   }
+}
+
+async function validateAndSaveUser(userId: string, body: any) {
+  // Hard check: verify the user still exists in the DB to prevent FK violations
+  const userExists = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true },
+  });
+
+  if (!userExists) {
+    return internalError("Session is stale. Please sign out and sign in again.");
+  }
+
+  await saveUserMessage(body, userId);
+  return null;
 }
 
 async function saveUserMessage(
@@ -574,4 +548,28 @@ function buildGeminiPromptParts(
   }
 
   return parts;
+}
+
+async function fetchFullUserContext(userId: string) {
+  const [routines, knowledge, prs] = await Promise.all([
+    prisma.routine.findMany({
+      where: { userId },
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' }
+    }),
+    prisma.userKnowledge.findMany({
+      where: { userId },
+      select: { key: true, value: true }
+    }),
+    prisma.personalRecord.findMany({
+      where: { userId },
+      include: { exercise: { select: { name: true } } }
+    })
+  ]);
+
+  return {
+    routinesList: routines.map(r => `- ${r.name} (ID: ${r.id})`).join('\n'),
+    knowledge,
+    prs
+  };
 }

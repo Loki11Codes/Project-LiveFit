@@ -8,7 +8,7 @@ import { syncUserGoals } from "@/lib/persistence";
 
 const OnboardingSchema = z.object({
   age: z.coerce.number().int().min(10).max(120),
-  gender: z.enum(["male", "female", "other"]),
+  gender: z.string().min(1).max(50),
   height: z.coerce.number().min(50).max(300),
   activityLevel: z.string().min(1),
   primaryGoal: z.string().min(1),

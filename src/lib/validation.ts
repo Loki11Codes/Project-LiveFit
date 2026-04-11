@@ -215,11 +215,11 @@ export const ChatRequestSchema = z
   });
 export type ChatRequestInput = z.infer<typeof ChatRequestSchema>;
 
-const DISPOSABLE_EMAIL_DOMAINS = [
+const DISPOSABLE_EMAIL_DOMAINS = new Set([
   "mailinator.com", "yopmail.com", "guerrillamail.com", "temp-mail.org", 
   "10minutemail.com", "throwawaymail.com", "dispostable.com", "sharklasers.com",
   "getnada.com", "maildrop.cc", "mail-temporaire.fr"
-];
+]);
 
 export const SignupSchema = z
   .object({
@@ -238,7 +238,7 @@ export const SignupSchema = z
       .max(72)
       .regex(/[a-z]/, "Must contain at least one lowercase letter")
       .regex(/[A-Z]/, "Must contain at least one uppercase letter")
-      .regex(/[0-9]/, "Must contain at least one number")
+      .regex(/\d/, "Must contain at least one number")
       .regex(/[^A-Za-z0-9]/, "Must contain at least one special character"),
     confirmPassword: z.string(),
   })
@@ -248,7 +248,7 @@ export const SignupSchema = z
   })
   .refine((data) => {
     const domain = data.email.split("@")[1]?.toLowerCase();
-    return !DISPOSABLE_EMAIL_DOMAINS.includes(domain);
+    return !DISPOSABLE_EMAIL_DOMAINS.has(domain || "");
   }, {
     message: "Disposable email addresses are not allowed. Please use a real email.",
     path: ["email"],

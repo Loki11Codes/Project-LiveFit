@@ -1,17 +1,18 @@
 "use client";
 
 import React from "react";
+
 import { CheckCircle2 } from "lucide-react";
 
 interface PasswordRequirementsProps {
-  passwordChecks: {
-    minimumLength: boolean;
-    hasUpper: boolean;
-    hasLower: boolean;
-    hasNumber: boolean;
-    hasSpecial: boolean;
+  readonly passwordChecks: {
+    readonly minimumLength: boolean;
+    readonly hasUpper: boolean;
+    readonly hasLower: boolean;
+    readonly hasNumber: boolean;
+    readonly hasSpecial: boolean;
   };
-  size?: "sm" | "md";
+  readonly size?: "sm" | "md";
 }
 
 export function PasswordRequirements({ passwordChecks, size = "md" }: PasswordRequirementsProps) {

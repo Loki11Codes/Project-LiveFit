@@ -45,7 +45,7 @@ interface SidebarProps {
   readonly dayType: DayType;
   readonly setDayType: (type: DayType) => void;
   readonly hasWorkout: boolean;
-  readonly analytics: any | null;
+  readonly analytics: any;
   readonly logs: any;
   readonly activeWorkout?: import("@/lib/types").ActiveWorkoutSession | null;
   readonly aiInsights?: AIInsight[];
@@ -114,7 +114,7 @@ function WeeklyConsistency({ stats }: Readonly<{ stats: any[] }>) {
           const height = dayData ? (dayData.protein / max) * 100 : 5;
           return (
             <div
-              key={i}
+              key={dayData?.day || i}
               className="flex-1 bg-[var(--surface2)] rounded-t-sm relative group"
               style={{ height: "100%" }}
             >
@@ -300,7 +300,7 @@ function ProactiveCoach({
   );
 }
 
-function WaterRing({ percentage }: { percentage: number }) {
+function WaterRing({ percentage }: Readonly<{ percentage: number }>) {
   const radius = 7;
   const circum = 2 * Math.PI * radius;
   const offset = circum - (percentage / 100) * circum;

@@ -27,8 +27,8 @@ export function calculateSuggestedTarget({
 }: ProgressionInputs): ProgressionResult {
   // Parse target reps (handle "8-12" or "10")
   const repMatch = targetReps.match(/(\d+)/g);
-  const minReps = repMatch ? parseInt(repMatch[0]) : 8;
-  const maxReps = repMatch && repMatch.length > 1 ? parseInt(repMatch[1]) : minReps;
+  const minReps = repMatch ? Number.parseInt(repMatch[0], 10) : 8;
+  const maxReps = repMatch && repMatch.length > 1 ? Number.parseInt(repMatch[1], 10) : minReps;
 
   // Base case: No PR yet (use default)
   if (!currentPRWeight) {
@@ -54,7 +54,10 @@ export function calculateSuggestedTarget({
   let reason = "Maintaining load, pushing for more volume.";
 
   if ((currentPRReps || 0) >= maxReps) {
-    const increment = isLowerBody ? 5 : isCore ? 1 : 2.5;
+    let increment = 2.5;
+    if (isLowerBody) increment = 5;
+    else if (isCore) increment = 1;
+    
     suggestedWeight = currentPRWeight + increment;
     suggestedReps = minReps;
     reason = `Target reps achieved! Increasing load by ${increment}kg.`;

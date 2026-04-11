@@ -255,6 +255,8 @@ describe('RoutinesTab Component', () => {
       // Click routine card to open preview (the main button)
       const routineBtn = screen.getByText('Push Day').closest('button');
       if (routineBtn) fireEvent.click(routineBtn);
+      // Wait for preview to open
+      await waitFor(() => expect(screen.getByText(/Customize before you start/i)).toBeDefined());
     });
 
     it('opens preview and shows exercise details', async () => {
@@ -325,6 +327,7 @@ describe('RoutinesTab Component', () => {
       
       fireEvent.click(screen.getByText('Push Day').closest('button')!);
       
+      await waitFor(() => expect(screen.getByText('Start Workout')).toBeDefined());
       const startBtn = screen.getByText('Start Workout');
       fireEvent.click(startBtn);
 

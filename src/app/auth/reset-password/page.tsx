@@ -30,7 +30,7 @@ export default function ResetPasswordPage() {
       minimumLength: password.length >= 12,
       hasUpper: /[A-Z]/.test(password),
       hasLower: /[a-z]/.test(password),
-      hasNumber: /[0-9]/.test(password),
+      hasNumber: /\d/.test(password),
       hasSpecial: /[^A-Za-z0-9]/.test(password),
     }),
     [password],

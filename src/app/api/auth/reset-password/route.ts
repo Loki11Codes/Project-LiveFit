@@ -14,7 +14,7 @@ const ResetPasswordSchema = z.object({
     .min(12)
     .regex(/[a-z]/)
     .regex(/[A-Z]/)
-    .regex(/[0-9]/)
+    .regex(/\d/)
     .regex(/[^A-Za-z0-9]/),
 });
 

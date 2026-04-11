@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { extractAndCleanLogData } from './src/lib/chat-utils';
 import { persistLogData } from './src/lib/persistence';
 import prisma from './src/lib/prisma';
@@ -40,4 +41,4 @@ Great! I've logged your apple (95 kcal, 25g carbs, 4.4g fiber). Keep up the heal
   }
 }
 
-test().finally(() => require('process').exit(0));
+test().finally(() => process.exit(0));

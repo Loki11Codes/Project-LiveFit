@@ -41,7 +41,7 @@ describe('MealPlanningTab', () => {
 
   it('dispatches ai-chat-prompt event when Generate button is clicked', async () => {
     (requestJson as any).mockResolvedValue(null);
-    const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
+    const dispatchSpy = vi.spyOn(globalThis, 'dispatchEvent');
     render(<MealPlanningTab />);
 
     const generateBtn = await screen.findByText('Generate with AI');

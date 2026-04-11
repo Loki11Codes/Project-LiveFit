@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from './route';
 import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prisma';
-import { NextResponse } from 'next/server';
+
 
 vi.mock('next-auth');
 vi.mock('@/lib/prisma', () => ({
@@ -64,7 +64,7 @@ describe('Knowledge API', () => {
       (prisma.userKnowledge.upsert as any).mockResolvedValue({ key: 'injury', value: 'Knee' });
 
       const res = await POST(req);
-      const data = await res.json();
+      await res.json();
 
       expect(res.status).toBe(200);
       expect(prisma.userKnowledge.upsert).toHaveBeenCalledWith(expect.objectContaining({

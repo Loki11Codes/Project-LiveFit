@@ -8,8 +8,8 @@ import { ConfettiCanvas } from "./Confetti";
 import type { AchievementBadge } from "@/lib/achievements";
 
 interface AchievementOverlayProps {
-  achievements: AchievementBadge[];
-  onClose: () => void;
+  readonly achievements: AchievementBadge[];
+  readonly onClose: () => void;
 }
 
 export function AchievementOverlay({ achievements, onClose }: AchievementOverlayProps) {

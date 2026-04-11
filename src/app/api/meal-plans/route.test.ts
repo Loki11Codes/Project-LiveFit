@@ -49,7 +49,7 @@ describe('Meal Plans API', () => {
       (prisma.mealPlan.create as any).mockResolvedValue({ id: 'new-plan', entries });
 
       const res = await POST(req);
-      const data = await res.json();
+      await res.json();
 
       expect(res.status).toBe(200);
       expect(prisma.mealPlan.create).toHaveBeenCalledWith(expect.objectContaining({

@@ -69,9 +69,8 @@ export default function Home() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const [activeTab, setActiveTabInternal] = useState<TabId>(
-    parseTab(searchParams.get("tab")),
-  );
+  const initialTab = parseTab(searchParams.get("tab"));
+  const [activeTab, setActiveTab] = React.useState<TabId>(initialTab);
   const [dashboard, setDashboard] = useState<DashboardState>(
     INITIAL_DASHBOARD_STATE,
   );
@@ -79,7 +78,6 @@ export default function Home() {
   const [chatInput, setChatInput] = useState("");
   const [newAchievements, setNewAchievements] = useState<AchievementBadge[]>([]);
 
-  const todaysFood = getTodayFoodLogs(dashboard.logs.food);
   // ...
   const handleStartWorkout = (routine: any) => {
     const workoutSession = {
@@ -232,18 +230,25 @@ export default function Home() {
       void refreshDashboard();
     }
   };
-  const nutrition = sumNutrition(todaysFood);
-  const latestSleep = getLatestSleepLog(dashboard.logs.sleep);
-  const trackedDayCount = getTrackedDayCount(dashboard.logs);
-  const hasLoggedWorkoutToday = dashboard.logs.workouts.some(w => getLocalDateKey(w.time) === getLocalDateKey(new Date()));
-  const history = buildHistoryRows(
-    dashboard.logs,
-    dashboard.goals,
-    dashboard.dayTypesByDay,
-  );
+  const { nutrition, latestSleep, trackedDayCount, hasLoggedWorkoutToday, history } = React.useMemo(() => {
+    const food = getTodayFoodLogs(dashboard.logs.food);
+    const nut = sumNutrition(food);
+    const sleep = getLatestSleepLog(dashboard.logs.sleep);
+    const count = getTrackedDayCount(dashboard.logs);
+    const workedOut = dashboard.logs.workouts.some(w => getLocalDateKey(w.time) === getLocalDateKey(new Date()));
+    const rows = buildHistoryRows(dashboard.logs, dashboard.goals, dashboard.dayTypesByDay);
+    
+    return {
+      nutrition: nut,
+      latestSleep: sleep,
+      trackedDayCount: count,
+      hasLoggedWorkoutToday: workedOut,
+      history: rows,
+    };
+  }, [dashboard.logs, dashboard.goals, dashboard.dayTypesByDay]);
 
   const handleTabChange = (tab: TabId) => {
-    setActiveTabInternal(tab);
+    setActiveTab(tab);
     router.push(`/?tab=${tab}`, { scroll: false });
   };
 
@@ -290,7 +295,37 @@ export default function Home() {
     }
 
     if (envelopes && envelopes.length > 0) {
-      // Filter for insights
+      // 1. Identify and persist log data to backend
+      const persistableCategories = new Set([
+        "food", "workout", "sleep", "measurement", "profile", 
+        "goals", "dayType", "delete", "knowledge", "meal_plan"
+      ]);
+      
+      const logsToPersist = envelopes.filter(e => 
+        persistableCategories.has(e.category) && 
+        !(e.category === "workout" && e.action === "start")
+      );
+
+      if (logsToPersist.length > 0) {
+        console.log("[PERSISTENCE] Sending AI logs to server:", logsToPersist);
+        void fetch("/api/logs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(logsToPersist),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.achievements?.length > 0) {
+              setNewAchievements(data.achievements);
+            }
+            void refreshDashboard();
+          })
+          .catch((err) => {
+            console.error("[PERSISTENCE] Failed to save AI logs:", err);
+          });
+      }
+
+      // 2. Handle non-persistent UI updates
       const insights = envelopes
         .filter((e) => e.category === "insight" && e.data)
         .map((e) => ({
@@ -301,7 +336,7 @@ export default function Home() {
       if (insights.length > 0) {
         setDashboard((prev) => ({
           ...prev,
-          aiInsights: [...insights, ...prev.aiInsights].slice(0, 3), // Keep latest 3
+          aiInsights: [...insights, ...prev.aiInsights].slice(0, 3),
         }));
       }
 
@@ -317,15 +352,10 @@ export default function Home() {
       }
     }
 
-    // Refresh dashboard to catch the changes. 
-    // We do it twice to handle potential backend latency or transient sync delays.
+    // Secondary refresh to ensure consistency with backend processing time
     setTimeout(() => {
       void refreshDashboard();
-    }, 500);
-
-    setTimeout(() => {
-      void refreshDashboard();
-    }, 1500);
+    }, 1000);
   }
 
   useEffect(() => {
@@ -333,13 +363,13 @@ export default function Home() {
       const prompt = e.detail;
       if (prompt) {
         setChatInput(prompt);
-        setActiveTabInternal("chat");
+        setActiveTab("chat");
         // We'll let the Chat component handle the initial message if needed, 
         // or just set the input and switch tab.
       }
     };
-    window.addEventListener('ai-chat-prompt', handleAiPrompt);
-    return () => window.removeEventListener('ai-chat-prompt', handleAiPrompt);
+    globalThis.addEventListener('ai-chat-prompt', handleAiPrompt);
+    return () => globalThis.removeEventListener('ai-chat-prompt', handleAiPrompt);
   }, []);
 
   function handleUpdateWorkout(updated: ActiveWorkoutSession) {
@@ -403,7 +433,7 @@ export default function Home() {
   useEffect(() => {
     const tabFromUrl = parseTab(searchParams.get("tab"));
     if (tabFromUrl !== activeTab) {
-      setActiveTabInternal(tabFromUrl);
+      setActiveTab(tabFromUrl);
     }
   }, [searchParams, activeTab]);
 
@@ -435,7 +465,7 @@ export default function Home() {
     try {
       const data = await fetchRawDashboardData();
       startTransition(() => {
-        setDashboard(prev => ({
+        setDashboard((prev) => ({
           ...prev,
           ...data,
           measurements: toMeasurementForm(data.latestMeasurement),
@@ -446,11 +476,11 @@ export default function Home() {
       console.error("Failed to refresh dashboard data:", message);
       toast.error(message);
     }
-  };
+  }
 
   const handleSaveMeasurements = async () => {
     try {
-      await requestJson<BodyMeasurement>(
+      await requestJson(
         "/api/measurements",
         {
           method: "POST",
@@ -467,22 +497,14 @@ export default function Home() {
     }
   };
 
-  return (
-    <main
-      className={`flex flex-col items-center bg-[var(--bg)] w-full overflow-x-hidden ${activeTab === "chat" ? "h-screen overflow-hidden" : "min-h-screen"}`}
-    >
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={handleTabChange}
-      />
+  const containerClassName = `flex flex-col items-center bg-[var(--bg)] w-full overflow-x-hidden ${activeTab === "chat" ? "h-screen overflow-hidden" : "min-h-screen"}`;
+  const mainLayoutClassName = `flex-1 min-h-0 w-full main-layout transition-all duration-500 ${activeTab === "chat" ? "single-screen-layout" : "page-top-offset pb-32 md:pb-12"}`;
 
-      <div
-        className={`flex-1 min-h-0 w-full main-layout transition-all duration-500 ${
-          activeTab === "chat"
-            ? "single-screen-layout"
-            : "page-top-offset pb-32 md:pb-12"
-        }`}
-      >
+  return (
+    <main className={containerClassName}>
+      <Navbar activeTab={activeTab} setActiveTab={handleTabChange} />
+
+      <div className={mainLayoutClassName}>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -549,6 +571,7 @@ export default function Home() {
                     analytics={dashboard.analytics}
                     logs={dashboard.logs}
                     activeWorkout={dashboard.activeWorkout}
+                    onTabChange={handleTabChange}
                   />
                 </div>
               </div>

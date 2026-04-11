@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, type SubmitEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { 
   ShieldCheck, 
   Mail, 
@@ -35,7 +35,7 @@ function VerifyEmailForm() {
     }
   }, [searchParams, session]);
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: SubmitEvent<HTMLFormElement>) => {
     if (e) e.preventDefault();
     if (code.length !== 6) return;
 
@@ -66,9 +66,21 @@ function VerifyEmailForm() {
   // Auto-submit OTP if 6 digits are entered
   useEffect(() => {
     if (code.length === 6 && !loading && !success) {
-      handleSubmit();
+      // Small cast needed since useEffect expects void/destructor
+      void handleSubmit();
     }
   }, [code]);
+
+  let buttonContent = <ArrowRight size={18} />;
+  let buttonText = "Verify Email";
+
+  if (loading) {
+    buttonContent = <Loader2 size={18} className="animate-spin" />;
+    buttonText = "Verifying...";
+  } else if (success) {
+    buttonContent = <ShieldCheck size={18} />;
+    buttonText = "Verified";
+  }
 
   return (
     <div className="space-y-6">
@@ -91,7 +103,7 @@ function VerifyEmailForm() {
             type="text"
             maxLength={6}
             value={code}
-            onChange={(e) => setCode(e.target.value.replaceAll(/[^0-9]/g, ""))}
+            onChange={(e) => setCode(e.target.value.replaceAll(/\D/g, ""))}
             placeholder="000000"
             className="h-16 w-full max-w-[240px] rounded-2xl border-2 border-auth-input-border bg-auth-input-bg text-center text-3xl font-black tracking-[0.5em] text-auth-input-text focus:border-[#185fa5] outline-none transition shadow-xl"
             autoFocus
@@ -111,24 +123,26 @@ function VerifyEmailForm() {
           disabled={loading || success || code.length !== 6}
           className="h-12 w-full rounded-2xl bg-[#185fa5] text-sm font-bold uppercase tracking-wider text-white hover:bg-[#378add] transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:grayscale"
         >
-          {loading ? (
-            <Loader2 size={18} className="animate-spin" />
-          ) : success ? (
-            <ShieldCheck size={18} />
-          ) : (
-            <ArrowRight size={18} />
-          )}
-          {loading ? "Verifying..." : success ? "Verified" : "Verify Email"}
+          {buttonContent}
+          {buttonText}
         </button>
       </form>
 
-      <div className="flex flex-col items-center gap-3">
+      <div className="flex flex-col items-center gap-6 mt-4">
         <button
           type="button"
-          className="text-xs font-bold uppercase tracking-wider text-auth-text-muted hover:text-[#185fa5] transition flex items-center gap-2"
+          className="text-[10px] font-black uppercase tracking-[0.2em] text-auth-text-muted hover:text-[#185fa5] transition flex items-center gap-2"
         >
-          <RefreshCcw size={14} />
+          <RefreshCcw size={12} />
           Resend Code
+        </button>
+
+        <button
+          type="button"
+          onClick={() => void signOut({ callbackUrl: "/auth/signin" })}
+          className="text-[10px] font-black uppercase tracking-[0.2em] text-auth-text-muted/50 hover:text-rose-500 transition flex items-center gap-2"
+        >
+          Try a different email
         </button>
       </div>
     </div>
