@@ -19,7 +19,7 @@ import {
 import { AuthShell } from "@/components/auth/AuthShell";
 import { requestJson } from "@/lib/client-api";
 
-type OnboardingStep = 'tutorial' | 'profile';
+type OnboardingStep = "tutorial" | "profile";
 
 type FormDataMap = {
   age: number | "";
@@ -37,10 +37,10 @@ interface ProfileStepProps {
 }
 
 export default function OnboardingPage() {
-  const [phase, setPhase] = useState<OnboardingStep>('tutorial');
+  const [phase, setPhase] = useState<OnboardingStep>("tutorial");
 
-  if (phase === 'tutorial') {
-    return <TutorialPhase onComplete={() => setPhase('profile')} />;
+  if (phase === "tutorial") {
+    return <TutorialPhase onComplete={() => setPhase("profile")} />;
   }
 
   return <ProfilePhase />;
@@ -145,7 +145,7 @@ function TutorialPhase({ onComplete }: { readonly onComplete: () => void }) {
               {tutorialSlides.map((slide, i) => (
                 <div 
                   key={slide.title} 
-                  className={`h-1.5 rounded-full transition-all duration-300 ${i === tutorialStep ? 'w-6 bg-[#185fa5]' : 'w-1.5 bg-auth-border'}`} 
+                  className={`h-1.5 rounded-full transition-all duration-300 ${i === tutorialStep ? "w-6 bg-[#185fa5]" : "w-1.5 bg-auth-border"}`} 
                 />
               ))}
             </div>
@@ -217,9 +217,9 @@ function ProfilePhase() {
     }
   };
 
-  let actionBtnClass = 'bg-[#534ab7] hover:bg-[#6c63d6]';
-  if (profileStep === 0) actionBtnClass = 'bg-[#185fa5] hover:bg-[#378add]';
-  else if (profileStep === 1) actionBtnClass = 'bg-[#0f6e56] hover:bg-[#1a8a6d]';
+  let actionBtnClass = "bg-[#534ab7] hover:bg-[#6c63d6]";
+  if (profileStep === 0) actionBtnClass = "bg-[#185fa5] hover:bg-[#378add]";
+  else if (profileStep === 1) actionBtnClass = "bg-[#0f6e56] hover:bg-[#1a8a6d]";
 
   let actionBtnContent = <>Next <ChevronRight size={16} /></>;
   if (loading) {
@@ -262,7 +262,7 @@ function ProfilePhase() {
                 disabled={loading}
                 onClick={() => setProfileStep(Math.max(0, profileStep - 1))}
                 className={`h-11 flex-1 rounded-2xl border border-auth-border text-xs font-bold uppercase tracking-wider text-auth-text-muted hover:bg-auth-surface2 transition-colors flex items-center justify-center gap-2 ${
-                  profileStep === 0 ? 'opacity-0 pointer-events-none' : ''
+                  profileStep === 0 ? "opacity-0 pointer-events-none" : ""
                 }`}
               >
                 <ChevronLeft size={16} />
