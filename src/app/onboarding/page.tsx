@@ -117,6 +117,19 @@ export default function OnboardingPage() {
     }
   };
 
+  let actionBtnClass = 'bg-[#534ab7] hover:bg-[#6c63d6]';
+  if (profileStep === 0) actionBtnClass = 'bg-[#185fa5] hover:bg-[#378add]';
+  else if (profileStep === 1) actionBtnClass = 'bg-[#0f6e56] hover:bg-[#1a8a6d]';
+
+  let actionBtnContent = <>Next <ChevronRight size={16} /></>;
+  if (loading) {
+    actionBtnContent = <><Loader2 size={18} className="animate-spin" /> Synchronizing...</>;
+  } else if (profileStep === 2) {
+    actionBtnContent = <><ShieldCheck size={18} /> Complete Setup</>;
+  }
+
+  const handleNextAction = profileStep === 2 ? handleFinishOnboarding : () => setProfileStep(profileStep + 1);
+
   return (
     <AuthShell
       badge="Onboarding"
@@ -348,20 +361,10 @@ export default function OnboardingPage() {
                 </button>
                 <button
                   disabled={loading}
-                  onClick={profileStep === 2 ? handleFinishOnboarding : () => setProfileStep(profileStep + 1)}
-                  className={`h-11 flex-[2] rounded-2xl text-xs font-bold uppercase tracking-wider text-white transition-all flex items-center justify-center gap-2 shadow-lg ${
-                    profileStep === 0 ? 'bg-[#185fa5] hover:bg-[#378add]' : 
-                    profileStep === 1 ? 'bg-[#0f6e56] hover:bg-[#1a8a6d]' : 
-                    'bg-[#534ab7] hover:bg-[#6c63d6]'
-                  }`}
+                  onClick={handleNextAction}
+                  className={`h-11 flex-[2] rounded-2xl text-xs font-bold uppercase tracking-wider text-white transition-all flex items-center justify-center gap-2 shadow-lg ${actionBtnClass}`}
                 >
-                  {loading ? (
-                    <><Loader2 size={18} className="animate-spin" /> Synchronizing...</>
-                  ) : profileStep === 2 ? (
-                    <><ShieldCheck size={18} /> Complete Setup</>
-                  ) : (
-                    <>Next <ChevronRight size={16} /></>
-                  )}
+                  {actionBtnContent}
                 </button>
               </div>
               
