@@ -13,7 +13,10 @@ import {
   Info,
   Dumbbell,
   LogIn,
+  Trophy,
 } from "lucide-react";
+import { AchievementCard } from "@/components/Shared/AchievementCard";
+import type { AchievementTier } from "@/lib/achievements";
 import { signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -351,8 +354,58 @@ export default function ProfileTab({
               </div>
             ))}
           </div>
+          </div>
         </motion.div>
       </div>
+
+      {/* Trophy Case */}
+      <motion.div
+        className="glass-premium p-6 rounded-[var(--radius-lg)] relative overflow-hidden group hover-glow"
+        variants={cardVariants}
+        initial="hidden"
+        animate="visible"
+        custom={4}
+      >
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-black/[0.03] dark:bg-white/[0.03] rounded-xl group-hover:bg-yellow-500/10 transition-colors">
+              <Trophy className="w-5 h-5 text-yellow-500" />
+            </div>
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Trophy Case</div>
+              <h2 className="text-sm font-black tracking-tight uppercase">Achievements</h2>
+            </div>
+          </div>
+          <div className="text-[10px] font-black uppercase text-[var(--nutri-green)] tracking-widest">
+            {p.achievements?.length || 0} Unlocked
+          </div>
+        </div>
+
+        {p.achievements && p.achievements.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {p.achievements.map((item) => (
+              <AchievementCard
+                key={item.id}
+                title={item.title}
+                description={item.description}
+                tier={item.tier as AchievementTier}
+                icon={(item as any).icon}
+                unlockedAt={new Date(item.unlockedAt)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="py-12 flex flex-col items-center text-center gap-4 bg-black/5 rounded-[var(--radius-md)] border border-dashed border-black/10">
+            <div className="w-12 h-12 rounded-full bg-black/5 flex items-center justify-center">
+               <Trophy className="w-6 h-6 opacity-10" />
+            </div>
+            <div className="max-w-[200px]">
+               <h4 className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">No Trophies Yet</h4>
+               <p className="text-[9px] font-medium opacity-30">Smash some PRs in the gym to unlock your first holographic badge.</p>
+            </div>
+          </div>
+        )}
+      </motion.div>
     </div>
   );
 }

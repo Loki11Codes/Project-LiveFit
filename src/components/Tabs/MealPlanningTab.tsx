@@ -14,7 +14,8 @@ import {
   Droplets,
   Zap,
   Clock,
-  Activity
+  Activity,
+  ShoppingCart
 } from "lucide-react";
 import { requestJson } from "@/lib/client-api";
 
@@ -76,13 +77,29 @@ export default function MealPlanningTab() {
           </div>
         </div>
 
-        <button 
-          className="flex items-center gap-2 px-5 py-2.5 bg-[var(--accent)] text-white rounded-[var(--radius-md)] shadow-lg shadow-[var(--accent)]/30 hover:scale-105 active:scale-95 transition-all text-sm font-black uppercase tracking-widest"
-          onClick={() => window.dispatchEvent(new CustomEvent('ai-chat-prompt', { detail: 'Please generate a structured weekly meal plan for me based on my current goals.' }))}
-        >
-          <Zap className="w-4 h-4 fill-white" />
-          Generate with AI
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            className="flex items-center gap-2 px-4 py-2.5 bg-black/5 hover:bg-black/10 text-[var(--foreground)] rounded-[var(--radius-md)] border border-black/5 transition-all text-[10px] font-black uppercase tracking-widest"
+            onClick={() => {
+              const date = activePlan ? new Date(activePlan.weekStarting).toLocaleDateString() : "this";
+              window.dispatchEvent(new CustomEvent('ai-chat-prompt', { 
+                detail: `I have a meal plan for the week of ${date}. Please generate a consolidated, categorized shopping list for all these meals, organized by supermarket aisle.` 
+              }));
+            }}
+            disabled={!activePlan}
+          >
+            <ShoppingCart className="w-4 h-4" />
+            <span className="hidden sm:inline">Shopping List</span>
+          </button>
+
+          <button 
+            className="flex items-center gap-2 px-5 py-2.5 bg-[var(--accent)] text-white rounded-[var(--radius-md)] shadow-lg shadow-[var(--accent)]/30 hover:scale-105 active:scale-95 transition-all text-sm font-black uppercase tracking-widest"
+            onClick={() => window.dispatchEvent(new CustomEvent('ai-chat-prompt', { detail: 'Please generate a structured weekly meal plan for me based on my current goals.' }))}
+          >
+            <Zap className="w-4 h-4 fill-white" />
+            Generate with AI
+          </button>
+        </div>
       </div>
 
       {/* Day Selector */}

@@ -13,6 +13,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { calculateSuggestedTarget } from "@/lib/progression";
+import { requestJson } from "@/lib/client-api";
 
 interface RoutinesTabProps {
   readonly onStart?: (routine: any) => void;
@@ -54,21 +56,47 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
 
   // ── Preview / Pre-workout editor ──────────────────────────────────────────
 
-  const openPreview = (routine: any) => {
-    // Deep-clone so edits don't mutate the saved routine list
+  const openPreview = async (routine: any) => {
+    setIsLoading(true);
+    let userPrs: any[] = [];
+    try {
+      userPrs = await requestJson<any[]>("/api/profile/prs");
+    } catch (err) {
+      console.error("Failed to fetch PRs", err);
+    } finally {
+      setIsLoading(false);
+    }
+
+    // Preview state — a local working copy of the routine being previewed/edited
     setPreviewRoutine({
       ...routine,
-      exercises: routine.exercises.map((e: any) => ({
-        ...e,
-        // Give each entry a stable local key in case exercise obj differs
-        _localId: crypto.randomUUID(),
-        sets: Array.from({ length: Number(e.targetSets) || 3 }).map((_, i) => ({
-          id: crypto.randomUUID(),
-          weight: "",
-          reps: e.targetReps || "",
-          isCompleted: false,
-        })),
-      })),
+      exercises: routine.exercises.map((e: any) => {
+        const currentPr = userPrs?.find((p: any) => p.exerciseId === e.exerciseId);
+        const suggestion = calculateSuggestedTarget({
+          exerciseName: e.exercise?.name || "Exercise",
+          category: e.exercise?.category || "",
+          currentPRWeight: currentPr?.maxWeight,
+          currentPRReps: currentPr?.maxReps,
+          targetReps: e.targetReps || "8-12"
+        });
+
+        return {
+          ...e,
+          _localId: crypto.randomUUID(),
+          category: e.exercise?.category,
+          sets: Array.from({ length: Number(e.targetSets) || 3 }).map(() => ({
+            id: crypto.randomUUID(),
+            weight: suggestion.weight,
+            reps: suggestion.reps,
+            isCompleted: false,
+            suggestion: {
+              weight: suggestion.weight,
+              reps: suggestion.reps,
+              reason: suggestion.reason
+            }
+          })),
+        };
+      }),
     });
     setView("preview");
   };

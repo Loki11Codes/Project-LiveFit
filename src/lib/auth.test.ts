@@ -124,7 +124,8 @@ describe('Auth Options', () => {
           id: true, 
           requirePasswordChange: true,
           onboarded: true,
-          hasSeenTutorial: true 
+          hasSeenTutorial: true,
+          emailVerified: true 
         }
       });
     });

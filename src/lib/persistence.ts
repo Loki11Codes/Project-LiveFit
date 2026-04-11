@@ -16,6 +16,7 @@ import {
 } from './validation';
 import { getErrorMessage, getLocalDateKey } from './dashboard';
 import { calculateDailyTargets } from './recommendations';
+import { syncAchievements, type AchievementBadge } from './achievements';
 
 
 export type ParsedLogEnvelope = {
@@ -27,13 +28,13 @@ export type ParsedLogEnvelope = {
  * Orchestrates the persistence of multiple log envelopes within a single transaction 
  * per envelope to ensure partial successes don't fail the entire set.
  */
-export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: string, clientDate?: string): Promise<void> {
-  if (envelopes.length === 0) return;
+export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: string, clientDate?: string): Promise<AchievementBadge[]> {
+  if (envelopes.length === 0) return [];
   console.log(`[PERSISTENCE] Starting persistence for ${envelopes.length} envelopes for user ${userId}`);
   console.log(`[PERSISTENCE] Processing ${envelopes.length} envelopes for user ${userId}`);
 
   const results = await Promise.allSettled(envelopes.map(async (envelope) => {
-    if (!envelope.category) return;
+    if (!envelope.category) return [];
 
     const category = envelope.category;
     const logData = envelope.data || envelope;
@@ -41,20 +42,30 @@ export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: str
     console.log(`[PERSISTENCE] Category: ${category}, Data:`, JSON.stringify(logData).substring(0, 500));
 
     try {
-      await prisma.$transaction(async (tx) => {
-        await handleCategoryPersistence(tx, category, logData, userId, clientDate);
+      return await prisma.$transaction(async (tx) => {
+        return await handleCategoryPersistence(tx, category, logData, userId, clientDate);
       });
-      console.log(`[PERSISTENCE] ${category} saved successfully.`);
     } catch (error) {
       console.error(`[PERSISTENCE] ERROR for ${category}:`, getErrorMessage(error));
       throw error;
     }
   }));
 
+  const newlyUnlocked: AchievementBadge[] = [];
+  results.forEach(result => {
+    if (result.status === 'fulfilled' && result.value) {
+      newlyUnlocked.push(...(result.value as AchievementBadge[]));
+    }
+  });
+
   const firstError = results.find((r): r is PromiseRejectedResult => r.status === 'rejected');
   if (firstError?.reason) {
     throw firstError.reason;
   }
+
+  // Deduplicate badges unlocked across different envelopes in same batch
+  const uniqueBadges = Array.from(new Map(newlyUnlocked.map(b => [b.badgeId, b])).values());
+  return uniqueBadges;
 }
 
 async function handleCategoryPersistence(
@@ -63,7 +74,7 @@ async function handleCategoryPersistence(
   logData: unknown,
   userId: string,
   clientDate?: string
-): Promise<void> {
+): Promise<AchievementBadge[]> {
   switch (category) {
     case 'food': {
       // Extract envelope-level date for items that don't carry their own
@@ -110,6 +121,9 @@ async function handleCategoryPersistence(
     default:
       console.warn(`Unknown category: ${category}`);
   }
+
+  // Check for new achievements at the end of any valid category persistence
+  return await syncAchievements(tx, userId);
 }
 
 async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInput[], userId: string): Promise<void> {

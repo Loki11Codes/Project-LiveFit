@@ -15,6 +15,8 @@ import ProfileTab from "@/components/Tabs/ProfileTab";
 import MealPlanningTab from "@/components/Tabs/MealPlanningTab";
 import { RoutinesTab } from "@/components/RoutinesTab";
 import { WorkoutSession } from "../components/WorkoutSession";
+import { AchievementOverlay } from "@/components/Shared/AchievementOverlay";
+import type { AchievementBadge } from "@/lib/achievements";
 import {
   buildHistoryRows,
   buildDayTypeMap,
@@ -75,6 +77,7 @@ export default function Home() {
   );
   const [chatDraft, setChatDraft] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState("");
+  const [newAchievements, setNewAchievements] = useState<AchievementBadge[]>([]);
 
   const todaysFood = getTodayFoodLogs(dashboard.logs.food);
   // ...
@@ -148,7 +151,13 @@ export default function Home() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify([workoutPayload]),
     })
-      .then(() => refreshDashboard())
+      .then(res => res.json())
+      .then((data) => {
+        if (data.achievements && data.achievements.length > 0) {
+          setNewAchievements(data.achievements);
+        }
+        refreshDashboard();
+      })
       .catch((err) => console.error("Failed to directly save workout log", err));
 
     let summaryText = `I finished my "${session.name}" workout! It took me ${durationMinutes} minutes.\n\nSummary:\n`;
@@ -606,6 +615,15 @@ export default function Home() {
               onFinish={handleFinishWorkout}
               onDiscard={handleDiscardWorkout}
               onUpdate={handleUpdateWorkout}
+            />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {newAchievements.length > 0 && (
+            <AchievementOverlay 
+              achievements={newAchievements} 
+              onClose={() => setNewAchievements([])} 
             />
           )}
         </AnimatePresence>

@@ -123,8 +123,8 @@ export async function POST(req: Request) {
       return badRequest('Expected an array of log envelopes');
     }
 
-    await persistLogData(list, session.user.id);
-    return NextResponse.json({ success: true });
+    const newlyUnlocked = await persistLogData(list, session.user.id);
+    return NextResponse.json({ success: true, achievements: newlyUnlocked });
   } catch (error) {
     console.error('Failed to post logs:', error);
     return internalError('Unable to save logs');

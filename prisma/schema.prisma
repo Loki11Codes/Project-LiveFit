@@ -59,6 +59,22 @@ model User {
   knowledge            UserKnowledge[]
   mealPlans            MealPlan[]
   personalRecords      PersonalRecord[]
+  achievements         Achievement[]
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // e.g. "PR", "STREAK", "CONSISTENCY"
+  badgeId     String   // slug e.g. "bench-press-100", "7-day-streak"
+  tier        String   // Bronze, Silver, Gold, Platinum
+  title       String
+  description String
+  unlockedAt  DateTime @default(now())
+  metadata    String?  // JSON for extra context
+
+  @@unique([userId, badgeId])
 }
 
 model VerificationToken {

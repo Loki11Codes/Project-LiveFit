@@ -419,6 +419,21 @@ export function WorkoutSession({
                         >
                           <X className="w-4 h-4" />
                         </button>
+                        
+                        {/* Suggestion Badge (Small Row below) */}
+                        {set.suggestion && !set.isCompleted && (
+                          <div className="col-start-2 col-span-2 flex items-center gap-1.5 px-1">
+                            <Zap className="w-2.5 h-2.5 text-[var(--accent)]" fill="var(--accent)" />
+                            <span className="text-[9px] font-black uppercase tracking-tight text-[var(--accent)] opacity-80">
+                              Target: {set.suggestion.weight}kg × {set.suggestion.reps}
+                            </span>
+                            {set.suggestion.reason && (
+                              <span className="text-[8px] font-bold text-[var(--foreground-muted)] opacity-60 italic">
+                                ({set.suggestion.reason})
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </motion.div>
                     ))}
                   </AnimatePresence>

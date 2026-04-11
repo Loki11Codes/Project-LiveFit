@@ -29,12 +29,10 @@ export async function GET(req: Request) {
 
     const user = (await prisma.user.findUnique({
       where: { id: session.user.id },
-    })) as {
-      name: string | null;
-      email: string | null;
-      phone?: string | null;
-      username?: string | null;
-    } | null;
+      include: {
+        achievements: true,
+      }
+    })) as any;
 
     return NextResponse.json({
       ...profile,
@@ -42,6 +40,7 @@ export async function GET(req: Request) {
       email: user?.email,
       phone: user?.phone,
       username: user?.username,
+      achievements: user?.achievements || [],
     });
   } catch (error) {
     console.error("Failed to fetch profile/goal:", error);

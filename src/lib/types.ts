@@ -28,12 +28,18 @@ export type TrackedSet = {
   weight: string;
   reps: string;
   isCompleted: boolean;
+  suggestion?: {
+    weight: string;
+    reps: string;
+    reason?: string;
+  };
 };
 
 export type TrackedExercise = {
   id: string; // unique ID for this instance in the workout
   exerciseId: string; // reference to the Exercise model
   name: string;
+  category?: string; // added for progression lookup
   sets: TrackedSet[];
 };
 
@@ -91,6 +97,15 @@ export type UserProfile = {
   day4?: string | null;
   day5?: string | null;
   day6?: string | null;
+  achievements?: {
+    id: string;
+    type: string;
+    badgeId: string;
+    tier: string;
+    title: string;
+    description: string;
+    unlockedAt: string | Date;
+  }[];
 };
 
 export type MeasurementFormField =
