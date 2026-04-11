@@ -212,6 +212,12 @@ export const ChatRequestSchema = z
   });
 export type ChatRequestInput = z.infer<typeof ChatRequestSchema>;
 
+const DISPOSABLE_EMAIL_DOMAINS = [
+  "mailinator.com", "yopmail.com", "guerrillamail.com", "temp-mail.org", 
+  "10minutemail.com", "throwawaymail.com", "dispostable.com", "sharklasers.com",
+  "getnada.com", "maildrop.cc", "mail-temporaire.fr"
+];
+
 export const SignupSchema = z
   .object({
     name: trimmedString.min(1).max(80),
@@ -236,5 +242,12 @@ export const SignupSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
+  })
+  .refine((data) => {
+    const domain = data.email.split("@")[1]?.toLowerCase();
+    return !DISPOSABLE_EMAIL_DOMAINS.includes(domain);
+  }, {
+    message: "Disposable email addresses are not allowed. Please use a real email.",
+    path: ["email"],
   });
 export type SignupInput = z.infer<typeof SignupSchema>;

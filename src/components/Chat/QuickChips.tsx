@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Coffee, Dumbbell, Moon, Info, ImageIcon, Trash2, type LucideIcon } from "lucide-react";
+import { Coffee, Dumbbell, Moon, Info, ImageIcon, Trash2, Droplets, Ruler, type LucideIcon } from "lucide-react";
 
 interface QuickChipProps {
   readonly icon: LucideIcon;
@@ -45,6 +45,12 @@ export function QuickChips({ onSelect }: QuickChipsProps) {
         onClick={() => onSelect("Log my breakfast")}
       />
       <QuickChip
+        icon={Droplets}
+        label="Water"
+        color="var(--iq-blue-light)"
+        onClick={() => onSelect("Log 500ml of water")}
+      />
+      <QuickChip
         icon={Dumbbell}
         label="Workout"
         color="var(--energy-coral)"
@@ -57,22 +63,28 @@ export function QuickChips({ onSelect }: QuickChipsProps) {
         onClick={() => onSelect("Show my sleep data")}
       />
       <QuickChip
+        icon={Ruler}
+        label="Weight"
+        color="var(--burn-amber)"
+        onClick={() => onSelect("Update my weight measurement")}
+      />
+      <QuickChip
         icon={Info}
-        label="Protein left?"
+        label="Stats"
         color="var(--nutri-green)"
-        onClick={() => onSelect("How is my protein intake?")}
+        onClick={() => onSelect("How are my stats for today?")}
       />
       <QuickChip
         icon={ImageIcon}
         label="Summary"
         color="var(--iq-blue)"
-        onClick={() => onSelect("Give me a summary")}
+        onClick={() => onSelect("Give me a weekly summary")}
       />
       <QuickChip
         icon={Trash2}
         label="Delete"
-        color="var(--burn-amber)"
-        onClick={() => onSelect("Delete my last food log from today")}
+        color="var(--red)"
+        onClick={() => onSelect("Delete my last food log")}
       />
     </div>
   );

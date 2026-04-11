@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, fireEvent, cleanup, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import BodyTab from './BodyTab';
@@ -161,6 +161,27 @@ describe('BodyTab Component', () => {
       expect(screen.queryByText('1 records')).toBeNull();
     });
     consoleSpy.mockRestore();
+  });
+
+  it('renders trend badges when historical data exists', async () => {
+    const historicalData = [
+      { ...defaultProps.latestMeasurement, id: 'm1', weight: 75, waist: 85 }, // current
+      { ...defaultProps.latestMeasurement, id: 'm2', weight: 70, waist: 90 }, // previous
+    ];
+    mockFetch.mockResolvedValueOnce({
+      json: () => Promise.resolve(historicalData),
+    });
+
+    await act(async () => {
+      render(<BodyTab {...defaultProps} />);
+    });
+
+    await waitFor(() => {
+      // Weight went from 70 to 75 (+5 up)
+      // Waist went from 90 to 85 (-5 down)
+      expect(screen.getByText('+5 kg')).toBeDefined();
+      expect(screen.getByText('-5 cm')).toBeDefined();
+    });
   });
 });
 

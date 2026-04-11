@@ -1,4 +1,4 @@
-﻿ 
+ 
 import { describe, it, expect } from 'vitest';
 import {
   DayTypeSchema,
@@ -45,8 +45,8 @@ describe('Validation Schemas', () => {
   });
 
   describe('SignupSchema', () => {
-    const VAL_A = 'valid_str_123';
-    const VAL_B = 'mismatch_str_456';
+    const VAL_A = 'SecurePass123!';
+    const VAL_B = 'MismatchPass456!';
 
     it('accepts matching passwords', () => {
       const data = {

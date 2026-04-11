@@ -105,9 +105,14 @@ describe('Auth Options', () => {
     });
 
     it('session maps token id and fetches latest status from DB', async () => {
-      vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: 'tid', requirePasswordChange: false } as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({ 
+        id: 'tid', 
+        requirePasswordChange: false,
+        onboarded: true,
+        hasSeenTutorial: true
+      } as any);
       const sessionCb = authOptions.callbacks?.session as any;
-      const session = { user: { name: 'hi' } };
+      const session = { user: { name: 'hi' } } as any;
       const token = { id: 'tid', requirePasswordChange: true }; // Token is stale
       const result = await sessionCb({ session, token });
       
@@ -115,7 +120,12 @@ describe('Auth Options', () => {
       expect(result.user.requirePasswordChange).toBe(false); // Should match DB, not token
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { id: 'tid' },
-        select: { id: true, requirePasswordChange: true }
+        select: { 
+          id: true, 
+          requirePasswordChange: true,
+          onboarded: true,
+          hasSeenTutorial: true 
+        }
       });
     });
   });

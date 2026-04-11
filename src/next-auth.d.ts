@@ -7,6 +7,7 @@ declare module 'next-auth' {
       requirePasswordChange?: boolean;
       onboarded?: boolean;
       hasSeenTutorial?: boolean;
+      emailVerified?: Date | null;
     };
   }
 
@@ -15,6 +16,7 @@ declare module 'next-auth' {
     requirePasswordChange?: boolean;
     onboarded?: boolean;
     hasSeenTutorial?: boolean;
+    emailVerified?: Date | null;
   }
 }
 
@@ -24,5 +26,6 @@ declare module 'next-auth/jwt' {
     requirePasswordChange?: boolean;
     onboarded?: boolean;
     hasSeenTutorial?: boolean;
+    emailVerified?: Date | null;
   }
 }

@@ -1,4 +1,4 @@
-﻿ 
+ 
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import SettingsPage from "./page";
@@ -15,6 +15,21 @@ vi.mock("@/lib/client-api", () => ({
   requestJson: vi.fn(),
   sendJson: vi.fn(), // If needed for saving
 }));
+vi.mock("@/components/Theme/ThemeProvider", () => ({
+  BRAND_COLORS: [{ name: "Test", hex: "#000000" }],
+  useTheme: vi.fn(() => ({ 
+    theme: "dark", 
+    accentColor: "#000000",
+    setTheme: vi.fn(),
+    setAccentColor: vi.fn(),
+    toggleTheme: vi.fn() 
+  })),
+}));
+
+// Mock View Transitions
+if (typeof document !== 'undefined') {
+  document.startViewTransition = vi.fn().mockReturnValue({ ready: Promise.resolve() });
+}
 
 describe("SettingsPage", () => {
   const mockRouter = { push: vi.fn(), back: vi.fn(), refresh: vi.fn() };

@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import Navbar from './Navbar';
@@ -8,6 +8,24 @@ import { useSession } from 'next-auth/react';
 vi.mock('next-auth/react', () => ({
   useSession: vi.fn(),
 }));
+
+// Mock theme provider
+const mockToggleTheme = vi.fn();
+vi.mock('@/components/Theme/ThemeProvider', () => ({
+  BRAND_COLORS: [{ name: "Test", hex: "#000000" }],
+  useTheme: vi.fn(() => ({ 
+    theme: 'light', 
+    accentColor: '#000000',
+    setTheme: vi.fn(),
+    setAccentColor: vi.fn(),
+    toggleTheme: mockToggleTheme 
+  })),
+}));
+
+// Mock View Transitions
+if (typeof document !== 'undefined') {
+  document.startViewTransition = vi.fn().mockReturnValue({ ready: Promise.resolve() });
+}
 
 // Mock framer-motion to avoid animation issues in tests
 vi.mock('framer-motion', () => ({
@@ -19,7 +37,6 @@ vi.mock('framer-motion', () => ({
 
 describe('Navbar Component', () => {
   const mockSetActiveTab = vi.fn();
-  const mockToggleTheme = vi.fn();
   
   beforeEach(() => {
     vi.clearAllMocks();
@@ -36,8 +53,6 @@ describe('Navbar Component', () => {
       <Navbar 
         activeTab="chat" 
         setActiveTab={mockSetActiveTab} 
-        theme="light" 
-        toggleTheme={mockToggleTheme} 
       />
     );
 
@@ -55,8 +70,6 @@ describe('Navbar Component', () => {
       <Navbar 
         activeTab="chat" 
         setActiveTab={mockSetActiveTab} 
-        theme="light" 
-        toggleTheme={mockToggleTheme} 
       />
     );
 
@@ -76,8 +89,6 @@ describe('Navbar Component', () => {
       <Navbar 
         activeTab="chat" 
         setActiveTab={mockSetActiveTab} 
-        theme="light" 
-        toggleTheme={mockToggleTheme} 
       />
     );
 
@@ -92,8 +103,6 @@ describe('Navbar Component', () => {
       <Navbar 
         activeTab="chat" 
         setActiveTab={mockSetActiveTab} 
-        theme="light" 
-        toggleTheme={mockToggleTheme} 
       />
     );
 
@@ -107,8 +116,6 @@ describe('Navbar Component', () => {
       <Navbar 
         activeTab="chat" 
         setActiveTab={mockSetActiveTab} 
-        theme="light" 
-        toggleTheme={mockToggleTheme} 
       />
     );
 
@@ -118,4 +125,3 @@ describe('Navbar Component', () => {
     expect(mockToggleTheme).toHaveBeenCalled();
   });
 });
-

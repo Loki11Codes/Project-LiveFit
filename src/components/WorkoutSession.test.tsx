@@ -120,12 +120,7 @@ describe('WorkoutSession Component', () => {
 
   it('calls onDiscard when the discard (trash) button is clicked', () => {
     renderSession();
-    // The discard button wraps the Trash2 icon — find it by its parent role
-    const discardBtn = screen.getAllByRole('button').find(
-      (b) => b.querySelector('svg') && b.className.includes('hover:text-red-500')
-        && !b.className.includes('rounded-xl'), // header button, not set remove
-    );
-    if (discardBtn) fireEvent.click(discardBtn);
+    fireEvent.click(screen.getByTestId('discard-button'));
     expect(onDiscard).toHaveBeenCalled();
   });
 
@@ -162,9 +157,7 @@ describe('WorkoutSession Component', () => {
   it('calls onUpdate toggling set completion to true when circle button clicked', () => {
     renderSession();
     // First set is NOT completed — find its toggle button (has rounded-xl styling)
-    const toggleButtons = screen.getAllByRole('button').filter(
-      (b) => b.className.includes('rounded-xl') && b.className.includes('h-9'),
-    );
+    const toggleButtons = screen.getAllByTestId('toggle-set');
     fireEvent.click(toggleButtons[0]);
     expect(onUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -232,10 +225,10 @@ describe('WorkoutSession Component', () => {
     globalThis.confirm = vi.fn().mockReturnValue(true);
     renderSession();
     // The X button in the exercise header (opacity-0 group-hover:opacity-100)
-    const exerciseRemoveBtns = screen.getAllByRole('button').filter(
+    const exerciseRemoveBtn = screen.getAllByRole('button').find(
       (b) => b.className.includes('opacity-0'),
     );
-    fireEvent.click(exerciseRemoveBtns[0]);
+    if (exerciseRemoveBtn) fireEvent.click(exerciseRemoveBtn);
     expect(onUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ exercises: [] }),
     );
@@ -244,10 +237,10 @@ describe('WorkoutSession Component', () => {
   it('does NOT remove exercise when confirm is cancelled', () => {
     globalThis.confirm = vi.fn().mockReturnValue(false);
     renderSession();
-    const exerciseRemoveBtns = screen.getAllByRole('button').filter(
+    const exerciseRemoveBtn = screen.getAllByRole('button').find(
       (b) => b.className.includes('opacity-0'),
     );
-    fireEvent.click(exerciseRemoveBtns[0]);
+    if (exerciseRemoveBtn) fireEvent.click(exerciseRemoveBtn);
     expect(onUpdate).not.toHaveBeenCalled();
   });
 
@@ -267,10 +260,7 @@ describe('WorkoutSession Component', () => {
       expect(screen.getByPlaceholderText('Search exercises...')).toBeDefined();
     });
     // The first button in the search overlay is the close (X) button
-    const searchOverlayButtons = screen.getAllByRole('button').filter(
-      (b) => b.className.includes('p-2') && b.className.includes('text-[var(--foreground-muted)]'),
-    );
-    fireEvent.click(searchOverlayButtons[0]);
+    fireEvent.click(screen.getByTestId('close-search'));
     await waitFor(() => {
       expect(screen.queryByPlaceholderText('Search exercises...')).toBeNull();
     });

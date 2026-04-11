@@ -33,6 +33,27 @@ vi.mock("next/navigation", () => ({
   usePathname: vi.fn(() => "/"),
 }));
 
+const mockToggleTheme = (e?: any) => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+};
+
+vi.mock("@/components/Theme/ThemeProvider", () => ({
+  BRAND_COLORS: [{ name: "Test", hex: "#000000" }],
+  useTheme: vi.fn(() => ({ 
+    theme: "light", 
+    accentColor: "#000000",
+    setTheme: vi.fn(),
+    setAccentColor: vi.fn(),
+    toggleTheme: mockToggleTheme
+  })),
+}));
+
+// Mock View Transitions
+if (typeof document !== 'undefined') {
+  document.startViewTransition = vi.fn().mockReturnValue({ ready: Promise.resolve() });
+}
+
 vi.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,  
@@ -45,17 +66,17 @@ vi.mock("framer-motion", () => ({
 
 // Mock sub-components to isolate Dashboard logic
 vi.mock("@/components/Navbar", () => ({
-  default: (
-    { activeTab, setActiveTab, toggleTheme }: any,  
-  ) => (
-    <nav data-testid="navbar">
-      <button onClick={() => setActiveTab("profile")}>Profile Link</button>
-      <button aria-label="Toggle theme" onClick={toggleTheme}>
-        Theme Toggle
-      </button>
-      <div data-active-tab={activeTab}>Navbar</div>
-    </nav>
-  ),
+  default: ({ activeTab, setActiveTab }: any) => {
+    return (
+      <nav data-testid="navbar">
+        <button onClick={() => setActiveTab("profile")}>Profile Link</button>
+        <button aria-label="Toggle theme" onClick={() => mockToggleTheme()}>
+          Theme Toggle
+        </button>
+        <div data-active-tab={activeTab}>Navbar</div>
+      </nav>
+    );
+  },
 }));
 
 vi.mock("@/components/Sidebar", () => ({

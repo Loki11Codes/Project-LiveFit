@@ -57,7 +57,7 @@ describe('SignIn Component', () => {
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'test@example.com' } });
     fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: testAuthSecret } });
 
-    fireEvent.click(screen.getByRole('button', { name: /Sign In/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Sign In$/i }));
 
     await waitFor(() => {
       expect(signIn).toHaveBeenCalledWith('credentials', expect.objectContaining({
@@ -80,7 +80,7 @@ describe('SignIn Component', () => {
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'test@example.com' } });
     fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'wrong' } });
 
-    fireEvent.click(screen.getByRole('button', { name: /Sign In/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Sign In$/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Invalid credentials/i)).toBeInTheDocument();

@@ -173,6 +173,7 @@ export function WorkoutSession({
         <div className="flex items-center gap-3">
           <button
             onClick={onDiscard}
+            data-testid="discard-button"
             className="p-3 text-[var(--foreground-muted)] hover:text-[var(--energy-coral)] hover:bg-[var(--energy-coral)]/10 rounded-[var(--radius-md)] transition-all active:scale-95 border border-transparent hover:border-[var(--energy-coral)]/20"
           >
             <Trash2 className="w-5 h-5" />
@@ -263,6 +264,7 @@ export function WorkoutSession({
                         {/* Complete toggle */}
                         <button
                           onClick={() => updateSet(ex.id, set.id, { isCompleted: !set.isCompleted })}
+                          data-testid="toggle-set"
                           className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
                             set.isCompleted
                               ? "bg-[var(--red)] text-white shadow-xl shadow-[var(--red)]/40 scale-105"
@@ -319,6 +321,7 @@ export function WorkoutSession({
             <div className="p-4 flex items-center gap-3 border-b border-[var(--border)] shadow-sm bg-[var(--surface)]">
               <button
                 onClick={() => setIsSearching(false)}
+                data-testid="close-search"
                 className="p-2 text-[var(--foreground-muted)]"
               >
                 <X className="w-6 h-6" />

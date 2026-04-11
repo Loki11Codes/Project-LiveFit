@@ -303,23 +303,25 @@ describe("Chat Components", () => {
   // ── QuickChips ────────────────────────────────────────────────────────────
 
   describe("QuickChips", () => {
-    it("renders all six chips", () => {
+    it("renders chips correctly", () => {
       render(<QuickChips onSelect={vi.fn()} />);
       expect(screen.getByText("Breakfast")).toBeDefined();
+      expect(screen.getByText("Water")).toBeDefined();
       expect(screen.getByText("Workout")).toBeDefined();
       expect(screen.getByText("Sleep")).toBeDefined();
-      expect(screen.getByText("Protein left?")).toBeDefined();
-      expect(screen.getByText("Summary")).toBeDefined();
-      expect(screen.getByText("Delete Log")).toBeDefined();
+      expect(screen.getByText("Weight")).toBeDefined();
+      expect(screen.getByText("Stats")).toBeDefined();
     });
 
     it.each([
       ["Breakfast", "Log my breakfast"],
+      ["Water", "Log 500ml of water"],
       ["Workout", "Record my training session"],
       ["Sleep", "Show my sleep data"],
-      ["Protein left?", "How is my protein intake?"],
-      ["Summary", "Give me a summary"],
-      ["Delete Log", "Delete my last food log from today"],
+      ["Weight", "Update my weight measurement"],
+      ["Stats", "How are my stats for today?"],
+      ["Summary", "Give me a weekly summary"],
+      ["Delete", "Delete my last food log"],
     ])("clicking '%s' chip calls onSelect with '%s'", (label, expectedText) => {
       const onSelect = vi.fn();
       render(<QuickChips onSelect={onSelect} />);

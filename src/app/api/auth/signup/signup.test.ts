@@ -10,6 +10,9 @@ vi.mock("@/lib/prisma", () => ({
       findUnique: vi.fn(),
       create: vi.fn(),
     },
+    verificationToken: {
+      upsert: vi.fn(),
+    },
   },
 }));
 
@@ -19,8 +22,8 @@ vi.mock("bcryptjs", () => ({
   },
 }));
 
-const testAuthSecret = "SECURE_AUTH_TOKEN_01";
-const mismatchSecret = "SECURE_AUTH_TOKEN_02";
+const testAuthSecret = "SecurePass123!";
+const mismatchSecret = "MismatchPass456!";
 const mockHash = "HASHED_DATA_BLOB_01";
 
 describe("Signup API Route", () => {
