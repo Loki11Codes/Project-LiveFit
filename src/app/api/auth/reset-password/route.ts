@@ -1,7 +1,6 @@
 /**
  * Security Overhaul: Reset Password API Handler
  */
-import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
@@ -20,22 +19,17 @@ const ResetPasswordSchema = z.object({
 });
 
 export async function POST(req: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) return badRequest("Unauthorized");
+
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return badRequest("Unauthorized");
-    }
-
     const body = await req.json();
     const result = ResetPasswordSchema.safeParse(body);
-
     if (!result.success) {
       return badRequest("Password does not meet security requirements");
     }
 
-    const { password } = result.data;
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(result.data.password, 10);
 
     await prisma.user.update({
       where: { id: session.user.id },

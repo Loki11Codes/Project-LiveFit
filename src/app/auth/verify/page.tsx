@@ -11,7 +11,6 @@ import {
   RefreshCcw,
   AlertCircle
 } from "lucide-react";
-import { motion } from "framer-motion";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { requestJson, getClientErrorMessage } from "@/lib/client-api";
 
@@ -80,7 +79,7 @@ function VerifyEmailForm() {
         <div className="space-y-1">
           <h3 className="text-lg font-bold text-auth-text">Check your inbox</h3>
           <p className="text-sm text-auth-text-muted">
-            We've sent a 6-digit verification code to <br />
+            We&apos;ve sent a 6-digit verification code to <br />
             <span className="font-bold text-auth-text">{email || "your email"}</span>
           </p>
         </div>
@@ -92,7 +91,7 @@ function VerifyEmailForm() {
             type="text"
             maxLength={6}
             value={code}
-            onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, ""))}
+            onChange={(e) => setCode(e.target.value.replaceAll(/[^0-9]/g, ""))}
             placeholder="000000"
             className="h-16 w-full max-w-[240px] rounded-2xl border-2 border-auth-input-border bg-auth-input-bg text-center text-3xl font-black tracking-[0.5em] text-auth-input-text focus:border-[#185fa5] outline-none transition shadow-xl"
             autoFocus

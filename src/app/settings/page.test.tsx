@@ -152,6 +152,7 @@ describe("SettingsPage", () => {
     const inputs = screen.getAllByRole("textbox");
     if (inputs.length > 0) {
       fireEvent.change(inputs[0], { target: { value: "New Name" } });
+      expect(inputs[0]).toHaveValue("New Name");
     }
   });
 
@@ -162,6 +163,7 @@ describe("SettingsPage", () => {
       const inputs = screen.getAllByRole("spinbutton");
       if (inputs.length > 0) {
         fireEvent.change(inputs[0], { target: { value: 75 } });
+        expect(inputs[0]).toHaveValue(75);
       }
     });
   });
@@ -173,6 +175,7 @@ describe("SettingsPage", () => {
       const inputs = screen.getAllByRole("spinbutton");
       if (inputs.length > 0) {
         fireEvent.change(inputs[0], { target: { value: 2000 } });
+        expect(inputs[0]).toHaveValue(2000);
       }
     });
   });

@@ -1,6 +1,5 @@
 import nodemailer from "nodemailer";
 import { v4 as uuidv4 } from "uuid";
-import crypto from "crypto";
 import prisma from "@/lib/prisma";
 
 /**
@@ -55,7 +54,7 @@ export async function sendVerificationEmail(email: string, name: string, otp: st
 
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || "587"),
+    port: Number.parseInt(process.env.SMTP_PORT || "587", 10),
     secure: process.env.SMTP_SECURE === "true",
     auth: {
       user: process.env.SMTP_USER,

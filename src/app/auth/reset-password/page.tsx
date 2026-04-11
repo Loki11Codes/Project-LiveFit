@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { getClientErrorMessage, requestJson } from "@/lib/client-api";
 import { useSession } from "next-auth/react";
+import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
 
 export default function ResetPasswordPage() {
   const { update } = useSession();
@@ -142,31 +143,7 @@ export default function ResetPasswordPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border-2 border-auth-input-border bg-auth-input-bg p-3.5 space-y-2 text-[11px] font-medium text-auth-text-muted">
-          <p className="mb-2 text-[10px] uppercase tracking-wider font-bold opacity-60">Security Requirements</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
-            <div className={`flex items-center gap-2 ${passwordChecks.minimumLength ? "text-[#0f6e56] font-bold" : ""}`}>
-               <CheckCircle2 size={14} className={passwordChecks.minimumLength ? "text-[#0f6e56]" : "text-zinc-400"} />
-               12+ characters
-            </div>
-            <div className={`flex items-center gap-2 ${passwordChecks.hasUpper ? "text-[#0f6e56] font-bold" : ""}`}>
-               <CheckCircle2 size={14} className={passwordChecks.hasUpper ? "text-[#0f6e56]" : "text-zinc-400"} />
-               Uppercase [A-Z]
-            </div>
-            <div className={`flex items-center gap-2 ${passwordChecks.hasLower ? "text-[#0f6e56] font-bold" : ""}`}>
-               <CheckCircle2 size={14} className={passwordChecks.hasLower ? "text-[#0f6e56]" : "text-zinc-400"} />
-               Lowercase [a-z]
-            </div>
-            <div className={`flex items-center gap-2 ${passwordChecks.hasNumber ? "text-[#0f6e56] font-bold" : ""}`}>
-               <CheckCircle2 size={14} className={passwordChecks.hasNumber ? "text-[#0f6e56]" : "text-zinc-400"} />
-               One number [0-9]
-            </div>
-            <div className={`flex items-center gap-2 ${passwordChecks.hasSpecial ? "text-[#0f6e56] font-bold" : ""}`}>
-               <CheckCircle2 size={14} className={passwordChecks.hasSpecial ? "text-[#0f6e56]" : "text-zinc-400"} />
-               Special char (@$!%*?&)
-            </div>
-          </div>
-        </div>
+        <PasswordRequirements passwordChecks={passwordChecks} />
 
         {error && (
           <div className="rounded-2xl border-2 border-rose-500/25 bg-rose-50 px-4 py-2.5 text-[14px] font-medium text-rose-700">
