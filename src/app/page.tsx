@@ -153,7 +153,8 @@ export default function Home() {
     let summaryText = `I finished my "${session.name}" workout! It took me ${durationMinutes} minutes.\n\nSummary:\n`;
     completedExercises.forEach((ex) => {
       const sets = ex.sets.filter((s) => s.isCompleted);
-      summaryText += `- ${ex.name}: ${sets.length} sets completed\n`;
+      const setDetails = sets.map(s => `${s.weight}kg x ${s.reps}`).join(", ");
+      summaryText += `- ${ex.name}: ${sets.length} sets completed (${setDetails})\n`;
     });
 
     setChatDraft(summaryText);

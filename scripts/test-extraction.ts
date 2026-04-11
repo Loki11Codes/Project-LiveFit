@@ -1,4 +1,4 @@
-import { extractAndCleanLogData } from './src/lib/chat-utils';
+import { extractAndCleanLogData } from '../src/lib/chat-utils';
 
 const text = `
 Great! Your breakfast of 2 boiled eggs and 200ml milk has been logged.

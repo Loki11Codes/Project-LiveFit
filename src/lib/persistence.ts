@@ -231,8 +231,8 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
       await tx.workoutLog.update({
         where: { id: existing.id },
         data: {
-          volume: validated.volume,
-          details: validated.details || detailsFallback,
+          volume: validated.volume ?? existing.volume,
+          details: validated.details || detailsFallback || existing.details,
           exercises: exercisesConfig ? {
             deleteMany: {}, // Clear old sets for clean recreation
             ...exercisesConfig
