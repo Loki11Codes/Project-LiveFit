@@ -316,11 +316,11 @@ async function main() {
   console.log(`Successfully populated ${seededCount} exercises.`);
 }
 
-try {
-  await main();
-} catch (e) {
-  console.error(e);
-  process.exit(1);
-} finally {
-  await prisma.$disconnect();
-}
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

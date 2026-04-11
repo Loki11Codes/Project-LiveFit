@@ -170,8 +170,30 @@ export default function HistoryTab({
                     <td className="py-4 px-4 text-[16px] font-black tracking-tight text-center text-[var(--amber)]">
                       {entry.kcal}
                     </td>
-                    <td className="py-4 px-4 text-[12px] font-black text-center text-[var(--red)]">
-                      {entry.workout}
+                    <td className="py-4 px-4 text-center">
+                      {entry.workout === '--' ? (
+                         <span className="text-[12px] font-black opacity-40">--</span>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-[12px] font-black text-[var(--red)] uppercase tracking-tight">
+                            {entry.workout}
+                          </span>
+                          {(entry.workoutDetail || entry.totalVolume) && (
+                            <div className="flex items-center gap-1.5">
+                              {entry.workoutDetail && (
+                                <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full bg-[var(--red)]/10 text-[var(--red)] uppercase">
+                                  {entry.workoutDetail}
+                                </span>
+                              )}
+                              {entry.totalVolume && (
+                                <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full bg-[var(--surface3)] text-[var(--text-muted)] uppercase">
+                                  {entry.totalVolume} kg
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="py-4 px-4 text-[12px] font-black text-center opacity-40">
                       {entry.sleep === '--' ? '--' : `${entry.sleep}h`}

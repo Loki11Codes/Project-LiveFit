@@ -66,7 +66,9 @@ export default function Home() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const activeTab = parseTab(searchParams.get("tab"));
+  const [activeTab, setActiveTabInternal] = useState<TabId>(
+    parseTab(searchParams.get("tab")),
+  );
   const [dashboard, setDashboard] = useState<DashboardState>(
     INITIAL_DASHBOARD_STATE,
   );
@@ -230,6 +232,7 @@ export default function Home() {
   );
 
   const handleTabChange = (tab: TabId) => {
+    setActiveTabInternal(tab);
     router.push(`/?tab=${tab}`, { scroll: false });
   };
 
@@ -303,10 +306,15 @@ export default function Home() {
       }
     }
 
-    // Small delay to ensure server transaction is committed before we fetch
+    // Refresh dashboard to catch the changes. 
+    // We do it twice to handle potential backend latency or transient sync delays.
     setTimeout(() => {
       void refreshDashboard();
-    }, 200);
+    }, 500);
+
+    setTimeout(() => {
+      void refreshDashboard();
+    }, 1500);
   }
 
   function handleUpdateWorkout(updated: ActiveWorkoutSession) {
@@ -365,6 +373,14 @@ export default function Home() {
       cancelled = true;
     };
   }, [session?.user?.id]);
+
+  // Sync internal tab state with URL changes (e.g. back button)
+  useEffect(() => {
+    const tabFromUrl = parseTab(searchParams.get("tab"));
+    if (tabFromUrl !== activeTab) {
+      setActiveTabInternal(tabFromUrl);
+    }
+  }, [searchParams, activeTab]);
 
   useEffect(() => {
     const saved = localStorage.getItem("active_workout");

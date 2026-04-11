@@ -24,6 +24,8 @@ type DailySummary = {
   water: number;
   sleep: number | null;
   workoutFocuses: Set<string>;
+  exerciseCount: number;
+  totalVolume: number;
 };
 
 const VALID_TABS = new Set<TabId>(['chat', 'log', 'routines', 'history', 'body', 'profile']);
@@ -150,6 +152,8 @@ export function buildHistoryRows(
     const entry = grouped.get(key) ?? createDailySummary(log.time);
 
     entry.workoutFocuses.add(log.focus);
+    entry.exerciseCount += log.exercises?.length ?? 0;
+    entry.totalVolume += log.volume ?? 0;
     grouped.set(key, entry);
   }
 
@@ -179,6 +183,8 @@ export function buildHistoryRows(
         entry.workoutFocuses.size > 0
           ? Array.from(entry.workoutFocuses).join(', ')
           : '--',
+      workoutDetail: entry.exerciseCount > 0 ? `${entry.exerciseCount} exercises` : undefined,
+      totalVolume: entry.totalVolume > 0 ? Math.round(entry.totalVolume) : undefined,
     }));
 }
 
@@ -226,6 +232,8 @@ function createDailySummary(value: Date | string): DailySummary {
     water: 0,
     sleep: null,
     workoutFocuses: new Set<string>(),
+    exerciseCount: 0,
+    totalVolume: 0,
   };
 }
 

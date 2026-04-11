@@ -212,6 +212,8 @@ export type HistoryRow = {
   fiber: number;
   water: number;
   workout: string;
+  workoutDetail?: string;
+  totalVolume?: number;
 };
 
 export type DashboardState = {
