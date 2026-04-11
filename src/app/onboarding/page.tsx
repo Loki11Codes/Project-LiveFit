@@ -32,8 +32,8 @@ type FormDataMap = {
 };
 
 interface ProfileStepProps {
-  formData: FormDataMap;
-  setFormData: (data: FormDataMap) => void;
+  readonly formData: FormDataMap;
+  readonly setFormData: (data: FormDataMap) => void;
 }
 
 export default function OnboardingPage() {
@@ -145,27 +145,23 @@ export default function OnboardingPage() {
 
   const handleNextAction = profileStep === 2 ? handleFinishOnboarding : () => setProfileStep(profileStep + 1);
 
-  return (
-    <AuthShell
-      badge="Onboarding"
-      title={phase === 'tutorial' ? "Welcome to Caloriq" : "Complete Your Profile"}
-      subtitle={phase === 'tutorial' ? "Let's take a quick look at how we'll help you reach your goals." : "Help us personalize your fitness and nutrition targets."}
-      panelTitle={phase === 'tutorial' ? "The Athlete's Platform" : "Intelligent Personalization"}
-      panelDescription={phase === 'tutorial' ? "Caloriq is built for high-performance tracking and intelligent insights." : "We use the Miffin-St Jeor equation to calculate your baseline metabolic targets."}
-      panelPoints={phase === 'tutorial' ? [
-        "Advanced data visualization",
-        "Context-aware AI assistance",
-        "Seamless activity logging"
-      ] : [
-        "Personalized BMR & TDEE calculation",
-        "Daily macro-nutrient targets",
-        "Weekly progress analysis"
-      ]}
-      illustration={<div className="flex justify-center p-8 opacity-20"><ShieldCheck size={120} /></div>}
-    >
-      <div className="min-h-[350px] flex flex-col justify-between">
-        <AnimatePresence mode="wait">
-          {phase === 'tutorial' ? (
+  if (phase === 'tutorial') {
+    return (
+      <AuthShell
+        badge="Onboarding"
+        title="Welcome to Caloriq"
+        subtitle="Let's take a quick look at how we'll help you reach your goals."
+        panelTitle="The Athlete's Platform"
+        panelDescription="Caloriq is built for high-performance tracking and intelligent insights."
+        panelPoints={[
+          "Advanced data visualization",
+          "Context-aware AI assistance",
+          "Seamless activity logging"
+        ]}
+        illustration={<div className="flex justify-center p-8 opacity-20"><ShieldCheck size={120} /></div>}
+      >
+        <div className="min-h-[350px] flex flex-col justify-between">
+          <AnimatePresence mode="wait">
             <motion.div
               key="tutorial"
               initial={{ opacity: 0, x: 20 }}
@@ -210,48 +206,68 @@ export default function OnboardingPage() {
                 </button>
               </div>
             </motion.div>
-          ) : (
-            <motion.div
-              key="profile"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-6 py-2"
-            >
-              {profileStep === 0 && <BioDataStep formData={formData} setFormData={setFormData} />}
-              {profileStep === 1 && <ObjectivesStep formData={formData} setFormData={setFormData} />}
-              {profileStep === 2 && <BaselineStep formData={formData} setFormData={setFormData} />}
+          </AnimatePresence>
+        </div>
+      </AuthShell>
+    );
+  }
 
-              <div className="flex items-center gap-3 pt-6">
-                <button
-                  disabled={loading}
-                  onClick={() => setProfileStep(Math.max(0, profileStep - 1))}
-                  className={`h-11 flex-1 rounded-2xl border border-auth-border text-xs font-bold uppercase tracking-wider text-auth-text-muted hover:bg-auth-surface2 transition-colors flex items-center justify-center gap-2 ${
-                    profileStep === 0 ? 'opacity-0 pointer-events-none' : ''
-                  }`}
-                >
-                  <ChevronLeft size={16} />
-                  Back
-                </button>
-                <button
-                  disabled={loading}
-                  onClick={handleNextAction}
-                  className={`h-11 flex-[2] rounded-2xl text-xs font-bold uppercase tracking-wider text-white transition-all flex items-center justify-center gap-2 shadow-lg ${actionBtnClass}`}
-                >
-                  {actionBtnContent}
-                </button>
-              </div>
-              
-              <div className="pt-4 flex justify-center">
-                <button
-                  onClick={() => signOut({ callbackUrl: "/auth/signin" })}
-                  className="text-[11px] font-bold text-auth-text-muted hover:text-auth-text transition-colors underline underline-offset-4"
-                >
-                  Sign Out / Wrong Account?
-                </button>
-              </div>
-            </motion.div>
-          )}
+  return (
+    <AuthShell
+      badge="Onboarding"
+      title="Complete Your Profile"
+      subtitle="Help us personalize your fitness and nutrition targets."
+      panelTitle="Intelligent Personalization"
+      panelDescription="We use the Miffin-St Jeor equation to calculate your baseline metabolic targets."
+      panelPoints={[
+        "Personalized BMR & TDEE calculation",
+        "Daily macro-nutrient targets",
+        "Weekly progress analysis"
+      ]}
+      illustration={<div className="flex justify-center p-8 opacity-20"><ShieldCheck size={120} /></div>}
+    >
+      <div className="min-h-[350px] flex flex-col justify-between">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key="profile"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6 py-2"
+          >
+            {profileStep === 0 && <BioDataStep formData={formData} setFormData={setFormData} />}
+            {profileStep === 1 && <ObjectivesStep formData={formData} setFormData={setFormData} />}
+            {profileStep === 2 && <BaselineStep formData={formData} setFormData={setFormData} />}
+
+            <div className="flex items-center gap-3 pt-6">
+              <button
+                disabled={loading}
+                onClick={() => setProfileStep(Math.max(0, profileStep - 1))}
+                className={`h-11 flex-1 rounded-2xl border border-auth-border text-xs font-bold uppercase tracking-wider text-auth-text-muted hover:bg-auth-surface2 transition-colors flex items-center justify-center gap-2 ${
+                  profileStep === 0 ? 'opacity-0 pointer-events-none' : ''
+                }`}
+              >
+                <ChevronLeft size={16} />
+                Back
+              </button>
+              <button
+                disabled={loading}
+                onClick={handleNextAction}
+                className={`h-11 flex-[2] rounded-2xl text-xs font-bold uppercase tracking-wider text-white transition-all flex items-center justify-center gap-2 shadow-lg ${actionBtnClass}`}
+              >
+                {actionBtnContent}
+              </button>
+            </div>
+            
+            <div className="pt-4 flex justify-center">
+              <button
+                onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+                className="text-[11px] font-bold text-auth-text-muted hover:text-auth-text transition-colors underline underline-offset-4"
+              >
+                Sign Out / Wrong Account?
+              </button>
+            </div>
+          </motion.div>
         </AnimatePresence>
       </div>
     </AuthShell>
