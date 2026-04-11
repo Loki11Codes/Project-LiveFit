@@ -317,7 +317,7 @@ export default function OnboardingPage() {
                   <div className="flex flex-col items-center justify-center space-y-6 py-6">
                     <div className="space-y-2 text-center">
                       <label htmlFor="weightInput" className="block text-sm font-bold text-auth-text">Enter Current Weight</label>
-                      <p className="text-[11px] text-auth-text-muted max-w-[240px] mx-auto">We'll use this as your starting reference point for metrics.</p>
+                      <p className="text-[11px] text-auth-text-muted max-w-[240px] mx-auto">We&apos;ll use this as your starting reference point for metrics.</p>
                     </div>
                     
                     <div className="relative flex items-center">
@@ -350,21 +350,18 @@ export default function OnboardingPage() {
                   disabled={loading}
                   onClick={profileStep === 2 ? handleFinishOnboarding : () => setProfileStep(profileStep + 1)}
                   className={`h-11 flex-[2] rounded-2xl text-xs font-bold uppercase tracking-wider text-white transition-all flex items-center justify-center gap-2 shadow-lg ${
-                    profileStep === 0 ? 'bg-[#185fa5] hover:bg-[#378add]' : ''
-                  } ${
-                    profileStep === 1 ? 'bg-[#0f6e56] hover:bg-[#1a8a6d]' : ''
-                  } ${
-                    profileStep === 2 ? 'bg-[#534ab7] hover:bg-[#6c63d6]' : ''
+                    profileStep === 0 ? 'bg-[#185fa5] hover:bg-[#378add]' : 
+                    profileStep === 1 ? 'bg-[#0f6e56] hover:bg-[#1a8a6d]' : 
+                    'bg-[#534ab7] hover:bg-[#6c63d6]'
                   }`}
                 >
-                  {loading && <Loader2 size={18} className="animate-spin" />}
-                  {!loading && profileStep === 2 && <ShieldCheck size={18} />}
-                  
-                  {loading && "Synchronizing..."}
-                  {!loading && profileStep === 2 && "Complete Setup"}
-                  {!loading && profileStep < 2 && "Next"}
-                  
-                  {!loading && profileStep < 2 && <ChevronRight size={16} />}
+                  {loading ? (
+                    <><Loader2 size={18} className="animate-spin" /> Synchronizing...</>
+                  ) : profileStep === 2 ? (
+                    <><ShieldCheck size={18} /> Complete Setup</>
+                  ) : (
+                    <>Next <ChevronRight size={16} /></>
+                  )}
                 </button>
               </div>
               
