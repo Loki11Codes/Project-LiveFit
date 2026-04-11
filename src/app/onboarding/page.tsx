@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   ChevronRight, 
   ChevronLeft, 
-  CheckCircle2, 
   ShieldCheck, 
   BarChart3, 
   MessageSquare, 
@@ -23,7 +22,7 @@ import { requestJson } from "@/lib/client-api";
 type OnboardingStep = 'tutorial' | 'profile';
 
 export default function OnboardingPage() {
-  const { data: session, update } = useSession();
+  const { update } = useSession();
   const router = useRouter();
   const [phase, setPhase] = useState<OnboardingStep>('tutorial');
   const [tutorialStep, setTutorialStep] = useState(0);
@@ -67,9 +66,6 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleSkipTutorial = () => {
-    setPhase('profile');
-  };
 
   const handleSkipOnboarding = async () => {
     setLoading(true);
@@ -162,9 +158,9 @@ export default function OnboardingPage() {
               </div>
 
               <div className="flex items-center justify-center gap-2">
-                {tutorialSlides.map((_, i) => (
+                {tutorialSlides.map((slide, i) => (
                   <div 
-                    key={i} 
+                    key={slide.title} 
                     className={`h-1.5 rounded-full transition-all duration-300 ${i === tutorialStep ? 'w-6 bg-[#185fa5]' : 'w-1.5 bg-auth-border'}`} 
                   />
                 ))}
@@ -203,7 +199,7 @@ export default function OnboardingPage() {
                   
                   <div className="space-y-3">
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold uppercase tracking-wider text-auth-text-muted ml-1">Gender</label>
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-auth-text-muted ml-1 mb-1.5">Gender</span>
                       <div className="grid grid-cols-2 gap-2">
                         {['male', 'female'].map(g => (
                           <button
@@ -223,8 +219,9 @@ export default function OnboardingPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-auth-text-muted ml-1">Age</label>
+                        <label htmlFor="ageInput" className="text-[11px] font-bold uppercase tracking-wider text-auth-text-muted ml-1">Age</label>
                         <input
+                          id="ageInput"
                           type="number"
                           value={formData.age}
                           placeholder="Ex: 25"
@@ -233,8 +230,9 @@ export default function OnboardingPage() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-auth-text-muted ml-1">Height (cm)</label>
+                        <label htmlFor="heightInput" className="text-[11px] font-bold uppercase tracking-wider text-auth-text-muted ml-1">Height (cm)</label>
                         <input
+                          id="heightInput"
                           type="number"
                           value={formData.height}
                           placeholder="Ex: 175"
@@ -245,8 +243,9 @@ export default function OnboardingPage() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold uppercase tracking-wider text-auth-text-muted ml-1">Activity Level</label>
+                      <label htmlFor="activityLevelSelect" className="text-[11px] font-bold uppercase tracking-wider text-auth-text-muted ml-1">Activity Level</label>
                       <select
+                        id="activityLevelSelect"
                         value={formData.activityLevel}
                         onChange={(e) => setFormData({ ...formData, activityLevel: e.target.value })}
                         className="h-10 w-full rounded-xl border-2 border-auth-input-border bg-auth-input-bg px-4 text-sm font-medium text-auth-input-text focus:border-[#185fa5] outline-none transition appearance-none"
@@ -271,7 +270,7 @@ export default function OnboardingPage() {
 
                   <div className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold uppercase tracking-wider text-auth-text-muted ml-1">Primary Goal</label>
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-auth-text-muted ml-1 mb-1.5">Primary Goal</span>
                       <div className="grid grid-cols-1 gap-2">
                         {['Weight Loss', 'Maintenance', 'Weight Gain'].map(goal => (
                           <button
@@ -290,8 +289,9 @@ export default function OnboardingPage() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold uppercase tracking-wider text-auth-text-muted ml-1">Dietary Focus</label>
+                      <label htmlFor="dietaryFocusSelect" className="text-[11px] font-bold uppercase tracking-wider text-auth-text-muted ml-1">Dietary Focus</label>
                       <select
+                        id="dietaryFocusSelect"
                         value={formData.dietaryPreference}
                         onChange={(e) => setFormData({ ...formData, dietaryPreference: e.target.value })}
                         className="h-10 w-full rounded-xl border-2 border-auth-input-border bg-auth-input-bg px-4 text-sm font-medium text-auth-input-text focus:border-[#0f6e56] outline-none transition appearance-none"
@@ -316,12 +316,13 @@ export default function OnboardingPage() {
 
                   <div className="flex flex-col items-center justify-center space-y-6 py-6">
                     <div className="space-y-2 text-center">
-                      <h4 className="text-sm font-bold text-auth-text">Enter Current Weight</h4>
-                      <p className="text-[11px] text-auth-text-muted max-w-[240px]">We'll use this as your starting reference point for metrics.</p>
+                      <label htmlFor="weightInput" className="block text-sm font-bold text-auth-text">Enter Current Weight</label>
+                      <p className="text-[11px] text-auth-text-muted max-w-[240px] mx-auto">We'll use this as your starting reference point for metrics.</p>
                     </div>
                     
                     <div className="relative flex items-center">
                       <input
+                        id="weightInput"
                         type="number"
                         value={formData.initialWeight}
                         placeholder="70"
@@ -349,13 +350,20 @@ export default function OnboardingPage() {
                   disabled={loading}
                   onClick={profileStep === 2 ? handleFinishOnboarding : () => setProfileStep(profileStep + 1)}
                   className={`h-11 flex-[2] rounded-2xl text-xs font-bold uppercase tracking-wider text-white transition-all flex items-center justify-center gap-2 shadow-lg ${
-                    profileStep === 0 ? 'bg-[#185fa5] hover:bg-[#378add]' :
-                    profileStep === 1 ? 'bg-[#0f6e56] hover:bg-[#1a8a6d]' :
-                    'bg-[#534ab7] hover:bg-[#6c63d6]'
+                    profileStep === 0 ? 'bg-[#185fa5] hover:bg-[#378add]' : ''
+                  } ${
+                    profileStep === 1 ? 'bg-[#0f6e56] hover:bg-[#1a8a6d]' : ''
+                  } ${
+                    profileStep === 2 ? 'bg-[#534ab7] hover:bg-[#6c63d6]' : ''
                   }`}
                 >
-                  {loading ? <Loader2 size={18} className="animate-spin" /> : (profileStep === 2 ? <ShieldCheck size={18} /> : null)}
-                  {loading ? "Synchronizing..." : (profileStep === 2 ? "Complete Setup" : "Next")}
+                  {loading && <Loader2 size={18} className="animate-spin" />}
+                  {!loading && profileStep === 2 && <ShieldCheck size={18} />}
+                  
+                  {loading && "Synchronizing..."}
+                  {!loading && profileStep === 2 && "Complete Setup"}
+                  {!loading && profileStep < 2 && "Next"}
+                  
                   {!loading && profileStep < 2 && <ChevronRight size={16} />}
                 </button>
               </div>
