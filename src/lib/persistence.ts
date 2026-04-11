@@ -101,6 +101,12 @@ async function handleCategoryPersistence(
     case 'delete':
       await persistDeleteAction(tx, logData, userId, clientDate);
       break;
+    case 'knowledge':
+      await persistKnowledgeEntry(tx, logData, userId);
+      break;
+    case 'meal_plan':
+      await persistMealPlan(tx, logData, userId);
+      break;
     default:
       console.warn(`Unknown category: ${category}`);
   }
@@ -182,31 +188,41 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
   const prs = getRecordValue(data, 'prs');
   const detailsFallback = prs ? JSON.stringify(prs) : undefined;
   
-  const exercisesConfig = validated.exercises ? {
-    create: await Promise.all(
-      validated.exercises.map(async (ex, exIdx) => {
-        const matched = await tx.exercise.findFirst({
-          where: { name: { equals: ex.name } },
-        });
-        return {
-          exerciseId: matched?.id || null,
-          customName: matched ? null : ex.name,
-          order: exIdx,
-          sets: ex.sets
-            ? {
-                create: ex.sets.map((set, setIdx) => ({
-                  setNumber: set.setNumber ?? setIdx + 1,
-                  reps: set.reps,
-                  weight: set.weight,
-                  distance: set.distance,
-                  duration: set.duration,
-                })),
-              }
-            : undefined,
-        };
-      })
-    ),
-  } : undefined;
+  // Resolve all exercises first to get IDs
+  const resolvedExercises = validated.exercises ? await Promise.all(
+    validated.exercises.map(async (ex, exIdx) => {
+      // Use provided ID or search by name
+      const matched = ex.exerciseId 
+        ? await tx.exercise.findUnique({ where: { id: ex.exerciseId } })
+        : await tx.exercise.findFirst({ where: { name: { equals: ex.name } } });
+      
+      return {
+        ...ex,
+        id: matched?.id || null,
+        order: exIdx,
+        matchedExercise: matched
+      };
+    })
+  ) : [];
+
+  const exercisesConfig = {
+    create: resolvedExercises.map((ex) => ({
+      exerciseId: ex.id,
+      customName: ex.id ? null : ex.name,
+      order: ex.order,
+      sets: ex.sets
+        ? {
+            create: ex.sets.map((set, setIdx) => ({
+              setNumber: set.setNumber ?? setIdx + 1,
+              reps: set.reps,
+              weight: set.weight,
+              distance: set.distance,
+              duration: set.duration,
+            })),
+          }
+        : undefined,
+    }))
+  };
 
   if (validated.update) {
     const startOfDay = new Date(logDate);
@@ -227,32 +243,78 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
     });
 
     if (existing) {
-
       await tx.workoutLog.update({
         where: { id: existing.id },
         data: {
           volume: validated.volume ?? existing.volume,
           details: validated.details || detailsFallback || existing.details,
-          exercises: exercisesConfig ? {
+          exercises: {
             deleteMany: {}, // Clear old sets for clean recreation
             ...exercisesConfig
-          } : undefined
+          }
         },
       });
-      return;
+    } else {
+        await tx.workoutLog.create({
+            data: {
+              userId,
+              focus: validated.focus,
+              volume: validated.volume,
+              details: validated.details || detailsFallback,
+              time: validated.date ? new Date(validated.date) : undefined,
+              exercises: exercisesConfig,
+            },
+          });
     }
+  } else {
+    await tx.workoutLog.create({
+      data: {
+        userId,
+        focus: validated.focus,
+        volume: validated.volume,
+        details: validated.details || detailsFallback,
+        time: validated.date ? new Date(validated.date) : undefined,
+        exercises: exercisesConfig,
+      },
+    });
   }
 
-  await tx.workoutLog.create({
-    data: {
-      userId,
-      focus: validated.focus,
-      volume: validated.volume,
-      details: validated.details || detailsFallback,
-      time: validated.date ? new Date(validated.date) : undefined,
-      exercises: exercisesConfig,
-    },
-  });
+  // Track and Update Personal Records
+  for (const ex of resolvedExercises) {
+    if (!ex.id || !ex.sets) continue;
+
+    let maxWeight = 0;
+    let max1RM = 0;
+
+    ex.sets.forEach(set => {
+      const w = set.weight || 0;
+      const r = set.reps || 0;
+      const rm = w * (1 + r / 30);
+      
+      if (w > maxWeight) maxWeight = w;
+      if (rm > max1RM) max1RM = rm;
+    });
+
+    if (maxWeight > 0 || max1RM > 0) {
+      const existingPr = await tx.personalRecord.findUnique({
+        where: { userId_exerciseId: { userId, exerciseId: ex.id } }
+      });
+
+      if (!existingPr) {
+        await tx.personalRecord.create({
+          data: { userId, exerciseId: ex.id, maxWeight, max1RM }
+        });
+      } else {
+        await tx.personalRecord.update({
+          where: { id: existingPr.id },
+          data: {
+            maxWeight: Math.max(existingPr.maxWeight || 0, maxWeight),
+            max1RM: Math.max(existingPr.max1RM || 0, max1RM)
+          }
+        });
+      }
+    }
+  }
 }
 
 async function persistSleepLog(tx: Prisma.TransactionClient, data: SleepLogInput, userId: string): Promise<void> {
@@ -596,6 +658,43 @@ async function deleteSingleEntry(
   if (entry) {
     await model.delete({ where: { id: entry.id } });
   }
+}
+
+async function persistKnowledgeEntry(tx: Prisma.TransactionClient, data: any, userId: string): Promise<void> {
+  const key = typeof data.key === 'string' ? data.key.toLowerCase() : '';
+  const value = typeof data.value === 'string' ? data.value : '';
+
+  if (!key || !value) return;
+
+  await tx.userKnowledge.upsert({
+    where: { userId_key: { userId, key } },
+    update: { value },
+    create: { userId, key, value }
+  });
+}
+
+async function persistMealPlan(tx: Prisma.TransactionClient, data: any, userId: string): Promise<void> {
+  if (!data.entries || !Array.isArray(data.entries)) return;
+
+  await tx.mealPlan.create({
+    data: {
+      userId,
+      name: data.name || "AI Generated Plan",
+      weekStarting: data.weekStarting ? new Date(data.weekStarting) : new Date(),
+      entries: {
+        create: data.entries.map((e: any) => ({
+          dayIndex: e.dayIndex ?? 0,
+          mealType: e.mealType || 'Meal',
+          title: e.title || 'Untitled Meal',
+          kcal: e.kcal,
+          protein: e.protein,
+          carbs: e.carbs,
+          fats: e.fats,
+          notes: e.notes
+        }))
+      }
+    }
+  });
 }
 
 function hasItemsArray(value: unknown): value is { items: unknown[] } {

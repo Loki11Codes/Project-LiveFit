@@ -51,7 +51,8 @@ export type TabId =
   | "history"
   | "body"
   | "profile"
-  | "routines";
+  | "routines"
+  | "meals";
 
 export type GoalsState = {
   proteinTarget: number;

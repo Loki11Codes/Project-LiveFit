@@ -43,11 +43,47 @@ describe('WorkoutSession Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      json: () => Promise.resolve([
-        { id: 'e-1', name: 'Bench Press', category: 'Chest', equipment: 'Barbell' },
-        { id: 'e-2', name: 'Squat', category: 'Legs', equipment: 'Barbell' },
-      ]),
+
+    // Mock Canvas for Confetti
+    // @ts-expect-error mock
+    HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
+      fill: vi.fn(),
+      stroke: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      arc: vi.fn(),
+      closePath: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      translate: vi.fn(),
+      rotate: vi.fn(),
+      scale: vi.fn(),
+      clearRect: vi.fn(),
+      fillRect: vi.fn(),
+    }));
+
+    globalThis.fetch = vi.fn().mockImplementation((url) => {
+      if (url === "/api/exercises") {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: () => Promise.resolve([
+            { id: 'e-1', name: 'Bench Press', category: 'Chest', equipment: 'Barbell' },
+            { id: 'e-2', name: 'Squat', category: 'Legs', equipment: 'Barbell' },
+          ]),
+        });
+      }
+      if (url === "/api/profile/prs") {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: () => Promise.resolve([
+            { exerciseId: 'e-1', maxWeight: 70, max1RM: 85 }
+          ]),
+        });
+      }
+      return Promise.reject(new Error("Unknown URL"));
     });
   });
 
@@ -324,5 +360,54 @@ describe('WorkoutSession Component', () => {
     await waitFor(() => {
       expect(screen.getByPlaceholderText('Search exercises...')).toBeDefined();
     });
+  });
+
+  // ── New Features: Rest Timer & PRs ───────────────────────────────────────────
+
+  it('starts rest timer after completing a set', async () => {
+    const session = makeSession(); // set-1 is NOT completed
+    renderSession(session);
+    
+    // Wait for initial render/effects
+    await screen.findByText('Bench Press');
+
+    // Toggle first set to completed
+    const toggleButtons = screen.getAllByTestId('toggle-set');
+    fireEvent.click(toggleButtons[0]);
+
+    // Check for "Rest Active" banner
+    await waitFor(() => {
+      expect(screen.getByText(/Rest Active/i)).toBeInTheDocument();
+    }, { timeout: 2000 });
+  });
+
+  it('triggers PR celebration when hitting a new max weight', async () => {
+    const session = makeSession(); // Bench Press @ 80kg (mocks say PR is 70kg)
+    renderSession(session);
+    
+    await screen.findByText('Bench Press');
+
+    // Toggle set-1 to completed
+    const toggleButtons = screen.getAllByTestId('toggle-set');
+    fireEvent.click(toggleButtons[0]);
+
+    // Check for PR celebratory text
+    await waitFor(() => {
+      expect(screen.getByText(/Weight PR!/i)).toBeInTheDocument();
+    }, { timeout: 2000 });
+  });
+
+  it('triggers PR celebration when hitting a new estimated 1RM', async () => {
+    const session = makeSession(); 
+    renderSession(session);
+    
+    await screen.findByText('Bench Press');
+
+    const toggleButtons = screen.getAllByTestId('toggle-set');
+    fireEvent.click(toggleButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Weight PR!/i)).toBeInTheDocument();
+    }, { timeout: 2000 });
   });
 });

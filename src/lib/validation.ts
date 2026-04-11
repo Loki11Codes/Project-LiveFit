@@ -123,6 +123,7 @@ export type WorkoutSetInput = z.infer<typeof WorkoutSetSchema>;
 
 export const WorkoutExerciseSchema = z.object({
   name: trimmedString.min(1).max(120),
+  exerciseId: z.string().optional(),
   sets: z.array(WorkoutSetSchema).optional(),
 });
 export type WorkoutExerciseInput = z.infer<typeof WorkoutExerciseSchema>;
@@ -198,6 +199,8 @@ export const ChatRequestSchema = z
           kcal: z.number(),
           water: z.number(),
         }),
+        knowledge: z.array(z.any()).optional(),
+        prs: z.array(z.any()).optional(),
       })
       .optional(),
   })

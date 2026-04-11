@@ -12,6 +12,7 @@ import LogTab from "@/components/Tabs/LogTab";
 import HistoryTab from "@/components/Tabs/HistoryTab";
 import BodyTab from "@/components/Tabs/BodyTab";
 import ProfileTab from "@/components/Tabs/ProfileTab";
+import MealPlanningTab from "@/components/Tabs/MealPlanningTab";
 import { RoutinesTab } from "@/components/RoutinesTab";
 import { WorkoutSession } from "../components/WorkoutSession";
 import {
@@ -318,6 +319,20 @@ export default function Home() {
     }, 1500);
   }
 
+  useEffect(() => {
+    const handleAiPrompt = (e: any) => {
+      const prompt = e.detail;
+      if (prompt) {
+        setChatInput(prompt);
+        setActiveTabInternal("chat");
+        // We'll let the Chat component handle the initial message if needed, 
+        // or just set the input and switch tab.
+      }
+    };
+    window.addEventListener('ai-chat-prompt', handleAiPrompt);
+    return () => window.removeEventListener('ai-chat-prompt', handleAiPrompt);
+  }, []);
+
   function handleUpdateWorkout(updated: ActiveWorkoutSession) {
     setDashboard((prev) => ({ ...prev, activeWorkout: updated }));
   }
@@ -575,6 +590,10 @@ export default function Home() {
                 analytics={dashboard.analytics}
                 trackedDayCount={trackedDayCount}
               />
+            )}
+
+            {activeTab === "meals" && (
+              <MealPlanningTab />
             )}
           </motion.div>
         </AnimatePresence>

@@ -15,6 +15,8 @@ import {
   Clock,
   Plus,
   CheckCircle,
+  UtensilsCrossed,
+  ChevronRight,
   type LucideIcon,
 } from "lucide-react";
 import { getSmartSuggestion } from "@/lib/meal-suggestions";
@@ -664,6 +666,29 @@ export default function Sidebar({
 
         {/* ── RECENT ACTIVITY FEED ── */}
         <RecentActivity logs={logs} />
+
+        {/* ── AI STRATEGY ── */}
+        <div className="flex flex-col gap-2 py-3 border-t border-[var(--border)] mt-2">
+          <div className="flex items-center justify-between">
+             <span className="text-[10px] font-black uppercase opacity-30 tracking-widest">AI Strategy</span>
+             <Zap className="w-3 h-3 text-[var(--accent)] animate-pulse" />
+          </div>
+          <button 
+            onClick={() => onTabChange?.("meals")}
+            className="w-full flex items-center justify-between p-3 bg-gradient-to-br from-[var(--accent)]/10 to-transparent border border-[var(--accent)]/20 rounded-2xl hover:scale-[1.02] active:scale-95 transition-all text-left"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center shadow-inner">
+                <UtensilsCrossed className="w-4 h-4 text-[var(--accent)]" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[11px] font-black italic">Weekly Meal Plan</span>
+                <span className="text-[9px] font-bold opacity-40 uppercase tracking-tighter">AI Optimized Schedule</span>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 opacity-20" />
+          </button>
+        </div>
 
         {/* ── AI COCHING / INSIGHTS ── */}
         <div className="flex flex-col gap-1.5 py-2 border-t border-[var(--border)] mt-0.5">

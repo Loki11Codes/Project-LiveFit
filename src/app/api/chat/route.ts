@@ -41,6 +41,10 @@ USER CONTEXT & PROGRESS:
 - Day Type: ${dayType}
 - Profile: Age: ${profile?.age || "--"}, Goal: ${profile?.primaryGoal || "--"}
 - Recent Performance: Avg calories: ${analytics?.averages.kcal.toFixed(0) || "--"}, Avg protein: ${analytics?.averages.protein.toFixed(0) || "--"}g
+${userContext?.knowledge ? `
+LONG-TERM USER KNOWLEDGE:
+${userContext.knowledge.map(k => `- ${k.key}: ${k.value}`).join('\n')}
+` : ''}
 `;
   }
 
@@ -103,7 +107,14 @@ When given a user health or fitness task, you MUST:
 --- USER CONTEXT & STATE ---
 - Today's Date: ${dateStr}
 - Current Time: ${timeStr}
-${contextStr ? `\n**User Progress & Stats:**${contextStr}` : ""}
+${userContext?.knowledge ? `
+LONG-TERM USER KNOWLEDGE:
+${userContext.knowledge.map((k: any) => `- ${k.key}: ${k.value}`).join('\n')}
+` : ''}
+${userContext?.prs ? `
+USER PERSONAL RECORDS:
+${userContext.prs.map((p: any) => `- ${p.exercise.name}: Max Weight ${p.maxWeight}kg, Max 1RM ${p.max1RM}kg`).join('\n')}
+` : ''}
 
 --- FUNCTIONAL ACTIONS ---
 **Workout Initiation:**
@@ -137,6 +148,8 @@ You MUST emit structural JSON data whenever a user logs food, workouts, sleep, o
 - Workout: |||DATA { "category": "workout", "data": { "focus": "...", "exercises": [{"name": "...", "sets": [{"reps": ..., "weight": ...}]}] } } |||
 - Sleep: |||DATA { "category": "sleep", "data": { "hours": ..., "bedTime": "...", "wakeTime": "..." } } |||
 - Measurement: |||DATA { "category": "measurement", "data": { "weight": ..., "waist": ..., "bodyFat": ... } } |||
+- Knowledge: |||DATA { "category": "knowledge", "data": { "key": "...", "value": "..." } } |||
+- Meal Plan: |||DATA { "category": "meal_plan", "data": { "name": "...", "entries": [{"dayIndex": 0-6, "mealType": "...", "title": "...", "kcal": ..., "protein": ...}] } } |||
 
 **Proactive Coaching Insights:**
 If you have meaningful advice based on the User Context (e.g., "You're short on protein", "It's a rest day"), emit an insight block.
@@ -371,6 +384,31 @@ export async function POST(req: Request) {
         orderBy: { name: 'asc' }
       });
       routinesList = routines.map(r => `- ${r.name} (ID: ${r.id})`).join('\n');
+
+      // Fetch long-term knowledge
+      const knowledge = await prisma.userKnowledge.findMany({
+        where: { userId: session.user.id },
+        select: { key: true, value: true }
+      });
+      
+      if (!body.userContext) {
+        body.userContext = {
+          profile: null,
+          goals: {},
+          analytics: null,
+          dayType: 'Rest',
+          todaysStats: { protein: 0, kcal: 0, water: 0 }
+        };
+      }
+      
+      body.userContext.knowledge = knowledge;
+
+      // Fetch PRs
+      const prs = await prisma.personalRecord.findMany({
+        where: { userId: session.user.id },
+        include: { exercise: { select: { name: true } } }
+      });
+      body.userContext.prs = prs;
     }
 
     const text = await getAIResponse(body, geminiKey, openRouterKey, routinesList, body.userContext);
