@@ -49,7 +49,10 @@ describe("Signup API Route", () => {
       password: mockHash,
       username: null,
       phone: null,
-    });
+      requirePasswordChange: false,
+      onboarded: false,
+      hasSeenTutorial: false,
+    } as any);
 
     const req = new NextRequest("http://localhost/api/auth/signup", {
       method: "POST",
@@ -82,7 +85,10 @@ describe("Signup API Route", () => {
       password: mockHash,
       username: null,
       phone: null,
-    });
+      requirePasswordChange: false,
+      onboarded: false,
+      hasSeenTutorial: false,
+    } as any);
 
     const req = new NextRequest("http://localhost/api/auth/signup", {
       method: "POST",
