@@ -7,12 +7,12 @@ import { badRequest, internalError, success, unauthorized } from "@/lib/api";
 import { syncUserGoals } from "@/lib/persistence";
 
 const OnboardingSchema = z.object({
-  age: z.number().int().min(10).max(120),
+  age: z.coerce.number().int().min(10).max(120),
   gender: z.enum(["male", "female", "other"]),
-  height: z.number().min(50).max(300),
+  height: z.coerce.number().min(50).max(300),
   activityLevel: z.string().min(1),
   primaryGoal: z.string().min(1),
-  initialWeight: z.number().min(20).max(500),
+  initialWeight: z.coerce.number().min(20).max(500),
   dietaryPreference: z.string().optional(),
 });
 

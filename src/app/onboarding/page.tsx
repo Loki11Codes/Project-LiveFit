@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -32,12 +32,12 @@ export default function OnboardingPage() {
 
   // Profile Form State
   const [formData, setFormData] = useState({
-    age: 25,
+    age: "" as number | "",
     gender: "male",
-    height: 175,
-    activityLevel: "Moderate",
+    height: "" as number | "",
+    activityLevel: "Moderately Active",
     primaryGoal: "Maintenance",
-    initialWeight: 75,
+    initialWeight: "" as number | "",
     dietaryPreference: "Balanced"
   });
 
@@ -71,7 +71,36 @@ export default function OnboardingPage() {
     setPhase('profile');
   };
 
+  const handleSkipOnboarding = async () => {
+    setLoading(true);
+    try {
+      await requestJson("/api/auth/onboard", {
+        method: "POST",
+        body: JSON.stringify({
+          age: 25,
+          gender: "male",
+          height: 170,
+          activityLevel: "Moderately Active",
+          primaryGoal: "Maintenance",
+          initialWeight: 70,
+          dietaryPreference: "Balanced"
+        }),
+      });
+      await update({ onboarded: true, hasSeenTutorial: true });
+      router.push("/");
+      router.refresh();
+    } catch (error) {
+      console.error("Skip failed", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleFinishOnboarding = async () => {
+    if (!formData.age || !formData.height || !formData.initialWeight) {
+      alert("Please enter values for Age, Height, and Weight.");
+      return;
+    }
     setLoading(true);
     try {
       await requestJson("/api/auth/onboard", {
@@ -143,10 +172,10 @@ export default function OnboardingPage() {
 
               <div className="flex items-center gap-3 pt-4">
                 <button
-                  onClick={handleSkipTutorial}
+                  onClick={handleSkipOnboarding}
                   className="h-11 flex-1 rounded-2xl border border-auth-border text-xs font-bold uppercase tracking-wider text-auth-text-muted hover:bg-auth-surface2 transition-colors"
                 >
-                  Skip
+                  Skip All
                 </button>
                 <button
                   onClick={handleNextTutorial}
@@ -198,7 +227,8 @@ export default function OnboardingPage() {
                         <input
                           type="number"
                           value={formData.age}
-                          onChange={(e) => setFormData({ ...formData, age: Number(e.target.value) })}
+                          placeholder="Ex: 25"
+                          onChange={(e) => setFormData({ ...formData, age: e.target.value ? Number(e.target.value) : "" })}
                           className="h-10 w-full rounded-xl border-2 border-auth-input-border bg-auth-input-bg px-4 text-sm font-medium text-auth-input-text focus:border-[#185fa5] outline-none transition"
                         />
                       </div>
@@ -207,7 +237,8 @@ export default function OnboardingPage() {
                         <input
                           type="number"
                           value={formData.height}
-                          onChange={(e) => setFormData({ ...formData, height: Number(e.target.value) })}
+                          placeholder="Ex: 175"
+                          onChange={(e) => setFormData({ ...formData, height: e.target.value ? Number(e.target.value) : "" })}
                           className="h-10 w-full rounded-xl border-2 border-auth-input-border bg-auth-input-bg px-4 text-sm font-medium text-auth-input-text focus:border-[#185fa5] outline-none transition"
                         />
                       </div>
@@ -293,7 +324,8 @@ export default function OnboardingPage() {
                       <input
                         type="number"
                         value={formData.initialWeight}
-                        onChange={(e) => setFormData({ ...formData, initialWeight: Number(e.target.value) })}
+                        placeholder="70"
+                        onChange={(e) => setFormData({ ...formData, initialWeight: e.target.value ? Number(e.target.value) : "" })}
                         className="h-16 w-32 rounded-3xl border-4 border-[#534ab7] bg-auth-input-bg text-center text-2xl font-black text-auth-input-text outline-none shadow-xl"
                       />
                       <span className="absolute -right-10 font-bold text-auth-text-muted uppercase tracking-tighter">kg</span>
@@ -325,6 +357,15 @@ export default function OnboardingPage() {
                   {loading ? <Loader2 size={18} className="animate-spin" /> : (profileStep === 2 ? <ShieldCheck size={18} /> : null)}
                   {loading ? "Synchronizing..." : (profileStep === 2 ? "Complete Setup" : "Next")}
                   {!loading && profileStep < 2 && <ChevronRight size={16} />}
+                </button>
+              </div>
+              
+              <div className="pt-4 flex justify-center">
+                <button
+                  onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+                  className="text-[11px] font-bold text-auth-text-muted hover:text-auth-text transition-colors underline underline-offset-4"
+                >
+                  Sign Out / Wrong Account?
                 </button>
               </div>
             </motion.div>
