@@ -8,6 +8,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
+    globalTeardown: './src/test/globalTeardown.ts',
+    pool: 'forks',
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'clover'],

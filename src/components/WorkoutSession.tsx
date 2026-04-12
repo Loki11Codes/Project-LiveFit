@@ -97,8 +97,8 @@ export function WorkoutSession({
     const currentPr = userPrs.find(p => p.exerciseId === exerciseId);
     const rm = calculate1RM(weight, reps);
     
-    let isWeightPr = weight > (currentPr?.maxWeight || 0);
-    let isRmPr = rm > (currentPr?.max1RM || 0);
+    const isWeightPr = weight > (currentPr?.maxWeight || 0);
+    const isRmPr = rm > (currentPr?.max1RM || 0);
 
     if (isWeightPr || isRmPr) {
       setLastPrInfo({ name, type: isWeightPr ? "Max Weight" : "Est. 1RM" });
