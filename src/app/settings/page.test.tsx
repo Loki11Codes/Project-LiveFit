@@ -150,10 +150,9 @@ describe("SettingsPage", () => {
   it("changes input in Profile Tab", async () => {
     render(<SettingsPage />);
     const inputs = screen.getAllByRole("textbox");
-    if (inputs.length > 0) {
-      fireEvent.change(inputs[0], { target: { value: "New Name" } });
-      expect(inputs[0]).toHaveValue("New Name");
-    }
+    expect(inputs.length).toBeGreaterThan(0);
+    fireEvent.change(inputs[0], { target: { value: "New Name" } });
+    expect(inputs[0]).toHaveValue("New Name");
   });
 
   it("changes input in Fitness Tab", async () => {
@@ -161,10 +160,9 @@ describe("SettingsPage", () => {
     fireEvent.click(screen.getAllByText("Fitness & Goals")[0]);
     await waitFor(() => {
       const inputs = screen.getAllByRole("spinbutton");
-      if (inputs.length > 0) {
-        fireEvent.change(inputs[0], { target: { value: 75 } });
-        expect(inputs[0]).toHaveValue(75);
-      }
+      expect(inputs.length).toBeGreaterThan(0);
+      fireEvent.change(inputs[0], { target: { value: 75 } });
+      expect(inputs[0]).toHaveValue(75);
     });
   });
 
@@ -173,10 +171,9 @@ describe("SettingsPage", () => {
     fireEvent.click(screen.getAllByText("Nutrition & Diet")[0]);
     await waitFor(() => {
       const inputs = screen.getAllByRole("spinbutton");
-      if (inputs.length > 0) {
-        fireEvent.change(inputs[0], { target: { value: 2000 } });
-        expect(inputs[0]).toHaveValue(2000);
-      }
+      expect(inputs.length).toBeGreaterThan(0);
+      fireEvent.change(inputs[0], { target: { value: 2000 } });
+      expect(inputs[0]).toHaveValue(2000);
     });
   });
 });

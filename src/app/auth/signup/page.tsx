@@ -1,6 +1,6 @@
 "use client";
 
-import { BaseSyntheticEvent, useMemo, useState } from "react";
+import { BaseSyntheticEvent, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -19,38 +19,26 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { GoogleMark } from "@/components/auth/GoogleMark";
 import { NutritionIllustration } from "@/components/auth/NutritionIllustration";
 import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
+import { usePasswordValidation } from "@/hooks/usePasswordValidation";
 
 
 export default function SignUp() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const {
+    password, setPassword,
+    confirmPassword, setConfirmPassword,
+    showPassword, setShowPassword,
+    showConfirmPassword, setShowConfirmPassword,
+    passwordMatch,
+    passwordChecks,
+    isPasswordValid,
+  } = usePasswordValidation();
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-
-  const passwordMatch = useMemo(() => {
-    if (!confirmPassword) {
-      return null;
-    }
-
-    return password === confirmPassword;
-  }, [confirmPassword, password]);
-
-  const passwordChecks = useMemo(
-    () => ({
-      minimumLength: password.length >= 12,
-      hasUpper: /[A-Z]/.test(password),
-      hasLower: /[a-z]/.test(password),
-      hasNumber: /\d/.test(password),
-      hasSpecial: /[^A-Za-z0-9]/.test(password),
-    }),
-    [password],
-  );
 
   const handleSubmit = async (e: BaseSyntheticEvent) => {
     e.preventDefault();
@@ -59,8 +47,7 @@ export default function SignUp() {
       return;
     }
 
-    const { minimumLength, hasUpper, hasLower, hasNumber, hasSpecial } = passwordChecks;
-    if (!minimumLength || !hasUpper || !hasLower || !hasNumber || !hasSpecial) {
+    if (!isPasswordValid) {
       setError("Password does not meet all security requirements");
       return;
     }

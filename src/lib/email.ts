@@ -1,12 +1,13 @@
 import nodemailer from "nodemailer";
 import { v4 as uuidv4 } from "uuid";
+import crypto from "node:crypto";
 import prisma from "@/lib/prisma";
 
 /**
  * Generates a 6-digit OTP code and a unique verification token.
  */
 export function generateVerificationData() {
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otp = crypto.randomInt(100000, 999999).toString();
   const token = uuidv4();
   const expires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 hours
   

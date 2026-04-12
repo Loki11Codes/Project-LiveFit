@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { getSmartSuggestion } from "@/lib/meal-suggestions";
 import { motion, AnimatePresence } from "framer-motion";
-import type { AIInsight, DayType, TabId } from "@/lib/types";
+import type { AIInsight, DayType, TabId, AnalyticsResponse, LogsResponse } from "@/lib/types";
 import { GlassPane } from "./Shared/GlassPane";
 import { GlassMetric } from "./Shared/GlassMetric";
 import { GlassPopover } from "./Shared/GlassPopover";
@@ -45,8 +45,8 @@ interface SidebarProps {
   readonly dayType: DayType;
   readonly setDayType: (type: DayType) => void;
   readonly hasWorkout: boolean;
-  readonly analytics: any;
-  readonly logs: any;
+  readonly analytics: AnalyticsResponse | null;
+  readonly logs: LogsResponse;
   readonly activeWorkout?: import("@/lib/types").ActiveWorkoutSession | null;
   readonly aiInsights?: AIInsight[];
   readonly onTabChange?: (tab: TabId) => void;
@@ -114,7 +114,7 @@ function WeeklyConsistency({ stats }: Readonly<{ stats: any[] }>) {
           const height = dayData ? (dayData.protein / max) * 100 : 5;
           return (
             <div
-              key={dayData?.day || i}
+              key={dayData?.day || `bar-${i}`}
               className="flex-1 bg-[var(--surface2)] rounded-t-sm relative group"
               style={{ height: "100%" }}
             >
@@ -131,7 +131,7 @@ function WeeklyConsistency({ stats }: Readonly<{ stats: any[] }>) {
   );
 }
 
-function RecentActivity({ logs }: Readonly<{ logs: any }>) {
+function RecentActivity({ logs }: Readonly<{ logs: LogsResponse }>) {
   const activities: any[] = [];
   
   if (logs?.food) {
@@ -428,12 +428,13 @@ export default function Sidebar({
   // TREND CALCULATION
   const weightTrend = analytics?.weightTrend || [];
   const weightDelta = weightTrend.length >= 2 
-    ? Number(weight) - weightTrend[weightTrend.length - 2].weight
+    ? Number(weight) - (weightTrend.at(-2)?.weight || 0)
     : 0;
 
   const sleepLogs = logs?.sleep || [];
+  const sleepLogsLatest = sleepLogs.at(-2);
   const sleepDelta = sleepLogs.length >= 2
-    ? Number(sleep) - Number(sleepLogs[sleepLogs.length - 2].hours)
+    ? Number(sleep) - Number(sleepLogsLatest?.hours || 0)
     : 0;
 
   const dayTypes: Array<{ id: DayType; label: string; icon: LucideIcon }> = [

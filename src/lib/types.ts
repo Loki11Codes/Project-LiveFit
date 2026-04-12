@@ -126,6 +126,7 @@ export type LogsResponse = {
   food: FoodLog[];
   workouts: WorkoutLogWithRelations[];
   sleep: SleepLog[];
+  water: any[]; // Hydration logs
 };
 
 export type DayTypeEntryRecord = {
@@ -271,6 +272,7 @@ export const EMPTY_LOGS: LogsResponse = {
   food: [],
   workouts: [],
   sleep: [],
+  water: [],
 };
 
 export const EMPTY_DAY_TYPES_BY_DAY: DayTypeMap = {};

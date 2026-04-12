@@ -57,7 +57,7 @@ export const UserProfileSchema = z.object({
   gender: z.string().max(20).nullable().optional(),
   height: optionalNullableFiniteNumber,
   startDay: z.number().int().min(1).nullable().optional(),
-  accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+  accentColor: z.string().regex(/^#[\dA-Fa-f]{6}$/).optional(),
   primaryGoal: z.string().max(100).nullable().optional(),
   dietaryPreference: z.string().max(100).nullable().optional(),
   activityPreference: z.string().max(100).nullable().optional(),
@@ -228,7 +228,7 @@ export const SignupSchema = z
       .string()
       .trim()
       .regex(
-        /^[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9.-]{1,191}\.[a-zA-Z]{2,8}$/,
+        /^[\w.%+-]{1,64}@[\w.-]{1,191}\.[a-zA-Z]{2,8}$/,
         "Invalid email address",
       )
       .max(160),
@@ -239,7 +239,7 @@ export const SignupSchema = z
       .regex(/[a-z]/, "Must contain at least one lowercase letter")
       .regex(/[A-Z]/, "Must contain at least one uppercase letter")
       .regex(/\d/, "Must contain at least one number")
-      .regex(/[^A-Za-z0-9]/, "Must contain at least one special character"),
+      .regex(/[^\w\s]|_/, "Must contain at least one special character"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {

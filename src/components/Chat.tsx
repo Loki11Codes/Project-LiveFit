@@ -314,7 +314,7 @@ export default function Chat({
 
   return (
     <div
-      className="flex-1 min-w-0 h-full bg-[var(--surface)] rounded-[var(--radius-xl)] flex flex-col border border-[var(--border)] shadow-[var(--shadow-lg)] overflow-hidden transition-all duration-300 [background-clip:padding-box] [transform:translateZ(0)] [mask-image:linear-gradient(#fff,#fff)] relative"
+      className="flex-1 min-w-0 h-full bg-[var(--surface)] rounded-[var(--radius-xl)] flex flex-col border border-[var(--border)] shadow-[var(--shadow-lg)] overflow-hidden transition-all duration-300 [background-clip:padding-box] [transform:translateZ(0)] [mask-image:linear-gradient(#fff,#fff)] relative fitness-doodle"
       role="log"
       aria-label="Chat history"
       aria-live="polite"

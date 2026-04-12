@@ -276,12 +276,17 @@ function FormField({
   value?: string | number;
   onChange?: (val: string) => void;
 }>) {
+  const id = React.useId();
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-[12px] font-bold uppercase tracking-widest text-(--text-muted)  ml-1">
+      <label 
+        htmlFor={id}
+        className="text-[12px] font-bold uppercase tracking-widest text-(--text-muted)  ml-1"
+      >
         {label}
       </label>
       <input
+        id={id}
         type={type}
         placeholder={placeholder}
         value={value}
@@ -394,9 +399,9 @@ function ProfilePanel({
             onChange={(v) => onChange("height", Number.parseInt(v) || 0)}
           />
           <div className="flex flex-col gap-2">
-            <label className="text-[12px] font-bold uppercase tracking-widest text-(--text-muted) ml-1">
+            <span className="text-[12px] font-bold uppercase tracking-widest text-(--text-muted) ml-1">
               Gender
-            </label>
+            </span>
             <div className="grid grid-cols-3 gap-2">
               {["male", "female", "others"].map((g) => {
                 const isActive = g === "others"
