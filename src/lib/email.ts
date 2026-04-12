@@ -14,14 +14,8 @@ export function generateVerificationData() {
   return { otp, token, expires };
 }
 
-/**
- * Sends a verification email containing both an OTP and a Magic Link.
- * In development without SMTP credentials, it logs the content to the console.
- */
-export async function sendVerificationEmail(email: string, name: string, otp: string, token: string) {
-  const verifyUrl = `${process.env.NEXTAUTH_URL}/api/auth/verify?token=${token}&email=${encodeURIComponent(email)}`;
-  
-  const html = `
+function getVerifyEmailHtml(name: string, otp: string, verifyUrl: string) {
+  return `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #1f2937;">
       <h2 style="color: #185fa5;">Verify Your Caloriq Account</h2>
       <p>Hello ${name},</p>
@@ -42,6 +36,15 @@ export async function sendVerificationEmail(email: string, name: string, otp: st
       </p>
     </div>
   `;
+}
+
+/**
+ * Sends a verification email containing both an OTP and a Magic Link.
+ * In development without SMTP credentials, it logs the content to the console.
+ */
+export async function sendVerificationEmail(email: string, name: string, otp: string, token: string) {
+  const verifyUrl = `${process.env.NEXTAUTH_URL}/api/auth/verify?token=${token}&email=${encodeURIComponent(email)}`;
+  const html = getVerifyEmailHtml(name, otp, verifyUrl);
 
   // For testing/dev if no SMTP is configured, log to console
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {

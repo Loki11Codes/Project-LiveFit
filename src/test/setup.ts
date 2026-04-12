@@ -1,10 +1,16 @@
 import '@testing-library/jest-dom';
 import { cleanup } from '@testing-library/react';
-import { afterEach, vi } from 'vitest';
+import { afterEach, afterAll, vi } from 'vitest';
+import prisma from '@/lib/prisma';
 
 // Automatically cleanup after each test to prevent memory leaks and state contamination
 afterEach(() => {
   cleanup();
+});
+
+// Ensure database connections are closed to prevent CI hangs
+afterAll(async () => {
+  await prisma.$disconnect();
 });
 
 // Mock Next.js navigation hooks by default as they are common in UI components

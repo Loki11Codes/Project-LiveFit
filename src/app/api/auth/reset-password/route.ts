@@ -15,7 +15,7 @@ const ResetPasswordSchema = z.object({
     .regex(/[a-z]/)
     .regex(/[A-Z]/)
     .regex(/\d/)
-    .regex(/[^A-Za-z0-9]/),
+    .regex(/[^\w\s]|_/)
 });
 
 export async function POST(req: Request) {

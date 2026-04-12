@@ -24,7 +24,7 @@ export function QuickChip({ icon: Icon, label, color, onClick }: QuickChipProps)
       suppressHydrationWarning
     >
       <Icon className="w-3.5 h-3.5" style={{ color }} strokeWidth={2.5} />
-      <span style={{ color: color ? color : 'inherit', filter: 'brightness(0.8)' }}>
+      <span style={{ color: color || 'inherit', filter: 'brightness(0.8)' }}>
         {label}
       </span>
     </motion.button>
