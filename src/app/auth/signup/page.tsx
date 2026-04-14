@@ -20,9 +20,48 @@ import { GoogleMark } from "@/components/auth/GoogleMark";
 import { NutritionIllustration } from "@/components/auth/NutritionIllustration";
 import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
 import { usePasswordValidation } from "@/hooks/usePasswordValidation";
-
+import { AuthInput } from "@/components/auth/AuthInput";
 
 export default function SignUp() {
+  return (
+    <AuthShell
+      badge="Create Account"
+      title="Build your Caloriq profile"
+      subtitle="Start with a few details and unlock daily tracking, nutrition insights, and guided progress from day one."
+      panelTitle="Train smarter, not noisier"
+      panelDescription="Caloriq gives you a practical fitness command center so your habits and outcomes stay visible every day."
+      panelPoints={[
+        "Clear daily goals for nutrition and body metrics",
+        "Personalized analytics that learn from your log history",
+        "Simple setup now, better consistency over time",
+      ]}
+      bottomText="Already have an account?"
+      bottomLinkLabel="Sign in"
+      bottomLinkHref="/auth/signin"
+      illustration={<NutritionIllustration />}
+    >
+      <SignUpForm />
+
+      <div className="my-3 flex items-center gap-4 text-[10px] font-bold uppercase tracking-[0.12em] text-auth-text-muted">
+        <span className="h-px flex-1 bg-auth-border/50" />
+        <span>Social Access</span>
+        <span className="h-px flex-1 bg-auth-border/50" />
+      </div>
+
+      <button
+        type="button"
+        suppressHydrationWarning
+        onClick={() => signIn("google", { callbackUrl: "/" })}
+        className="inline-flex h-10 w-full items-center justify-center gap-3 rounded-2xl border-2 border-auth-border bg-auth-surface px-5 text-[13px] font-semibold text-auth-input-text transition hover:brightness-95 shadow-sm"
+      >
+        <GoogleMark />
+        Google Sign In
+      </button>
+    </AuthShell>
+  );
+}
+
+function SignUpForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const {
@@ -75,119 +114,83 @@ export default function SignUp() {
   };
 
   return (
-    <AuthShell
-      badge="Create Account"
-      title="Build your Caloriq profile"
-      subtitle="Start with a few details and unlock daily tracking, nutrition insights, and guided progress from day one."
-      panelTitle="Train smarter, not noisier"
-      panelDescription="Caloriq gives you a practical fitness command center so your habits and outcomes stay visible every day."
-      panelPoints={[
-        "Clear daily goals for nutrition and body metrics",
-        "Personalized analytics that learn from your log history",
-        "Simple setup now, better consistency over time",
-      ]}
-      bottomText="Already have an account?"
-      bottomLinkLabel="Sign in"
-      bottomLinkHref="/auth/signin"
-      illustration={<NutritionIllustration />}
-    >
-      <form onSubmit={handleSubmit} className="space-y-2.5 mt-1">
-        <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
-          <div className="relative flex items-center">
-            <User
-              size={18}
-              className="pointer-events-none absolute left-4 text-zinc-400"
-            />
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(event) => {
-                setName(event.target.value);
-                if (error) setError("");
-              }}
-              placeholder="Full Name"
-              aria-label="Full Name"
-              autoFocus
-              required
-              suppressHydrationWarning
-              className="h-10 w-full rounded-2xl border-2 border-auth-input-border bg-auth-input-bg pl-11 pr-4 text-[14px] font-medium text-auth-input-text outline-none transition placeholder:text-zinc-500 focus:border-[#185fa5] focus:ring-4 focus:ring-[#185fa5]/10"
-            />
-          </div>
+    <form onSubmit={handleSubmit} className="space-y-2.5 mt-1">
+      <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
+        <AuthInput
+          id="name"
+          icon={User}
+          type="text"
+          value={name}
+          onChange={(event) => {
+            setName(event.target.value);
+            if (error) setError("");
+          }}
+          placeholder="Full Name"
+          aria-label="Full Name"
+          autoFocus
+          required
+          suppressHydrationWarning
+        />
 
-          <div className="relative flex items-center">
-            <Mail
-              size={18}
-              className="pointer-events-none absolute left-4 text-zinc-400"
-            />
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(event) => {
-                setEmail(event.target.value);
-                if (error) setError("");
-              }}
-              placeholder="Email Address"
-              aria-label="Email"
-              required
-              suppressHydrationWarning
-              className="h-10 w-full rounded-2xl border-2 border-auth-input-border bg-auth-input-bg pl-11 pr-4 text-[14px] font-medium text-auth-input-text outline-none transition placeholder:text-zinc-500 focus:border-[#185fa5] focus:ring-4 focus:ring-[#185fa5]/10"
-            />
-          </div>
-        </div>
+        <AuthInput
+          id="email"
+          icon={Mail}
+          type="email"
+          value={email}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            if (error) setError("");
+          }}
+          placeholder="Email Address"
+          aria-label="Email"
+          required
+          suppressHydrationWarning
+        />
+      </div>
 
-        <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
-          <div className="relative flex items-center">
-            <Lock
-              size={18}
-              className="pointer-events-none absolute left-4 text-zinc-400"
-            />
-            <input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(event) => {
-                setPassword(event.target.value);
-                if (error) setError("");
-              }}
-              placeholder="New Password"
-              aria-label="Password"
-              minLength={6}
-              required
-              suppressHydrationWarning
-              className="h-10 w-full rounded-2xl border-2 border-auth-input-border bg-auth-input-bg pl-11 pr-12 text-[14px] font-medium text-auth-input-text outline-none transition placeholder:text-zinc-500 focus:border-[#185fa5] focus:ring-4 focus:ring-[#185fa5]/10"
-            />
+      <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
+        <AuthInput
+          id="password"
+          icon={Lock}
+          type={showPassword ? "text" : "password"}
+          value={password}
+          onChange={(event) => {
+            setPassword(event.target.value);
+            if (error) setError("");
+          }}
+          placeholder="New Password"
+          aria-label="Password"
+          minLength={6}
+          required
+          suppressHydrationWarning
+          rightElement={
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               suppressHydrationWarning
-              className="absolute right-4 text-zinc-400 hover:text-zinc-600 transition-colors"
+              className="text-zinc-400 hover:text-zinc-600 transition-colors"
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
-          </div>
+          }
+        />
 
-          <div className="relative flex items-center">
-            <input
-              id="confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
-              value={confirmPassword}
-              onChange={(event) => {
-                setConfirmPassword(event.target.value);
-                if (error) setError("");
-              }}
-              placeholder="Confirm Password"
-              aria-label="Confirm Password"
-              required
-              suppressHydrationWarning
-              className={`h-10 w-full rounded-2xl border-2 pl-4 pr-12 text-[14px] font-medium outline-none transition ${
-                passwordMatch === false
-                  ? "border-rose-400 focus:border-rose-500 focus:ring-4 focus:ring-rose-100/50"
-                  : "border-auth-input-border bg-auth-input-bg text-auth-input-text placeholder:text-zinc-500 focus:border-[#185fa5] focus:ring-4 focus:ring-[#185fa5]/10"
-              }`}
-            />
-            <div className="absolute right-4 flex items-center gap-2">
+        <AuthInput
+          id="confirmPassword"
+          icon={Lock}
+          type={showConfirmPassword ? "text" : "password"}
+          value={confirmPassword}
+          onChange={(event) => {
+            setConfirmPassword(event.target.value);
+            if (error) setError("");
+          }}
+          placeholder="Confirm Password"
+          aria-label="Confirm Password"
+          required
+          suppressHydrationWarning
+          error={passwordMatch === false}
+          rightElement={
+            <>
               {passwordMatch && (
                 <CheckCircle2 size={16} className="text-[#0f6e56]" />
               )}
@@ -199,58 +202,42 @@ export default function SignUp() {
               >
                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
-            </div>
-          </div>
-        </div>
-
-        <PasswordRequirements passwordChecks={passwordChecks} size="sm" />
-
-        {error && (
-          <div className="rounded-2xl border-2 border-rose-500/25 bg-rose-50 px-4 py-3 text-[14px] font-medium text-rose-700 mt-2">
-            {error}
-          </div>
-        )}
-
-        {success && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="rounded-2xl border-2 border-emerald-500/25 bg-emerald-50 px-4 py-3 text-[14px] font-medium text-[#0f6e56] mt-2"
-          >
-            {success}
-          </motion.div>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading}
-          suppressHydrationWarning
-          className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-[#185fa5] px-5 text-[13px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-[#378add] disabled:cursor-not-allowed disabled:bg-zinc-500 shadow-md"
-        >
-          {loading ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <UserPlus size={16} />
-          )}
-          {loading ? "Creating account" : "Create Account"}
-        </button>
-      </form>
-
-      <div className="my-3 flex items-center gap-4 text-[10px] font-bold uppercase tracking-[0.12em] text-auth-text-muted">
-        <span className="h-px flex-1 bg-auth-border/50" />
-        <span>Social Access</span>
-        <span className="h-px flex-1 bg-auth-border/50" />
+            </>
+          }
+        />
       </div>
 
+      <PasswordRequirements passwordChecks={passwordChecks} size="sm" />
+
+      {error && (
+        <div className="rounded-2xl border-2 border-rose-500/25 bg-rose-50 px-4 py-3 text-[14px] font-medium text-rose-700 mt-2">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="rounded-2xl border-2 border-emerald-500/25 bg-emerald-50 px-4 py-3 text-[14px] font-medium text-[#0f6e56] mt-2"
+        >
+          {success}
+        </motion.div>
+      )}
+
       <button
-        type="button"
+        type="submit"
+        disabled={loading}
         suppressHydrationWarning
-        onClick={() => signIn("google", { callbackUrl: "/" })}
-        className="inline-flex h-10 w-full items-center justify-center gap-3 rounded-2xl border-2 border-auth-border bg-auth-surface px-5 text-[13px] font-semibold text-auth-input-text transition hover:brightness-95 shadow-sm"
+        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-[#185fa5] px-5 text-[13px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-[#378add] disabled:cursor-not-allowed disabled:bg-zinc-500 shadow-md"
       >
-        <GoogleMark />
-        Google Sign In
+        {loading ? (
+          <Loader2 size={16} className="animate-spin" />
+        ) : (
+          <UserPlus size={16} />
+        )}
+        {loading ? "Creating account" : "Create Account"}
       </button>
-    </AuthShell>
+    </form>
   );
 }

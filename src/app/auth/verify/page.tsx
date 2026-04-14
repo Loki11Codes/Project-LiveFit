@@ -14,7 +14,7 @@ import {
 import { AuthShell } from "@/components/auth/AuthShell";
 import { requestJson, getClientErrorMessage } from "@/lib/client-api";
 
-function VerifyEmailForm() {
+export function VerifyEmailForm() {
   const { data: session, update } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();

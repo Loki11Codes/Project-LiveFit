@@ -389,14 +389,14 @@ function ProfilePanel({
             type="number"
             placeholder="25"
             value={data.age || ""}
-            onChange={(v) => onChange("age", Number.parseInt(v) || 0)}
+            onChange={(v) => onChange("age", Number.parseInt(v, 10) || 0)}
           />
           <FormField
             label="Height (cm)"
             type="number"
             placeholder="180"
             value={data.height || ""}
-            onChange={(v) => onChange("height", Number.parseInt(v) || 0)}
+            onChange={(v) => onChange("height", Number.parseInt(v, 10) || 0)}
           />
           <div className="flex flex-col gap-2">
             <span className="text-[12px] font-bold uppercase tracking-widest text-(--text-muted) ml-1">
@@ -615,7 +615,7 @@ function FitnessPanel({
             placeholder="2500"
             value={goals.kcalTarget ?? ""}
             onChange={(v) =>
-              onChangeGoal("kcalTarget", Number.parseInt(v) || 0)
+              onChangeGoal("kcalTarget", Number.parseInt(v, 10) || 0)
             }
           />
           <FormField
@@ -624,7 +624,7 @@ function FitnessPanel({
             placeholder="60"
             value={goals.workoutDuration ?? ""}
             onChange={(v) =>
-              onChangeGoal("workoutDuration", Number.parseInt(v) || 0)
+              onChangeGoal("workoutDuration", Number.parseInt(v, 10) || 0)
             }
           />
         </div>

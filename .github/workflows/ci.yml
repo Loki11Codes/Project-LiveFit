@@ -39,6 +39,7 @@ jobs:
       continue-on-error: true
 
     - name: Run tests with coverage
+      timeout-minutes: 15
       run: npm test
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}

@@ -9,7 +9,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     globalTeardown: './src/test/globalTeardown.ts',
-    pool: 'forks',
+    pool: 'threads',
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'clover'],

@@ -29,6 +29,8 @@ vi.mock('@/lib/prisma', () => ({
     chatMessage: { create: vi.fn() },
     user: { findUnique: vi.fn().mockResolvedValue({ id: 'user-1' }) },
     routine: { findMany: vi.fn().mockResolvedValue([]) },
+    userKnowledge: { findMany: vi.fn().mockResolvedValue([]) },
+    personalRecord: { findMany: vi.fn().mockResolvedValue([]) },
   },
 }));
 

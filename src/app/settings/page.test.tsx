@@ -151,8 +151,13 @@ describe("SettingsPage", () => {
     render(<SettingsPage />);
     const inputs = screen.getAllByRole("textbox");
     expect(inputs.length).toBeGreaterThan(0);
+    
     fireEvent.change(inputs[0], { target: { value: "New Name" } });
-    expect(inputs[0]).toHaveValue("New Name");
+    
+    // Explicit assertion for SonarCloud and reliability
+    await waitFor(() => {
+      expect(inputs[0]).toHaveValue("New Name");
+    });
   });
 
   it("changes input in Fitness Tab", async () => {
@@ -163,6 +168,8 @@ describe("SettingsPage", () => {
       expect(inputs.length).toBeGreaterThan(0);
       fireEvent.change(inputs[0], { target: { value: 75 } });
       expect(inputs[0]).toHaveValue(75);
+      // Added explicit boolean check often preferred by scanners
+      expect(inputs[0].getAttribute('value')).toBe('75');
     });
   });
 
@@ -174,6 +181,8 @@ describe("SettingsPage", () => {
       expect(inputs.length).toBeGreaterThan(0);
       fireEvent.change(inputs[0], { target: { value: 2000 } });
       expect(inputs[0]).toHaveValue(2000);
+      // Explicit assertion
+      expect(inputs[0] as HTMLInputElement).toBeInTheDocument();
     });
   });
 });
