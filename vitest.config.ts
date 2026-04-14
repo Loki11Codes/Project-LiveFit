@@ -10,6 +10,14 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     globalTeardown: './src/test/globalTeardown.ts',
     pool: 'threads',
+    poolOptions: {
+      threads: {
+        singleThread: true,
+      },
+    },
+    testTimeout: 30000,
+    hookTimeout: 30000,
+    teardownTimeout: 30000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'clover'],

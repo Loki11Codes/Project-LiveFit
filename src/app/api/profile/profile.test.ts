@@ -68,12 +68,13 @@ describe("Profile API Route", () => {
       const data = await res.json();
 
       expect(res.status).toBe(200);
-      expect(data).toEqual({ ...mockProfile, ...mockUser });
+      expect(data).toEqual({ ...mockProfile, ...mockUser, achievements: [] });
       expect(prisma.userProfile.findUnique).toHaveBeenCalledWith({
         where: { userId: "user-1" },
       });
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { id: "user-1" },
+        include: { achievements: true },
       });
     });
 
