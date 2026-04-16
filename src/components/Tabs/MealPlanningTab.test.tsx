@@ -23,14 +23,14 @@ describe('MealPlanningTab', () => {
   });
 
   it('renders loading state initially', async () => {
-    (requestJson as any).mockReturnValue(new Promise(() => {}));
+    vi.mocked(requestJson).mockReturnValue(new Promise(() => {}));
     const { container } = render(<MealPlanningTab />);
     // Check for the pulse animation class
     expect(container.querySelector('.animate-pulse')).toBeDefined();
   });
 
   it('renders a meal plan when data is loaded', async () => {
-    (requestJson as any).mockResolvedValue(mockPlan);
+    vi.mocked(requestJson).mockResolvedValue(mockPlan);
     render(<MealPlanningTab />);
 
     await waitFor(() => {
@@ -40,7 +40,7 @@ describe('MealPlanningTab', () => {
   });
 
   it('dispatches ai-chat-prompt event when Generate button is clicked', async () => {
-    (requestJson as any).mockResolvedValue(null);
+    vi.mocked(requestJson).mockResolvedValue(null);
     const dispatchSpy = vi.spyOn(globalThis, 'dispatchEvent');
     render(<MealPlanningTab />);
 
@@ -54,7 +54,7 @@ describe('MealPlanningTab', () => {
   });
 
   it('shows empty state when no plan exists', async () => {
-    (requestJson as any).mockResolvedValue(null);
+    vi.mocked(requestJson).mockResolvedValue(null);
     render(<MealPlanningTab />);
 
     await waitFor(() => {

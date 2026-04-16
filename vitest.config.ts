@@ -9,11 +9,12 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     pool: 'forks',
+    maxWorkers: process.env.CI ? 1 : undefined,
     testTimeout: 30000,
     hookTimeout: 30000,
     teardownTimeout: 30000,
     coverage: {
-      provider: 'v8',
+      provider: 'istanbul',
       reporter: ['text', 'lcov', 'clover'],
       reportsDirectory: './coverage',
       include: ['src/**/*.{ts,tsx}'],

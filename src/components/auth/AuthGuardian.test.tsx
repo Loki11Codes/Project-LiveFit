@@ -20,11 +20,11 @@ describe('AuthGuardian Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as any);
+    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as ReturnType<typeof useRouter>);
   });
 
   it('does nothing if status is loading', () => {
-    vi.mocked(useSession).mockReturnValue({ data: null, status: 'loading' } as any);
+    vi.mocked(useSession).mockReturnValue({ data: null, status: 'loading', update: vi.fn() } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
     render(<AuthGuardian />);
     expect(mockPush).not.toHaveBeenCalled();
   });
@@ -33,7 +33,8 @@ describe('AuthGuardian Component', () => {
     vi.mocked(useSession).mockReturnValue({
       data: { user: { id: 'u1', requirePasswordChange: true } },
       status: 'authenticated',
-    } as any);
+      update: vi.fn(),
+    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
     vi.mocked(usePathname).mockReturnValue('/');
 
     render(<AuthGuardian />);
@@ -47,7 +48,8 @@ describe('AuthGuardian Component', () => {
     vi.mocked(useSession).mockReturnValue({
       data: { user: { id: 'u1', emailVerified: null } },
       status: 'authenticated',
-    } as any);
+      update: vi.fn(),
+    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
     vi.mocked(usePathname).mockReturnValue('/');
 
     render(<AuthGuardian />);
@@ -61,7 +63,8 @@ describe('AuthGuardian Component', () => {
     vi.mocked(useSession).mockReturnValue({
       data: { user: { id: 'u1', emailVerified: new Date(), onboarded: false } },
       status: 'authenticated',
-    } as any);
+      update: vi.fn(),
+    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
     vi.mocked(usePathname).mockReturnValue('/');
 
     render(<AuthGuardian />);
@@ -75,7 +78,8 @@ describe('AuthGuardian Component', () => {
     vi.mocked(useSession).mockReturnValue({
       data: { user: { id: 'u1', emailVerified: new Date(), onboarded: true, requirePasswordChange: false } },
       status: 'authenticated',
-    } as any);
+      update: vi.fn(),
+    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
     vi.mocked(usePathname).mockReturnValue('/');
 
     render(<AuthGuardian />);

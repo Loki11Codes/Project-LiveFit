@@ -31,8 +31,8 @@ export function WorkoutSession({
   const [elapsed, setElapsed] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [availableExercises, setAvailableExercises] = useState<any[]>([]);
-  const [userPrs, setUserPrs] = useState<any[]>([]);
+  const [availableExercises, setAvailableExercises] = useState<Array<{ id: string; name: string; category: string; equipment?: string }>>([]);
+  const [userPrs, setUserPrs] = useState<Array<{ exerciseId: string; maxWeight?: number; max1RM?: number }>>([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [lastPrInfo, setLastPrInfo] = useState<{name: string, type: string} | null>(null);
   
@@ -210,7 +210,7 @@ export function WorkoutSession({
     }
   };
 
-  const addExercise = (exercise: any) => {
+  const addExercise = (exercise: { id: string; name: string }) => {
     const newEx: TrackedExercise = {
       id: crypto.randomUUID(),
       exerciseId: exercise.id,
@@ -506,7 +506,7 @@ export function WorkoutSession({
                   <div className="p-4 rounded-full bg-[var(--surface2)]">
                     <Search className="w-8 h-8 opacity-20" />
                   </div>
-                  <p className="font-bold">No exercises found for "{searchQuery}"</p>
+                  <p className="font-bold">No exercises found for &quot;{searchQuery}&quot;</p>
                 </div>
               )}
             </div>
