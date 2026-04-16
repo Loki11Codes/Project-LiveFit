@@ -9,7 +9,6 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     pool: 'forks',
-    singleFork: true,
     testTimeout: 30000,
     hookTimeout: 30000,
     teardownTimeout: 30000,

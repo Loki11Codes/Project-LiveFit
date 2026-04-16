@@ -6,6 +6,14 @@ import prisma from '@/lib/prisma';
 // Automatically cleanup after each test to prevent memory leaks and state contamination
 afterEach(() => {
   cleanup();
+  vi.clearAllMocks();
+  if (typeof window !== 'undefined') {
+    localStorage.clear();
+    sessionStorage.clear();
+    // Reset document attributes that might be changed by ThemeProvider or other logic
+    document.documentElement.removeAttribute('data-theme');
+    document.documentElement.style.removeProperty('--user-accent');
+  }
 });
 
 // Ensure database connections are closed to prevent CI hangs
