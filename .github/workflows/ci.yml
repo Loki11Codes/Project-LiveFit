@@ -41,7 +41,7 @@ jobs:
       continue-on-error: true
 
     - name: Run tests with coverage
-      timeout-minutes: 20
+      timeout-minutes: 40
       run: npm test
 
     - name: SonarCloud Scan

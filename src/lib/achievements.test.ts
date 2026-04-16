@@ -35,8 +35,8 @@ describe('ACHIEVEMENT_REGISTRY', () => {
 // ── syncAchievements ──────────────────────────────────────────────────────────
 
 const makeTx = (overrides: Partial<{
-  existing: any[];
-  prs: any[];
+  existing: Array<{ badgeId: string }>;
+  prs: Array<{ exercise: { name: string }, maxWeight: number }>;
   workoutCount: number;
   createMany: ReturnType<typeof vi.fn>;
 }> = {}) => {

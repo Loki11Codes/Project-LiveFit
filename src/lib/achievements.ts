@@ -99,11 +99,37 @@ export function getBadgeById(id: string) {
   return ACHIEVEMENT_REGISTRY.find(b => b.badgeId === id);
 }
 
+interface PrismaTx {
+  achievement: {
+    findMany: (args: { where: { userId: string } }) => Promise<Array<{ badgeId: string }>>;
+    createMany: (args: { data: Array<{
+      userId: string;
+      type: string;
+      badgeId: string;
+      tier: string;
+      title: string;
+      description: string;
+    }> }) => Promise<{ count: number }>;
+  };
+  personalRecord: {
+    findMany: (args: { 
+      where: { userId: string }, 
+      include: { exercise: boolean } 
+    }) => Promise<Array<{ 
+      maxWeight: number; 
+      exercise: { name: string } 
+    }>>;
+  };
+  workoutLog: {
+    count: (args: { where: { userId: string } }) => Promise<number>;
+  };
+}
+
 /**
  * Logic to evaluate and persist achievements based on user state.
  * Runs within a Prisma transaction for consistency.
  */
-export async function syncAchievements(tx: any, userId: string) {
+export async function syncAchievements(tx: PrismaTx, userId: string) {
   const [existing, prs, workoutCount] = await Promise.all([
     tx.achievement.findMany({ where: { userId } }),
     tx.personalRecord.findMany({ 
@@ -113,11 +139,11 @@ export async function syncAchievements(tx: any, userId: string) {
     tx.workoutLog.count({ where: { userId } })
   ]);
 
-  const existingIds = new Set(existing.map((a: any) => a.badgeId));
+  const existingIds = new Set(existing.map((a) => a.badgeId));
   const newlyUnlocked: AchievementBadge[] = [];
 
   // 1. Check PR Milestones (Bench Press)
-  const benchPR = prs.find((p: any) => p.exercise.name === 'Bench Press');
+  const benchPR = prs.find((p) => p.exercise.name === 'Bench Press');
   if (benchPR) {
     const milestones = [
       { id: 'bench-bronze', weight: 50 },

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useMemo } from "react";
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
 import type { AppTheme } from "@/lib/types";
 
 interface ThemeContextType {
@@ -22,30 +22,30 @@ export const BRAND_COLORS = [
 ];
 
 export function ThemeProvider({ children }: { readonly children: React.ReactNode }) {
-  const [theme, setTheme] = useState<AppTheme>("light");
-  const [accentColor, setAccentColor] = useState("#185fa5");
-
-  // Load initial theme from localStorage
-  useEffect(() => {
+  const [theme, setTheme] = useState<AppTheme>(() => {
+    if (typeof window === "undefined") return "light";
     const savedTheme = localStorage.getItem("theme") as AppTheme;
-    const savedAccent = localStorage.getItem("accentColor");
-
     if (savedTheme) {
-      setTheme(savedTheme);
       document.documentElement.dataset.theme = savedTheme;
-    } else {
-      // Detect system preference if no manual setting exists
-      const systemTheme = globalThis.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-      setTheme(systemTheme);
-      document.documentElement.dataset.theme = systemTheme;
+      return savedTheme;
     }
+    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.dataset.theme = systemTheme;
+    return systemTheme;
+  });
 
+  const [accentColor, setAccentColor] = useState(() => {
+    if (typeof window === "undefined") return "#185fa5";
+    const savedAccent = localStorage.getItem("accentColor");
     if (savedAccent) {
-      setAccentColor(savedAccent);
       document.documentElement.style.setProperty("--user-accent", savedAccent);
+      return savedAccent;
     }
+    return "#185fa5";
+  });
+
+  useEffect(() => {
+    // Empty effect to satisfy layout mounting logic if needed in future
   }, []);
 
   const updateTheme = (newTheme: AppTheme) => {
@@ -60,7 +60,7 @@ export function ThemeProvider({ children }: { readonly children: React.ReactNode
     localStorage.setItem("accentColor", newColor);
   };
 
-  const toggleTheme = (event?: React.MouseEvent) => {
+  const toggleTheme = useCallback((event?: React.MouseEvent) => {
     const newTheme = theme === "light" ? "dark" : "light";
     
     // Check for View Transitions API support
@@ -105,7 +105,7 @@ export function ThemeProvider({ children }: { readonly children: React.ReactNode
         document.documentElement.classList.remove("theme-transitioning");
       };
     });
-  };
+  }, [theme]);
 
   const value = useMemo(() => ({
     theme,
@@ -113,7 +113,7 @@ export function ThemeProvider({ children }: { readonly children: React.ReactNode
     setTheme: updateTheme,
     setAccentColor: updateAccentColor,
     toggleTheme,
-  }), [theme, accentColor]);
+  }), [theme, accentColor, toggleTheme]);
 
   return (
     <ThemeContext.Provider value={value}>
