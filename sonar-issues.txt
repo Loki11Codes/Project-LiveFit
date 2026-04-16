@@ -1,0 +1,25 @@
+Loki11Codes_Project-LiveFit:src/app/page.tsx:69 - useState call is not destructured into value + setter pair
+Loki11Codes_Project-LiveFit:src/app/auth/signup/page.tsx:23 - Refactor this function to reduce its Cognitive Complexity from 17 to the 15 allowed.
+Loki11Codes_Project-LiveFit:src/app/auth/signup/page.tsx:48 - Use concise character class syntax '\d' instead of '[0-9]'.
+Loki11Codes_Project-LiveFit:src/lib/validation.ts:215 - `DISPOSABLE_EMAIL_DOMAINS` should be a `Set`, and use `DISPOSABLE_EMAIL_DOMAINS.has()` to check existence or non-existence.
+Loki11Codes_Project-LiveFit:src/lib/validation.ts:238 - Use concise character class syntax '\d' instead of '[0-9]'.
+Loki11Codes_Project-LiveFit:src/app/auth/verify/page.tsx:14 - Remove this unused import of 'motion'.
+Loki11Codes_Project-LiveFit:src/app/auth/verify/page.tsx:39 - 'FormEvent' is deprecated.
+Loki11Codes_Project-LiveFit:src/app/auth/verify/page.tsx:95 - Prefer `String#replaceAll()` over `String#replace()`.
+Loki11Codes_Project-LiveFit:src/app/auth/verify/page.tsx:95 - Use concise character class syntax '\D' instead of '[^0-9]'.
+Loki11Codes_Project-LiveFit:src/app/auth/verify/page.tsx:117 - Extract this nested ternary operation into an independent statement.
+Loki11Codes_Project-LiveFit:src/app/auth/verify/page.tsx:122 - Extract this nested ternary operation into an independent statement.
+Loki11Codes_Project-LiveFit:src/lib/email.ts:3 - Remove this unused import of 'crypto'.
+Loki11Codes_Project-LiveFit:src/lib/email.ts:3 - Prefer `node:crypto` over `crypto`.
+Loki11Codes_Project-LiveFit:src/lib/email.ts:58 - Prefer `Number.parseInt` over `parseInt`.
+Loki11Codes_Project-LiveFit:src/app/api/auth/reset-password/route.ts:4 - Remove this unused import of 'NextResponse'.
+Loki11Codes_Project-LiveFit:src/app/api/auth/reset-password/route.ts:18 - Use concise character class syntax '\d' instead of '[0-9]'.
+Loki11Codes_Project-LiveFit:src/app/auth/reset-password/page.tsx:11 - Refactor this function to reduce its Cognitive Complexity from 17 to the 15 allowed.
+Loki11Codes_Project-LiveFit:src/app/auth/reset-password/page.tsx:32 - Use concise character class syntax '\d' instead of '[0-9]'.
+Loki11Codes_Project-LiveFit:src/components/Chat/QuickChips.tsx:27 - Unnecessary use of conditional expression for default assignment.
+Loki11Codes_Project-LiveFit:src/components/Sidebar.tsx:46 - 'any' overrides all other types in this union type.
+Loki11Codes_Project-LiveFit:src/components/Sidebar.tsx:115 - Do not use Array index in keys
+Loki11Codes_Project-LiveFit:src/components/Sidebar.tsx:301 - Mark the props of the component as read-only.
+Loki11Codes_Project-LiveFit:src/app/settings/page.test.tsx:150 - Add at least one assertion to this test case.
+Loki11Codes_Project-LiveFit:src/app/settings/page.test.tsx:158 - Add at least one assertion to this test case.
+Loki11Codes_Project-LiveFit:src/app/settings/page.test.tsx:169 - Add at least one assertion to this test case.

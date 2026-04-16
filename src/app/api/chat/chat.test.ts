@@ -74,7 +74,12 @@ describe('Chat API Route', () => {
 
   it('returns 500 if AI fails completely', async () => {
     vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
-    
+
+    // Ensure OpenRouter is also unavailable so route hits full failure path
+    delete process.env.OPENROUTER_API_KEY;
+    // Stub global fetch so no real network calls are made
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network unavailable')));
+
     mockGenerateContent.mockRejectedValue(new Error('AI Error'));
 
     const req = new Request('http://localhost/api/chat', {
@@ -84,6 +89,8 @@ describe('Chat API Route', () => {
 
     const res = await POST(req);
     expect(res.status).toBe(500);
+
+    vi.unstubAllGlobals();
   });
 
   it('falls back to OpenRouter if Gemini fails', async () => {

@@ -1,6 +1,8 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import { AuthInput } from './AuthInput';
+import { Mail, Eye } from 'lucide-react';
 import { AuthShell } from './AuthShell';
 import { FitnessIllustration } from './FitnessIllustration';
 import { NutritionIllustration } from './NutritionIllustration';
@@ -72,6 +74,50 @@ describe('Auth Utility Components', () => {
       expect(container.querySelector('svg')).toBeDefined();
       // Should have circles for progress rings and apple body
       expect(container.querySelectorAll('circle').length).toBeGreaterThan(0);
+    });
+  });
+
+  // ── AuthInput ────────────────────────────────────────────────────────────────
+  describe('AuthInput', () => {
+    it('renders an input element with the icon', () => {
+      const { container } = render(<AuthInput icon={Mail} placeholder="Email" />);
+      expect(container.querySelector('input')).toBeInTheDocument();
+      expect(container.querySelector('svg')).toBeInTheDocument();
+    });
+
+    it('forwards standard input props (placeholder, type)', () => {
+      render(<AuthInput icon={Mail} placeholder="Enter email" type="email" />);
+      const input = screen.getByPlaceholderText('Enter email');
+      expect(input).toBeInTheDocument();
+      expect(input).toHaveAttribute('type', 'email');
+    });
+
+    it('renders rightElement when provided', () => {
+      render(
+        <AuthInput
+          icon={Mail}
+          placeholder="Password"
+          rightElement={<button data-testid="toggle-btn"><Eye size={16} /></button>}
+        />
+      );
+      expect(screen.getByTestId('toggle-btn')).toBeInTheDocument();
+    });
+
+    it('applies error border class when error prop is true', () => {
+      render(<AuthInput icon={Mail} placeholder="Email" error />);
+      const input = screen.getByPlaceholderText('Email');
+      expect(input.className).toContain('border-rose-400');
+    });
+
+    it('does not apply error border class when error prop is false', () => {
+      render(<AuthInput icon={Mail} placeholder="Email" error={false} />);
+      const input = screen.getByPlaceholderText('Email');
+      expect(input.className).not.toContain('border-rose-400');
+    });
+
+    it('propagates disabled prop to the input', () => {
+      render(<AuthInput icon={Mail} placeholder="Email" disabled />);
+      expect(screen.getByPlaceholderText('Email')).toBeDisabled();
     });
   });
 });
