@@ -99,7 +99,7 @@ export function getBadgeById(id: string) {
   return ACHIEVEMENT_REGISTRY.find(b => b.badgeId === id);
 }
 
-interface PrismaTx {
+export interface PrismaTx {
   achievement: {
     findMany: (args: { where: { userId: string } }) => Promise<Array<{ badgeId: string }>>;
     createMany: (args: { data: Array<{

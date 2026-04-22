@@ -23,7 +23,7 @@ describe('Personal Records API', () => {
     vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
     vi.mocked(prisma.personalRecord.findMany).mockResolvedValue([
       { id: 'pr-1', exerciseId: 'e1', maxWeight: 100, exercise: { name: 'Bench Press' } }
-    ] as unknown as Record<string, unknown>[]);
+    ] as any);
 
     const res = await GET();
     const data = await res.json();

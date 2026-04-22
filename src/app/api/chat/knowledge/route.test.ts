@@ -33,7 +33,7 @@ describe('Knowledge API', () => {
       vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as unknown as Session);
       vi.mocked(prisma.userKnowledge.findMany).mockResolvedValue([
         { key: 'injury', value: 'Knee' }
-      ] as unknown as { key: string; value: string }[]);
+      ] as any);
 
       const res = await GET();
       const data = await res.json();
@@ -62,7 +62,7 @@ describe('Knowledge API', () => {
         body: JSON.stringify({ key: 'injury', value: 'Knee' })
       });
 
-      vi.mocked(prisma.userKnowledge.upsert).mockResolvedValue({ key: 'injury', value: 'Knee' } as unknown as { key: string; value: string });
+      vi.mocked(prisma.userKnowledge.upsert).mockResolvedValue({ key: 'injury', value: 'Knee' } as any);
 
       const res = await POST(req);
       await res.json();
