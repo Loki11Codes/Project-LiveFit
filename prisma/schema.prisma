@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -79,7 +79,7 @@ model Achievement {
 
 model VerificationToken {
   identifier String
-  token      String   @unique
+  token      String
   expires    DateTime
 
   @@unique([identifier, token])
