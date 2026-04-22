@@ -32,15 +32,15 @@ jobs:
     - name: Install dependencies
       run: npm ci
       env:
-        DATABASE_URL: "${{ secrets.DATABASE_URL }}"
-        NEXTAUTH_SECRET: "${{ secrets.NEXTAUTH_SECRET }}"
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
 
     - name: Lint check
       run: npm run lint
       continue-on-error: true
       env:
-        DATABASE_URL: "${{ secrets.DATABASE_URL }}"
-        NEXTAUTH_SECRET: "${{ secrets.NEXTAUTH_SECRET }}"
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
 
     - name: Run tests with coverage
       timeout-minutes: 60
