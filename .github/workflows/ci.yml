@@ -1,5 +1,7 @@
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  DATABASE_URL: "${{ secrets.DATABASE_URL }}"
+  NEXTAUTH_SECRET: "${{ secrets.NEXTAUTH_SECRET }}"
 
 on:
   push:
@@ -10,9 +12,7 @@ on:
 jobs:
   build_and_lint:
     runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: "${{ secrets.DATABASE_URL }}"
-      NEXTAUTH_SECRET: "${{ secrets.NEXTAUTH_SECRET }}"
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
