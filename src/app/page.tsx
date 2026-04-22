@@ -70,7 +70,7 @@ export default function Home() {
   const router = useRouter();
 
   const initialTab = parseTab(searchParams.get("tab"));
-  const [activeTab, setActiveTab] = React.useState<TabId>(initialTab);
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab);
   const [dashboard, setDashboard] = useState<DashboardState>(
     INITIAL_DASHBOARD_STATE,
   );

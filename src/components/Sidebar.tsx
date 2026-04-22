@@ -322,7 +322,7 @@ function WaterRing({ percentage }: Readonly<{ percentage: number }>) {
   );
 }
 
-function WorkoutLiveAssistant({ session }: { readonly session: import("@/lib/types").ActiveWorkoutSession }) {
+function WorkoutLiveAssistant({ session }: Readonly<{ session: ActiveWorkoutSession }>) {
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {

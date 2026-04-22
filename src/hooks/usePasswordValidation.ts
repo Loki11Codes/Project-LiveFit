@@ -25,7 +25,7 @@ export function usePasswordValidation() {
       hasUpper: /[A-Z]/.test(password),
       hasLower: /[a-z]/.test(password),
       hasNumber: /\d/.test(password),
-      hasSpecial: /[^A-Za-z0-9]/.test(password),
+      hasSpecial: /[^\w]/.test(password),
     }),
     [password],
   );

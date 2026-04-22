@@ -209,6 +209,18 @@ function SignUpForm() {
 
       <PasswordRequirements passwordChecks={passwordChecks} size="sm" />
 
+      <FormStatusMessages error={error} success={success} />
+
+      <SubmitButton loading={loading} />
+    </form>
+  );
+}
+
+function FormStatusMessages({ error, success }: Readonly<{ error?: string; success?: string }>) {
+  if (!error && !success) return null;
+
+  return (
+    <>
       {error && (
         <div className="rounded-2xl border-2 border-rose-500/25 bg-rose-50 px-4 py-3 text-[14px] font-medium text-rose-700 mt-2">
           {error}
@@ -224,20 +236,24 @@ function SignUpForm() {
           {success}
         </motion.div>
       )}
+    </>
+  );
+}
 
-      <button
-        type="submit"
-        disabled={loading}
-        suppressHydrationWarning
-        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-[#185fa5] px-5 text-[13px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-[#378add] disabled:cursor-not-allowed disabled:bg-zinc-500 shadow-md"
-      >
-        {loading ? (
-          <Loader2 size={16} className="animate-spin" />
-        ) : (
-          <UserPlus size={16} />
-        )}
-        {loading ? "Creating account" : "Create Account"}
-      </button>
-    </form>
+function SubmitButton({ loading }: Readonly<{ loading: boolean }>) {
+  return (
+    <button
+      type="submit"
+      disabled={loading}
+      suppressHydrationWarning
+      className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-[#185fa5] px-5 text-[13px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-[#378add] disabled:cursor-not-allowed disabled:bg-zinc-500 shadow-md mt-2"
+    >
+      {loading ? (
+        <Loader2 size={16} className="animate-spin" />
+      ) : (
+        <UserPlus size={16} />
+      )}
+      {loading ? "Creating account" : "Create Account"}
+    </button>
   );
 }

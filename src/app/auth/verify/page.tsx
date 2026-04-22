@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, type FormEvent } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { 
@@ -37,7 +37,7 @@ export function VerifyEmailForm() {
     }
   }, [searchParams, session, email]);
 
-  const handleSubmit = async (e?: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>) => {
     if (e) e.preventDefault();
     if (code.length !== 6) return;
 

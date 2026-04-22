@@ -138,6 +138,25 @@ function ResetPasswordForm() {
 
       <PasswordRequirements passwordChecks={passwordChecks} />
 
+      <ResetStatus error={error} success={success} />
+
+      <button
+        type="submit"
+        disabled={loading || success}
+        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-[#185fa5] px-5 text-[13px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-[#378add] disabled:cursor-not-allowed disabled:opacity-50 shadow-lg"
+      >
+        {loading ? <Loader2 size={18} className="animate-spin" /> : <ShieldCheck size={18} />}
+        {loading ? "Updating..." : "Update Password"}
+      </button>
+    </form>
+  );
+}
+
+function ResetStatus({ error, success }: Readonly<{ error?: string; success?: boolean }>) {
+  if (!error && !success) return null;
+
+  return (
+    <>
       {error && (
         <div className="rounded-2xl border-2 border-rose-500/25 bg-rose-50 px-4 py-2.5 text-[14px] font-medium text-rose-700">
           {error}
@@ -153,15 +172,6 @@ function ResetPasswordForm() {
           Password updated successfully! Synchronizing session...
         </motion.div>
       )}
-
-      <button
-        type="submit"
-        disabled={loading || success}
-        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-[#185fa5] px-5 text-[13px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-[#378add] disabled:cursor-not-allowed disabled:opacity-50 shadow-lg"
-      >
-        {loading ? <Loader2 size={18} className="animate-spin" /> : <ShieldCheck size={18} />}
-        {loading ? "Updating..." : "Update Password"}
-      </button>
-    </form>
+    </>
   );
 }
