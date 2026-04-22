@@ -1,6 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -33,6 +34,11 @@ type NavbarTab = {
 export default function Navbar({ activeTab, setActiveTab }: NavbarProps) {
   const { data: session } = useSession();
   const { theme, toggleTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   const tabs: NavbarTab[] = [
     { id: 'chat', label: 'Chat', icon: MessageSquare, color: 'var(--iq-blue)' },
@@ -156,7 +162,7 @@ export default function Navbar({ activeTab, setActiveTab }: NavbarProps) {
                   transition={{ duration: 0.3, ease: 'easeInOut' }}
                   className="flex items-center justify-center"
                 >
-                  {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                  {mounted && (theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />)}
                 </motion.div>
               </AnimatePresence>
             </button>
