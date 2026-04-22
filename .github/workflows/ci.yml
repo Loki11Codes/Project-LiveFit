@@ -12,8 +12,8 @@ jobs:
   build_and_lint:
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: ${{secrets.DATABASE_URL}}
-      NEXTAUTH_SECRET: ${{secrets.NEXTAUTH_SECRET}}
+      DATABASE_URL: ${{ fromJSON(toJSON(secrets))['DATABASE_URL'] }}
+      NEXTAUTH_SECRET: ${{ fromJSON(toJSON(secrets))['NEXTAUTH_SECRET'] }}
 
     steps:
     - uses: actions/checkout@v4
