@@ -67,7 +67,7 @@ export async function sendVerificationEmail(email: string, name: string, otp: st
   });
 
   await transporter.sendMail({
-    from: `"Caloriq Security" <${process.env.SMTP_FROM || "security@caloriq.app"}>`,
+    from: `"Caloriq" <${process.env.SMTP_FROM || "onboarding@resend.dev"}>`,
     to: email,
     subject: "Verify your Caloriq Account",
     html,
