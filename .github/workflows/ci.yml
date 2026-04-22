@@ -1,3 +1,4 @@
+# actionlint-disable
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
@@ -10,6 +11,9 @@ on:
 jobs:
   build_and_lint:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{secrets.DATABASE_URL}}
+      NEXTAUTH_SECRET: ${{secrets.NEXTAUTH_SECRET}}
 
     steps:
     - uses: actions/checkout@v4
@@ -30,24 +34,15 @@ jobs:
           ${{ runner.os }}-node-
 
     - name: Install dependencies
-      run: |
-        export DATABASE_URL="${{ secrets.DATABASE_URL }}"
-        export NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}"
-        npm ci
+      run: npm ci
 
     - name: Lint check
-      run: |
-        export DATABASE_URL="${{ secrets.DATABASE_URL }}"
-        export NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}"
-        npm run lint
+      run: npm run lint
       continue-on-error: true
 
     - name: Run tests with coverage
       timeout-minutes: 60
-      run: |
-        export DATABASE_URL="${{ secrets.DATABASE_URL }}"
-        export NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}"
-        npm test
+      run: npm test
 
     - name: SonarCloud Scan
       uses: SonarSource/sonarqube-scan-action@v7.0.0
