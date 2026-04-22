@@ -32,7 +32,13 @@ export async function GET(req: Request) {
       include: {
         achievements: true,
       }
-    })) as any;
+    })) as {
+      name: string | null;
+      email: string | null;
+      phone: string | null;
+      username: string | null;
+      achievements: Record<string, unknown>[];
+    } | null;
 
     return NextResponse.json({
       ...profile,

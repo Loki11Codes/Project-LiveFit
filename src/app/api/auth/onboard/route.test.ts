@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { POST } from './route';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
+import { type Session } from 'next-auth';
 import { syncUserGoals } from '@/lib/persistence';
 
 vi.mock('next-auth/next', () => ({
@@ -40,7 +41,7 @@ describe('Auth Onboarding API Route', () => {
   });
 
   it('returns 400 for invalid onboarding data', async () => {
-    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } } as any);
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } } as unknown as Session);
     const req = new Request('http://localhost/api/auth/onboard', {
       method: 'POST',
       body: JSON.stringify({ age: 5 }), // invalid age < 10
@@ -50,9 +51,9 @@ describe('Auth Onboarding API Route', () => {
   });
 
   it('completes onboarding on valid data', async () => {
-    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } } as any);
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } } as unknown as Session);
     
-    vi.mocked(prisma.$transaction).mockImplementation(async (cb: any) => 
+    vi.mocked(prisma.$transaction).mockImplementation(async (cb: (tx: unknown) => Promise<unknown>) => 
       cb({
         userProfile: { upsert: vi.fn().mockResolvedValue({}) },
         bodyMeasurement: { create: vi.fn().mockResolvedValue({}) },

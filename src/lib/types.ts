@@ -81,6 +81,7 @@ export type UserProfile = {
   age?: number | null;
   gender?: string | null;
   height?: number | null;
+  weight?: number | null;
   startDay?: number | null;
   primaryGoal?: string | null;
   dietaryPreference?: string | null;
@@ -126,7 +127,7 @@ export type LogsResponse = {
   food: FoodLog[];
   workouts: WorkoutLogWithRelations[];
   sleep: SleepLog[];
-  water: any[]; // Hydration logs
+  water: unknown[]; // Hydration logs
 };
 
 export type DayTypeEntryRecord = {
@@ -213,7 +214,12 @@ export type FoodLog = {
 
 export type ParsedLogEnvelope = {
   category?: string;
-  data?: unknown;
+  data?: Record<string, unknown>;
+  action?: string;
+  name?: string;
+  focus?: string;
+  routineId?: string;
+  [key: string]: unknown;
 };
 
 export type HistoryRow = {

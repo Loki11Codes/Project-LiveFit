@@ -23,21 +23,21 @@ vi.mock("@/lib/client-api", () => ({
 
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    section: ({ children, ...props }: any) => <section {...props}>{children}</section>,
+    div: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    section: ({ children }: { children: React.ReactNode }) => <section>{children}</section>,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 vi.mock("@/components/auth/AuthShell", () => ({
-  AuthShell: ({ children }: any) => <div>{children}</div>,
+  AuthShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 vi.mock("react", async () => {
-  const actual: any = await vi.importActual("react");
+  const actual = await vi.importActual<typeof import("react")>("react");
   return {
     ...actual,
-    Suspense: ({ children }: any) => <>{children}</>,
+    Suspense: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   };
 });
 
@@ -49,14 +49,15 @@ describe("VerifyEmailPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useRealTimers();
-    (useRouter as any).mockReturnValue(mockRouter);
-    (useSearchParams as any).mockReturnValue({
+    vi.mocked(useRouter).mockReturnValue(mockRouter as unknown as ReturnType<typeof useRouter>);
+    vi.mocked(useSearchParams).mockReturnValue({
       get: (key: string) => (key === "email" ? mockSearchParams.get("email") : null)
-    });
-    (useSession as any).mockReturnValue({
+    } as unknown as ReturnType<typeof useSearchParams>);
+    vi.mocked(useSession).mockReturnValue({
       data: { user: { email: "session@example.com" } },
+      status: "authenticated",
       update: mockUpdate,
-    });
+    } as unknown as ReturnType<typeof useSession>);
   });
 
   it("renders the verification form with email from session", async () => {
@@ -73,7 +74,7 @@ describe("VerifyEmailPage", () => {
   });
 
   it("auto-submits when 6 digits are entered", async () => {
-    (requestJson as any).mockResolvedValue({ success: true });
+    vi.mocked(requestJson).mockResolvedValue({ success: true });
     render(<VerifyEmailForm />);
 
     // Wait for email to appear (ensures session effect has run)
@@ -97,7 +98,7 @@ describe("VerifyEmailPage", () => {
   });
 
   it("shows error message on failure", async () => {
-    (requestJson as any).mockRejectedValue(new Error("Invalid code"));
+    vi.mocked(requestJson).mockRejectedValue(new Error("Invalid code"));
     render(<VerifyEmailForm />);
 
     const input = screen.getByPlaceholderText("000000");
@@ -111,7 +112,7 @@ describe("VerifyEmailPage", () => {
   it("redirects and updates session on success", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
 
-    (requestJson as any).mockResolvedValue({ success: true });
+    vi.mocked(requestJson).mockResolvedValue({ success: true });
     render(<VerifyEmailForm />);
 
     expect(await screen.findByText("session@example.com")).toBeInTheDocument();

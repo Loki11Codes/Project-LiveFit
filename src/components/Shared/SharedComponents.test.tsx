@@ -16,7 +16,7 @@ import { Activity } from 'lucide-react';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, whileHover, whileTap, animate, initial, exit, transition, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
     h2: ({ children, ...props }: any) => <h2 {...props}>{children}</h2>,
   },

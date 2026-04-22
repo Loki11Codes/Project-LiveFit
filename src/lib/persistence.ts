@@ -157,8 +157,7 @@ async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInpu
       });
 
       if (existing) {
-
-        await (tx.foodLog as any).update({
+        await tx.foodLog.update({
           where: { id: existing.id },
           data: {
             kcal: validated.kcal,
@@ -173,7 +172,7 @@ async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInpu
       }
     }
 
-    await (tx.foodLog as any).create({
+    await tx.foodLog.create({
       data: {
         userId,
         name: validated.name,
@@ -674,7 +673,7 @@ async function deleteSingleEntry(
   }
 }
 
-async function persistKnowledgeEntry(tx: Prisma.TransactionClient, data: any, userId: string): Promise<void> {
+async function persistKnowledgeEntry(tx: Prisma.TransactionClient, data: Record<string, unknown>, userId: string): Promise<void> {
   const key = typeof data.key === 'string' ? data.key.toLowerCase() : '';
   const value = typeof data.value === 'string' ? data.value : '';
 
@@ -687,24 +686,25 @@ async function persistKnowledgeEntry(tx: Prisma.TransactionClient, data: any, us
   });
 }
 
-async function persistMealPlan(tx: Prisma.TransactionClient, data: any, userId: string): Promise<void> {
-  if (!data.entries || !Array.isArray(data.entries)) return;
+async function persistMealPlan(tx: Prisma.TransactionClient, data: Record<string, unknown>, userId: string): Promise<void> {
+  const entries = data.entries as Record<string, unknown>[] | undefined;
+  if (!entries || !Array.isArray(entries)) return;
 
   await tx.mealPlan.create({
     data: {
       userId,
-      name: data.name || "AI Generated Plan",
-      weekStarting: data.weekStarting ? new Date(data.weekStarting) : new Date(),
+      name: (data.name as string) || "AI Generated Plan",
+      weekStarting: data.weekStarting ? new Date(data.weekStarting as string) : new Date(),
       entries: {
-        create: data.entries.map((e: any) => ({
-          dayIndex: e.dayIndex ?? 0,
-          mealType: e.mealType || 'Meal',
-          title: e.title || 'Untitled Meal',
-          kcal: e.kcal,
-          protein: e.protein,
-          carbs: e.carbs,
-          fats: e.fats,
-          notes: e.notes
+        create: entries.map((e) => ({
+          dayIndex: (e.dayIndex as number) ?? 0,
+          mealType: (e.mealType as string) || 'Meal',
+          title: (e.title as string) || 'Untitled Meal',
+          kcal: e.kcal as number,
+          protein: e.protein as number,
+          carbs: e.carbs as number,
+          fats: e.fats as number,
+          notes: e.notes as string
         }))
       }
     }

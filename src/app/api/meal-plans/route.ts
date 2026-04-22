@@ -47,7 +47,16 @@ export async function POST(req: Request) {
         name: name || "My AI Meal Plan",
         weekStarting: weekStarting ? new Date(weekStarting) : new Date(),
         entries: {
-          create: entries.map((e: any) => ({
+          create: entries.map((e: {
+            dayIndex: number;
+            mealType: string;
+            title: string;
+            kcal?: number;
+            protein?: number;
+            carbs?: number;
+            fats?: number;
+            notes?: string;
+          }) => ({
             dayIndex: e.dayIndex,
             mealType: e.mealType,
             title: e.title,

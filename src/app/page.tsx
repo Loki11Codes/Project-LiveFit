@@ -1,6 +1,6 @@
 "use client";
 
-import React, { startTransition, useEffect, useState } from "react";
+import React, { startTransition, useEffect, useState, useCallback } from "react";
 import type { BodyMeasurement } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -20,7 +20,6 @@ import type { AchievementBadge } from "@/lib/achievements";
 import {
   buildHistoryRows,
   buildDayTypeMap,
-  getCurrentDayType,
   getLatestSleepLog,
   getLocalDateKey,
   getProteinTarget,
@@ -49,6 +48,7 @@ import {
   type MeasurementForm,
   type TabId,
   type AIInsight,
+  type ParsedLogEnvelope,
 } from "@/lib/types";
 
 const INITIAL_DASHBOARD_STATE: DashboardState = {
@@ -79,29 +79,110 @@ export default function Home() {
   const [newAchievements, setNewAchievements] = useState<AchievementBadge[]>([]);
 
   // ...
-  const handleStartWorkout = (routine: any) => {
+  const handleStartWorkout = useCallback((routine: { name: string; exercises: unknown[] }) => {
     const workoutSession = {
       name: routine.name,
       startTime: Date.now(),
-      exercises: (routine.exercises || []).map((e: any) => ({
-        id: crypto.randomUUID(),
-        exerciseId: e.exerciseId || e.id,
-        name: e.exercise?.name || e.name, 
-        sets: e.sets
-          ? e.sets.map((s: any) => ({ ...s, isCompleted: false }))
-          : Array.from({ length: Number(e.targetSets) || 3 }).map((_, i) => ({
-              id: crypto.randomUUID(),
-              weight: "",
-              reps: e.targetReps || "",
-              isCompleted: false,
-            })),
-      })),
+      exercises: (routine.exercises || []).map((e: unknown) => {
+        const ex = e as Record<string, unknown>;
+        return {
+          id: crypto.randomUUID(),
+          exerciseId: (ex.exerciseId as string) || (ex.id as string),
+          name: ((ex.exercise as Record<string, unknown>)?.name as string) || (ex.name as string), 
+          sets: ex.sets
+            ? (ex.sets as unknown[]).map((s: unknown) => ({ ...(s as Record<string, unknown>), isCompleted: false }))
+            : Array.from({ length: Number(ex.targetSets) || 3 }).map(() => ({
+                id: crypto.randomUUID(),
+                weight: "",
+                reps: (ex.targetReps as string) || "",
+                isCompleted: false,
+              })),
+        };
+      }),
     };
     setDashboard((prev) => ({ ...prev, activeWorkout: workoutSession }));
     // Don't switch tab automatically, WorkoutSession will be an overlay
-  };
+  }, [setDashboard]);
 
-  const handleFinishWorkout = (session: ActiveWorkoutSession) => {
+  const handleStartWorkoutById = useCallback(async (id: string, name?: string) => {
+    try {
+      const res = await fetch(`/api/routines?id=${id}`);
+      if (res.ok) {
+        const routine = await res.json();
+        handleStartWorkout(routine);
+        return;
+      }
+    } catch (err) {
+      console.error("Failed to start routine by ID", err);
+    }
+    // Fallback
+    handleStartWorkout({ name: name || "Routine", exercises: [] });
+  }, [handleStartWorkout]);
+
+  const fetchRawDashboardData = useCallback(async (): Promise<Omit<DashboardState, "activeWorkout" | "measurements">> => {
+    const [
+      logs,
+      latestMeasurementResponse,
+      goalsResponse,
+      analyticsResponse,
+      dayTypesResponse,
+      profileResponse,
+    ] = await Promise.all([
+      requestJson<LogsResponse>("/api/logs"),
+      requestJson<unknown>("/api/measurements"),
+      requestJson<unknown>("/api/profile?type=goals"),
+      requestJson<unknown>("/api/analytics"),
+      requestJson<unknown>("/api/day-types"),
+      requestJson<unknown>("/api/profile"),
+    ]);
+
+    const latestMeasurement = isBodyMeasurement(latestMeasurementResponse)
+      ? latestMeasurementResponse
+      : null;
+
+    return {
+      logs: logs || EMPTY_LOGS,
+      latestMeasurement,
+      goals: isGoalsState(goalsResponse) ? goalsResponse : DEFAULT_GOALS,
+      analytics: isAnalyticsResponse(analyticsResponse)
+        ? analyticsResponse
+        : EMPTY_ANALYTICS,
+      dayType: ((profileResponse as Record<string, unknown>)?.dayType as string) || "Rest",
+      dayTypesByDay: isDayTypeEntryRecordArray(dayTypesResponse)
+        ? buildDayTypeMap(dayTypesResponse)
+        : EMPTY_DAY_TYPES_BY_DAY,
+      profile: isUserProfile(profileResponse) ? profileResponse : null,
+      aiInsights: [],
+    };
+  }, []);
+
+  const refreshDashboard = useCallback(async () => {
+    if (!session?.user?.id) {
+      return;
+    }
+
+    try {
+      const data = await fetchRawDashboardData();
+      startTransition(() => {
+        setDashboard((prev) => ({
+          ...prev,
+          ...data,
+          measurements: toMeasurementForm(data.latestMeasurement),
+        }));
+      });
+    } catch (error) {
+      const message = getClientErrorMessage(error);
+      console.error("Failed to refresh dashboard data:", message);
+      toast.error(message);
+    }
+  }, [session?.user?.id, fetchRawDashboardData]);
+
+  const handleTabChange = useCallback((tab: TabId) => {
+    setActiveTab(tab);
+    router.push(`/?tab=${tab}`, { scroll: false });
+  }, [router]);
+
+  const handleFinishWorkout = useCallback((session: ActiveWorkoutSession) => {
     const durationMinutes = Math.floor(
       (Date.now() - session.startTime) / 60000,
     );
@@ -168,7 +249,7 @@ export default function Home() {
     setChatDraft(summaryText);
     setDashboard((prev) => ({ ...prev, activeWorkout: null }));
     handleTabChange("chat");
-  };
+  }, [refreshDashboard, handleTabChange]);
 
   const handleDiscardWorkout = () => {
     if (confirm("Are you sure you want to discard your workout?")) {
@@ -247,10 +328,6 @@ export default function Home() {
     };
   }, [dashboard.logs, dashboard.goals, dashboard.dayTypesByDay]);
 
-  const handleTabChange = (tab: TabId) => {
-    setActiveTab(tab);
-    router.push(`/?tab=${tab}`, { scroll: false });
-  };
 
   const updateMeasurements: React.Dispatch<
     React.SetStateAction<MeasurementForm>
@@ -287,7 +364,7 @@ export default function Home() {
     });
   };
 
-  async function handleLogParsed(envelopes?: any[], hasData?: boolean) {
+  const handleLogParsed = useCallback(async (envelopes?: ParsedLogEnvelope[], hasData?: boolean) => {
     console.log("[DEBUG] Chat envelopes received:", envelopes);
     
     if (hasData && (!envelopes || envelopes.length === 0)) {
@@ -345,7 +422,7 @@ export default function Home() {
         console.log("[DEBUG] Workout start intent detected:", workoutAction);
         const name = workoutAction.name || workoutAction.focus || workoutAction.data?.name || "Fresh Workout";
         if (workoutAction.routineId) {
-           void handleStartWorkoutById(workoutAction.routineId, name);
+            void handleStartWorkoutById(workoutAction.routineId as string, name);
         } else {
            handleStartWorkout({ name, exercises: [] });
         }
@@ -356,11 +433,11 @@ export default function Home() {
     setTimeout(() => {
       void refreshDashboard();
     }, 1000);
-  }
+  }, [refreshDashboard, handleStartWorkoutById, handleStartWorkout]);
 
   useEffect(() => {
-    const handleAiPrompt = (e: any) => {
-      const prompt = e.detail;
+    const handleAiPrompt = (e: Event) => {
+      const prompt = (e as CustomEvent<string>).detail;
       if (prompt) {
         setChatInput(prompt);
         setActiveTab("chat");
@@ -376,20 +453,6 @@ export default function Home() {
     setDashboard((prev) => ({ ...prev, activeWorkout: updated }));
   }
 
-  async function handleStartWorkoutById(id: string, name?: string) {
-    try {
-      const res = await fetch(`/api/routines?id=${id}`);
-      if (res.ok) {
-        const routine = await res.json();
-        handleStartWorkout(routine);
-        return;
-      }
-    } catch (err) {
-      console.error("Failed to start routine by ID", err);
-    }
-    // Fallback
-    handleStartWorkout({ name: name || "Routine", exercises: [] });
-  }
 
   useEffect(() => {
     let cancelled = false;
@@ -427,12 +490,13 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [session?.user?.id]);
+  }, [session?.user?.id, fetchRawDashboardData]);
 
   // Sync internal tab state with URL changes (e.g. back button)
   useEffect(() => {
     const tabFromUrl = parseTab(searchParams.get("tab"));
     if (tabFromUrl !== activeTab) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab(tabFromUrl);
     }
   }, [searchParams, activeTab]);
@@ -442,6 +506,7 @@ export default function Home() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setDashboard(prev => ({ ...prev, activeWorkout: parsed }));
       } catch (e) {
         console.warn("Failed to load active workout from storage", e);
@@ -457,26 +522,6 @@ export default function Home() {
     }
   }, [dashboard.activeWorkout]);
 
-  async function refreshDashboard() {
-    if (!session?.user?.id) {
-      return;
-    }
-
-    try {
-      const data = await fetchRawDashboardData();
-      startTransition(() => {
-        setDashboard((prev) => ({
-          ...prev,
-          ...data,
-          measurements: toMeasurementForm(data.latestMeasurement),
-        }));
-      });
-    } catch (error) {
-      const message = getClientErrorMessage(error);
-      console.error("Failed to refresh dashboard data:", message);
-      toast.error(message);
-    }
-  }
 
   const handleSaveMeasurements = async () => {
     try {
@@ -655,47 +700,6 @@ export default function Home() {
   );
 }
 
-async function fetchRawDashboardData(): Promise<Omit<DashboardState, "activeWorkout" | "measurements">> {
-  const [
-    logs,
-    latestMeasurementResponse,
-    goalsResponse,
-    analyticsResponse,
-    dayTypesResponse,
-    profileResponse,
-  ] = await Promise.all([
-    requestJson<LogsResponse>("/api/logs"),
-    requestJson<unknown>("/api/measurements"),
-    requestJson<unknown>("/api/profile?type=goals"), // We'll use the profile route for goals now
-    requestJson<unknown>("/api/analytics"),
-    requestJson<unknown>("/api/day-types"),
-    requestJson<unknown>("/api/profile"),
-  ]);
-
-  const latestMeasurement = isBodyMeasurement(latestMeasurementResponse)
-    ? latestMeasurementResponse
-    : null;
-  const goals = isGoalsState(goalsResponse) ? goalsResponse : DEFAULT_GOALS;
-  const analytics = isAnalyticsResponse(analyticsResponse)
-    ? analyticsResponse
-    : EMPTY_ANALYTICS;
-  const dayTypeEntries = isDayTypeEntryRecordArray(dayTypesResponse)
-    ? dayTypesResponse
-    : [];
-  const dayTypesByDay = buildDayTypeMap(dayTypeEntries);
-  const profile = isUserProfile(profileResponse) ? profileResponse : null;
-
-  return {
-    logs,
-    latestMeasurement,
-    goals,
-    profile,
-    analytics,
-    dayType: getCurrentDayType(dayTypesByDay),
-    dayTypesByDay,
-    aiInsights: [], // Insights are session-based from Chat responses
-  };
-}
 
 function isUserProfile(value: unknown): value is DashboardState["profile"] {
   return (

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -16,23 +15,60 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateSuggestedTarget } from "@/lib/progression";
 import { requestJson } from "@/lib/client-api";
 
+interface Routine {
+  id: string;
+  name: string;
+  exercises: RoutineExercise[];
+}
+
+interface RoutineExercise {
+  id: string;
+  _localId?: string;
+  exerciseId: string;
+  targetSets: number | string;
+  targetReps: string;
+  order: number;
+  exercise: Exercise;
+  sets?: Set[];
+}
+
+interface Exercise {
+  id: string;
+  name: string;
+  category: string;
+  muscleGroup?: string;
+  equipment?: string;
+}
+
+interface Set {
+  id: string;
+  weight: string | number;
+  reps: string | number;
+  isCompleted: boolean;
+  suggestion?: {
+    weight: number;
+    reps: number;
+    reason: string;
+  };
+}
+
 interface RoutinesTabProps {
-  readonly onStart?: (routine: any) => void;
+  readonly onStart?: (routine: Routine) => void;
 }
 
 export function RoutinesTab({ onStart }: RoutinesTabProps) {
   const [view, setView] = useState<"list" | "create" | "preview">("list");
-  const [routines, setRoutines] = useState<any[]>([]);
-  const [exercises, setExercises] = useState<any[]>([]);
+  const [routines, setRoutines] = useState<Routine[]>([]);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Preview state — a local working copy of the routine being previewed/edited
-  const [previewRoutine, setPreviewRoutine] = useState<any>(null);
+  const [previewRoutine, setPreviewRoutine] = useState<Routine | null>(null);
 
   // Builder State
   const [newRoutineName, setNewRoutineName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedExercises, setSelectedExercises] = useState<any[]>([]);
+  const [selectedExercises, setSelectedExercises] = useState<(Exercise & { routineExerciseId: string; targetSets: number | string; targetReps: string })[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
@@ -56,11 +92,11 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
 
   // ── Preview / Pre-workout editor ──────────────────────────────────────────
 
-  const openPreview = async (routine: any) => {
+  const openPreview = async (routine: Routine) => {
     setIsLoading(true);
-    let userPrs: any[] = [];
+    let userPrs: { exerciseId: string; maxWeight: number; maxReps: number }[] = [];
     try {
-      userPrs = await requestJson<any[]>("/api/profile/prs");
+      userPrs = await requestJson<{ exerciseId: string; maxWeight: number; maxReps: number }[]>("/api/profile/prs");
     } catch (err) {
       console.error("Failed to fetch PRs", err);
     } finally {
@@ -70,8 +106,8 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
     // Preview state — a local working copy of the routine being previewed/edited
     setPreviewRoutine({
       ...routine,
-      exercises: routine.exercises.map((e: any) => {
-        const currentPr = userPrs?.find((p: any) => p.exerciseId === e.exerciseId);
+      exercises: routine.exercises.map((e) => {
+        const currentPr = userPrs?.find((p) => p.exerciseId === e.exerciseId);
         const suggestion = calculateSuggestedTarget({
           exerciseName: e.exercise?.name || "Exercise",
           category: e.exercise?.category || "",
@@ -102,38 +138,41 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
   };
 
   const addPreviewSet = (localId: string) => {
-    setPreviewRoutine((prev: any) => ({
-      ...prev,
-      exercises: prev.exercises.map((e: any) => {
-        if (e._localId === localId) {
-          const lastSet = e.sets[e.sets.length - 1];
-          return {
-            ...e,
-            sets: [
-              ...e.sets,
-              {
-                id: crypto.randomUUID(),
-                weight: lastSet?.weight || "",
-                reps: lastSet?.reps || "",
-                isCompleted: false,
-              },
-            ],
-          };
-        }
-        return e;
-      }),
-    }));
+    setPreviewRoutine((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        exercises: prev.exercises.map((e) => {
+          if (e._localId === localId) {
+            const lastSet = e.sets?.[e.sets.length - 1];
+            return {
+              ...e,
+              sets: [
+                ...(e.sets ?? []),
+                {
+                  id: crypto.randomUUID(),
+                  weight: lastSet?.weight || "",
+                  reps: lastSet?.reps || "",
+                  isCompleted: false,
+                },
+              ],
+            };
+          }
+          return e;
+        }),
+      };
+    });
   };
 
   const removePreviewSet = (localId: string, setId: string) => {
     if (!confirm("Are you sure you want to delete this set?")) return;
     
-    const removeSetFromExercise = (e: any) => {
+    const removeSetFromExercise = (e: RoutineExercise) => {
       if (e._localId !== localId) return e;
-      return { ...e, sets: e.sets.filter((s: any) => s.id !== setId) };
+      return { ...e, sets: e.sets?.filter((s) => s.id !== setId) };
     };
 
-    setPreviewRoutine((prev: any) => {
+    setPreviewRoutine((prev) => {
       if (!prev) return prev;
       return { ...prev, exercises: prev.exercises.map(removeSetFromExercise) };
     });
@@ -145,15 +184,15 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
     field: string,
     value: string
   ) => {
-    const editSetField = (e: any) => {
+    const editSetField = (e: RoutineExercise) => {
       if (e._localId !== localId) return e;
-      const newSets = e.sets.map((s: any) =>
+      const newSets = e.sets?.map((s) =>
         s.id === setId ? { ...s, [field]: value } : s
       );
       return { ...e, sets: newSets };
     };
 
-    setPreviewRoutine((prev: any) => {
+    setPreviewRoutine((prev) => {
       if (!prev) return prev;
       return { ...prev, exercises: prev.exercises.map(editSetField) };
     });
@@ -161,32 +200,40 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
 
   const removePreviewExercise = (localId: string) => {
     if (!confirm("Are you sure you want to remove this exercise?")) return;
-    setPreviewRoutine((prev: any) => ({
-      ...prev,
-      exercises: prev.exercises.filter((e: any) => e._localId !== localId),
-    }));
+    setPreviewRoutine((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        exercises: prev.exercises.filter((e) => e._localId !== localId),
+      };
+    });
   };
 
-  const addPreviewExercise = (exercise: any) => {
-    setPreviewRoutine((prev: any) => ({
-      ...prev,
-      exercises: [
-        ...prev.exercises,
-        {
-          _localId: crypto.randomUUID(),
-          exercise: { name: exercise.name },
-          exerciseId: exercise.id,
-          targetSets: 3,
-          targetReps: "8-12",
-          sets: Array.from({ length: 3 }).map(() => ({
-            id: crypto.randomUUID(),
-            weight: "",
-            reps: "8-12",
-            isCompleted: false,
-          })),
-        },
-      ],
-    }));
+  const addPreviewExercise = (exercise: Exercise) => {
+    setPreviewRoutine((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        exercises: [
+          ...prev.exercises,
+          {
+            id: crypto.randomUUID(), // RoutineExercise id
+            _localId: crypto.randomUUID(),
+            exercise: { name: exercise.name, category: exercise.category, id: exercise.id },
+            exerciseId: exercise.id,
+            targetSets: 3,
+            targetReps: "8-12",
+            order: prev.exercises.length,
+            sets: Array.from({ length: 3 }).map(() => ({
+              id: crypto.randomUUID(),
+              weight: "",
+              reps: "8-12",
+              isCompleted: false,
+            })),
+          },
+        ],
+      };
+    });
     setIsSearching(false);
     setSearchQuery("");
   };
@@ -199,7 +246,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
 
   // ── Create builder ─────────────────────────────────────────────────────────
 
-  const handleAddExercise = (exercise: any) => {
+  const handleAddExercise = (exercise: Exercise) => {
     setSelectedExercises([
       ...selectedExercises,
       {
@@ -392,7 +439,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                 routines.map((routine, rIdx) => {
                   const muscleGroups = Array.from(new Set(
                     routine.exercises
-                      .map((e: any) => e.exercise?.muscleGroup || e.exercise?.category || "Misc")
+                      .map((e) => e.exercise?.muscleGroup || e.exercise?.category || "Misc")
                       .filter(Boolean)
                   )).slice(0, 3);
 
@@ -414,7 +461,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                           <div className="flex items-center gap-2">
                             <h3 className="text-lg font-black tracking-tight">{routine.name}</h3>
                             <div className="flex gap-1">
-                              {muscleGroups.map((mg: any) => (
+                              {muscleGroups.map((mg) => (
                                 <span key={mg} className="muscle-tag">{mg}</span>
                               ))}
                             </div>
@@ -424,7 +471,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                           </p>
                           <div className="text-[11px] font-bold text-[var(--foreground-muted)] leading-relaxed truncate opacity-40">
                             {routine.exercises
-                              .map((e: any) => e.exercise.name)
+                              .map((e) => e.exercise.name)
                               .join(", ")}
                           </div>
                         </div>
@@ -476,7 +523,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                 Customize before you start — changes only apply to this session.
               </p>
 
-              {previewRoutine.exercises.map((ex: any, idx: number) => (
+              {previewRoutine.exercises.map((ex, idx: number) => (
                 <motion.div
                   layout
                   key={ex._localId}
@@ -520,7 +567,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
 
                     <div className="flex flex-col gap-2">
                       <AnimatePresence mode="popLayout">
-                        {ex.sets?.map((set: any, sIdx: number) => (
+                        {ex.sets?.map((set, sIdx: number) => (
                           <motion.div
                             layout
                             key={set.id}

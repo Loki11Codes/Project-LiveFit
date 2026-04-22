@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getBadgeById, syncAchievements, ACHIEVEMENT_REGISTRY } from './achievements';
+import { getBadgeById, syncAchievements, ACHIEVEMENT_REGISTRY, type PrismaTx } from './achievements';
 
 // ── getBadgeById ──────────────────────────────────────────────────────────────
 
@@ -36,11 +36,11 @@ describe('ACHIEVEMENT_REGISTRY', () => {
 
 const makeTx = (overrides: Partial<{
   existing: Array<{ badgeId: string }>;
-  prs: Array<{ exercise: { name: string }, maxWeight: number }>;
+  prs: Array<{ exercise: { name: string }, maxWeight: number | null }>;
   workoutCount: number;
-  createMany: ReturnType<typeof vi.fn>;
+  createMany: unknown;
 }> = {}) => {
-  const createMany = overrides.createMany ?? vi.fn().mockResolvedValue({});
+  const createMany = overrides.createMany ?? vi.fn().mockResolvedValue({ count: 0 });
   return {
     achievement: {
       findMany: vi.fn().mockResolvedValue(overrides.existing ?? []),
@@ -53,7 +53,7 @@ const makeTx = (overrides: Partial<{
       count: vi.fn().mockResolvedValue(overrides.workoutCount ?? 0),
     },
     _createMany: createMany,
-  };
+  } as unknown as PrismaTx;
 };
 
 describe('syncAchievements', () => {

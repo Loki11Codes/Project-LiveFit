@@ -39,7 +39,12 @@ describe("Sidebar Component", () => {
     setDayType: vi.fn(),
     hasWorkout: false,
     analytics: null,
-    logs: {},
+    logs: {
+      food: [],
+      workouts: [],
+      sleep: [],
+      water: [],
+    },
   };
 
   beforeEach(() => {

@@ -33,7 +33,7 @@ vi.mock("next/navigation", () => ({
   usePathname: vi.fn(() => "/"),
 }));
 
-const mockToggleTheme = (e?: any) => {
+const mockToggleTheme = () => {
   const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
   document.documentElement.dataset.theme = next;
 };
@@ -56,12 +56,12 @@ if (typeof document !== 'undefined') {
 
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,  
-    button: ({ children, ...props }: any) => (
+    div: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,  
+    button: ({ children, ...props }: { children: React.ReactNode }) => (
       <button {...props}>{children}</button>
     ),  
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,  
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,  
 }));
 
 // Mock sub-components to isolate Dashboard logic
@@ -134,15 +134,16 @@ describe("Home (Dashboard) Orchestration", () => {
       ),
     );
 
-    (useSession as any).mockReturnValue({
+    vi.mocked(useSession).mockReturnValue({
       data: { user: { id: "test-user" } },
       status: "authenticated",
-    });  
-    (useRouter as any).mockReturnValue(mockRouter);  
-    (useSearchParams as any).mockReturnValue(mockSearchParams);  
+      update: mockUpdate,
+    } as unknown as ReturnType<typeof useSession>);  
+    vi.mocked(useRouter).mockReturnValue(mockRouter as unknown as ReturnType<typeof useRouter>);  
+    vi.mocked(useSearchParams).mockReturnValue(mockSearchParams as unknown as ReturnType<typeof useSearchParams>);  
 
     // Dashboard data mock
-    (clientApi.requestJson as any).mockImplementation((url: string) => {
+    vi.mocked(clientApi.requestJson).mockImplementation((url: string) => {
        
       if (url === "/api/logs")
         return Promise.resolve({ food: [], workouts: [], sleep: [] });
@@ -172,7 +173,7 @@ describe("Home (Dashboard) Orchestration", () => {
   });
 
   it("renders specific tab from search params", async () => {
-    (useSearchParams as any).mockReturnValue(new URLSearchParams("tab=body"));  
+    vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("tab=body") as unknown as ReturnType<typeof useSearchParams>);  
     render(<Home />);
     await waitFor(() => {
       expect(screen.getByTestId("body-tab")).toBeDefined();
@@ -206,7 +207,7 @@ describe("Home (Dashboard) Orchestration", () => {
     render(<Home />);
 
     const saveBtn = await screen.findByText(/Save Measurements/i);
-    (clientApi.requestJson as any).mockResolvedValueOnce({ id: "m1" });  
+    vi.mocked(clientApi.requestJson).mockResolvedValueOnce({ id: "m1" });  
 
     await act(async () => {
       fireEvent.click(saveBtn);
@@ -227,10 +228,11 @@ describe("Home (Dashboard) Orchestration", () => {
     expect(screen.getByTestId("navbar")).toBeDefined();
 
     // Session loss
-    (useSession as any).mockReturnValue({
+    vi.mocked(useSession).mockReturnValue({
       data: null,
       status: "unauthenticated",
-    });  
+      update: mockUpdate,
+    } as unknown as ReturnType<typeof useSession>);  
 
     act(() => {
       rerender(<Home />);

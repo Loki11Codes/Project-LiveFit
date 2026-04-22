@@ -3,6 +3,7 @@ import { POST } from "./route";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { NextRequest } from "next/server";
+import { type User } from "@prisma/client";
 
 vi.mock("@/lib/prisma", () => ({
   default: {
@@ -52,7 +53,7 @@ describe("Signup API Route", () => {
       requirePasswordChange: false,
       onboarded: false,
       hasSeenTutorial: false,
-    } as any);
+    } as unknown as User);
 
     const req = new NextRequest("http://localhost/api/auth/signup", {
       method: "POST",
@@ -88,7 +89,7 @@ describe("Signup API Route", () => {
       requirePasswordChange: false,
       onboarded: false,
       hasSeenTutorial: false,
-    } as any);
+    } as unknown as User);
 
     const req = new NextRequest("http://localhost/api/auth/signup", {
       method: "POST",

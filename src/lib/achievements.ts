@@ -116,7 +116,7 @@ interface PrismaTx {
       where: { userId: string }, 
       include: { exercise: boolean } 
     }) => Promise<Array<{ 
-      maxWeight: number; 
+      maxWeight: number | null; 
       exercise: { name: string } 
     }>>;
   };
@@ -144,7 +144,7 @@ export async function syncAchievements(tx: PrismaTx, userId: string) {
 
   // 1. Check PR Milestones (Bench Press)
   const benchPR = prs.find((p) => p.exercise.name === 'Bench Press');
-  if (benchPR) {
+  if (benchPR && benchPR.maxWeight !== null) {
     const milestones = [
       { id: 'bench-bronze', weight: 50 },
       { id: 'bench-silver', weight: 80 },

@@ -28,12 +28,14 @@ export function VerifyEmailForm() {
   useEffect(() => {
     // Priority: Search param email > Session email
     const paramEmail = searchParams.get("email");
+    const sessionEmail = session?.user?.email;
+
     if (paramEmail) {
       setEmail(paramEmail);
-    } else if (session?.user?.email) {
-      setEmail(session.user.email);
+    } else if (sessionEmail && sessionEmail !== email) {
+      setEmail(sessionEmail);
     }
-  }, [searchParams, session]);
+  }, [searchParams, session, email]);
 
   const handleSubmit = async (e?: FormEvent<HTMLFormElement>) => {
     if (e) e.preventDefault();
@@ -63,12 +65,12 @@ export function VerifyEmailForm() {
     }
   };
 
-  // Auto-submit OTP if 6 digits are entered
+  // Auto-submit when input is complete
   useEffect(() => {
     if (code.length === 6 && !loading && !success) {
-      // Small cast needed since useEffect expects void/destructor
       void handleSubmit();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code]);
 
   let buttonContent = <ArrowRight size={18} />;

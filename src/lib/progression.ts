@@ -3,7 +3,7 @@
  * and target rep ranges provided by a routine.
  */
 
-type MuscleGroup = 'Chest' | 'Back' | 'Shoulders' | 'Arms' | 'Legs' | 'Glutes' | 'Calves' | 'Core' | 'Abs' | 'Cardio';
+export type MuscleGroup = 'Chest' | 'Back' | 'Shoulders' | 'Arms' | 'Legs' | 'Glutes' | 'Calves' | 'Core' | 'Abs' | 'Cardio';
 
 interface ProgressionInputs {
   exerciseName: string;

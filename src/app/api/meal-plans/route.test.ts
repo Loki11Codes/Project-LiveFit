@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from './route';
 import { getServerSession } from 'next-auth';
+import { type Session } from 'next-auth';
 import prisma from '@/lib/prisma';
 
 vi.mock('next-auth');
@@ -22,11 +23,11 @@ describe('Meal Plans API', () => {
 
   describe('GET', () => {
     it('returns the latest meal plan', async () => {
-      (getServerSession as any).mockResolvedValue({ user: mockUser });
-      (prisma.mealPlan.findFirst as any).mockResolvedValue({
+      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as unknown as Session);
+      vi.mocked(prisma.mealPlan.findFirst).mockResolvedValue({
         id: 'plan-1',
         entries: [{ id: 'e1', title: 'Oats' }]
-      });
+      } as unknown as { id: string; entries: { id: string; title: string }[] });
 
       const res = await GET();
       const data = await res.json();
@@ -38,7 +39,7 @@ describe('Meal Plans API', () => {
 
   describe('POST', () => {
     it('creates a new meal plan', async () => {
-      (getServerSession as any).mockResolvedValue({ user: mockUser });
+      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as unknown as Session);
       const entries = [{ dayIndex: 0, mealType: 'Breakfast', title: 'Oats' }];
       
       const req = new Request('http://localhost', {
@@ -46,7 +47,7 @@ describe('Meal Plans API', () => {
         body: JSON.stringify({ name: 'Bulk Plan', entries })
       });
 
-      (prisma.mealPlan.create as any).mockResolvedValue({ id: 'new-plan', entries });
+      vi.mocked(prisma.mealPlan.create).mockResolvedValue({ id: 'new-plan', entries } as unknown as { id: string; entries: { dayIndex: number; mealType: string; title: string }[] });
 
       const res = await POST(req);
       await res.json();

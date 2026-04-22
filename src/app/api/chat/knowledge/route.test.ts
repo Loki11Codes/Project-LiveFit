@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from './route';
 import { getServerSession } from 'next-auth';
+import { type Session } from 'next-auth';
 import prisma from '@/lib/prisma';
 
 
@@ -23,16 +24,16 @@ describe('Knowledge API', () => {
 
   describe('GET', () => {
     it('returns 401 if not authenticated', async () => {
-      (getServerSession as any).mockResolvedValue(null);
+      vi.mocked(getServerSession).mockResolvedValue(null);
       const res = await GET();
       expect(res.status).toBe(401);
     });
 
     it('returns knowledge for the current user', async () => {
-      (getServerSession as any).mockResolvedValue({ user: mockUser });
-      (prisma.userKnowledge.findMany as any).mockResolvedValue([
+      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as unknown as Session);
+      vi.mocked(prisma.userKnowledge.findMany).mockResolvedValue([
         { key: 'injury', value: 'Knee' }
-      ]);
+      ] as unknown as { key: string; value: string }[]);
 
       const res = await GET();
       const data = await res.json();
@@ -45,7 +46,7 @@ describe('Knowledge API', () => {
 
   describe('POST', () => {
     it('returns 400 if key/value missing', async () => {
-      (getServerSession as any).mockResolvedValue({ user: mockUser });
+      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as unknown as Session);
       const req = new Request('http://localhost', {
         method: 'POST',
         body: JSON.stringify({ key: 'injury' }) // missing value
@@ -55,13 +56,13 @@ describe('Knowledge API', () => {
     });
 
     it('upserts knowledge entry', async () => {
-      (getServerSession as any).mockResolvedValue({ user: mockUser });
+      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as unknown as Session);
       const req = new Request('http://localhost', {
         method: 'POST',
         body: JSON.stringify({ key: 'injury', value: 'Knee' })
       });
 
-      (prisma.userKnowledge.upsert as any).mockResolvedValue({ key: 'injury', value: 'Knee' });
+      vi.mocked(prisma.userKnowledge.upsert).mockResolvedValue({ key: 'injury', value: 'Knee' } as unknown as { key: string; value: string });
 
       const res = await POST(req);
       await res.json();

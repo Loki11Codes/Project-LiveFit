@@ -13,6 +13,7 @@ vi.mock('framer-motion', () => ({
 }));
 
 const baseInsight: AIInsight = {
+  id: 'test-insight-1',
   type: 'nutrition',
   title: 'Eat more protein',
   description: 'You are under your protein target.',
@@ -50,11 +51,11 @@ describe('AIInsightCard', () => {
     const insight: AIInsight = {
       ...baseInsight,
       actionLabel: 'View Workouts',
-      actionTab: 'workout',
+      actionTab: 'history',
     };
     render(<AIInsightCard insight={insight} onAction={onAction} />);
     fireEvent.click(screen.getByRole('button', { name: /View Workouts/i }));
-    expect(onAction).toHaveBeenCalledWith('workout');
+    expect(onAction).toHaveBeenCalledWith('history');
   });
 
   it('renders correct icon area for each insight type', () => {

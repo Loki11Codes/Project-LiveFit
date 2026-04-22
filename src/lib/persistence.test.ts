@@ -12,7 +12,6 @@ vi.mock('./prisma', () => ({
 
 describe('persistence utility', () => {
   const userId = 'user-123';
-  const mockDate = '2024-01-01';
   
   // Type-safe mock structure for the models we use
   const mockTx = {
@@ -30,7 +29,7 @@ describe('persistence utility', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(prisma.$transaction).mockImplementation(async (cb: (tx: Prisma.TransactionClient) => Promise<any>) => 
+    vi.mocked(prisma.$transaction).mockImplementation(async (cb: (tx: Prisma.TransactionClient) => Promise<unknown>) => 
       cb(txClient)
     );
   });
@@ -183,7 +182,7 @@ describe('persistence utility', () => {
 
     it('guards against malformed data in helpers', async () => {
         // Test persistLogData fallback when data is missing
-        await persistLogData([{ category: 'sleep', hours: 8 } as any], userId);
+        await persistLogData([{ category: 'sleep', hours: 8 } as unknown as { category: string; data: unknown }], userId);
         expect(mockTx.sleepLog.create).toHaveBeenCalled();
 
         // Test validation failure
@@ -196,11 +195,11 @@ describe('persistence utility', () => {
         // We trigger them by passing malformed data.
         
         // Triggers getRecordValue(data, 'prs') on line 182
-        await persistLogData([{ category: 'workout', data: 'not-an-object' as any }], userId);
+        await persistLogData([{ category: 'workout', data: 'not-an-object' as unknown as Record<string, unknown> }], userId);
         expect(mockTx.workoutLog.create).not.toHaveBeenCalled();
 
         // Triggers hasItemsArray/isRecord on line 602/623 via food handler
-        await persistLogData([{ category: 'food', data: null as any }], userId);
+        await persistLogData([{ category: 'food', data: null as unknown as Record<string, unknown> }], userId);
         expect(mockTx.foodLog.create).not.toHaveBeenCalled();
     });
   });

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET } from './route';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
+import { type Session } from 'next-auth';
 
 vi.mock('next-auth', () => ({
   getServerSession: vi.fn(),
@@ -26,7 +27,7 @@ describe('Analytics API Route', () => {
   });
 
   it('aggregates nutrition and weight data for authenticated user', async () => {
-    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } } as unknown as Session);
     
     const mockFood = [
       { id: '1', time: new Date('2026-03-18T10:00:00Z'), kcal: 500, protein: 30 },
@@ -36,8 +37,8 @@ describe('Analytics API Route', () => {
       { id: 'm1', time: new Date('2026-03-18T08:00:00Z'), weight: 70 },
     ];
 
-    vi.mocked(prisma.foodLog.findMany).mockResolvedValue(mockFood as any);
-    vi.mocked(prisma.bodyMeasurement.findMany).mockResolvedValue(mockMeasurements as any);
+    vi.mocked(prisma.foodLog.findMany).mockResolvedValue(mockFood as unknown as Record<string, unknown>[]);
+    vi.mocked(prisma.bodyMeasurement.findMany).mockResolvedValue(mockMeasurements as unknown as Record<string, unknown>[]);
 
     const res = await GET();
     const data = await res.json();

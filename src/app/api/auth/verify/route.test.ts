@@ -16,7 +16,7 @@ vi.mock('@/lib/prisma', () => ({
 }));
 
 vi.mock('next/server', async () => {
-  const actual = await vi.importActual('next/server') as any;
+  const actual = await vi.importActual<typeof import('next/server')>('next/server');
   return {
     ...actual,
     NextResponse: {
@@ -58,7 +58,7 @@ describe('Auth Verify API Route', () => {
         identifier: email,
         token: token,
         expires: new Date(Date.now() + 10000),
-      } as any);
+      } as unknown as { identifier: string; token: string; expires: Date });
 
       vi.mocked(prisma.$transaction).mockResolvedValue([{}, {}]);
 
@@ -87,7 +87,7 @@ describe('Auth Verify API Route', () => {
         identifier: `otp:${email}`,
         token: code,
         expires: new Date(Date.now() + 10000),
-      } as any);
+      } as unknown as { identifier: string; token: string; expires: Date });
 
       vi.mocked(prisma.$transaction).mockResolvedValue([{}, {}]);
 
@@ -110,7 +110,7 @@ describe('Auth Verify API Route', () => {
         identifier: `otp:${email}`,
         token: code,
         expires: new Date(Date.now() - 10000), // expired
-      } as any);
+      } as unknown as { identifier: string; token: string; expires: Date });
 
       const req = new Request('http://localhost/api/auth/verify', {
         method: 'POST',

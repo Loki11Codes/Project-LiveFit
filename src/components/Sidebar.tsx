@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useSyncExternalStore, useState, useEffect } from "react";
@@ -33,9 +32,7 @@ interface SidebarProps {
   readonly calories: number;
   readonly calorieTarget: number;
   readonly carbs: number;
-  readonly carbsTarget?: number | null;
   readonly fats: number;
-  readonly fatsTarget?: number | null;
   readonly fiber: number;
   readonly weight: number | string;
   readonly sleep: number | string;
@@ -98,7 +95,7 @@ function MacroBar({
 }
 
 
-function WeeklyConsistency({ stats }: Readonly<{ stats: any[] }>) {
+function WeeklyConsistency({ stats }: Readonly<{ stats: NutritionStat[] }>) {
   const last7 = (stats || []).slice(-7);
   const max = Math.max(...last7.map((s) => s.protein || 0), 100);
 
@@ -132,10 +129,16 @@ function WeeklyConsistency({ stats }: Readonly<{ stats: any[] }>) {
 }
 
 function RecentActivity({ logs }: Readonly<{ logs: LogsResponse }>) {
-  const activities: any[] = [];
+  const activities: Array<{
+    id: string;
+    type: string;
+    label: string;
+    time: Date;
+    icon: LucideIcon;
+  }> = [];
   
   if (logs?.food) {
-    logs.food.slice(-2).forEach((f: any) => activities.push({ 
+    logs.food.slice(-2).forEach((f: FoodLog) => activities.push({ 
       id: f.id, 
       type: "food", 
       label: f.name, 
@@ -144,10 +147,10 @@ function RecentActivity({ logs }: Readonly<{ logs: LogsResponse }>) {
     }));
   }
   if (logs?.workouts) {
-    logs.workouts.slice(-1).forEach((w: any) => activities.push({ 
+    logs.workouts.slice(-1).forEach((w: WorkoutLogWithRelations) => activities.push({ 
       id: w.id, 
       type: "workout", 
-      label: w.name, 
+      label: w.focus, 
       time: new Date(w.time),
       icon: Flame 
     }));
@@ -387,9 +390,7 @@ export default function Sidebar({
   calories,
   calorieTarget,
   carbs,
-  carbsTarget,
   fats,
-  fatsTarget,
   fiber,
   weight,
   sleep,
@@ -545,7 +546,7 @@ export default function Sidebar({
             value={protein}
             target={`${proteinTarget}g`}
             percentage={proteinPct}
-            status={proteinStatus as any}
+            status={proteinStatus as "hit" | "near" | ""}
             nudge={proteinPct < 50}
             iconColor="var(--green)"
             onClick={() => setActiveMetric("Protein")}
@@ -557,7 +558,7 @@ export default function Sidebar({
             value={calories}
             target={calorieTarget}
             percentage={caloriePct}
-            status={calorieStatus as any}
+            status={calorieStatus as "hit" | "near" | ""}
             nudge={caloriePct < 50}
             iconColor="var(--amber)"
             onClick={() => setActiveMetric("Calories")}
@@ -602,7 +603,7 @@ export default function Sidebar({
             <WorkoutLiveAssistant session={activeWorkout} />
           ) : (
             <div className="grid grid-cols-3 gap-x-2 gap-y-2">
-              {statsRows.map((row: any) => (
+              {statsRows.map((row) => (
                 <button
                   key={row.label}
                   type="button"
@@ -756,17 +757,7 @@ export default function Sidebar({
   );
 }
 
-function getProteinRange(dayType: DayType): string {
-  if (dayType === "Rest") {
-    return "75-85g";
-  }
 
-  if (dayType === "Training") {
-    return "100-120g";
-  }
-
-  return "60-75g";
-}
 
 function subscribeToDateLabel(): () => void {
   return () => undefined;

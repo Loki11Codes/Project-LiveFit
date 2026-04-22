@@ -49,7 +49,7 @@ export function AchievementCard({
   const colors = tierColors[tier];
   
   // Resolve icon component
-  const IconComponent = icon ? (LucideIcons as any)[icon] : LucideIcons.Trophy;
+  const IconComponent = (icon && icon in LucideIcons ? (LucideIcons[icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>) : LucideIcons.Trophy);
 
   return (
     <motion.div

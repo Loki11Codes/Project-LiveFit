@@ -1,10 +1,10 @@
-import { Beef, Salad, Flame, Wheat, Target } from "lucide-react";
+import { Beef, Salad, Flame, Wheat, Target, type LucideIcon } from "lucide-react";
 
 export interface FoodSuggestion {
   name: string;
   protein: number;
   calories: number;
-  icon: any;
+  icon: LucideIcon;
   benefit: string;
 }
 

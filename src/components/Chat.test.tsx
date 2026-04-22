@@ -12,6 +12,7 @@ import Chat from "./Chat";
 import { QuickChips } from "./Chat/QuickChips";
 import * as clientApi from "@/lib/client-api";
 import * as chatUtils from "@/lib/chat-utils";
+import type { ParsedLogEnvelope } from "@/lib/types";
 
 // ─── Module mocks ────────────────────────────────────────────────────────────
 
@@ -209,7 +210,7 @@ describe("Chat Components", () => {
       vi.mocked(chatUtils.extractAndCleanLogData).mockReturnValue({
         hasData: true,
         cleanText: "Logged your food!",
-        logs: mockLogs as any,
+        logs: mockLogs as ParsedLogEnvelope[],
       });
 
       const onLogParsed = vi.fn();
@@ -300,6 +301,169 @@ describe("Chat Components", () => {
     });
   });
 
+  // ── Scroll & UI Behavior ──────────────────────────────────────────────────
+
+  describe("Chat UI Behavior", () => {
+    it("shows scroll-to-bottom button when scrolled up", async () => {
+      render(<Chat {...makeProps()} />);
+      await waitForHistoryLoad();
+
+      const viewport = screen.getByRole("log");
+      // Mock scroll event
+      fireEvent.scroll(viewport, { target: { scrollTop: 0, scrollHeight: 2000, clientHeight: 500 } });
+
+      await waitFor(() => {
+        expect(screen.getByLabelText("Scroll to bottom")).toBeDefined();
+      });
+    });
+
+    it("handles initialMessage prop by triggering handleSend", async () => {
+      vi.mocked(clientApi.requestJson).mockResolvedValue({ text: "Auto-reply" });
+      const setInput = vi.fn();
+      const onMessageSent = vi.fn();
+      
+      const props = makeProps({ 
+        initialMessage: "Seed message",
+        setInput,
+        onMessageSent 
+      });
+
+      render(<Chat {...props} />);
+      
+      // Wait for handleSend's internal timeout (100ms)
+      await waitFor(() => {
+        expect(setInput).toHaveBeenCalledWith("Seed message");
+        expect(onMessageSent).toHaveBeenCalled();
+        expect(clientApi.requestJson).toHaveBeenCalled();
+      }, { timeout: 1000 });
+    });
+  });
+
+  // ── Message Deletion ──────────────────────────────────────────────────────
+
+  describe("Message Deletion", () => {
+    it("calls submitChat with a delete command when onDelete is triggered", async () => {
+      mockHistory([
+        { id: "msg-to-delete", role: "user", text: "Delete me", timestamp: "10:00" },
+      ]);
+      vi.mocked(clientApi.requestJson).mockResolvedValue({ text: "Deleted." });
+      
+      render(<Chat {...makeProps()} />);
+      await waitForHistoryLoad();
+
+      // MessageBubble renders a delete button if onDelete is provided
+      // The test-id is based on msg.id
+      const deleteBtn = screen.getByTestId("delete-msg-msg-to-delete");
+      fireEvent.click(deleteBtn);
+
+      await waitFor(() => {
+        expect(clientApi.requestJson).toHaveBeenCalledWith(
+          "/api/chat",
+          expect.objectContaining({
+            body: expect.stringContaining('Delete the log for: \\"Delete me\\"'),
+          }),
+        );
+      });
+    });
+  });
+
+  // ── File Attachments ──────────────────────────────────────────────────────
+
+  describe("File Attachments", () => {
+    const dummyDataUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+
+    it("handles image file selection and renders preview", async () => {
+      // Mock FileReader
+      const readAsDataURLMock = vi.fn().mockImplementation(function (this: FileReader) {
+        if (this.onload) {
+          const event = { target: { result: dummyDataUrl } } as unknown as ProgressEvent<FileReader>;
+          this.onload(event);
+        }
+      });
+      vi.stubGlobal("FileReader", vi.fn().mockImplementation(() => ({
+        readAsDataURL: readAsDataURLMock,
+      })));
+
+      render(<Chat {...makeProps()} />);
+      await waitForHistoryLoad();
+
+      // The file input is hidden but follows the "Attach images" button
+      const fileInput = screen.getByLabelText("Attach images").parentElement?.querySelector('input[type="file"]') as HTMLInputElement;
+      const file = new File(["(⌐□_□)"], "test.png", { type: "image/png" });
+
+      await act(async () => {
+        fireEvent.change(fileInput, { target: { files: [file] } });
+      });
+
+      await waitFor(() => {
+        expect(screen.getByAltText("test.png")).toBeDefined();
+      });
+    });
+
+    it("removes a pending attachment when the remove button is clicked", async () => {
+      const readAsDataURLMock = vi.fn().mockImplementation(function (this: FileReader) {
+        if (this.onload) {
+          const event = { target: { result: dummyDataUrl } } as unknown as ProgressEvent<FileReader>;
+          this.onload(event);
+        }
+      });
+      vi.stubGlobal("FileReader", vi.fn().mockImplementation(() => ({
+        readAsDataURL: readAsDataURLMock,
+      })));
+
+      render(<Chat {...makeProps()} />);
+      await waitForHistoryLoad();
+
+      const fileInput = screen.getByLabelText("Attach images").parentElement?.querySelector('input[type="file"]') as HTMLInputElement;
+      const file = new File(["(⌐□_□)"], "test.png", { type: "image/png" });
+
+      await act(async () => {
+        fireEvent.change(fileInput, { target: { files: [file] } });
+      });
+
+      const removeBtn = screen.getByLabelText("Remove test.png");
+      fireEvent.click(removeBtn);
+
+      expect(screen.queryByAltText("test.png")).toBeNull();
+    });
+
+    it("sends a message with fallback text when only an audio file is attached", async () => {
+      const audioDataUrl = "data:audio/mpeg;base64,AAAA";
+      const readAsDataURLMock = vi.fn().mockImplementation(function (this: FileReader) {
+        if (this.onload) {
+          const event = { target: { result: audioDataUrl } } as unknown as ProgressEvent<FileReader>;
+          this.onload(event);
+        }
+      });
+      vi.stubGlobal("FileReader", vi.fn().mockImplementation(() => ({
+        readAsDataURL: readAsDataURLMock,
+      })));
+      vi.mocked(clientApi.requestJson).mockResolvedValue({ text: "Audio processed" });
+
+      render(<Chat {...makeProps({ input: "" })} />);
+      await waitForHistoryLoad();
+
+      const fileInput = screen.getByLabelText("Attach images").parentElement?.querySelector('input[type="file"]') as HTMLInputElement;
+      const file = new File(["audio"], "voice.mp3", { type: "audio/mpeg" });
+
+      await act(async () => {
+        fireEvent.change(fileInput, { target: { files: [file] } });
+      });
+
+      const sendBtn = screen.getByLabelText("Send message");
+      fireEvent.click(sendBtn);
+
+      await waitFor(() => {
+        expect(clientApi.requestJson).toHaveBeenCalledWith(
+          "/api/chat",
+          expect.objectContaining({
+            body: expect.stringContaining("Audio message"),
+          }),
+        );
+      });
+    });
+  });
+
   // ── QuickChips ────────────────────────────────────────────────────────────
 
   describe("QuickChips", () => {
@@ -330,3 +494,4 @@ describe("Chat Components", () => {
     });
   });
 });
+

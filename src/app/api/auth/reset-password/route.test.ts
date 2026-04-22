@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { POST } from './route';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
+import { type Session } from 'next-auth';
 import bcrypt from 'bcryptjs';
 
 vi.mock('next-auth/next', () => ({
@@ -37,7 +38,7 @@ describe('Auth Reset Password API Route', () => {
   });
 
   it('returns 400 if password does not meet security requirements', async () => {
-    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } } as any);
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1', email: 'u@e.c' } } as unknown as Session);
     const req = new Request('http://localhost/api/auth/reset-password', {
       method: 'POST',
       body: JSON.stringify({ password: 'short' }),
@@ -49,7 +50,7 @@ describe('Auth Reset Password API Route', () => {
   });
 
   it('updates password successfully on valid input', async () => {
-    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } } as any);
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1', email: 'u@e.c' } } as unknown as Session);
     const validPassword = 'StrongPassword123!';
     
     const req = new Request('http://localhost/api/auth/reset-password', {

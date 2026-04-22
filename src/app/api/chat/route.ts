@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { appendFileSync } from "node:fs";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getServerSession } from "next-auth";
@@ -97,12 +98,16 @@ When given a user health or fitness task, you MUST:
 - Today's Date: ${dateStr}
 - Current Time: ${timeStr}
 ${userContext?.knowledge ? `
-LONG-TERM USER KNOWLEDGE:
-${userContext.knowledge.map((k: any) => `- ${k.key}: ${k.value}`).join('\n')}
+SHORT-TERM USER KNOWLEDGE:
+${userContext.knowledge.map((k: { key: string; value: string }) => `- ${k.key}: ${k.value}`).join('\n')}
 ` : ''}
 ${userContext?.prs ? `
 USER PERSONAL RECORDS:
-${userContext.prs.map((p: any) => `- ${p.exercise.name}: Max Weight ${p.maxWeight}kg, Max 1RM ${p.max1RM}kg`).join('\n')}
+${userContext.prs.map((p: unknown) => {
+    const pr = p as { maxWeight: number; exercise?: { name: string }; name?: string };
+    const name = pr.exercise?.name || pr.name || "Unknown Exercise";
+    return `- ${name}: Max Weight ${pr.maxWeight}kg`;
+}).join('\n')}
 ` : ''}
 
 --- FUNCTIONAL ACTIONS ---
@@ -407,7 +412,7 @@ export async function POST(req: Request) {
   }
 }
 
-async function validateAndSaveUser(userId: string, body: any) {
+async function validateAndSaveUser(userId: string, body: z.infer<typeof ChatRequestSchema>) {
   // Hard check: verify the user still exists in the DB to prevent FK violations
   const userExists = await prisma.user.findUnique({
     where: { id: userId },
@@ -518,7 +523,7 @@ async function handleUserResponse(
     console.error("Chat log persistence failed:", getErrorMessage(error));
     // DUMP TO FILE FOR DEBUGGING
     try {
-      require('node:fs').appendFileSync('debug-crash.txt', '\nChat Error: ' + (error instanceof Error ? error.stack : String(error)) + '\n');
+      appendFileSync('debug-crash.txt', '\nChat Error: ' + (error instanceof Error ? error.stack : String(error)) + '\n');
     } catch(e) {
       console.error("Failed to dump error to debug log:", e);
     }

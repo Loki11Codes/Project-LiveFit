@@ -388,7 +388,7 @@ export default function ProfileTab({
                 title={item.title}
                 description={item.description}
                 tier={item.tier as AchievementTier}
-                icon={(item as any).icon}
+                icon={(item as Record<string, unknown>).icon as string}
                 unlockedAt={new Date(item.unlockedAt)}
               />
             ))}

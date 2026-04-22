@@ -259,14 +259,6 @@ export function getLocalDateKey(value: Date | string): string {
   return `${year}-${month}-${day}`;
 }
 
-function isSameCalendarDay(left: Date, right: Date): boolean {
-  return (
-    left.getFullYear() === right.getFullYear() &&
-    left.getMonth() === right.getMonth() &&
-    left.getDate() === right.getDate()
-  );
-}
-
 function formatHistoryDay(value: Date): string {
   return value.toLocaleDateString('en-US', {
     month: 'short',

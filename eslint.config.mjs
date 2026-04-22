@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "scratch/**",
+    "get-otp.js",
+    "seed-test-user.js",
+    "debug-*.js",
+    "fetch-issues.js",
   ]),
 ]);
 

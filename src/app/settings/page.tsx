@@ -53,7 +53,7 @@ export default function SettingsPage() {
         if (prof) setProfileData(prof);
         if (go) setGoalsData(go);
         if (measure && measure.length > 0) {
-          setProfileData(prev => ({ ...prev, weight: measure[0].weight } as any));
+          setProfileData(prev => ({ ...prev, weight: measure[0].weight }));
         }
       } catch (e) {
         console.error("Failed to load settings data", e);
@@ -104,7 +104,7 @@ export default function SettingsPage() {
       gender: profileData.gender,
       age: profileData.age,
       height: profileData.height,
-      weight: (profileData as any).weight,
+      weight: profileData.weight ?? 0,
       activityPreference: profileData.activityPreference,
       primaryGoal: profileData.primaryGoal,
       dietaryPreference: profileData.dietaryPreference
@@ -455,7 +455,7 @@ function ProfilePanel({
             label="Haptic Feedback"
             description="Enable vibrations for app interactions."
             checked={data.hapticFeedback ?? true}
-            onChange={(c) => onChange("hapticFeedback", c as any)} // eslint-disable-line @typescript-eslint/no-explicit-any
+            onChange={(c) => onChange("hapticFeedback", c)} 
           />
         </div>
       </div>

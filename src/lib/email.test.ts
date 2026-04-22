@@ -51,7 +51,7 @@ describe('Email Utility', () => {
       process.env.SMTP_PASS = 'pass';
       
       const sendMailMock = vi.fn().mockResolvedValue({});
-      vi.mocked(nodemailer.createTransport).mockReturnValue({ sendMail: sendMailMock } as any);
+      vi.mocked(nodemailer.createTransport).mockReturnValue({ sendMail: sendMailMock } as unknown as ReturnType<typeof nodemailer.createTransport>);
 
       await sendVerificationEmail('test@example.com', 'Test User', '123456', 'token-123');
 

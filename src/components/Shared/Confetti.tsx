@@ -2,6 +2,17 @@
 
 import React, { useEffect, useRef } from 'react';
 
+interface Particle {
+  x: number;
+  y: number;
+  r: number;
+  d: number;
+  color: string;
+  tilt: number;
+  tiltAngleIncremental: number;
+  tiltAngle: number;
+}
+
 export function ConfettiCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -15,7 +26,7 @@ export function ConfettiCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const particles: any[] = [];
+    const particles: Particle[] = [];
     const colors = ['#ff5f6d', '#ffc371', '#4db382', '#6b7ea8', '#185fa5'];
 
     for (let i = 0; i < 150; i++) {

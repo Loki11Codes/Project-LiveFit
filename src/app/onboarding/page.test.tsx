@@ -25,10 +25,12 @@ describe("OnboardingPage", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useRouter as any).mockReturnValue(mockRouter);
-    (useSession as any).mockReturnValue({
+    vi.mocked(useRouter).mockReturnValue(mockRouter as unknown as ReturnType<typeof useRouter>);
+    vi.mocked(useSession).mockReturnValue({
+      data: null,
+      status: "unauthenticated",
       update: mockUpdate,
-    });
+    } as unknown as ReturnType<typeof useSession>);
   });
 
   describe("Tutorial Phase", () => {
@@ -52,7 +54,7 @@ describe("OnboardingPage", () => {
     });
 
     it("allows skipping onboarding", async () => {
-      (requestJson as any).mockResolvedValue({ success: true });
+      vi.mocked(requestJson).mockResolvedValue({ success: true });
       render(<OnboardingPage />);
       
       const skipBtn = screen.getByRole("button", { name: /skip all/i });

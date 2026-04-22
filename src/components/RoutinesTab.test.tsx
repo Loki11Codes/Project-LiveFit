@@ -6,12 +6,12 @@ import { RoutinesTab } from './RoutinesTab';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, style, layout, initial, animate, exit, transition, ...props }: any) => 
+    div: ({ children, style, ...props }: { children: React.ReactNode; style?: React.CSSProperties }) => 
       <div {...props} style={style}>{children}</div>,
-    button: ({ children, style, layout, initial, animate, exit, transition, ...props }: any) => 
+    button: ({ children, style, ...props }: { children: React.ReactNode; style?: React.CSSProperties }) => 
       <button {...props} style={style}>{children}</button>,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 // Mock globalThis.crypto.randomUUID

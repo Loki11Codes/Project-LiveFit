@@ -25,10 +25,12 @@ describe("ResetPasswordPage", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useRouter as any).mockReturnValue(mockRouter);
-    (useSession as any).mockReturnValue({
+    vi.mocked(useRouter).mockReturnValue(mockRouter as unknown as ReturnType<typeof useRouter>);
+    vi.mocked(useSession).mockReturnValue({
+      data: null,
+      status: "unauthenticated",
       update: mockUpdate,
-    });
+    } as unknown as ReturnType<typeof useSession>);
   });
 
   it("renders the reset password form", () => {
@@ -54,7 +56,7 @@ describe("ResetPasswordPage", () => {
   });
 
   it("calls API and updates session on valid submission", async () => {
-    (requestJson as any).mockResolvedValue({ success: true });
+    vi.mocked(requestJson).mockResolvedValue({ success: true });
     
     render(<ResetPasswordPage />);
     
@@ -86,7 +88,7 @@ describe("ResetPasswordPage", () => {
   });
 
   it("handles API errors gracefully", async () => {
-    (requestJson as any).mockRejectedValue(new Error("API Error"));
+    vi.mocked(requestJson).mockRejectedValue(new Error("API Error"));
     
     render(<ResetPasswordPage />);
     

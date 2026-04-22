@@ -20,7 +20,7 @@ vi.mock('@/lib/client-api', () => ({
 
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({ children, ...props }: { children: React.ReactNode }) => <div {...props}>{children}</div>,
   },
 }));
 
@@ -36,7 +36,7 @@ vi.mock('lucide-react', () => ({
 }));
 
 vi.mock('@/components/auth/AuthShell', () => ({
-  AuthShell: ({ children }: any) => <div data-testid="auth-shell">{children}</div>,
+  AuthShell: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-shell">{children}</div>,
 }));
 
 vi.mock('@/components/auth/GoogleMark', () => ({
@@ -53,7 +53,7 @@ describe('SignUp Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers({ shouldAdvanceTime: true });
-    vi.mocked(useRouter).mockReturnValue(mockRouter as any);
+    vi.mocked(useRouter).mockReturnValue(mockRouter as unknown as ReturnType<typeof useRouter>);
   });
 
   afterEach(() => {
@@ -139,7 +139,7 @@ describe('SignUp Component', () => {
     render(<SignUp />);
     const passwordInput = screen.getByLabelText(/^Password$/i);
     const buttons = screen.getAllByRole('button');
-    const toggle = buttons.find(b => !b.textContent && (b as any).type !== 'submit');
+    const toggle = buttons.find(b => !b.textContent && (b as HTMLButtonElement).type !== 'submit');
     
     expect(passwordInput).toHaveAttribute('type', 'password');
     if (toggle) fireEvent.click(toggle);

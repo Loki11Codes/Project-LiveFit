@@ -1,18 +1,5 @@
 import type { ParsedLogEnvelope } from './types';
 
-/** Strip all |||DATA...||| marker blocks from the raw text. */
-function removeDataBlocks(text: string, startMarker: string, endMarker: string): string {
-  let result = text;
-  let sIdx = result.indexOf(startMarker);
-  while (sIdx >= 0) {
-    const eIdx = result.indexOf(endMarker, sIdx + startMarker.length);
-    if (eIdx < 0) break;
-    result = result.substring(0, sIdx) + result.substring(eIdx + endMarker.length);
-    sIdx = result.indexOf(startMarker);
-  }
-  return result.trim();
-}
-
 /** Find the closing ||| that is NOT the start of another |||DATA block. */
 function findClosingMarker(text: string, searchFrom: number): number {
   const markerRegex = /\|\|\|\s*DATA/gi;
@@ -35,16 +22,14 @@ function findClosingMarker(text: string, searchFrom: number): number {
   return -1;
 }
 
-/** 
- * Handle cases where AI wraps the envelope in another level like { data: { ... } }
- */
-function unWrapEnvelope(parsed: any): any {
+function unWrapEnvelope(parsed: Record<string, unknown> | null): unknown {
   if (parsed?.data?.category && !parsed.category) {
+    const d = parsed.data;
     return {
-      category: parsed.data.category,
-      data: parsed.data.data ?? parsed.data,
-      date: parsed.data.date ?? parsed.date,
-      update: parsed.data.update ?? parsed.update,
+      category: d.category,
+      data: d.data ?? d,
+      date: d.date ?? parsed.date,
+      update: d.update ?? parsed.update,
     };
   }
   return parsed;

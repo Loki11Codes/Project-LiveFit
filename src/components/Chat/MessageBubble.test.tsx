@@ -1,4 +1,3 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { MessageBubble } from './MessageBubble';
@@ -6,13 +5,14 @@ import { MessageBubble } from './MessageBubble';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, style, layout, ...props }: any) => <div {...props} style={style}>{children}</div>,
+    div: ({ children, style, ...props }: { children: React.ReactNode; style?: React.CSSProperties }) => <div {...props} style={style}>{children}</div>,
   },
 }));
 
 // Mock next/image
 vi.mock('next/image', () => ({
-  default: ({ src, alt }: any) => <img src={src} alt={alt} data-testid="mock-image" />,
+  // eslint-disable-next-line @next/next/no-img-element
+  default: ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} data-testid="mock-image" />,
 }));
 
 describe('MessageBubble Component', () => {

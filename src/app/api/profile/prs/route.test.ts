@@ -20,10 +20,10 @@ describe('Personal Records API', () => {
   });
 
   it('returns personal records for the user', async () => {
-    (getServerSession as any).mockResolvedValue({ user: mockUser });
-    (prisma.personalRecord.findMany as any).mockResolvedValue([
+    vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
+    vi.mocked(prisma.personalRecord.findMany).mockResolvedValue([
       { id: 'pr-1', exerciseId: 'e1', maxWeight: 100, exercise: { name: 'Bench Press' } }
-    ]);
+    ] as unknown as Record<string, unknown>[]);
 
     const res = await GET();
     const data = await res.json();
@@ -34,7 +34,7 @@ describe('Personal Records API', () => {
   });
 
   it('returns 401 if unauthenticated', async () => {
-    (getServerSession as any).mockResolvedValue(null);
+    vi.mocked(getServerSession).mockResolvedValue(null);
     const res = await GET();
     expect(res.status).toBe(401);
   });
