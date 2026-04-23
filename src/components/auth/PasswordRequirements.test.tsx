@@ -57,11 +57,11 @@ describe('PasswordRequirements', () => {
 
   it('uses smaller size variant when size="sm"', () => {
     const { container } = render(<PasswordRequirements passwordChecks={allFalse} size="sm" />);
-    expect(container.querySelector('.text-\\[11px\\]')).toBeInTheDocument();
+    expect(container.querySelector(String.raw`.text-\[11px\]`)).toBeInTheDocument();
   });
 
   it('uses default (md) size when size prop is omitted', () => {
     const { container } = render(<PasswordRequirements passwordChecks={allFalse} />);
-    expect(container.querySelector('.text-\\[12px\\]')).toBeInTheDocument();
+    expect(container.querySelector(String.raw`.text-\[12px\]`)).toBeInTheDocument();
   });
 });
