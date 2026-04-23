@@ -23,19 +23,19 @@ export const BRAND_COLORS = [
 
 export function ThemeProvider({ children }: { readonly children: React.ReactNode }) {
   const [theme, setTheme] = useState<AppTheme>(() => {
-    if (typeof window === "undefined") return "light";
+    if (typeof globalThis.window === "undefined") return "light";
     const savedTheme = localStorage.getItem("theme") as AppTheme;
     if (savedTheme) {
       document.documentElement.dataset.theme = savedTheme;
       return savedTheme;
     }
-    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    const systemTheme = globalThis.window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     document.documentElement.dataset.theme = systemTheme;
     return systemTheme;
   });
 
   const [accentColor, setAccentColor] = useState(() => {
-    if (typeof window === "undefined") return "#185fa5";
+    if (typeof globalThis.window === "undefined") return "#185fa5";
     const savedAccent = localStorage.getItem("accentColor");
     if (savedAccent) {
       document.documentElement.style.setProperty("--user-accent", savedAccent);
@@ -76,8 +76,8 @@ export function ThemeProvider({ children }: { readonly children: React.ReactNode
     const x = event.clientX;
     const y = event.clientY;
     const endRadius = Math.hypot(
-      Math.max(x, window.innerWidth - x),
-      Math.max(y, window.innerHeight - y)
+      Math.max(x, globalThis.window.innerWidth - x),
+      Math.max(y, globalThis.window.innerHeight - y)
     );
 
     document.documentElement.style.setProperty("--transition-x", `${x}px`);

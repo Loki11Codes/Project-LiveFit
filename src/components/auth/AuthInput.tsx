@@ -15,7 +15,7 @@ export function AuthInput({
   error,
   className = "",
   ...props
-}: AuthInputProps) {
+}: Readonly<AuthInputProps>) {
   return (
     <div className="relative flex items-center w-full">
       <Icon

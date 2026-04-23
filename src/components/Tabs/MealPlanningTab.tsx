@@ -219,7 +219,7 @@ interface MacroItemProps {
   unit: string;
 }
 
-function MacroItem({ icon: Icon, color, label, value, unit }: MacroItemProps) {
+function MacroItem({ icon: Icon, color, label, value, unit }: Readonly<MacroItemProps>) {
   return (
     <div className="bg-black/5 rounded-2xl p-3 flex flex-col gap-1 border border-transparent hover:border-black/5 transition-all">
       <div className="flex items-center gap-1.5 opacity-40">

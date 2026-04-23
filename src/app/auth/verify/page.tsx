@@ -37,7 +37,7 @@ export function VerifyEmailForm() {
     }
   }, [searchParams, session, email]);
 
-  const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e?: React.SyntheticEvent) => {
     if (e) e.preventDefault();
     if (code.length !== 6) return;
 

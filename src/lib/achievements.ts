@@ -154,7 +154,8 @@ export async function syncAchievements(tx: PrismaTx, userId: string) {
 
     for (const m of milestones) {
       if (benchPR.maxWeight >= m.weight && !existingIds.has(m.id)) {
-        newlyUnlocked.push(getBadgeById(m.id)!);
+        const badge = getBadgeById(m.id);
+        if (badge) newlyUnlocked.push(badge);
       }
     }
   }
