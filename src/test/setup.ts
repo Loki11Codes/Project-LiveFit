@@ -7,7 +7,7 @@ import prisma from '@/lib/prisma';
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
-  if (typeof globalThis.window !== 'undefined') {
+  if (globalThis.window !== undefined) {
     localStorage.clear();
     sessionStorage.clear();
     // Reset document attributes that might be changed by ThemeProvider or other logic

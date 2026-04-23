@@ -22,9 +22,11 @@ describe('persistence utility', () => {
     userProfile: { findUnique: vi.fn(), upsert: vi.fn(), findFirst: vi.fn() },
     goal: { upsert: vi.fn(), findUnique: vi.fn() },
     dayTypeEntry: { upsert: vi.fn() },
-    exercise: { findFirst: vi.fn() },
+    exercise: { findFirst: vi.fn(), findUnique: vi.fn() },
     achievement: { findMany: vi.fn().mockResolvedValue([]), createMany: vi.fn() },
-    personalRecord: { findMany: vi.fn().mockResolvedValue([]) },
+    personalRecord: { findMany: vi.fn().mockResolvedValue([]), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
+    userKnowledge: { upsert: vi.fn() },
+    mealPlan: { create: vi.fn() },
   };
 
   const txClient = mockTx as unknown as Prisma.TransactionClient;
@@ -124,6 +126,24 @@ describe('persistence utility', () => {
         await persistLogData([{ category: 'dayType', data: { dayType: 'train' } }], userId);
         expect(mockTx.dayTypeEntry.upsert).toHaveBeenCalledWith(expect.objectContaining({
             create: expect.objectContaining({ dayType: 'Training' })
+        }));
+    });
+
+    it('persists knowledge entry', async () => {
+        await persistLogData([{ category: 'knowledge', data: { key: 'Focus', value: 'High' } }], userId);
+        expect(mockTx.userKnowledge.upsert).toHaveBeenCalledWith(expect.objectContaining({
+            create: expect.objectContaining({ key: 'focus', value: 'High' })
+        }));
+    });
+
+    it('persists meal plan', async () => {
+        const mealPlanData = {
+            name: 'Test Plan',
+            entries: [{ dayIndex: 0, title: 'Breakfast', kcal: 500 }]
+        };
+        await persistLogData([{ category: 'meal_plan', data: mealPlanData }], userId);
+        expect(mockTx.mealPlan.create).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.objectContaining({ name: 'Test Plan' })
         }));
     });
   });
