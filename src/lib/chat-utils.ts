@@ -23,13 +23,14 @@ function findClosingMarker(text: string, searchFrom: number): number {
 }
 
 function unWrapEnvelope(parsed: Record<string, unknown> | null): unknown {
-  if (parsed?.data?.category && !parsed.category) {
-    const d = parsed.data;
+  const p = parsed as { data?: { category?: unknown; data?: unknown; date?: unknown; update?: unknown }; category?: unknown; date?: unknown; update?: unknown };
+  if (p?.data?.category && !p.category) {
+    const d = p.data;
     return {
       category: d.category,
       data: d.data ?? d,
-      date: d.date ?? parsed.date,
-      update: d.update ?? parsed.update,
+      date: d.date ?? p.date,
+      update: d.update ?? p.update,
     };
   }
   return parsed;

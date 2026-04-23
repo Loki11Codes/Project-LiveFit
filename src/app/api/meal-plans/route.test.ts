@@ -27,7 +27,7 @@ describe('Meal Plans API', () => {
       vi.mocked(prisma.mealPlan.findFirst).mockResolvedValue({
         id: 'plan-1',
         entries: [{ id: 'e1', title: 'Oats' }]
-      } as any);
+      } as unknown as Awaited<ReturnType<typeof prisma.mealPlan.findFirst>>);
 
       const res = await GET();
       const data = await res.json();
@@ -47,7 +47,7 @@ describe('Meal Plans API', () => {
         body: JSON.stringify({ name: 'Bulk Plan', entries })
       });
 
-      vi.mocked(prisma.mealPlan.create).mockResolvedValue({ id: 'new-plan', entries } as any);
+      vi.mocked(prisma.mealPlan.create).mockResolvedValue({ id: 'new-plan', entries } as unknown as Awaited<ReturnType<typeof prisma.mealPlan.create>>);
 
       const res = await POST(req);
       await res.json();

@@ -138,6 +138,7 @@ export function MessageBubble({ msg, isFirstInGroup, isNewUser, onDelete }: Read
           onClick={() => onDelete(msg)}
           className="chat-delete-btn opacity-0 group-hover/row:opacity-100 transition-opacity p-2 hover:text-red-500 rounded-full hover:bg-[var(--surface2)]"
           aria-label="Delete message"
+          data-testid={`delete-msg-${msg.id}`}
         >
           <Trash2 className="w-4 h-4" />
         </button>

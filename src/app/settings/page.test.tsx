@@ -26,6 +26,34 @@ vi.mock("@/components/Theme/ThemeProvider", () => ({
   })),
 }));
 
+// Mock framer-motion
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+vi.mock("framer-motion", () => {
+  const motionProps = new Set([
+    "initial", "animate", "exit", "variants", "custom",
+    "whileHover", "whileTap", "whileInView", "whileFocus", "whileDrag",
+    "transition", "layout", "layoutId", "suppressHydrationWarning",
+  ]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const filterProps = (props: Record<string, any>) => {
+    const filtered: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(props)) {
+      if (!motionProps.has(k)) filtered[k] = v;
+    }
+    return filtered;
+  };
+  return {
+    motion: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      div: ({ children, ...props }: any) => <div {...filterProps(props)}>{children}</div>,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      button: ({ children, ...props }: any) => <button {...filterProps(props)}>{children}</button>,
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    AnimatePresence: ({ children }: any) => <>{children}</>,
+  };
+});
+
 // Mock View Transitions
 if (typeof document !== 'undefined') {
   document.startViewTransition = vi.fn().mockReturnValue({ ready: Promise.resolve() });
@@ -99,7 +127,7 @@ describe("SettingsPage", () => {
     const notificationsTabNav = screen.getAllByText("Notifications & Apps")[0];
     fireEvent.click(notificationsTabNav);
     await waitFor(() => {
-      expect(screen.getByText("Haptic Feedback")).toBeInTheDocument();
+      expect(screen.getByText("Workout Reminders")).toBeInTheDocument();
     });
   });
 

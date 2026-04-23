@@ -52,7 +52,6 @@ const makeTx = (overrides: Partial<{
     workoutLog: {
       count: vi.fn().mockResolvedValue(overrides.workoutCount ?? 0),
     },
-    _createMany: createMany,
   } as unknown as PrismaTx;
 };
 
@@ -65,7 +64,7 @@ describe('syncAchievements', () => {
     const tx = makeTx();
     const result = await syncAchievements(tx, 'user-1');
     expect(result).toEqual([]);
-    expect(tx._createMany).not.toHaveBeenCalled();
+    expect(tx.achievement.createMany).not.toHaveBeenCalled();
   });
 
   it('unlocks bench-bronze when bench PR ≥ 50kg', async () => {
@@ -74,7 +73,7 @@ describe('syncAchievements', () => {
     });
     const result = await syncAchievements(tx, 'user-1');
     expect(result.map((b) => b.badgeId)).toContain('bench-bronze');
-    expect(tx._createMany).toHaveBeenCalled();
+    expect(tx.achievement.createMany).toHaveBeenCalled();
   });
 
   it('unlocks multiple bench milestones at once when PR is high enough', async () => {

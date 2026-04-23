@@ -49,6 +49,7 @@ describe("VerifyEmailPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useRealTimers();
+    mockSearchParams.get.mockReturnValue(null);
     vi.mocked(useRouter).mockReturnValue(mockRouter as unknown as ReturnType<typeof useRouter>);
     vi.mocked(useSearchParams).mockReturnValue({
       get: (key: string) => (key === "email" ? mockSearchParams.get("email") : null)

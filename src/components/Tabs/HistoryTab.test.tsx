@@ -11,6 +11,7 @@ vi.mock('framer-motion', () => ({
     path: (props: any) => <path {...props} />,
     circle: (props: any) => <circle {...props} />,
   },
+  AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
 describe('HistoryTab Component', () => {
@@ -69,7 +70,7 @@ describe('HistoryTab Component', () => {
 
   it('renders activity history table correctly', () => {
     render(<HistoryTab {...defaultProps} />);
-    expect(screen.getByText('Activity History')).toBeDefined();
+    expect(screen.getByText(/Activity Logs/i)).toBeDefined();
     expect(screen.getByText(/2 Days/i)).toBeDefined();
     // Use getAllByText for data that appears in both trends and logs
     const proteinMatches = screen.getAllByText(/120/);

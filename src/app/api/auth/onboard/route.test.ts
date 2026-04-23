@@ -53,7 +53,7 @@ describe('Auth Onboarding API Route', () => {
   it('completes onboarding on valid data', async () => {
     vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } } as unknown as Session);
     
-    vi.mocked(prisma.$transaction).mockImplementation(async (cb: any) => 
+    vi.mocked(prisma.$transaction).mockImplementation(async (cb: (tx: typeof prisma) => unknown) => 
       cb({
         userProfile: { upsert: vi.fn().mockResolvedValue({}) },
         bodyMeasurement: { create: vi.fn().mockResolvedValue({}) },

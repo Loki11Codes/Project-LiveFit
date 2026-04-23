@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { getSmartSuggestion } from "@/lib/meal-suggestions";
 import { motion, AnimatePresence } from "framer-motion";
-import type { AIInsight, DayType, TabId, AnalyticsResponse, LogsResponse } from "@/lib/types";
+import type { AIInsight, DayType, TabId, AnalyticsResponse, LogsResponse, NutritionStat, FoodLog, WorkoutLogWithRelations, ActiveWorkoutSession } from "@/lib/types";
 import { GlassPane } from "./Shared/GlassPane";
 import { GlassMetric } from "./Shared/GlassMetric";
 import { GlassPopover } from "./Shared/GlassPopover";

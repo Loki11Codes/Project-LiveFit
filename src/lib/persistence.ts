@@ -113,10 +113,10 @@ async function handleCategoryPersistence(
       await persistDeleteAction(tx, logData, userId, clientDate);
       break;
     case 'knowledge':
-      await persistKnowledgeEntry(tx, logData, userId);
+      await persistKnowledgeEntry(tx, logData as Record<string, unknown>, userId);
       break;
     case 'meal_plan':
-      await persistMealPlan(tx, logData, userId);
+      await persistMealPlan(tx, logData as Record<string, unknown>, userId);
       break;
     default:
       console.warn(`Unknown category: ${category}`);

@@ -54,15 +54,35 @@ if (typeof document !== 'undefined') {
   document.startViewTransition = vi.fn().mockReturnValue({ ready: Promise.resolve() });
 }
 
-vi.mock("framer-motion", () => ({
-  motion: {
-    div: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,  
-    button: ({ children, ...props }: { children: React.ReactNode }) => (
-      <button {...props}>{children}</button>
-    ),  
-  },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,  
-}));
+// Mock framer-motion
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+vi.mock("framer-motion", () => {
+  const motionProps = new Set([
+    "initial", "animate", "exit", "variants", "custom",
+    "whileHover", "whileTap", "whileInView", "whileFocus", "whileDrag",
+    "transition", "layout", "layoutId", "suppressHydrationWarning",
+  ]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const filterProps = (props: Record<string, any>) => {
+    const filtered: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(props)) {
+      if (!motionProps.has(k)) filtered[k] = v;
+    }
+    return filtered;
+  };
+  return {
+    motion: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      div: ({ children, ...props }: any) => <div {...filterProps(props)}>{children}</div>,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      button: ({ children, ...props }: any) => <button {...filterProps(props)}>{children}</button>,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      section: ({ children, ...props }: any) => <section {...filterProps(props)}>{children}</section>,
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    AnimatePresence: ({ children }: any) => <>{children}</>,
+  };
+});
 
 // Mock sub-components to isolate Dashboard logic
 vi.mock("@/components/Navbar", () => ({
@@ -120,6 +140,7 @@ vi.mock("@/lib/client-api", () => ({
 
 describe("Home (Dashboard) Orchestration", () => {
   const mockRouter = { push: vi.fn(), refresh: vi.fn() };
+  const mockUpdate = vi.fn();
   let mockSearchParams = new URLSearchParams();
 
   beforeEach(() => {

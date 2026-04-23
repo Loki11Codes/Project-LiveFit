@@ -16,13 +16,15 @@ describe('persistence utility', () => {
   // Type-safe mock structure for the models we use
   const mockTx = {
     foodLog: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() },
-    workoutLog: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() },
+    workoutLog: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn(), delete: vi.fn(), deleteMany: vi.fn(), count: vi.fn().mockResolvedValue(0) },
     sleepLog: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() },
     bodyMeasurement: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() },
     userProfile: { findUnique: vi.fn(), upsert: vi.fn(), findFirst: vi.fn() },
     goal: { upsert: vi.fn(), findUnique: vi.fn() },
     dayTypeEntry: { upsert: vi.fn() },
     exercise: { findFirst: vi.fn() },
+    achievement: { findMany: vi.fn().mockResolvedValue([]), createMany: vi.fn() },
+    personalRecord: { findMany: vi.fn().mockResolvedValue([]) },
   };
 
   const txClient = mockTx as unknown as Prisma.TransactionClient;
