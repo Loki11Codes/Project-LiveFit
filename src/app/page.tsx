@@ -422,7 +422,7 @@ export default function Home() {
         console.log("[DEBUG] Workout start intent detected:", workoutAction);
         const name = workoutAction.name || workoutAction.focus || workoutAction.data?.name || "Fresh Workout";
         if (workoutAction.routineId) {
-            void handleStartWorkoutById(workoutAction.routineId as string, name);
+            void handleStartWorkoutById(workoutAction.routineId, name);
         } else {
            handleStartWorkout({ name, exercises: [] });
         }

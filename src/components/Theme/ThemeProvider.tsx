@@ -23,7 +23,7 @@ export const BRAND_COLORS = [
 
 export function ThemeProvider({ children }: { readonly children: React.ReactNode }) {
   const [theme, setTheme] = useState<AppTheme>(() => {
-    if (typeof globalThis.window === "undefined") return "light";
+    if (globalThis.window === undefined) return "light";
     const savedTheme = localStorage.getItem("theme") as AppTheme;
     if (savedTheme) {
       document.documentElement.dataset.theme = savedTheme;
@@ -35,7 +35,7 @@ export function ThemeProvider({ children }: { readonly children: React.ReactNode
   });
 
   const [accentColor, setAccentColor] = useState(() => {
-    if (typeof globalThis.window === "undefined") return "#185fa5";
+    if (globalThis.window === undefined) return "#185fa5";
     const savedAccent = localStorage.getItem("accentColor");
     if (savedAccent) {
       document.documentElement.style.setProperty("--user-accent", savedAccent);

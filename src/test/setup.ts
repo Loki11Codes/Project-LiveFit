@@ -7,11 +7,11 @@ import prisma from '@/lib/prisma';
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
-  if (typeof window !== 'undefined') {
+  if (typeof globalThis.window !== 'undefined') {
     localStorage.clear();
     sessionStorage.clear();
     // Reset document attributes that might be changed by ThemeProvider or other logic
-    document.documentElement.removeAttribute('data-theme');
+    delete document.documentElement.dataset.theme;
     document.documentElement.style.removeProperty('--user-accent');
   }
 });

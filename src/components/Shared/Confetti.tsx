@@ -29,15 +29,21 @@ export function ConfettiCanvas() {
     const particles: Particle[] = [];
     const colors = ['#ff5f6d', '#ffc371', '#4db382', '#6b7ea8', '#185fa5'];
 
+    const secureRandom = () => {
+      const array = new Uint32Array(1);
+      globalThis.crypto.getRandomValues(array);
+      return array[0] / 4294967296;
+    };
+
     for (let i = 0; i < 150; i++) {
       particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height - canvas.height,
-        r: Math.random() * 4 + 2,
-        d: Math.random() * 150,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        tilt: Math.random() * 10 - 10,
-        tiltAngleIncremental: Math.random() * 0.07 + 0.05,
+        x: secureRandom() * canvas.width,
+        y: secureRandom() * canvas.height - canvas.height,
+        r: secureRandom() * 4 + 2,
+        d: secureRandom() * 150,
+        color: colors[Math.floor(secureRandom() * colors.length)],
+        tilt: secureRandom() * 10 - 10,
+        tiltAngleIncremental: secureRandom() * 0.07 + 0.05,
         tiltAngle: 0
       });
     }
@@ -61,7 +67,7 @@ export function ConfettiCanvas() {
 
         if (p.x > canvas.width + 5 || p.x < -5 || p.y > canvas.height) {
           if (i % 5 > 0 || p.y > canvas.height) {
-            particles[i] = { ...p, x: Math.random() * canvas.width, y: -10, tilt: Math.random() * 10 - 10 };
+            particles[i] = { ...p, x: secureRandom() * canvas.width, y: -10, tilt: secureRandom() * 10 - 10 };
           }
         }
       });

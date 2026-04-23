@@ -54,7 +54,7 @@ export async function persistLogData(envelopes: ParsedLogEnvelope[], userId: str
   const newlyUnlocked: AchievementBadge[] = [];
   results.forEach(result => {
     if (result.status === 'fulfilled' && result.value) {
-      newlyUnlocked.push(...(result.value as AchievementBadge[]));
+      newlyUnlocked.push(...result.value);
     }
   });
 
@@ -189,22 +189,40 @@ async function persistFoodLogs(tx: Prisma.TransactionClient, items: FoodItemInpu
 }
 
 async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogInput, userId: string): Promise<void> {
-
   const parsed = WorkoutLogSchema.safeParse(data);
   if (!parsed.success) {
     console.error('[PERSISTENCE] Workout validation failed:', JSON.stringify(parsed.error.issues, null, 2));
     console.warn('Skipping invalid workout log from AI:', parsed.error);
     return;
   }
+
   const validated = parsed.data;
   const logDate = validated.date ? new Date(validated.date) : new Date();
   const prs = getRecordValue(data, 'prs');
   const detailsFallback = prs ? JSON.stringify(prs) : undefined;
+
+  // Resolve exercises and prepare config
+  const resolvedExercises = await resolveWorkoutExercises(tx, validated.exercises);
+  const exercisesConfig = createExercisesConfig(resolvedExercises);
+
+  // Upsert the workout log
+  await upsertWorkoutLog(tx, {
+    userId,
+    validated,
+    logDate,
+    detailsFallback,
+    exercisesConfig
+  });
+
+  // Track and Update Personal Records
+  await updatePersonalRecords(tx, userId, resolvedExercises);
+}
+
+async function resolveWorkoutExercises(tx: Prisma.TransactionClient, exercises?: WorkoutLogInput['exercises']) {
+  if (!exercises) return [];
   
-  // Resolve all exercises first to get IDs
-  const resolvedExercises = validated.exercises ? await Promise.all(
-    validated.exercises.map(async (ex, exIdx) => {
-      // Use provided ID or search by name
+  return await Promise.all(
+    exercises.map(async (ex, exIdx) => {
       const matched = ex.exerciseId 
         ? await tx.exercise.findUnique({ where: { id: ex.exerciseId } })
         : await tx.exercise.findFirst({ where: { name: { equals: ex.name } } });
@@ -216,16 +234,18 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
         matchedExercise: matched
       };
     })
-  ) : [];
+  );
+}
 
-  const exercisesConfig = {
+function createExercisesConfig(resolvedExercises: any[]) {
+  return {
     create: resolvedExercises.map((ex) => ({
       exerciseId: ex.id,
       customName: ex.id ? null : ex.name,
       order: ex.order,
       sets: ex.sets
         ? {
-            create: ex.sets.map((set, setIdx) => ({
+            create: ex.sets.map((set: any, setIdx: number) => ({
               setNumber: set.setNumber ?? setIdx + 1,
               reps: set.reps,
               weight: set.weight,
@@ -236,6 +256,16 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
         : undefined,
     }))
   };
+}
+
+async function upsertWorkoutLog(tx: Prisma.TransactionClient, params: {
+  userId: string;
+  validated: any;
+  logDate: Date;
+  detailsFallback?: string;
+  exercisesConfig: any;
+}) {
+  const { userId, validated, logDate, detailsFallback, exercisesConfig } = params;
 
   if (validated.update) {
     const startOfDay = new Date(logDate);
@@ -247,10 +277,7 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
       where: {
         userId,
         focus: { equals: validated.focus },
-        time: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
+        time: { gte: startOfDay, lte: endOfDay },
       },
       orderBy: { time: 'desc' },
     });
@@ -262,44 +289,35 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
           volume: validated.volume ?? existing.volume,
           details: validated.details || detailsFallback || existing.details,
           exercises: {
-            deleteMany: {}, // Clear old sets for clean recreation
+            deleteMany: {},
             ...exercisesConfig
           }
         },
       });
-    } else {
-        await tx.workoutLog.create({
-            data: {
-              userId,
-              focus: validated.focus,
-              volume: validated.volume,
-              details: validated.details || detailsFallback,
-              time: validated.date ? new Date(validated.date) : undefined,
-              exercises: exercisesConfig,
-            },
-          });
+      return;
     }
-  } else {
-    await tx.workoutLog.create({
-      data: {
-        userId,
-        focus: validated.focus,
-        volume: validated.volume,
-        details: validated.details || detailsFallback,
-        time: validated.date ? new Date(validated.date) : undefined,
-        exercises: exercisesConfig,
-      },
-    });
   }
 
-  // Track and Update Personal Records
+  await tx.workoutLog.create({
+    data: {
+      userId,
+      focus: validated.focus,
+      volume: validated.volume,
+      details: validated.details || detailsFallback,
+      time: validated.date ? new Date(validated.date) : undefined,
+      exercises: exercisesConfig,
+    },
+  });
+}
+
+async function updatePersonalRecords(tx: Prisma.TransactionClient, userId: string, resolvedExercises: any[]) {
   for (const ex of resolvedExercises) {
     if (!ex.id || !ex.sets) continue;
 
     let maxWeight = 0;
     let max1RM = 0;
 
-    ex.sets.forEach(set => {
+    ex.sets.forEach((set: any) => {
       const w = set.weight || 0;
       const r = set.reps || 0;
       const rm = w * (1 + r / 30);
@@ -313,17 +331,17 @@ async function persistWorkoutLog(tx: Prisma.TransactionClient, data: WorkoutLogI
         where: { userId_exerciseId: { userId, exerciseId: ex.id } }
       });
 
-      if (!existingPr) {
-        await tx.personalRecord.create({
-          data: { userId, exerciseId: ex.id, maxWeight, max1RM }
-        });
-      } else {
+      if (existingPr) {
         await tx.personalRecord.update({
           where: { id: existingPr.id },
           data: {
             maxWeight: Math.max(existingPr.maxWeight || 0, maxWeight),
             max1RM: Math.max(existingPr.max1RM || 0, max1RM)
           }
+        });
+      } else {
+        await tx.personalRecord.create({
+          data: { userId, exerciseId: ex.id, maxWeight, max1RM }
         });
       }
     }
