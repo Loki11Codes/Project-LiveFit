@@ -3,23 +3,18 @@ import type { ParsedLogEnvelope } from './types';
 /** Find the closing ||| that is NOT the start of another |||DATA block. */
 function findClosingMarker(text: string, searchFrom: number): number {
   const markerRegex = /\|\|\|\s*DATA/gi;
-  let pos = searchFrom;
+  const idx = text.indexOf('|||', searchFrom);
+  if (idx === -1) return -1;
   
-  while (pos < text.length) {
-    const idx = text.indexOf('|||', pos);
-    if (idx === -1) return -1;
-    
-    // Check if this ||| is actually a new opening block
-    markerRegex.lastIndex = idx;
-    const match = markerRegex.exec(text);
-    if (match?.index === idx) {
-      pos = idx + match[0].length;
-      continue;
-    }
-    
-    return idx;
+  // Check if this ||| is actually a new opening block
+  markerRegex.lastIndex = idx;
+  const match = markerRegex.exec(text);
+  if (match?.index === idx) {
+    // This ||| starts a new block, so the current one is unclosed.
+    return -1;
   }
-  return -1;
+  
+  return idx;
 }
 
 function unWrapEnvelope(parsed: Record<string, unknown> | null): unknown {

@@ -150,8 +150,81 @@ describe('Chat API Route', () => {
 
     const res = await POST(req);
     expect(res.status).toBe(200);
-    // Should NOT failover to OpenRouter for images (route.ts: lines 231, 308)
+    // Should NOT failover to OpenRouter for images
     expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('handles 429 rate limit error', async () => {
+    mockShouldFailGemini = true;
+    (globalThis.fetch as any).mockRejectedValue(new Error('429 Too Many Requests'));
+    const req = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ prompt: 'Go', history: [], images: [] }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toContain('Rate Limit Exceeded');
+  });
+
+  it('handles missing user in database (stale session)', async () => {
+    (prisma.user.findUnique as any).mockResolvedValueOnce(null);
+    const req = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ prompt: 'Hello', history: [], images: [] }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toContain('Session is stale');
+  });
+
+  it('handles images when Gemini key is missing', async () => {
+    process.env.GEMINI_API_KEY = '';
+    const req = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        prompt: 'Analyze', 
+        history: [], 
+        images: [{ base64: 'b64', mediaType: 'image/png', name: 'img.png' }] 
+      }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toContain('Image analysis is temporarily unavailable');
+  });
+
+  it('handles consecutive history messages of same role in sanitizeGeminiHistory', async () => {
+    const req = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        prompt: 'Hello', 
+        history: [
+            { role: 'user', parts: [{ text: 'Msg 1' }] },
+            { role: 'user', parts: [{ text: 'Msg 2' }] }
+        ], 
+        images: [] 
+      }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+  });
+
+  it('handles model messages at start of history in sanitizeGeminiHistory', async () => {
+    const req = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        prompt: 'Hello', 
+        history: [
+            { role: 'model', parts: [{ text: 'Model Start' }] },
+            { role: 'user', parts: [{ text: 'User Msg' }] }
+        ], 
+        images: [] 
+      }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
   });
 });
 

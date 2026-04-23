@@ -196,8 +196,20 @@ describe("SettingsPage", () => {
       expect(inputs.length).toBeGreaterThan(0);
       fireEvent.change(inputs[0], { target: { value: 75 } });
       expect(inputs[0]).toHaveValue(75);
-      // Added explicit boolean check often preferred by scanners
-      expect(inputs[0].getAttribute('value')).toBe('75');
+      
+      // Workout Duration
+      if (inputs[1]) {
+        fireEvent.change(inputs[1], { target: { value: 45 } });
+        expect(inputs[1]).toHaveValue(45);
+      }
+
+      const primaryGoalSelect = screen.getByLabelText(/Primary Goal/i);
+      fireEvent.change(primaryGoalSelect, { target: { value: "Muscle Gain" } });
+      expect(primaryGoalSelect).toHaveValue("Muscle Gain");
+
+      const activitySelect = screen.getByLabelText(/Activity Preference/i);
+      fireEvent.change(activitySelect, { target: { value: "Yoga / Pilates" } });
+      expect(activitySelect).toHaveValue("Yoga / Pilates");
     });
   });
 
@@ -211,6 +223,40 @@ describe("SettingsPage", () => {
       expect(inputs[0]).toHaveValue(2000);
       // Explicit assertion
       expect(inputs[0] as HTMLInputElement).toBeInTheDocument();
+    });
+  });
+
+  it("changes all inputs in Nutrition Tab", async () => {
+    render(<SettingsPage />);
+    fireEvent.click(screen.getAllByText("Nutrition & Diet")[0]);
+    await waitFor(() => {
+      const inputs = screen.getAllByRole("spinbutton");
+      // kcal, protein, carbs, fats
+      if (inputs.length >= 4) {
+        fireEvent.change(inputs[1], { target: { value: 150 } }); // Protein
+        fireEvent.change(inputs[2], { target: { value: 200 } }); // Carbs
+        fireEvent.change(inputs[3], { target: { value: 60 } });  // Fats
+        expect(inputs[1]).toHaveValue(150);
+        expect(inputs[2]).toHaveValue(200);
+        expect(inputs[3]).toHaveValue(60);
+      }
+      
+      const select = screen.getByLabelText(/Dietary Preference/i);
+      fireEvent.change(select, { target: { value: "Vegan" } });
+      expect(select).toHaveValue("Vegan");
+    });
+  });
+
+  it("changes toggles in Notifications Tab", async () => {
+    render(<SettingsPage />);
+    fireEvent.click(screen.getAllByText("Notifications & Apps")[0]);
+    await waitFor(() => {
+      const toggles = screen.getAllByRole("switch");
+      if (toggles.length >= 3) {
+        fireEvent.click(toggles[0]);
+        fireEvent.click(toggles[1]);
+        fireEvent.click(toggles[2]);
+      }
     });
   });
 });

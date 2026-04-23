@@ -621,6 +621,7 @@ async function persistDeleteAction(
     workout: () => deleteWorkoutEntry(tx, userId, dateRange, focus),
     sleep: () => deleteSingleEntry(tx.sleepLog, userId, dateRange),
     measurement: () => deleteSingleEntry(tx.bodyMeasurement, userId, dateRange),
+    knowledge: () => deleteKnowledgeEntry(tx, raw, userId),
     all: async () => {
       await Promise.all([
         tx.foodLog.deleteMany({ where: { userId, time: dateRange } }),
@@ -752,4 +753,16 @@ function getStringValue(value: unknown, key: string): string | undefined {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+async function deleteKnowledgeEntry(tx: Prisma.TransactionClient, data: Record<string, unknown>, userId: string): Promise<void> {
+  const key = typeof data.key === 'string' ? data.key.toLowerCase() : '';
+  if (!key) return;
+
+  const entry = await tx.userKnowledge.findFirst({
+    where: { userId, key: { equals: key, mode: 'insensitive' } }
+  });
+
+  if (entry) {
+    await tx.userKnowledge.delete({ where: { id: entry.id } });
+  }
 }

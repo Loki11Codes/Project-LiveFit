@@ -266,6 +266,7 @@ async function callOpenRouter(
   params: ChatParams & { openRouterKey: string }
 ) {
   const { prompt, history, images, clientDate, clientTime, routinesList, userContext, openRouterKey } = params;
+  let lastError: any = null;
   const freeModels = [
     "openrouter/free",
     "google/gemini-2.0-flash-lite-preview-02-05:free",
@@ -326,15 +327,18 @@ async function callOpenRouter(
         }
       } else {
         const errorText = await res.text();
+        lastError = new Error(`${res.status} - ${errorText}`);
         console.warn(
           `OpenRouter model ${modelId} failed: ${res.status} - ${errorText}`,
         );
       }
     } catch (error) {
+      lastError = error;
       console.error(`Error with model ${modelId}:`, getErrorMessage(error));
     }
   }
 
+  if (lastError) throw lastError;
   return null;
 }
 
@@ -471,6 +475,7 @@ async function getAIResponse(
   userContext?: z.infer<typeof ChatRequestSchema>["userContext"]
 ) {
   let text = "";
+  let lastError: any = null;
   const { prompt, history, images, clientDate, clientTime } = body;
 
   if (geminiKey) {
@@ -479,14 +484,15 @@ async function getAIResponse(
     } catch (error) {
       console.error(
         "Gemini failed completely, failing over to OpenRouter...",
-        getErrorMessage(error),
+        getErrorMessage(error)
       );
+      lastError = error;
     }
   }
 
   if (!text && openRouterKey) {
-    text =
-      (await callOpenRouter({
+    try {
+      text = await callOpenRouter({
         prompt,
         history,
         openRouterKey,
@@ -495,7 +501,17 @@ async function getAIResponse(
         clientTime,
         routinesList,
         userContext
-      })) || "";
+      }) || "";
+      if (!text) {
+        lastError = new Error("OpenRouter failed to return content");
+      }
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (!text && lastError) {
+    throw lastError;
   }
 
   return text;

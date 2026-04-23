@@ -25,7 +25,7 @@ describe('persistence utility', () => {
     exercise: { findFirst: vi.fn(), findUnique: vi.fn() },
     achievement: { findMany: vi.fn().mockResolvedValue([]), createMany: vi.fn() },
     personalRecord: { findMany: vi.fn().mockResolvedValue([]), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
-    userKnowledge: { upsert: vi.fn() },
+    userKnowledge: { upsert: vi.fn(), findFirst: vi.fn(), delete: vi.fn() },
     mealPlan: { create: vi.fn() },
   };
 
@@ -187,6 +187,12 @@ describe('persistence utility', () => {
         await persistLogData([{ category: 'delete', data: { target: 'all' } }], userId);
         expect(mockTx.foodLog.deleteMany).toHaveBeenCalled();
         expect(mockTx.workoutLog.deleteMany).toHaveBeenCalled();
+    });
+
+    it('deletes specific knowledge entry', async () => {
+        mockTx.userKnowledge.findFirst.mockResolvedValue({ id: 'k1' });
+        await persistLogData([{ category: 'delete', data: { target: 'knowledge', key: 'Focus' } }], userId);
+        expect(mockTx.userKnowledge.delete).toHaveBeenCalledWith({ where: { id: 'k1' } });
     });
   });
 
