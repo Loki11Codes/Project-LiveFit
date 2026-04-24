@@ -28,7 +28,7 @@ type DailySummary = {
   totalVolume: number;
 };
 
-const VALID_TABS = new Set<TabId>(['chat', 'log', 'routines', 'history', 'body', 'profile']);
+const VALID_TABS = new Set<TabId>(['chat', 'log', 'routines', 'history', 'body', 'profile', 'meals']);
 
 export function parseTab(value: string | null): TabId {
   if (value && VALID_TABS.has(value as TabId)) {

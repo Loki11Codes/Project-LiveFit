@@ -194,6 +194,15 @@ describe('Shared Utility Components', () => {
       expect(screen.getByText(/Next Reward/i)).toBeInTheDocument();
     });
 
+    it('advances to next achievement on button click', () => {
+      const badge2: AchievementBadge = { ...badge, badgeId: 'bench-silver', title: 'Press Power', tier: 'SILVER' };
+      render(<AchievementOverlay achievements={[badge, badge2]} onClose={vi.fn()} />);
+      
+      fireEvent.click(screen.getByText(/Next Reward/i));
+      expect(screen.getByText('Press Power')).toBeInTheDocument();
+      expect(screen.getByText(/Claim & Continue/i)).toBeInTheDocument();
+    });
+
     it('calls onClose when X close button is clicked', () => {
       const onClose = vi.fn();
       render(<AchievementOverlay achievements={[badge]} onClose={onClose} />);

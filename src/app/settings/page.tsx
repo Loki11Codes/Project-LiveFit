@@ -141,6 +141,7 @@ export default function SettingsPage() {
                 router.refresh();
                 router.push("/");
               }}
+              aria-label="Back"
               className="inline-flex w-fit items-center gap-2 rounded-full border border-black/10 bg-(--surface)/75 px-4 py-2 text-[12px] font-bold uppercase tracking-[0.18em] text-zinc-700 backdrop-blur-sm transition hover:border-black/20 hover:bg-(--surface) dark:bg-(--surface2)/80 dark:text-zinc-300  dark:hover:bg-(--surface2)"
             >
               <ArrowLeft size={16} />
@@ -317,6 +318,7 @@ function ToggleField({
       <button
         type="button"
         role="switch"
+        aria-label={label}
         aria-checked={checked}
         onClick={() => onChange?.(!checked)}
         className={`relative h-6 w-11 rounded-full transition-colors cursor-pointer shadow-inner ${checked ? "bg-[var(--accent)]" : "bg-(--border)"}`}

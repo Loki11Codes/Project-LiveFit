@@ -53,8 +53,8 @@ export async function GET() {
     // Calculate averages
     const totalDays = Object.keys(nutritionByDay).length || 1;
     const averages = {
-      kcal: foodLogs.reduce((sum: number, log: FoodLog) => sum + log.kcal, 0) / (totalDays || 1),
-      protein: foodLogs.reduce((sum: number, log: FoodLog) => sum + log.protein, 0) / (totalDays || 1),
+      kcal: foodLogs.reduce((sum: number, log: FoodLog) => sum + log.kcal, 0) / totalDays,
+      protein: foodLogs.reduce((sum: number, log: FoodLog) => sum + log.protein, 0) / totalDays,
     };
 
     // Weight trend

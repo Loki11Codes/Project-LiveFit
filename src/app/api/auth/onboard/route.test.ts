@@ -83,4 +83,24 @@ describe('Auth Onboarding API Route', () => {
     expect(prisma.$transaction).toHaveBeenCalled();
     expect(syncUserGoals).toHaveBeenCalled();
   });
+
+  it('returns 500 if transaction fails', async () => {
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } } as unknown as Session);
+    vi.mocked(prisma.$transaction).mockRejectedValue(new Error('Transaction Failed'));
+
+    const req = new Request('http://localhost/api/auth/onboard', {
+      method: 'POST',
+      body: JSON.stringify({
+        age: 25,
+        gender: 'male',
+        height: 180,
+        activityLevel: 'Active',
+        primaryGoal: 'Muscle Gain',
+        initialWeight: 75,
+      }),
+    });
+    
+    const res = await POST(req);
+    expect(res.status).toBe(500);
+  });
 });

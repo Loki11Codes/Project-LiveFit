@@ -237,7 +237,9 @@ export default function Home() {
         }
         refreshDashboard();
       })
-      .catch((err) => console.error("Failed to directly save workout log", err));
+      .catch((err) => {
+        console.error("Failed to directly save workout log", err);
+      });
 
     let summaryText = `I finished my "${session.name}" workout! It took me ${durationMinutes} minutes.\n\nSummary:\n`;
     completedExercises.forEach((ex) => {
@@ -365,8 +367,8 @@ export default function Home() {
   };
 
   const handleLogParsed = useCallback(async (envelopes?: ParsedLogEnvelope[], hasData?: boolean) => {
-    console.log("[DEBUG] Chat envelopes received:", envelopes);
     
+
     if (hasData && (!envelopes || envelopes.length === 0)) {
       console.warn("[PARSER] Data blocks were detected but failed to parse correctly.");
     }
@@ -384,7 +386,6 @@ export default function Home() {
       );
 
       if (logsToPersist.length > 0) {
-        console.log("[PERSISTENCE] Sending AI logs to server:", logsToPersist);
         void fetch("/api/logs", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -398,7 +399,7 @@ export default function Home() {
             void refreshDashboard();
           })
           .catch((err) => {
-            console.error("[PERSISTENCE] Failed to save AI logs:", err);
+            console.error("Failed to save AI logs:", err);
           });
       }
 
@@ -419,7 +420,6 @@ export default function Home() {
 
       const workoutAction = envelopes.find(e => e.category === 'workout' && e.action === 'start');
       if (workoutAction) {
-        console.log("[DEBUG] Workout start intent detected:", workoutAction);
         const name = workoutAction.name || workoutAction.focus || workoutAction.data?.name || "Fresh Workout";
         if (workoutAction.routineId) {
             void handleStartWorkoutById(workoutAction.routineId, name);
@@ -691,7 +691,9 @@ export default function Home() {
           {newAchievements.length > 0 && (
             <AchievementOverlay 
               achievements={newAchievements} 
-              onClose={() => setNewAchievements([])} 
+              onClose={() => {
+                setNewAchievements([]);
+              }} 
             />
           )}
         </AnimatePresence>

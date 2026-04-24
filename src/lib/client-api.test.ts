@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, expect, vi } from 'vitest';
 import {
   ApiClientError,
@@ -78,4 +78,13 @@ test('getClientErrorMessage handles Error instances', () => {
 test('getClientErrorMessage fallback', () => {
   expect(getClientErrorMessage({} as any)).toBe('Something went wrong. Please try again.');  
 });
+
+test('requestJson handles missing content-type header', async () => {
+  const mockFetch = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+  vi.stubGlobal('fetch', mockFetch);
+  const data = await requestJson('http://localhost');
+  expect(data).toBeNull();
+  vi.unstubAllGlobals();
+});
+
 

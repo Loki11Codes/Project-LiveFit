@@ -6,6 +6,7 @@ import {
   MeasurementSchema,
   SignupSchema,
   ChatRequestSchema,
+  FoodItemSchema,
 } from './validation';
 
 describe('Validation Schemas', () => {
@@ -114,5 +115,30 @@ describe('Validation Schemas', () => {
       expect(() => MeasurementSchema.parse({ date: '18-03-2026' })).toThrow();
     });
   });
+
+  describe('Edge Cases', () => {
+    it('handles non-finite numbers in optional fields', () => {
+      const result = FoodItemSchema.parse({ 
+        name: 'Test', 
+        protein: 10, 
+        kcal: 100, 
+        carbs: Infinity,
+        fats: NaN
+      });
+      expect(result.carbs).toBeUndefined();
+      expect(result.fats).toBeUndefined();
+    });
+
+    it('rejects disposable email domains in SignupSchema', () => {
+      const data = {
+        name: 'John Doe',
+        email: 'spam@yopmail.com',
+        password: 'SecurePass123!',
+        confirmPassword: 'SecurePass123!',
+      };
+      expect(() => SignupSchema.parse(data)).toThrow(/disposable/i);
+    });
+  });
 });
+
 

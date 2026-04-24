@@ -203,6 +203,56 @@ describe("Profile API Route", () => {
       );
       expect(res.status).toBe(500);
     });
+
+    it("handles partial user updates in profile POST", async () => {
+      vi.mocked(getServerSession).mockResolvedValue({ user: { id: "user-1" } });
+      
+      // name only
+      await POST(new Request("http://localhost/api/profile", {
+        method: "POST",
+        body: JSON.stringify({ name: "Only Name" }),
+      }));
+      expect(prisma.user.update).toHaveBeenCalledWith(expect.objectContaining({ data: { name: "Only Name" } }));
+
+      // phone only
+      await POST(new Request("http://localhost/api/profile", {
+        method: "POST",
+        body: JSON.stringify({ phone: "123" }),
+      }));
+      expect(prisma.user.update).toHaveBeenCalledWith(expect.objectContaining({ data: { phone: "123" } }));
+
+      // username only
+      await POST(new Request("http://localhost/api/profile", {
+        method: "POST",
+        body: JSON.stringify({ username: "user" }),
+      }));
+      expect(prisma.user.update).toHaveBeenCalledWith(expect.objectContaining({ data: { username: "user" } }));
+
+      // none
+      vi.mocked(prisma.user.update).mockClear();
+      await POST(new Request("http://localhost/api/profile", {
+        method: "POST",
+        body: JSON.stringify({ age: 30 }),
+      }));
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it("returns empty object if goal is missing in GET", async () => {
+      vi.mocked(getServerSession).mockResolvedValue({ user: { id: "user-1" } });
+      vi.mocked(prisma.goal.findUnique).mockResolvedValue(null);
+      const res = await GET(new Request("http://localhost/api/profile?type=goals"));
+      const data = await res.json();
+      expect(data).toEqual({});
+    });
+
+    it("handles non-Error exceptions in GET", async () => {
+      vi.mocked(getServerSession).mockResolvedValue({ user: { id: "user-1" } });
+      vi.mocked(prisma.userProfile.findUnique).mockRejectedValueOnce("string error");
+      const res = await GET(new Request("http://localhost/api/profile"));
+      expect(res.status).toBe(500);
+      const data = await res.json();
+      expect(data.error).toContain("Unknown error");
+    });
   });
 });
 

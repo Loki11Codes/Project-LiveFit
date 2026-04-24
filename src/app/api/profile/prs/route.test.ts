@@ -38,4 +38,13 @@ describe('Personal Records API', () => {
     const res = await GET();
     expect(res.status).toBe(401);
   });
+
+  it('returns 500 if database fails', async () => {
+    vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
+    vi.mocked(prisma.personalRecord.findMany).mockRejectedValue(new Error('DB Fail'));
+    
+    const res = await GET();
+    expect(res.status).toBe(500);
+  });
 });
+

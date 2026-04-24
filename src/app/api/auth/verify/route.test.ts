@@ -119,5 +119,22 @@ describe('Auth Verify API Route', () => {
       const res = await POST(req);
       expect(res.status).toBe(400);
     });
+
+    it('returns 500 if transaction fails in GET', async () => {
+      vi.mocked(prisma.verificationToken.findUnique).mockRejectedValue(new Error('Fail'));
+      const req = new Request('http://localhost/api/auth/verify?token=t&email=e');
+      const res = await GET(req);
+      expect(res.status).toBe(500);
+    });
+
+    it('returns 500 if transaction fails in POST', async () => {
+      vi.mocked(prisma.verificationToken.findUnique).mockRejectedValue(new Error('Fail'));
+      const req = new Request('http://localhost/api/auth/verify', {
+        method: 'POST',
+        body: JSON.stringify({ email: 'e', code: 'c' }),
+      });
+      const res = await POST(req);
+      expect(res.status).toBe(500);
+    });
   });
 });

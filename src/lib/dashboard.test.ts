@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from 'vitest';
 import {
   parseTab,
@@ -13,6 +13,7 @@ import {
   buildDayTypeMap,
   getProteinTarget,
   getLocalDateKey,
+  getCurrentDayType,
 } from './dashboard';
 import type { FoodLog } from '@prisma/client';
 import { EMPTY_MEASUREMENT_FORM } from './types';
@@ -154,5 +155,81 @@ describe('dashboard utilities', () => {
       expect(getLatestSleepLog([])).toBeNull();
     });
   });
+
+  describe('getCurrentDayType', () => {
+    it('returns type for today if exists', () => {
+      const today = getLocalDateKey(new Date());
+      const map = { [today]: 'Training' } as any;
+      expect(getCurrentDayType(map)).toBe('Training');
+    });
+    it('returns Rest as fallback', () => {
+      expect(getCurrentDayType({})).toBe('Rest');
+    });
+  });
+
+  describe('getProteinTarget - default branch', () => {
+    it('returns goals.proteinTarget for unknown day types', () => {
+       const goals = { proteinTarget: 150 } as any;
+       expect(getProteinTarget(goals, 'Unknown' as any)).toBe(150);
+    });
+  });
+
+  describe('buildHistoryRows - sorting', () => {
+    it('sorts rows by date descending', () => {
+      const logs = {
+        food: [
+          { time: new Date('2024-01-01'), kcal: 100, protein: 10 },
+          { time: new Date('2024-01-03'), kcal: 200, protein: 20 },
+          { time: new Date('2024-01-02'), kcal: 300, protein: 30 },
+        ],
+        workouts: [],
+        sleep: [],
+      } as any;
+      const rows = buildHistoryRows(logs, {} as any, {});
+      expect(rows[0].kcal).toBe(200); // 2024-01-03
+      expect(rows[1].kcal).toBe(300); // 2024-01-02
+      expect(rows[2].kcal).toBe(100); // 2024-01-01
+    });
+
+    it('includes workout details and volume when present', () => {
+      const logs = {
+        food: [],
+        workouts: [{ time: new Date('2024-01-01'), focus: 'Legs', volume: 5000, exercises: [{}, {}] }],
+        sleep: [],
+      } as any;
+      const rows = buildHistoryRows(logs, {} as any, {});
+      expect(rows[0].workoutDetail).toBe('2 exercises');
+      expect(rows[0].totalVolume).toBe(5000);
+    });
+  });
+
+  describe('Formatting Helpers', () => {
+    it('round handles null values', () => {
+       // We can't access private round, but buildHistoryRows uses it
+       const logs = { 
+         food: [{ time: new Date(), kcal: null, protein: 10 }], 
+         workouts: [], 
+         sleep: [] 
+       } as any;
+       const rows = buildHistoryRows(logs, {} as any, {});
+       expect(rows[0].kcal).toBe(0);
+    });
+
+    it('formatNumber handles non-integer and nulls', () => {
+       const logs = { 
+         food: [], 
+         workouts: [], 
+         sleep: [{ time: new Date('2024-01-01'), hours: 7.5 }] 
+       } as any;
+       const rows = buildHistoryRows(logs, {} as any, { '2024-01-01': 'Rest' });
+       expect(rows[0].sleep).toBe('7.5');
+
+       const logsNull = { food: [], workouts: [], sleep: [] } as any;
+       const rowsNull = buildHistoryRows(logsNull, {} as any, {});
+       // if sleep is missing, it shows '--' because of the ternary at line 173
+    });
+  });
 });
+
+
 

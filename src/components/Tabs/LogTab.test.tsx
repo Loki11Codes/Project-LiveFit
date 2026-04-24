@@ -117,5 +117,46 @@ describe('LogTab Component', () => {
     expect(screen.getAllByText('0g').length).toBeGreaterThan(0);
     expect(screen.getByText('3g')).toBeDefined();
   });
+
+  it('calls deletion handlers', async () => {
+    const onDeleteFood = vi.fn();
+    const onDeleteWorkout = vi.fn();
+    const onDeleteSleep = vi.fn();
+    
+    await act(async () => {
+      render(<LogTab {...defaultProps} onDeleteFood={onDeleteFood} onDeleteWorkout={onDeleteWorkout} onDeleteSleep={onDeleteSleep} />);
+    });
+    
+    // Deleting food
+    const foodRow = screen.getByText('Chicken Breast').closest('div')?.parentElement!;
+    fireEvent.mouseEnter(foodRow); 
+    const deleteFoodBtns = screen.getAllByTitle('Delete food log');
+    fireEvent.click(deleteFoodBtns[0]);
+    expect(onDeleteFood).toHaveBeenCalledWith('f1');
+
+    // Deleting workout
+    const deleteWorkoutBtns = screen.getAllByTitle('Delete workout');
+    fireEvent.click(deleteWorkoutBtns[0]);
+    expect(onDeleteWorkout).toHaveBeenCalledWith('w1');
+
+    // Deleting sleep
+    const deleteSleepBtns = screen.getAllByTitle('Delete sleep log');
+    fireEvent.click(deleteSleepBtns[0]);
+    expect(onDeleteSleep).toHaveBeenCalledWith('s1');
+  });
+
+  it('handles missing data fields gracefully', async () => {
+    const sparseProps = {
+        ...defaultProps,
+        foodLog: [{ id: 'f3', name: 'Water', protein: 0, kcal: null, carbs: null, fats: null, fiber: null, time: new Date() } as any],
+        workouts: [{ id: 'w2', focus: 'Empty', volume: null, time: new Date(), exercises: [] } as any]
+    };
+    await act(async () => {
+      render(<LogTab {...sparseProps} />);
+    });
+    expect(screen.getAllByText('? kcal').length).toBeGreaterThan(0);
+    expect(screen.getByText('-- kg')).toBeDefined();
+  });
 });
+
 

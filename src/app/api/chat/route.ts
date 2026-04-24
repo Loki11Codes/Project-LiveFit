@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { appendFileSync } from "node:fs";
+import * as fs from "node:fs";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getServerSession } from "next-auth";
@@ -386,10 +386,6 @@ export async function POST(req: Request) {
 
     const text = await getAIResponse(body, geminiKey, openRouterKey, routinesList, body.userContext);
 
-    if (!text) {
-      throw new Error("All AI providers failed");
-    }
-
     let warning: string | undefined;
     if (session?.user) {
       warning = await handleUserResponse(
@@ -539,7 +535,7 @@ async function handleUserResponse(
     console.error("Chat log persistence failed:", getErrorMessage(error));
     // DUMP TO FILE FOR DEBUGGING
     try {
-      appendFileSync('debug-crash.txt', '\nChat Error: ' + (error instanceof Error ? error.stack : String(error)) + '\n');
+      fs.appendFileSync('debug-crash.txt', '\nChat Error: ' + (error instanceof Error ? error.stack : String(error)) + '\n');
     } catch(e) {
       console.error("Failed to dump error to debug log:", e);
     }

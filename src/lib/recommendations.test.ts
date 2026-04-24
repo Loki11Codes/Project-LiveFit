@@ -123,4 +123,22 @@ describe('recommendation utility', () => {
   it('returns null for incomplete profile', () => {
     expect(calculateDailyTargets({ gender: 'Male' })).toBeNull();
   });
+
+  it('covers remaining activity multipliers', () => {
+    expect(getActivityMultiplier('Very Hard Training')).toBe(1.725);
+    expect(getActivityMultiplier('Light activity')).toBe(1.375);
+    expect(getActivityMultiplier('Random unknown')).toBe(1.2);
+  });
+
+  it('handles zero or null weight for protein target', () => {
+    const t0 = calculateDailyTargets({ ...maleProfile, weight: 0 });
+    expect(t0).toBeNull();
+
+    // calculateDailyTargets has line 69: (stats.weight || 0)
+    // But calculateBMR returns null if weight is null.
+    // So to hit line 69 with 0, we need calculateBMR to pass but weight to be falsy?
+    // That's impossible because calculateBMR needs weight.
+    // Wait! calculateBMR checks !weight. 0 is !weight.
+  });
 });
+

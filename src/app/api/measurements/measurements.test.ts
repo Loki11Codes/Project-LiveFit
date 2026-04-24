@@ -3,15 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from './route';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-
-vi.mock('next-auth', () => ({
-  getServerSession: vi.fn(),
-}));
-
-// Mock persistence to avoid DB side effects from syncUserGoals
-vi.mock('@/lib/persistence', () => ({
-  syncUserGoals: vi.fn().mockResolvedValue(undefined),
-}));
+import { NextRequest } from 'next/server';
 
 vi.mock('@/lib/prisma', () => ({
   default: {
@@ -24,101 +16,127 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
+vi.mock('next-auth', () => ({
+  getServerSession: vi.fn(),
+}));
+
+vi.mock('@/lib/persistence', () => ({
+  syncUserGoals: vi.fn().mockResolvedValue({}),
+}));
+
 describe('Measurements API Route', () => {
+  const mockSession = { user: { id: 'user-1' } };
+
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getServerSession).mockResolvedValue(mockSession as any);
   });
 
   describe('GET', () => {
     it('returns 401 if not authenticated', async () => {
-      vi.mocked(getServerSession).mockResolvedValue(null);
-      const res = await GET(new Request('http://localhost/api/measurements'));
+      vi.mocked(getServerSession).mockResolvedValueOnce(null);
+      const req = new NextRequest('http://localhost');
+      const res = await GET(req);
       expect(res.status).toBe(401);
     });
 
     it('returns latest measurement by default', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
-      const mockLatest = { id: 'm1', weight: 70 };
-      vi.mocked(prisma.bodyMeasurement.findFirst).mockResolvedValue(mockLatest as any);  
-
-      const res = await GET(new Request('http://localhost/api/measurements'));
+      const mockMeasurement = { weight: 80 };
+      vi.mocked(prisma.bodyMeasurement.findFirst).mockResolvedValueOnce(mockMeasurement as any);
+      const req = new NextRequest('http://localhost');
+      const res = await GET(req);
       const data = await res.json();
-
       expect(res.status).toBe(200);
-      expect(data).toEqual(mockLatest);
+      expect(data).toEqual(mockMeasurement);
     });
 
-    it('returns all measurements when all=true', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
-      const mockMany = [{ id: 'm1' }, { id: 'm2' }];
-      vi.mocked(prisma.bodyMeasurement.findMany).mockResolvedValue(mockMany as any);  
-
-      const res = await GET(new Request('http://localhost/api/measurements?all=true'));
+    it('returns all measurements if all=true', async () => {
+      vi.mocked(prisma.bodyMeasurement.findMany).mockResolvedValueOnce([{ weight: 80 }] as any);
+      const req = new NextRequest('http://localhost?all=true');
+      const res = await GET(req);
       const data = await res.json();
-
       expect(res.status).toBe(200);
-      expect(data).toHaveLength(2);
+      expect(data).toHaveLength(1);
+    });
+
+    it('returns empty object if no measurements exist', async () => {
+      vi.mocked(prisma.bodyMeasurement.findFirst).mockResolvedValueOnce(null);
+      const req = new NextRequest('http://localhost');
+      const res = await GET(req);
+      const data = await res.json();
+      expect(res.status).toBe(200);
+      expect(data).toEqual({});
+    });
+
+    it('returns 500 on db error', async () => {
+      vi.mocked(prisma.bodyMeasurement.findFirst).mockRejectedValueOnce(new Error('fail'));
+      const req = new NextRequest('http://localhost');
+      const res = await GET(req);
+      expect(res.status).toBe(500);
     });
   });
 
   describe('POST', () => {
-    it('creates a new measurement', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
-      const payload = { weight: 70.5, waist: 80 };
-      const mockMeasurement = { id: 'm1', ...payload };
-
-      // $transaction receives a callback — we call it with a mock tx and resolve
-      vi.mocked(prisma.$transaction).mockImplementation(async (cb: any) =>
-        cb({
-          bodyMeasurement: { create: vi.fn().mockResolvedValue(mockMeasurement) },
-        })
-      );
-
-      const req = new Request('http://localhost/api/measurements', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
+    it('returns 401 if not authenticated', async () => {
+      vi.mocked(getServerSession).mockResolvedValueOnce(null);
+      const req = new NextRequest('http://localhost', { method: 'POST' });
       const res = await POST(req);
-      const data = await res.json();
-
-      expect(res.status).toBe(200);
-      expect(data.weight).toBe(70.5);
-      expect(prisma.$transaction).toHaveBeenCalled();
+      expect(res.status).toBe(401);
     });
 
-    it('returns 400 for invalid data', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
-      const req = new Request('http://localhost/api/measurements', {
+    it('creates a new measurement', async () => {
+      vi.mocked(prisma.$transaction).mockImplementation(async (cb: any) => cb(prisma));
+      vi.mocked(prisma.bodyMeasurement.create).mockResolvedValueOnce({ id: 'm1' } as any);
+      
+      const req = new NextRequest('http://localhost', {
         method: 'POST',
-        body: JSON.stringify({ date: "invalid-date" }),
+        body: JSON.stringify({ weight: 80, waist: 90 })
+      });
+
+      const res = await POST(req);
+      expect(res.status).toBe(200);
+      expect(prisma.bodyMeasurement.create).toHaveBeenCalled();
+    });
+
+    it('handles null values for optional fields', async () => {
+      vi.mocked(prisma.$transaction).mockImplementation(async (cb: any) => cb(prisma));
+      vi.mocked(prisma.bodyMeasurement.create).mockResolvedValueOnce({ id: 'm1' } as any);
+      
+      const req = new NextRequest('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({
+          weight: null,
+          waist: null
+        })
+      });
+
+      const res = await POST(req);
+      expect(res.status).toBe(200);
+      expect(prisma.bodyMeasurement.create).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({
+            weight: null,
+            waist: null
+        })
+      }));
+    });
+
+    it('returns 400 for invalid JSON', async () => {
+      const req = new Request('http://localhost', {
+        method: 'POST',
+        body: '{"weight":' // Malformed
       });
       const res = await POST(req);
       expect(res.status).toBe(400);
     });
 
-    it('returns 500 if database fails on GET', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
-      vi.mocked(prisma.bodyMeasurement.findFirst).mockRejectedValueOnce(new Error('DB Error'));
-      const res = await GET(new Request('http://localhost/api/measurements'));
-      expect(res.status).toBe(500);
-    });
-
-    it('returns 500 if database fails on POST', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } });
-      vi.mocked(prisma.$transaction).mockRejectedValueOnce(new Error('DB Error'));
-      const res = await POST(new Request('http://localhost/api/measurements', { method: 'POST', body: JSON.stringify({ weight: 70 }) }));
-      expect(res.status).toBe(500);
-    });
-
-    it('returns 401 if not authenticated on POST', async () => {
-      vi.mocked(getServerSession).mockResolvedValue(null);
-      const req = new Request('http://localhost/api/measurements', {
+    it('returns 500 on transaction error', async () => {
+      vi.mocked(prisma.$transaction).mockRejectedValueOnce(new Error('fail'));
+      const req = new NextRequest('http://localhost', {
         method: 'POST',
-        body: JSON.stringify({ weight: 70 }),
+        body: JSON.stringify({ weight: 80 })
       });
       const res = await POST(req);
-      expect(res.status).toBe(401);
+      expect(res.status).toBe(500);
     });
   });
 });
-

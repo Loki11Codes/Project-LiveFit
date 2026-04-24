@@ -180,4 +180,18 @@ describe('extractAndCleanLogData', () => {
     const result = extractAndCleanLogData(input);
     expect(result.hasData).toBe(false);
   });
+
+  it('covers unwrapping without nested data field', () => {
+    const obj = { category: 'food', data: { name: 'Apple' } }; 
+    const input = `|||DATA${JSON.stringify(obj)}|||`;
+    const result = extractAndCleanLogData(input);
+    expect(result.logs[0].category).toBe('food');
+  });
+
+  it('covers unclosed code blocks in extractJsonCodeBlocks', () => {
+    const input = '```json\n{"category":"food"}'; 
+    const result = extractAndCleanLogData(input);
+    expect(result.hasData).toBe(false);
+  });
 });
+

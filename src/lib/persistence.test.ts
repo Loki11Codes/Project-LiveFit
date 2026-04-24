@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Prisma } from '@prisma/client';
-import { persistLogData, syncUserGoals } from './persistence';
+import { persistLogData, syncUserGoals, isRecord, getRecordValue, getStringValue, updatePersonalRecords } from './persistence';
 import prisma from './prisma';
 
 // Mock prisma client
@@ -65,6 +65,10 @@ describe('persistence utility', () => {
         await persistLogData([{ category: 'food', data: { name: 'Apple', kcal: 100 } }], userId);
         expect(mockTx.foodLog.create).toHaveBeenCalled();
 
+        // Items array branch
+        await persistLogData([{ category: 'food', data: { items: [{ name: 'Banana', kcal: 90 }] } }], userId);
+        expect(mockTx.foodLog.create).toHaveBeenCalledTimes(2);
+
         // Update branch
         mockTx.foodLog.findFirst.mockResolvedValue({ id: 'f1' });
         await persistLogData([{ category: 'food', data: { name: 'Apple', kcal: 105, update: true } }], userId);
@@ -77,9 +81,30 @@ describe('persistence utility', () => {
     it('persists workout logs (create and update branches)', async () => {
         mockTx.exercise.findFirst.mockResolvedValue({ id: 'ex-1' });
         
-        // Create branch
-        await persistLogData([{ category: 'workout', data: { focus: 'Arms', exercises: [{ name: 'Curl' }] } }], userId);
+        // Create branch with sets
+        await persistLogData([{ 
+            category: 'workout', 
+            data: { 
+                focus: 'Arms', 
+                exercises: [{ name: 'Curl', sets: [{ weight: 10, reps: 10 }] }] 
+            } 
+        }], userId);
         expect(mockTx.workoutLog.create).toHaveBeenCalled();
+        expect(mockTx.workoutLog.create).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.objectContaining({
+                exercises: expect.objectContaining({
+                    create: expect.arrayContaining([
+                        expect.objectContaining({
+                            sets: expect.objectContaining({
+                                create: expect.arrayContaining([
+                                    expect.objectContaining({ weight: 10 })
+                                ])
+                            })
+                        })
+                    ])
+                })
+            })
+        }));
 
         // Update branch
         mockTx.workoutLog.findFirst.mockResolvedValue({ id: 'w1' });
@@ -219,16 +244,168 @@ describe('persistence utility', () => {
     });
 
     it('getRecordValue and getStringValue handle non-object inputs', async () => {
-        // These are used for internal guards in various persistence handlers.
-        // We trigger them by passing malformed data.
-        
-        // Triggers getRecordValue(data, 'prs') on line 182
-        await persistLogData([{ category: 'workout', data: 'not-an-object' as unknown as Record<string, unknown> }], userId);
-        expect(mockTx.workoutLog.create).not.toHaveBeenCalled();
+        expect(isRecord(null)).toBe(false);
+        expect(isRecord('str')).toBe(false);
+        expect(isRecord({})).toBe(true);
 
-        // Triggers hasItemsArray/isRecord on line 602/623 via food handler
-        await persistLogData([{ category: 'food', data: null as unknown as Record<string, unknown> }], userId);
-        expect(mockTx.foodLog.create).not.toHaveBeenCalled();
+        expect(getRecordValue(null, 'key')).toBeUndefined();
+        expect(getStringValue(null, 'key')).toBeUndefined();
+        expect(getStringValue({ key: 123 }, 'key')).toBeUndefined();
+        expect(getStringValue({ key: 'val' }, 'key')).toBe('val');
+    });
+
+    it('handles non-object delete action', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        await persistLogData([{ category: 'delete', data: 'not-an-object' as any }], userId);
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('non-object data'));
+        warnSpy.mockRestore();
+    });
+
+    it('deletes all entries for a day when target is missing name/focus', async () => {
+        await persistLogData([{ category: 'delete', data: { target: 'food' } }], userId);
+        expect(mockTx.foodLog.deleteMany).toHaveBeenCalled();
+
+        await persistLogData([{ category: 'delete', data: { target: 'workout' } }], userId);
+        expect(mockTx.workoutLog.deleteMany).toHaveBeenCalled();
+    });
+
+    it('handles syncUserGoals with missing data', async () => {
+        // Missing weight
+        mockTx.userProfile.findUnique.mockResolvedValue({ userId, age: 30, gender: 'Male' });
+        mockTx.bodyMeasurement.findFirst.mockResolvedValue({ weight: null });
+        await syncUserGoals(txClient, userId);
+        expect(mockTx.goal.upsert).not.toHaveBeenCalled();
+
+        // Missing profile
+        mockTx.userProfile.findUnique.mockResolvedValue(null);
+        await syncUserGoals(txClient, userId);
+        expect(mockTx.goal.upsert).not.toHaveBeenCalled();
+    });
+
+    it('handles unknown delete target and missing target', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        
+        // Missing target
+        await persistLogData([{ category: 'delete', data: {} }], userId);
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('missing "target"'));
+
+        // Unknown target
+        await persistLogData([{ category: 'delete', data: { target: 'unknown' } }], userId);
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown delete target'));
+        
+        warnSpy.mockRestore();
+    });
+
+    it('handles invalid goal update', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        await persistLogData([{ category: 'goals', data: { kcalTarget: -1 } }], userId);
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('invalid goal update'), expect.anything());
+        warnSpy.mockRestore();
+    });
+
+    it('covers all day type normalization branches', async () => {
+        // Rest
+        await persistLogData([{ category: 'dayType', data: { dayType: 'rest day' } }], userId);
+        expect(mockTx.dayTypeEntry.upsert).toHaveBeenCalledWith(expect.objectContaining({
+            update: expect.objectContaining({ dayType: 'Rest' })
+        }));
+
+        // Lite
+        await persistLogData([{ category: 'dayType', data: { dayType: 'light' } }], userId);
+        expect(mockTx.dayTypeEntry.upsert).toHaveBeenCalledWith(expect.objectContaining({
+            update: expect.objectContaining({ dayType: 'Lite' })
+        }));
+
+        // Invalid
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        await persistLogData([{ category: 'dayType', data: { dayType: 'garbage' } }], userId);
+        expect(mockTx.dayTypeEntry.upsert).toHaveBeenCalledWith(expect.objectContaining({
+            update: expect.objectContaining({ dayType: 'Rest' })
+        }));
+        expect(warnSpy).toHaveBeenCalled();
+        warnSpy.mockRestore();
+    });
+
+    it('handles invalid food, workout, and sleep logs', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        
+        // Invalid food (no name) - single item
+        await persistLogData([{ category: 'food', data: { kcal: 100 } }], userId);
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('invalid food'), expect.anything());
+        warnSpy.mockClear();
+
+        // Invalid food (no name) - in items array (triggers line 122)
+        await persistLogData([{ category: 'food', data: { items: [{ kcal: 100 }] } }], userId);
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('invalid food'), expect.anything());
+        warnSpy.mockClear();
+
+        // Unknown category (triggers line 122)
+        await persistLogData([{ category: 'alien_abduction', data: {} }], userId);
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown category'));
+        warnSpy.mockClear();
+
+        // Invalid workout (exercises is not an array) - triggered via handleCategoryPersistence -> persistWorkoutLog
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        await persistLogData([{ category: 'workout', data: { exercises: 'invalid' } }], userId);
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('invalid workout'), expect.anything());
+        warnSpy.mockClear();
+        errorSpy.mockRestore();
+
+        // Invalid sleep (negative hours) - triggered via handleCategoryPersistence -> persistSleepLog
+        await persistLogData([{ category: 'sleep', data: { hours: -1 } }], userId);
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('invalid sleep'), expect.anything());
+        
+        warnSpy.mockRestore();
+    });
+
+    it('updates personal records correctly', async () => {
+        const userId = 'user-123';
+        const exercises = [
+            { id: 'ex-1', sets: [{ weight: 100, reps: 5 }] }, // RM = 116.6
+            { id: null, sets: [{ weight: 50, reps: 10 }] }, // should skip (no id)
+            { id: 'ex-2' } // should skip (no sets)
+        ];
+
+        // New PR branch
+        mockTx.personalRecord.findUnique.mockResolvedValue(null);
+        await updatePersonalRecords(txClient, userId, exercises);
+        expect(mockTx.personalRecord.create).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.objectContaining({ exerciseId: 'ex-1', maxWeight: 100 })
+        }));
+
+        // Existing PR branch (update)
+        mockTx.personalRecord.findUnique.mockResolvedValue({ id: 'pr-1', maxWeight: 80, max1RM: 90 });
+        await updatePersonalRecords(txClient, userId, [{ id: 'ex-1', sets: [{ weight: 110, reps: 5 }] }]);
+        expect(mockTx.personalRecord.update).toHaveBeenCalledWith(expect.objectContaining({
+            where: { id: 'pr-1' },
+            data: expect.objectContaining({ maxWeight: 110 })
+        }));
+    });
+
+    it('handles invalid measurement and profile updates', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        
+        // Invalid measurement (date format)
+        await persistLogData([{ category: 'measurement', data: { date: 'invalid' } }], userId);
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('invalid measurement'), expect.anything());
+
+        // Invalid profile (age too high)
+        await persistLogData([{ category: 'profile', data: { age: 1000 } }], userId);
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('invalid profile'), expect.anything());
+        
+        warnSpy.mockRestore();
+    });
+
+    it('handles syncUserGoals update path', async () => {
+        mockTx.bodyMeasurement.findFirst.mockResolvedValue({ weight: 80 });
+        mockTx.userProfile.findUnique.mockResolvedValue({ userId, age: 30, gender: 'Male', height: 180, activityPreference: 'Lite', primaryGoal: 'Maintenance' });
+        
+        // This will call syncUserGoals which calls goal.upsert
+        await syncUserGoals(txClient, userId);
+        expect(mockTx.goal.upsert).toHaveBeenCalledWith(expect.objectContaining({
+            update: expect.any(Object)
+        }));
     });
   });
 });
+

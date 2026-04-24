@@ -310,7 +310,7 @@ async function upsertWorkoutLog(tx: Prisma.TransactionClient, params: {
   });
 }
 
-async function updatePersonalRecords(tx: Prisma.TransactionClient, userId: string, resolvedExercises: any[]) {
+export async function updatePersonalRecords(tx: Prisma.TransactionClient, userId: string, resolvedExercises: any[]) {
   for (const ex of resolvedExercises) {
     if (!ex.id || !ex.sets) continue;
 
@@ -734,7 +734,7 @@ function hasItemsArray(value: unknown): value is { items: unknown[] } {
   return isRecord(value) && Array.isArray(value.items);
 }
 
-function getRecordValue(value: unknown, key: string): unknown {
+export function getRecordValue(value: unknown, key: string): unknown {
   if (!isRecord(value)) {
     return undefined;
   }
@@ -742,7 +742,7 @@ function getRecordValue(value: unknown, key: string): unknown {
   return value[key];
 }
 
-function getStringValue(value: unknown, key: string): string | undefined {
+export function getStringValue(value: unknown, key: string): string | undefined {
   if (!isRecord(value)) {
     return undefined;
   }
@@ -751,7 +751,7 @@ function getStringValue(value: unknown, key: string): string | undefined {
   return typeof nestedValue === 'string' ? nestedValue : undefined;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 async function deleteKnowledgeEntry(tx: Prisma.TransactionClient, data: Record<string, unknown>, userId: string): Promise<void> {

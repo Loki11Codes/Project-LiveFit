@@ -69,4 +69,17 @@ describe('Auth Reset Password API Route', () => {
       data: expect.objectContaining({ password: 'hashed-password' }),
     }));
   });
+
+  it('returns 500 if database update fails', async () => {
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1', email: 'u@e.c' } } as unknown as Session);
+    vi.mocked(prisma.user.update).mockRejectedValue(new Error('Update Failed'));
+
+    const req = new Request('http://localhost/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ password: 'StrongPassword123!' }),
+    });
+    
+    const res = await POST(req);
+    expect(res.status).toBe(500);
+  });
 });

@@ -42,5 +42,7 @@ describe("ConfettiCanvas Component", () => {
   it("handles window resize", () => {
     render(<ConfettiCanvas />);
     fireEvent.resize(window);
+    const canvas = document.querySelector("canvas");
+    expect(canvas).toBeInTheDocument();
   });
 });

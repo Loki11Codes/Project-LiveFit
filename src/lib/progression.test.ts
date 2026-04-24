@@ -47,4 +47,35 @@ describe('Progression Logic', () => {
     expect(result.weight).toBe("80");
     expect(result.reps).toBe("9");
   });
+
+  it('handles invalid targetReps format gracefully', () => {
+    const result = calculateSuggestedTarget({
+      exerciseName: 'Bench Press',
+      category: 'Chest',
+      targetReps: 'abc' 
+    });
+    expect(result.reps).toBe("abc");
+  });
+
+  it('suggests increasing weight for core exercises', () => {
+    const result = calculateSuggestedTarget({
+      exerciseName: 'Situp',
+      category: 'Abs',
+      currentPRWeight: 10,
+      currentPRReps: 20,
+      targetReps: '15-20'
+    });
+    expect(result.weight).toBe("11");
+  });
+
+  it('handles missing currentPRReps gracefully', () => {
+    const result = calculateSuggestedTarget({
+      exerciseName: 'Bench Press',
+      category: 'Chest',
+      currentPRWeight: 80,
+      targetReps: '8-12'
+    });
+    expect(result.reps).toBe("9"); 
+  });
 });
+
