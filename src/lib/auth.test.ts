@@ -113,6 +113,47 @@ describe('Auth Options', () => {
       expect(result.emailVerified).toBe(newDate);
     });
 
+    it('jwt does NOT update token fields when session properties are non-boolean or undefined', async () => {
+      const jwtCb = authOptions.callbacks?.jwt as any;
+      const token = { id: 'u1', requirePasswordChange: true, onboarded: false, hasSeenTutorial: false, emailVerified: null };
+      // session props are strings (non-boolean) - should NOT update token
+      const session = { 
+        requirePasswordChange: 'yes',  // not a boolean
+        onboarded: 'true',             // not a boolean  
+        hasSeenTutorial: 1,            // not a boolean
+        // emailVerified is undefined - should NOT update
+      };
+      const result = await jwtCb({ token, trigger: "update", session });
+      // Token should be unchanged
+      expect(result.requirePasswordChange).toBe(true);
+      expect(result.onboarded).toBe(false);
+      expect(result.hasSeenTutorial).toBe(false);
+      expect(result.emailVerified).toBe(null); // undefined session.emailVerified means no update
+    });
+
+    it('jwt does nothing when trigger is not update', async () => {
+      const jwtCb = authOptions.callbacks?.jwt as any;
+      const token = { id: 'u1', requirePasswordChange: true };
+      const result = await jwtCb({ token, trigger: 'signIn', session: { requirePasswordChange: false } });
+      // Without trigger === 'update', the session update block is skipped
+      expect(result.requirePasswordChange).toBe(true);
+    });
+
+    it('session does NOT set user fields when session.user or token.id is missing', async () => {
+      const sessionCb = authOptions.callbacks?.session as any;
+      // No user on session
+      const sessionNoUser = { } as any;
+      const token = { id: 'tid' };
+      const result = await sessionCb({ session: sessionNoUser, token });
+      expect(result).toEqual(sessionNoUser);
+
+      // Session user present but token has no id
+      const sessionWithUser = { user: { name: 'hi' } } as any;
+      const tokenNoId = {};
+      const result2 = await sessionCb({ session: sessionWithUser, token: tokenNoId });
+      expect(result2).toEqual(sessionWithUser);
+    });
+
     it('session maps token id and fetches latest status from DB', async () => {
       vi.mocked(prisma.user.findUnique).mockResolvedValue({ 
         id: 'tid', 

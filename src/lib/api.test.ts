@@ -105,3 +105,10 @@ test('internalError returns default message', async () => {
   const body = await response.json();
   expect(body.error).toBe('Internal Server Error');
 });
+
+import { apiError } from './api';
+test('apiError returns default 500 status', () => {
+  const response = apiError('Test Error');
+  expect(response.status).toBe(500);
+});
+

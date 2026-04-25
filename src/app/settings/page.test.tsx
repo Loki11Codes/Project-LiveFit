@@ -261,7 +261,31 @@ describe("SettingsPage", () => {
     expect(vi.mocked(requestJson)).toHaveBeenCalled();
     consoleSpy.mockRestore();
   });
+
+  it("handles invalid or empty numeric goal inputs by setting to null", async () => {
+    render(<SettingsPage />);
+    
+    // Switch to nutrition tab
+    fireEvent.click(screen.getByText(/Nutrition & Diet/i));
+    
+    const kcalInput = screen.getByPlaceholderText("2500");
+    const proteinInput = screen.getByPlaceholderText("180");
+    const carbsInput = screen.getByPlaceholderText("250");
+    const fatsInput = screen.getByPlaceholderText("70");
+
+    // Clear inputs to trigger || null branch
+    fireEvent.change(kcalInput, { target: { value: "" } });
+    fireEvent.change(proteinInput, { target: { value: "" } });
+    fireEvent.change(carbsInput, { target: { value: "" } });
+    fireEvent.change(fatsInput, { target: { value: "" } });
+
+    expect(kcalInput).toHaveValue(null);
+    expect(proteinInput).toHaveValue(null);
+    expect(carbsInput).toHaveValue(null);
+    expect(fatsInput).toHaveValue(null);
+  });
 });
+
 
 
 

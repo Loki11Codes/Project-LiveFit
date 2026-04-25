@@ -51,6 +51,7 @@ export function VerifyEmailForm() {
       });
 
       setSuccess(true);
+      setLoading(false);
       
       // Update session to reflect verified status
       await update({ emailVerified: new Date() });

@@ -295,5 +295,37 @@ describe("Sidebar Component", () => {
     render(<Sidebar {...defaultProps} logs={null as any} />);
     expect(screen.getByText("Weight")).toBeInTheDocument();
   });
+
+  it("handles sleep logs with length < 2 for trend calculation", () => {
+    const logs = {
+      ...defaultProps.logs,
+      sleep: [{ id: "s1", hours: 8, time: new Date().toISOString() }]
+    };
+    render(<Sidebar {...defaultProps} sleep={8} logs={logs as any} />);
+    // delta should be 0, no trend label should be rendered for sleep
+    const deltaLabels = screen.queryAllByText(/[\+\-]\d+\.\d+/);
+    expect(deltaLabels.length).toBe(0);
+  });
+
+  it("renders macro rows and handles click", () => {
+    render(<Sidebar {...defaultProps} fiber={30} carbs={200} fats={60} />);
+    
+    const fiberBtn = screen.getByText("Fiber").closest("button");
+    const carbsBtn = screen.getByText("Carbs").closest("button");
+    const fatsBtn = screen.getByText("Fats").closest("button");
+    
+    expect(screen.getByText("30.0")).toBeInTheDocument();
+    expect(screen.getByText("200.0")).toBeInTheDocument();
+    expect(screen.getByText("60.0")).toBeInTheDocument();
+    
+    if (fiberBtn) fireEvent.click(fiberBtn);
+    expect(screen.getByText("Fiber Trend")).toBeInTheDocument();
+  });
+
+  it("renders workout logged indicator when hasWorkout is true", () => {
+    render(<Sidebar {...defaultProps} hasWorkout={true} />);
+    expect(screen.getByText("Workout Logged")).toBeInTheDocument();
+  });
 });
+
 

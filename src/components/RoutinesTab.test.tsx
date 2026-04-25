@@ -468,6 +468,67 @@ describe('RoutinesTab Component', () => {
         ])
       }));
     });
+
+    it('hits return e in addPreviewSet map by having multiple exercises', async () => {
+      // Add a second exercise
+      fireEvent.click(screen.getByText('Add Exercise'));
+      const searchInput = screen.getByPlaceholderText('Search exercises...');
+      fireEvent.change(searchInput, { target: { value: 'Squat' } });
+      const squatBtn = screen.getByText(/Squat/).closest('button');
+      if (squatBtn) fireEvent.click(squatBtn);
+      await waitFor(() => expect(screen.getByText('Squat')).toBeDefined());
+
+      // Now we have Bench Press and Squat.
+      // Click "Add Set" on Bench Press.
+      const addSetBtns = screen.getAllByTitle('Add set');
+      fireEvent.click(addSetBtns[0]); // Bench Press
+      
+      // Verify we have more sets now
+      // Bench Press (originally 3 sets) + 1 new set = 4 sets
+      // Squat (newly added, default 3 sets)
+      // Total 7 sets = 14 inputs
+      await waitFor(() => expect(screen.getAllByPlaceholderText('0').length).toBe(14));
+    });
+
+    it('handles save routine catch block', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation((url: any, options: any) => {
+        if (url === '/api/routines' && options?.method === 'POST') {
+          return Promise.reject(new Error('Save failed'));
+        }
+        if (url === '/api/routines') return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+        if (url === '/api/exercises') return Promise.resolve({ ok: true, json: () => Promise.resolve(mockExercises) });
+        if (url === '/api/profile/prs') return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+        return Promise.resolve({ ok: false });
+      });
+
+      render(<RoutinesTab />);
+      await waitFor(() => screen.getByText('Create Routine'));
+      fireEvent.click(screen.getByText('Create Routine'));
+      
+      fireEvent.change(screen.getByPlaceholderText(/Push Day/i), { target: { value: 'Fail Save' } });
+      
+      // Add an exercise so validation passes
+      fireEvent.click(screen.getAllByText('Search Exercises')[0]);
+      const allButtons = screen.getAllByRole('button');
+      const benchPressBtn = allButtons.find(b => b.textContent?.includes('Bench Press'));
+      if (benchPressBtn) fireEvent.click(benchPressBtn);
+      
+      fireEvent.click(screen.getByText('Save Routine'));
+
+
+      
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith('Failed to save routine', expect.any(Error));
+      });
+      
+      consoleSpy.mockRestore();
+      fetchSpy.mockRestore();
+    });
   });
 
 });
+
+
+
+

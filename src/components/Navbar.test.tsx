@@ -135,4 +135,34 @@ describe('Navbar Component', () => {
     );
     expect(container.firstChild).toBeNull();
   });
+
+  it('calls setActiveTab when mobile bottom nav tab is clicked', () => {
+    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as any);
+    render(
+      <Navbar 
+        activeTab="chat" 
+        setActiveTab={mockSetActiveTab} 
+      />
+    );
+    // All tab buttons rendered - click the 'log' button from the mobile nav (second group)
+    const allLogButtons = screen.getAllByText('Log');
+    // The mobile nav renders all tabs as buttons - click any Log button
+    const logBtn = allLogButtons[allLogButtons.length - 1].closest('button');
+    if (logBtn) fireEvent.click(logBtn);
+    expect(mockSetActiveTab).toHaveBeenCalledWith('log');
+  });
+
+  it('shows fallback USER name when session user has no name', () => {
+    vi.mocked(useSession).mockReturnValue({
+      data: { user: { name: null } },
+      status: 'authenticated',
+    } as any);
+    render(
+      <Navbar 
+        activeTab="chat" 
+        setActiveTab={mockSetActiveTab} 
+      />
+    );
+    expect(screen.getByText('USER')).toBeDefined();
+  });
 });

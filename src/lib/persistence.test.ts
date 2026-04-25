@@ -463,6 +463,164 @@ describe('persistence utility', () => {
             })
         }));
     });
+
+    it('handles persistMealPlan with non-array entries', async () => {
+        await persistLogData([{ category: 'meal_plan', data: { entries: 'invalid' } }], userId);
+        expect(mockTx.mealPlan.create).not.toHaveBeenCalled();
+    });
+
+    it('handles persistKnowledgeEntry with non-string key or value', async () => {
+        await persistLogData([{ category: 'knowledge', data: { key: 123, value: 'test' } }], userId);
+        expect(mockTx.userKnowledge.upsert).not.toHaveBeenCalled();
+
+        await persistLogData([{ category: 'knowledge', data: { key: 'test', value: 123 } }], userId);
+        expect(mockTx.userKnowledge.upsert).not.toHaveBeenCalled();
+    });
+
+    it('handles handleDeleteAction with explicit date and missing date', async () => {
+        // Explicit date (covers 603 raw.date and 610 dateStr)
+        mockTx.foodLog.findFirst.mockResolvedValue({ id: 'f1' });
+        await persistLogData([{ category: 'delete', data: { target: 'food', name: 'Eggs', date: '2024-01-01' } }], userId);
+        expect(mockTx.foodLog.delete).toHaveBeenCalled();
+        
+        // Missing date (covers 610 else branch)
+        await persistLogData([{ category: 'delete', data: { target: 'food', name: 'Eggs' } }], userId);
+    });
+
+    it('handles deleteSingleEntry else branch', async () => {
+        // Line 692 else branch
+        mockTx.sleepLog.findFirst.mockResolvedValue(null);
+        await persistLogData([{ category: 'delete', data: { target: 'sleep' } }], userId);
+        expect(mockTx.sleepLog.delete).not.toHaveBeenCalled();
+    });
+
+    it('handles persistMealPlan with explicit weekStarting', async () => {
+        // Line 718 then branch
+        const data = { entries: [], weekStarting: '2024-01-01' };
+        await persistLogData([{ category: 'meal_plan', data }], userId);
+        expect(mockTx.mealPlan.create).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.objectContaining({
+                weekStarting: new Date('2024-01-01')
+            })
+        }));
+    });
+
+    it('covers persistDayTypeUpdate with "type" fallback', async () => {
+        // Line 558 data.type fallback
+        await persistLogData([{ category: 'dayType', data: { type: 'rest' } }], userId);
+        expect(mockTx.dayTypeEntry.upsert).toHaveBeenCalledWith(expect.objectContaining({
+            update: expect.objectContaining({ dayType: 'Rest' })
+        }));
+    });
+
+    it('covers syncUserGoals with no targets', async () => {
+        // calculateMacros returns null if profile data is incomplete (e.g. height=0)
+        mockTx.bodyMeasurement.findFirst.mockResolvedValue({ weight: 80 });
+        mockTx.userProfile.findUnique.mockResolvedValue({ userId, age: 30, height: 0 }); 
+        await syncUserGoals(txClient, userId);
+        expect(mockTx.goal.upsert).not.toHaveBeenCalled();
+    });
+
+    it('covers bodyMeasurement create with explicit date', async () => {
+        // Line 462 validated.date branch
+        mockTx.bodyMeasurement.findFirst.mockResolvedValue(null);
+        await persistLogData([{ category: 'measurement', data: { weight: 70, date: '2024-01-01' } }], userId);
+        expect(mockTx.bodyMeasurement.create).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.objectContaining({ time: new Date('2024-01-01') })
+        }));
+    });
+
+    it('covers sleep update and create with date', async () => {
+        // Create with date (line 398)
+        await persistLogData([{ category: 'sleep', data: { hours: 8, date: '2024-01-01' } }], userId);
+        expect(mockTx.sleepLog.create).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.objectContaining({ time: new Date('2024-01-01') })
+        }));
+
+        // Update (line 378)
+        mockTx.sleepLog.findFirst.mockResolvedValue({ id: 's1' });
+        await persistLogData([{ category: 'sleep', data: { hours: 7, update: true } }], userId);
+        expect(mockTx.sleepLog.update).toHaveBeenCalled();
+        
+        // Update requested but not existing (covers 378 else branch)
+        mockTx.sleepLog.findFirst.mockResolvedValue(null);
+        await persistLogData([{ category: 'sleep', data: { hours: 6, update: true } }], userId);
+        expect(mockTx.sleepLog.create).toHaveBeenCalled();
+    });
+
+    it('covers persistDeleteAction fallbacks', async () => {
+        // Line 603 clientDate fallback
+        await persistLogData([{ category: 'delete', data: { target: 'water' } }], userId, '2024-01-02');
+        expect(mockTx.waterLog.deleteMany).toHaveBeenCalled();
+
+        // Line 610 new Date() fallback
+        await persistLogData([{ category: 'delete', data: { target: 'water' } }], userId);
+        expect(mockTx.waterLog.deleteMany).toHaveBeenCalled();
+    });
+
+    it('covers bodyMeasurement update requested but not existing', async () => {
+        // Line 430 else branch (covers implicit create when update=true but existing=null)
+        mockTx.bodyMeasurement.findFirst.mockResolvedValue(null);
+        await persistLogData([{ category: 'measurement', data: { weight: 70, update: true } }], userId);
+        expect(mockTx.bodyMeasurement.create).toHaveBeenCalled();
+    });
+
+    it('covers persistDayTypeUpdate with neither dayType nor type', async () => {
+        // Line 558 both missing branch
+        await persistLogData([{ category: 'dayType', data: { } }], userId);
+        expect(mockTx.dayTypeEntry.upsert).toHaveBeenCalledWith(expect.objectContaining({
+            update: expect.objectContaining({ dayType: 'Rest' })
+        }));
+    });
+
+    it('covers updatePersonalRecords with existing PR and multiple sets', async () => {
+        // Mock existing PR
+        mockTx.personalRecord.findUnique.mockResolvedValue({ id: 'pr-1', maxWeight: 200, max1RM: 250 });
+        
+        const resolvedExercises = [
+            {
+                id: 'ex-1',
+                sets: [
+                    { weight: 110, reps: 5 },   // 1RM = 110 * (1 + 5/30) = 128.3
+                    { weight: 100, reps: 10 }  // 1RM = 133.3 (higher 1RM but lower weight)
+                ]
+            }
+        ];
+        
+        await updatePersonalRecords(txClient, userId, resolvedExercises);
+        
+        // Should update with max(200, 110) and max(250, 133.3)
+        expect(mockTx.personalRecord.update).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.objectContaining({
+                maxWeight: 200,
+                max1RM: 250
+            })
+        }));
+    });
+
+    it('covers updatePersonalRecords new higher values', async () => {
+        mockTx.personalRecord.findUnique.mockResolvedValue({ id: 'pr-1', maxWeight: 50, max1RM: 60 });
+        const resolvedExercises = [{ id: 'ex-1', sets: [{ weight: 100, reps: 10 }] }];
+        await updatePersonalRecords(txClient, userId, resolvedExercises);
+        expect(mockTx.personalRecord.update).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.objectContaining({ maxWeight: 100, max1RM: expect.any(Number) })
+        }));
+    });
+
+
+
+    it('covers updatePersonalRecords skipping when id or sets missing', async () => {
+        // Line 315 continue branch
+        await updatePersonalRecords(txClient, userId, [{ id: null, sets: [] }, { id: 'ex-1', sets: null }]);
+        expect(mockTx.personalRecord.update).not.toHaveBeenCalled();
+        expect(mockTx.personalRecord.create).not.toHaveBeenCalled();
+    });
   });
 });
+
+
+
+
+
+
 

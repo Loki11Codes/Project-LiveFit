@@ -570,4 +570,53 @@ describe('WorkoutSession Component', () => {
     
     expect(screen.getByText('Squat')).toBeDefined();
   });
+
+  it('formats time with hours when elapsed > 3600 seconds', () => {
+    // startTime 1h5min ago → should show "1:05:00"
+    renderSession(makeSession({ startTime: Date.now() - (3600 + 5 * 60) * 1000 }));
+    expect(screen.getByText(/1:\d{2}:\d{2}/)).toBeDefined();
+  });
+
+  it('adds a set to an exercise with no previous sets (empty weight/reps fallback)', () => {
+    const sessionNoSets = makeSession({
+      exercises: [{
+        id: 'ex-1',
+        exerciseId: 'e-1',
+        name: 'Bench Press',
+        sets: [], // No sets
+      }]
+    });
+    renderSession(sessionNoSets);
+    fireEvent.click(screen.getByText(/Add Set/i));
+    expect(onUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        exercises: expect.arrayContaining([
+          expect.objectContaining({
+            sets: expect.arrayContaining([
+              expect.objectContaining({ weight: '', reps: '', isCompleted: false }),
+            ]),
+          }),
+        ]),
+      }),
+    );
+  });
+
+  it('does NOT trigger PR check when set weight or reps is 0/falsy', async () => {
+    // Set weight=0, reps=0 → checkForPr is skipped (w && r is falsy)
+    const sessionZeroWeights = makeSession({
+      exercises: [{
+        id: 'ex-1',
+        exerciseId: 'e-1',
+        name: 'Bench Press',
+        sets: [
+          { id: 'set-z', weight: '0', reps: '0', isCompleted: false },
+        ],
+      }]
+    });
+    renderSession(sessionZeroWeights);
+    const toggleButtons = screen.getAllByTestId('toggle-set');
+    fireEvent.click(toggleButtons[0]);
+    // No PR toast should appear
+    expect(screen.queryByText(/PR!/i)).not.toBeInTheDocument();
+  });
 });

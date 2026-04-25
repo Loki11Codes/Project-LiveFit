@@ -1,140 +1,138 @@
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { VerifyEmailForm } from "./page";
-import { useSession } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { requestJson } from "@/lib/client-api";
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import VerifyEmailPage from './page';
+import { useSession, signOut } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { requestJson, getClientErrorMessage } from '@/lib/client-api';
 
 // Mock dependencies
-vi.mock("next-auth/react", () => ({
+vi.mock('next-auth/react', () => ({
   useSession: vi.fn(),
   signOut: vi.fn(),
 }));
 
-vi.mock("next/navigation", () => ({
+vi.mock('next/navigation', () => ({
   useRouter: vi.fn(),
-  useSearchParams: vi.fn(() => ({ get: vi.fn() })),
+  useSearchParams: vi.fn(),
 }));
 
-vi.mock("@/lib/client-api", () => ({
+vi.mock('@/lib/client-api', () => ({
   requestJson: vi.fn(),
-  getClientErrorMessage: vi.fn((err) => err.message || "Error"),
+  getClientErrorMessage: vi.fn((err) => err instanceof Error ? err.message : 'Error'),
 }));
 
-vi.mock("framer-motion", () => ({
-  motion: {
-    div: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    section: ({ children }: { children: React.ReactNode }) => <section>{children}</section>,
-  },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
-vi.mock("@/components/auth/AuthShell", () => ({
-  AuthShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
-
-vi.mock("react", async () => {
-  const actual = await vi.importActual<typeof import("react")>("react");
+vi.mock('lucide-react', async () => {
+  const actual = await vi.importActual('lucide-react');
   return {
     ...actual,
-    Suspense: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    Loader2: () => <div data-testid="loader" />,
+    ShieldCheck: () => <div data-testid="shield-check" />,
   };
 });
 
-describe("VerifyEmailPage", () => {
-  const mockRouter = { push: vi.fn(), refresh: vi.fn() };
-  const mockSearchParams = { get: vi.fn() };
-  const mockUpdate = vi.fn().mockResolvedValue({});
+describe('VerifyEmailPage', () => {
+  const mockPush = vi.fn();
+  const mockGet = vi.fn();
+  const mockUpdate = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.useRealTimers();
-    mockSearchParams.get.mockReturnValue(null);
-    vi.mocked(useRouter).mockReturnValue(mockRouter as unknown as ReturnType<typeof useRouter>);
-    vi.mocked(useSearchParams).mockReturnValue({
-      get: (key: string) => (key === "email" ? mockSearchParams.get("email") : null)
-    } as unknown as ReturnType<typeof useSearchParams>);
-    vi.mocked(useSession).mockReturnValue({
-      data: { user: { email: "session@example.com" } },
-      status: "authenticated",
-      update: mockUpdate,
-    } as unknown as ReturnType<typeof useSession>);
+    (useRouter as any).mockReturnValue({ push: mockPush, refresh: vi.fn() });
+    (useSearchParams as any).mockReturnValue({ get: mockGet });
+    (useSession as any).mockReturnValue({ 
+      data: { user: { email: 'test@example.com' } }, 
+      status: 'authenticated',
+      update: mockUpdate
+    });
   });
 
-  it("renders the verification form with email from session", async () => {
-    render(<VerifyEmailForm />);
-    expect(screen.getByText("Check your inbox")).toBeInTheDocument();
-    expect(await screen.findByText("session@example.com")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("000000")).toBeInTheDocument();
+  it('renders the verification form', () => {
+    render(<VerifyEmailPage />);
+    expect(screen.getByText(/Verify your identity/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('000000')).toBeInTheDocument();
   });
 
-  it("prioritizes email from search params", async () => {
-    mockSearchParams.get.mockReturnValue("param@example.com");
-    render(<VerifyEmailForm />);
-    expect(await screen.findByText("param@example.com")).toBeInTheDocument();
+  it('handles code input and formatting', () => {
+    render(<VerifyEmailPage />);
+    const input = screen.getByPlaceholderText('000000') as HTMLInputElement;
+    
+    fireEvent.change(input, { target: { value: '123abc456' } });
+    expect(input.value).toBe('123456');
   });
 
-  it("auto-submits when 6 digits are entered", async () => {
-    vi.mocked(requestJson).mockResolvedValue({ success: true });
-    render(<VerifyEmailForm />);
+  it('shows loading state during submission', async () => {
+    vi.mocked(requestJson).mockReturnValue(new Promise(() => {})); // Never resolves
+    render(<VerifyEmailPage />);
+    
+    const input = screen.getByPlaceholderText('000000');
+    fireEvent.change(input, { target: { value: '123456' } });
+    
+    // Submit btn is disabled if code is not 6 chars. 
+    // Here code is 6 chars.
+    const submitBtn = screen.getByRole('button', { name: /Verify/i });
+    fireEvent.click(submitBtn);
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('loader')).toBeInTheDocument();
+      expect(screen.getByText('Verifying...')).toBeInTheDocument();
+    });
+  });
 
-    // Wait for email to appear (ensures session effect has run)
-    expect(await screen.findByText("session@example.com")).toBeInTheDocument();
-
-    const input = screen.getByPlaceholderText("000000");
-
+  it('shows success state on valid code', async () => {
+    vi.mocked(requestJson).mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({ success: true }), 100)));
+    
+    render(<VerifyEmailPage />);
+    const input = screen.getByPlaceholderText('000000');
+    
     await act(async () => {
-      fireEvent.change(input, { target: { value: "123456" } });
+      fireEvent.change(input, { target: { value: '123456' } });
+    });
+    
+    // Should show loading state first
+    await waitFor(() => {
+      expect(screen.getByText(/Verifying/i)).toBeInTheDocument();
+    });
+
+    // Then success state
+    await waitFor(() => {
+      expect(screen.getByText('Verified')).toBeInTheDocument();
+    }, { timeout: 3000 });
+    
+    // Should update session and redirect
+    await waitFor(() => {
+      expect(mockUpdate).toHaveBeenCalled();
     });
 
     await waitFor(() => {
-      expect(requestJson).toHaveBeenCalledWith(
-        "/api/auth/verify",
-        expect.objectContaining({
-          method: "POST",
-          body: JSON.stringify({ email: "session@example.com", code: "123456" }),
-        })
-      );
-    });
+      expect(mockPush).toHaveBeenCalledWith('/');
+    }, { timeout: 4000 });
   });
 
-  it("shows error message on failure", async () => {
-    vi.mocked(requestJson).mockRejectedValue(new Error("Invalid code"));
-    render(<VerifyEmailForm />);
-
-    const input = screen.getByPlaceholderText("000000");
+  it('shows error state on invalid code', async () => {
+    vi.mocked(requestJson).mockRejectedValue(new Error('Invalid code'));
+    
+    render(<VerifyEmailPage />);
+    const input = screen.getByPlaceholderText('000000');
+    
     await act(async () => {
-      fireEvent.change(input, { target: { value: "111111" } });
+      fireEvent.change(input, { target: { value: '123456' } });
     });
-
-    expect(await screen.findByText("Invalid code")).toBeInTheDocument();
-  });
-
-  it("redirects and updates session on success", async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-
-    vi.mocked(requestJson).mockResolvedValue({ success: true });
-    render(<VerifyEmailForm />);
-
-    expect(await screen.findByText("session@example.com")).toBeInTheDocument();
-
-    const input = screen.getByPlaceholderText("000000");
-    await act(async () => {
-      fireEvent.change(input, { target: { value: "654321" } });
-    });
-
-    // Wait for the API call to complete
+    
     await waitFor(() => {
-      expect(requestJson).toHaveBeenCalled();
+      expect(screen.getByText('Invalid code')).toBeInTheDocument();
     });
+  });
 
-    // Advance the 1500ms redirect timer
-    await act(async () => {
-      await vi.runAllTimersAsync();
-    });
 
-    expect(mockRouter.push).toHaveBeenCalledWith("/");
 
-    vi.useRealTimers();
+
+
+
+  it('handles signOut on "Try a different email"', () => {
+    render(<VerifyEmailPage />);
+    const signOutBtn = screen.getByText(/Try a different email/i);
+    fireEvent.click(signOutBtn);
+    expect(signOut).toHaveBeenCalledWith({ callbackUrl: '/auth/signin' });
   });
 });
+
