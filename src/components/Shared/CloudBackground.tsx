@@ -51,7 +51,7 @@ export function CloudBackground() {
   );
 }
 
-function Cloud({ 
+export function Cloud({ 
   delay = 0, 
   duration = 40, 
   top = "20%", 

@@ -183,6 +183,87 @@ describe('RoutinesTab Component', () => {
     });
   });
 
+  it('removes an exercise from the routine builder', async () => {
+    vi.spyOn(globalThis, 'confirm').mockImplementation(() => true);
+    render(<RoutinesTab />);
+    await waitFor(() => expect(screen.getByText('New Routine')).toBeDefined());
+    
+    fireEvent.click(screen.getByText('New Routine'));
+    
+    // Add exercise
+    fireEvent.click(screen.getAllByText('Search Exercises')[0]);
+    fireEvent.click(screen.getByText(/Bench Press/).closest('button')!);
+    
+    expect(screen.getByText('Bench Press')).toBeDefined();
+    
+    // Remove exercise via the X icon button in the exercise card
+    // The button is: <button class="absolute top-3 right-3 ..."><X /></button>
+    const removeExerciseBtn = document.querySelector('button.absolute.top-3.right-3') as HTMLElement;
+    if (removeExerciseBtn) fireEvent.click(removeExerciseBtn);
+
+    expect(globalThis.confirm).toHaveBeenCalled();
+    expect(screen.queryByText('Bench Press')).toBeNull();
+  });
+
+  it('updates target sets and reps in the routine builder', async () => {
+    render(<RoutinesTab />);
+    await waitFor(() => expect(screen.getByText('New Routine')).toBeDefined());
+    
+    fireEvent.click(screen.getByText('New Routine'));
+    fireEvent.click(screen.getAllByText('Search Exercises')[0]);
+    fireEvent.click(screen.getByText(/Bench Press/).closest('button')!);
+    
+    const setsInput = screen.getByLabelText('Sets');
+    const repsInput = screen.getByLabelText('Target Reps');
+    
+    fireEvent.change(setsInput, { target: { value: '5' } });
+    fireEvent.change(repsInput, { target: { value: '5x5' } });
+    
+    expect(setsInput).toHaveValue(5);
+    expect(setsInput).toHaveValue(5);
+    expect(repsInput).toHaveValue('5x5');
+  });
+
+  it('handles back button in create view', async () => {
+    render(<RoutinesTab />);
+    await waitFor(() => expect(screen.getByText('New Routine')).toBeDefined());
+    fireEvent.click(screen.getByText('New Routine'));
+    
+    // Back button
+    const backBtn = document.querySelector('button.p-2\\.5');
+    if (backBtn) fireEvent.click(backBtn);
+    
+    await waitFor(() => expect(screen.getByText('My Routines')).toBeDefined());
+  });
+
+  it('handles search close button', async () => {
+    render(<RoutinesTab />);
+    await waitFor(() => expect(screen.getByText('New Routine')).toBeDefined());
+    fireEvent.click(screen.getByText('New Routine'));
+    
+    // Open search
+    fireEvent.click(screen.getAllByText('Search Exercises')[0]);
+    expect(screen.getByPlaceholderText(/Search exercises/i)).toBeDefined();
+    
+    // Close search (X button in header)
+    const closeSearchBtn = screen.getAllByRole('button').find(b => b.querySelector('svg.lucide-x'));
+    if (closeSearchBtn) fireEvent.click(closeSearchBtn);
+    
+    expect(screen.queryByPlaceholderText(/Search exercises/i)).toBeNull();
+  });
+
+  it('allows searching from empty state in create view', async () => {
+    render(<RoutinesTab />);
+    await waitFor(() => expect(screen.getByText('New Routine')).toBeDefined());
+    fireEvent.click(screen.getByText('New Routine'));
+    
+    // The "Search Exercises" button in the middle when empty
+    const emptySearchBtn = screen.getByText(/You haven't added any exercises/i).parentElement?.querySelector('button');
+    if (emptySearchBtn) fireEvent.click(emptySearchBtn);
+    
+    expect(screen.getByPlaceholderText(/Search exercises/i)).toBeDefined();
+  });
+
   describe('Routine Management', () => {
     it('deletes a routine after confirmation', async () => {
       vi.spyOn(globalThis, 'confirm').mockImplementation(() => true);

@@ -410,4 +410,101 @@ describe('WorkoutSession Component', () => {
       expect(screen.getByText(/Weight PR!/i)).toBeInTheDocument();
     }, { timeout: 2000 });
   });
+
+  it('cleans up timers on unmount', () => {
+    const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval');
+    const { unmount } = renderSession();
+    unmount();
+    expect(clearIntervalSpy).toHaveBeenCalled();
+  });
+
+  it('expires rest timer after time passes', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    renderSession();
+    
+    // Wait for initial render with fake timers
+    await waitFor(() => expect(screen.getByText('Bench Press')).toBeInTheDocument());
+
+    // Complete a set to start rest timer
+    const toggleButtons = screen.getAllByTestId('toggle-set');
+    fireEvent.click(toggleButtons[0]);
+    
+    await waitFor(() => expect(screen.getByText(/Rest Active/i)).toBeInTheDocument());
+    
+    // Advance 90 seconds so each 1s interval fires 90x, setting restTime to 0
+    for (let i = 0; i < 91; i++) {
+      vi.advanceTimersByTime(1000);
+    }
+    
+    await waitFor(() => {
+      expect(screen.queryByText(/Rest Active/i)).not.toBeInTheDocument();
+    });
+    vi.useRealTimers();
+  });
+
+  it('hides PR celebration after timeout', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    renderSession();
+
+    await waitFor(() => expect(screen.getByText('Bench Press')).toBeInTheDocument());
+
+    // Trigger PR by completing set-1 (80kg > PR of 70kg)
+    const toggleButtons = screen.getAllByTestId('toggle-set');
+    fireEvent.click(toggleButtons[0]);
+    
+    await waitFor(() => expect(screen.getByText(/Weight PR!/i)).toBeInTheDocument());
+    
+    // Advance 5 seconds to trigger setTimeout hiding confetti
+    vi.advanceTimersByTime(5001);
+    
+    await waitFor(() => {
+      expect(screen.queryByText(/Weight PR!/i)).not.toBeInTheDocument();
+    });
+    vi.useRealTimers();
+  });
+
+  it('can manually close the rest timer', async () => {
+    renderSession();
+    const toggleButtons = screen.getAllByTestId('toggle-set');
+    fireEvent.click(toggleButtons[0]);
+    
+    await waitFor(() => expect(screen.getByText(/Rest Active/i)).toBeInTheDocument());
+    
+    // In WorkoutSession it has no title/label on the close rest button. 
+    // Let's find it by icon.
+    const closeRestBtn = screen.getAllByRole('button').find(b => b.querySelector('svg.lucide-x'));
+    if (closeRestBtn) fireEvent.click(closeRestBtn);
+    
+    expect(screen.queryByText(/Rest Active/i)).toBeNull();
+  });
+
+  it('handles updates/removals with multiple exercises (map fallbacks)', async () => {
+    const multiExSession = makeSession({
+      exercises: [
+        ...makeSession().exercises,
+        {
+          id: 'ex-2',
+          exerciseId: 'squat',
+          name: 'Squat',
+          sets: [{ id: 's2', weight: '100', reps: '5', isCompleted: false }]
+        }
+      ]
+    });
+    render(<WorkoutSession session={multiExSession as any} onUpdate={vi.fn()} onFinish={vi.fn()} />);
+    
+    // Toggle set on the second exercise
+    const toggles = screen.getAllByTestId('toggle-set');
+    fireEvent.click(toggles[1]);
+    
+    // Add set to the second exercise
+    const addButtons = screen.getAllByText(/Add Set/i);
+    fireEvent.click(addButtons[1]);
+    
+    // Remove set from the second exercise
+    vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
+    const removeButtons = screen.getAllByTitle('Remove set');
+    fireEvent.click(removeButtons[1]);
+    
+    expect(screen.getByText('Squat')).toBeDefined();
+  });
 });

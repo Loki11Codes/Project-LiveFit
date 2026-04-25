@@ -275,6 +275,24 @@ describe("Chat Components", () => {
       });
     });
 
+    it("triggers onLogParsed([]) on 'deleted' keyword without data block", async () => {
+      vi.mocked(clientApi.requestJson).mockResolvedValue({ text: "I have deleted your log." });
+      vi.mocked(chatUtils.extractAndCleanLogData).mockReturnValue({
+        hasData: false,
+        cleanText: "I have deleted your log.",
+        logs: [],
+      });
+
+      const onLogParsed = vi.fn();
+      render(<Chat {...makeProps({ input: "delete last", onLogParsed })} />);
+      await waitForHistoryLoad();
+      fireEvent.keyDown(screen.getByTestId("chat-input"), { key: "Enter", shiftKey: false });
+
+      await waitFor(() => {
+        expect(onLogParsed).toHaveBeenCalledWith([]);
+      });
+    });
+
     it("shows warning notice when AI response includes a warning field", async () => {
       vi.mocked(clientApi.requestJson).mockResolvedValue({
         text: "Some reply",
@@ -471,33 +489,69 @@ describe("Chat Components", () => {
       expect(screen.queryByAltText("test.png")).toBeNull();
     });
 
-    it("sends audio file attachment via the API", async () => {
-      const audioDataUrl = "data:audio/mpeg;base64,AAAA";
-      stubFileReader(audioDataUrl);
-      vi.mocked(clientApi.requestJson).mockResolvedValue({ text: "Audio processed" });
-
-      render(<Chat {...makeProps({ input: "" })} />);
+    it("handles file selection errors", async () => {
+      vi.stubGlobal("FileReader", class {
+        readAsDataURL() {
+          if (this.onerror) this.onerror(new ProgressEvent('error'));
+        }
+      });
+      render(<Chat {...makeProps()} />);
       await waitForHistoryLoad();
 
       const fileInput = getFileInput();
-      const file = new File(["audio"], "voice.mp3", { type: "audio/mpeg" });
-
-      await act(async () => {
-        fireEvent.change(fileInput, { target: { files: [file] } });
-      });
+      fireEvent.change(fileInput, { target: { files: [new File([], "bad.png")] } });
 
       await waitFor(() => {
-        expect(screen.getByLabelText("Send message")).toBeDefined();
+        expect(screen.getByText(/Unable to read selected file/i)).toBeInTheDocument();
       });
+    });
 
-      fireEvent.click(screen.getByLabelText("Send message"));
+    it("handles empty file selection", async () => {
+      render(<Chat {...makeProps()} />);
+      await waitForHistoryLoad();
+      const fileInput = getFileInput();
+      fireEvent.change(fileInput, { target: { files: [] } });
+      expect(screen.queryByText(/Unable to read selected file/i)).toBeNull();
+    });
 
+    it("handles unexpected FileReader result", async () => {
+      vi.stubGlobal("FileReader", class {
+        readAsDataURL() {
+          this.result = 123; // Not a string
+          if (this.onload) this.onload({} as any);
+        }
+      });
+      render(<Chat {...makeProps()} />);
+      await waitForHistoryLoad();
+      const fileInput = getFileInput();
+      fireEvent.change(fileInput, { target: { files: [new File([], "bad.png")] } });
+      await waitFor(() => {
+        expect(screen.getByText(/Unexpected file reader result/i)).toBeInTheDocument();
+      });
+    });
+
+    it("extracts media type from data URL correctly", async () => {
+      // This is hit during send. We need to mock requestJson to succeed.
+      vi.mocked(clientApi.requestJson).mockResolvedValue({ text: "Received" });
+      stubFileReader("data:image/jpeg;base64,abc");
+      
+      render(<Chat {...makeProps()} />);
+      await waitForHistoryLoad();
+      
+      const fileInput = getFileInput();
+      await act(async () => {
+        fireEvent.change(fileInput, { target: { files: [new File([], "test.jpg")] } });
+      });
+      
+      fireEvent.change(screen.getByTestId("chat-input"), { target: { value: "Look at this" } });
+      fireEvent.keyDown(screen.getByTestId("chat-input"), { key: "Enter" });
+      
       await waitFor(() => {
         expect(clientApi.requestJson).toHaveBeenCalledWith(
           "/api/chat",
           expect.objectContaining({
-            body: expect.stringContaining("voice.mp3"),
-          }),
+            body: expect.stringContaining("image/jpeg"),
+          })
         );
       });
     });

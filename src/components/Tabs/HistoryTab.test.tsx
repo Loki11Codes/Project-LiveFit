@@ -85,5 +85,32 @@ describe('HistoryTab Component', () => {
     expect(screen.getByText(/No history logged yet/i)).toBeDefined();
     expect(screen.getByText(/Add body measurements/i)).toBeDefined();
   });
+
+  it('handles single weight measurement correctly', () => {
+    const singleWeightProps = {
+      ...defaultProps,
+      analytics: {
+        ...defaultProps.analytics,
+        weightTrend: [{ day: 'Mon', weight: 75, date: '2026-03-18' }]
+      }
+    } as any;
+    render(<HistoryTab {...singleWeightProps} />);
+    expect(screen.getByText('No change')).toBeDefined();
+  });
+
+  it('handles missing analytics averages gracefully', () => {
+    const noAvgProps = {
+      ...defaultProps,
+      analytics: {
+        ...defaultProps.analytics,
+        averages: null
+      }
+    } as any;
+    render(<HistoryTab {...noAvgProps} />);
+    // AnalyticsMetricCard renders value digits and "g" in separate elements
+    // so we check by matching the numeric part
+    const zeros = screen.getAllByText('0');
+    expect(zeros.length).toBeGreaterThanOrEqual(2); // protein=0, kcal=0
+  });
 });
 

@@ -43,8 +43,8 @@ export default function HistoryTab({
           <AnalyticsMetricCard
             icon={Beef}
             label="7-Day Avg Protein"
-            value={`${roundNumber(analytics?.averages.protein ?? 0)}g`}
-            subtitle={`${analytics?.meta.logCount ?? 0} nutrition entries`}
+            value={`${roundNumber(analytics?.averages?.protein ?? 0)}g`}
+            subtitle={`${analytics?.meta?.logCount ?? 0} nutrition entries`}
             tone="var(--green)"
           />
         </motion.div>
@@ -52,8 +52,8 @@ export default function HistoryTab({
           <AnalyticsMetricCard
             icon={Flame}
             label="7-Day Avg Calories"
-            value={`${roundNumber(analytics?.averages.kcal ?? 0)}`}
-            subtitle={`${analytics?.meta.period ?? '7d'} average`}
+            value={`${roundNumber(analytics?.averages?.kcal ?? 0)}`}
+            subtitle={`${analytics?.meta?.period ?? '7d'} average`}
             tone="var(--amber)"
             suffix="kcal"
           />

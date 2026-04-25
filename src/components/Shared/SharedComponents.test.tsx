@@ -183,9 +183,11 @@ describe('Shared Utility Components', () => {
       expect(screen.getByText('Bench Baseline')).toBeInTheDocument();
     });
 
-    it('shows "Claim & Continue" for a single achievement', () => {
-      render(<AchievementOverlay achievements={[badge]} onClose={vi.fn()} />);
-      expect(screen.getByText(/Claim & Continue/i)).toBeInTheDocument();
+    it('calls onClose when "Claim & Continue" is clicked for a single achievement', () => {
+      const onClose = vi.fn();
+      render(<AchievementOverlay achievements={[badge]} onClose={onClose} />);
+      fireEvent.click(screen.getByText(/Claim & Continue/i));
+      expect(onClose).toHaveBeenCalled();
     });
 
     it('shows "Next Reward" when multiple achievements provided', () => {

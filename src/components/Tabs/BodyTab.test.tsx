@@ -183,5 +183,80 @@ describe('BodyTab Component', () => {
       expect(screen.getByText('-5 cm')).toBeDefined();
     });
   });
+
+  it('renders neutral trend badge', async () => {
+    const neutralData = [
+      { ...defaultProps.latestMeasurement, id: 'm1', weight: 75 },
+      { ...defaultProps.latestMeasurement, id: 'm2', weight: 75 },
+    ];
+    mockFetch.mockResolvedValueOnce({ json: () => Promise.resolve(neutralData) });
+    render(<BodyTab {...defaultProps} />);
+    await waitFor(() => expect(screen.getByText('0 kg')).toBeDefined());
+  });
+
+  it('handles missing historical values in trend calculation', async () => {
+    const missingData = [
+      { ...defaultProps.latestMeasurement, id: 'm1', weight: 75 },
+      { ...defaultProps.latestMeasurement, id: 'm2', weight: null },
+    ];
+    mockFetch.mockResolvedValueOnce({ json: () => Promise.resolve(missingData) });
+    render(<BodyTab {...defaultProps} />);
+    // Trend should be null, so no badge
+    await waitFor(() => expect(screen.queryByText('0 kg')).toBeNull());
+  });
+
+  it('handles non-array fetch response', async () => {
+    mockFetch.mockResolvedValueOnce({ json: () => Promise.resolve({ error: 'not an array' }) });
+    render(<BodyTab {...defaultProps} />);
+    // Should not crash, measurementHistory remains empty
+    await waitFor(() => expect(screen.queryByText('records')).toBeNull());
+  });
+
+  it('renders null fields in history table as dashes', async () => {
+    const nullData = [
+      { ...defaultProps.latestMeasurement, id: 'm1', weight: null, waist: null }
+    ];
+    mockFetch.mockResolvedValueOnce({ json: () => Promise.resolve(nullData) });
+    render(<BodyTab {...defaultProps} />);
+    await waitFor(() => {
+      // The table renders m.weight ?? '—', etc.
+      // We expect at least one row with dashes
+      const rows = screen.getAllByRole('row');
+      expect(rows.length).toBeGreaterThan(1); // Header + 1 data row
+      const dashes = screen.getAllByText('—');
+      expect(dashes.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('skips rendering fields that are null in latest measurement', async () => {
+    const partialMeasurement = { 
+      ...defaultProps.latestMeasurement, 
+      weight: 75, 
+      waist: null,
+      chest: null,
+      arms: null,
+      thighs: null,
+      hips: null,
+      bodyFat: null
+    };
+    const partialForm = {
+      ...defaultProps.measurements,
+      weight: '75',
+      waist: '',
+      chest: '',
+      arms: '',
+      thighs: '',
+      hips: '',
+      bodyFat: ''
+    };
+    render(<BodyTab {...defaultProps} measurements={partialForm} latestMeasurement={partialMeasurement} />);
+    
+    // Check the input value
+    expect(screen.getByDisplayValue('75')).toBeDefined();
+    
+    // Check that Waist input is empty
+    const waistInput = screen.getByTestId('input-waist') as HTMLInputElement;
+    expect(waistInput.value).toBe('');
+  });
 });
 

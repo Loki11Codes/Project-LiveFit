@@ -1,6 +1,6 @@
  
 import { test, expect } from 'vitest';
-import { parseJsonBody, unauthorized, conflict, internalError } from './api';
+import { parseJsonBody, unauthorized, conflict, internalError, badRequest, success } from './api';
 import { GoalSchema } from './validation';
 import { z } from 'zod';
 
@@ -60,6 +60,22 @@ test('conflict returns 409', () => {
 test('internalError returns 500', () => {
   const response = internalError();
   expect(response.status).toBe(500);
+});
+
+test('badRequest returns 400', async () => {
+  const response = badRequest('Bad Request', { foo: 'bar' });
+  expect(response.status).toBe(400);
+  const body = await response.json();
+  expect(body.error).toBe('Bad Request');
+  expect(body.details).toEqual({ foo: 'bar' });
+});
+
+test('success returns 200', async () => {
+  const response = success('Success', { data: 123 });
+  expect(response.status).toBe(200);
+  const body = await response.json();
+  expect(body.message).toBe('Success');
+  expect(body.details).toEqual({ data: 123 });
 });
 
 test('parseJsonBody returns badRequest on schema mismatch', async () => {

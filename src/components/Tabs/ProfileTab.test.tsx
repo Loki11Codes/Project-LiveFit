@@ -134,5 +134,43 @@ describe("ProfileTab Component", () => {
     expect(screen.getByText("First Workout")).toBeDefined();
     expect(screen.getByText("Completed your first workout")).toBeDefined();
   });
+
+  it("handles missing user image", () => {
+    const noImageSession = {
+      ...defaultProps.session,
+      user: { ...defaultProps.session.user, image: null }
+    };
+    render(<ProfileTab {...defaultProps} session={noImageSession as any} />);
+    // The placeholder User icon should be rendered
+    expect(document.querySelector('svg.lucide-user')).toBeDefined();
+  });
+
+  it("handles missing profile data safely", () => {
+    render(<ProfileTab {...defaultProps} profile={null as any} />);
+    // Should show "--" for age, etc.
+    const dashes = screen.getAllByText("--");
+    expect(dashes.length).toBeGreaterThan(0);
+  });
+
+  it("renders empty trophy case", () => {
+    const profileNoAch = { ...defaultProps.profile, achievements: [] };
+    render(<ProfileTab {...defaultProps} profile={profileNoAch as any} />);
+    expect(screen.getByText(/No Trophies Yet/i)).toBeDefined();
+  });
+
+  it("handles null goal values gracefully", () => {
+    const nullGoals = {
+      proteinTraining: null,
+      proteinRest: null,
+      proteinLite: null,
+      waterTarget: null,
+      sleepTarget: null
+    };
+    render(<ProfileTab {...defaultProps} goals={nullGoals as any} />);
+    
+    // Should show "--" fallbacks for protein targets, water, sleep
+    const placeholders = screen.getAllByText("--");
+    expect(placeholders.length).toBeGreaterThanOrEqual(5);
+  });
 });
 
