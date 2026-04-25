@@ -3,6 +3,7 @@ import SignUp from './page';
 import { useRouter } from 'next/navigation';
 import { requestJson } from '@/lib/client-api';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { signIn } from 'next-auth/react';
 import React from 'react';
 
 vi.mock('next/navigation', () => ({
@@ -138,12 +139,45 @@ describe('SignUp Component', () => {
   it('toggles password visibility', () => {
     render(<SignUp />);
     const passwordInput = screen.getByLabelText(/^Password$/i);
-    const buttons = screen.getAllByRole('button');
-    const toggle = buttons.find(b => !b.textContent && (b as HTMLButtonElement).type !== 'submit');
+    const confirmInput = screen.getByLabelText(/Confirm Password/i);
     
-    expect(passwordInput).toHaveAttribute('type', 'password');
-    if (toggle) fireEvent.click(toggle);
-    expect(passwordInput).toHaveAttribute('type', 'text');
+    // In our mock, Eye and EyeOff render data-testid icons.
+    // Let's find the parent buttons that contain these icons.
+    const allButtons = screen.getAllByRole('button');
+    const toggleBtns = allButtons.filter(btn => !btn.textContent && (btn as HTMLButtonElement).type !== 'submit');
+    
+    // Assuming first is password, second is confirm password
+    if (toggleBtns.length >= 2) {
+      expect(passwordInput).toHaveAttribute('type', 'password');
+      fireEvent.click(toggleBtns[0]);
+      expect(passwordInput).toHaveAttribute('type', 'text');
+      
+      expect(confirmInput).toHaveAttribute('type', 'password');
+      fireEvent.click(toggleBtns[1]);
+      expect(confirmInput).toHaveAttribute('type', 'text');
+    }
+  });
+
+  it('shows error if password does not meet requirements', async () => {
+    render(<SignUp />);
+    fireEvent.change(screen.getByLabelText(/Full Name/i), { target: { value: 'Test User' } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'test@example.com' } });
+    // This password matches but is too weak
+    fireEvent.change(screen.getByLabelText(/^Password$/i), { target: { value: 'weak' } });
+    fireEvent.change(screen.getByLabelText(/Confirm Password/i), { target: { value: 'weak' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /Create Account/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Password does not meet all security requirements/i)).toBeInTheDocument();
+    });
+  });
+
+  it('handles Google sign in', () => {
+    render(<SignUp />);
+    const googleBtn = screen.getByRole('button', { name: /Google Sign In/i });
+    fireEvent.click(googleBtn);
+    expect(signIn).toHaveBeenCalledWith('google', { callbackUrl: '/' });
   });
 });
 

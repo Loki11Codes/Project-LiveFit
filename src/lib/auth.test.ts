@@ -96,12 +96,21 @@ describe('Auth Options', () => {
       expect(noUserResult).toEqual({ orig: true });
     });
 
-    it('jwt handles session update trigger', async () => {
+    it('jwt handles session update trigger for multiple properties', async () => {
       const jwtCb = authOptions.callbacks?.jwt as any;
-      const token = { id: 'u1', requirePasswordChange: true };
-      const session = { requirePasswordChange: false };
+      const token = { id: 'u1', requirePasswordChange: true, onboarded: false, hasSeenTutorial: false, emailVerified: new Date() };
+      const newDate = new Date();
+      const session = { 
+        requirePasswordChange: false, 
+        onboarded: true, 
+        hasSeenTutorial: true,
+        emailVerified: newDate
+      };
       const result = await jwtCb({ token, trigger: "update", session });
       expect(result.requirePasswordChange).toBe(false);
+      expect(result.onboarded).toBe(true);
+      expect(result.hasSeenTutorial).toBe(true);
+      expect(result.emailVerified).toBe(newDate);
     });
 
     it('session maps token id and fetches latest status from DB', async () => {
@@ -128,6 +137,14 @@ describe('Auth Options', () => {
           emailVerified: true 
         }
       });
+    });
+
+    it('session throws error if user not found in DB', async () => {
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(null as any);
+      const sessionCb = authOptions.callbacks?.session as any;
+      const session = { user: { name: 'hi' } } as any;
+      const token = { id: 'tid' };
+      await expect(sessionCb({ session, token })).rejects.toThrow("Session invalidated: User no longer exists in the database.");
     });
   });
 });

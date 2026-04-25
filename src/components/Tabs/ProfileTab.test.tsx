@@ -114,5 +114,25 @@ describe("ProfileTab Component", () => {
     const zeroMatches = screen.getAllByText(/0/);
     expect(zeroMatches.length).toBeGreaterThan(0);
   });
+
+  it("renders achievements when present", () => {
+    const profileWithAchievements = {
+      ...defaultProps.profile,
+      achievements: [
+        {
+          id: "ach-1",
+          title: "First Workout",
+          description: "Completed your first workout",
+          tier: "BRONZE",
+          icon: "Dumbbell",
+          unlockedAt: new Date().toISOString(),
+        }
+      ]
+    };
+    
+    render(<ProfileTab {...defaultProps} profile={profileWithAchievements as any} />);
+    expect(screen.getByText("First Workout")).toBeDefined();
+    expect(screen.getByText("Completed your first workout")).toBeDefined();
+  });
 });
 

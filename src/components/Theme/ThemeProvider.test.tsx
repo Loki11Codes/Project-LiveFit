@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ThemeProvider, useTheme, BRAND_COLORS } from './ThemeProvider';
 
@@ -13,7 +13,7 @@ function TestConsumer() {
       <span data-testid="accent">{accentColor}</span>
       <button onClick={() => setTheme('dark')} data-testid="set-dark">set dark</button>
       <button onClick={() => setAccentColor('#ff0000')} data-testid="set-accent">set accent</button>
-      <button onClick={() => toggleTheme()} data-testid="toggle">toggle</button>
+      <button onClick={(e) => toggleTheme(e)} data-testid="toggle">toggle</button>
     </div>
   );
 }
@@ -166,5 +166,65 @@ describe('ThemeProvider', () => {
       );
     });
     expect(screen.getByTestId('theme').textContent).toBe('dark');
+  });
+
+  it('uses startViewTransition when available and toggles theme with animation', async () => {
+    // Mock matchMedia to avoid prefers-reduced-motion
+    (globalThis.matchMedia as any).mockImplementation((query: string) => {
+      if (query === '(prefers-reduced-motion: reduce)') {
+        return { matches: false };
+      }
+      return { matches: false };
+    });
+
+    let transitionCallback: () => void = () => {};
+    let onfinish: (() => void) | null = null;
+
+    const mockAnimate = vi.fn().mockReturnValue({
+      set onfinish(cb: () => void) {
+        onfinish = cb;
+      }
+    });
+
+    document.documentElement.animate = mockAnimate as any;
+
+    document.startViewTransition = vi.fn((cb: () => void) => {
+      transitionCallback = cb;
+      return {
+        ready: Promise.resolve(),
+      } as any;
+    });
+
+    await act(async () => {
+      render(
+        <ThemeProvider>
+          <TestConsumer />
+        </ThemeProvider>
+      );
+    });
+
+    await act(async () => {
+      const btn = screen.getByTestId('toggle');
+      fireEvent.click(btn, { clientX: 100, clientY: 100 });
+    });
+
+    expect(document.startViewTransition).toHaveBeenCalled();
+
+    // Execute the callback passed to startViewTransition
+    await act(async () => {
+      transitionCallback();
+    });
+
+    expect(screen.getByTestId('theme').textContent).toBe('dark');
+
+    // Wait for the ready promise to resolve and then call onfinish
+    await act(async () => {
+      await Promise.resolve(); // allow microtasks to flush
+      if (onfinish) {
+        onfinish();
+      }
+    });
+    
+    expect(mockAnimate).toHaveBeenCalled();
   });
 });

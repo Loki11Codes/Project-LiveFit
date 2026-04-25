@@ -96,5 +96,28 @@ describe('SignIn Component', () => {
     if (toggle) fireEvent.click(toggle);
     expect(passwordInput).toHaveAttribute('type', 'text');
   });
+
+  it('handles unexpected errors during signIn', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(signIn).mockRejectedValueOnce(new Error('Network failure'));
+    
+    render(<SignIn />);
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'test@example.com' } });
+    fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'pass' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /^Sign In$/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/An unexpected error occurred/i)).toBeInTheDocument();
+    });
+    vi.restoreAllMocks();
+  });
+
+  it('handles Google sign in', () => {
+    render(<SignIn />);
+    const googleBtn = screen.getByRole('button', { name: /Google Sign In/i });
+    fireEvent.click(googleBtn);
+    expect(signIn).toHaveBeenCalledWith('google', { callbackUrl: '/' });
+  });
 });
 

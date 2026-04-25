@@ -98,4 +98,52 @@ describe("ResetPasswordPage", () => {
 
     expect(await screen.findByText("API Error")).toBeInTheDocument();
   });
+
+  it("toggles password visibility", () => {
+    render(<ResetPasswordPage />);
+    
+    const passwordInput = screen.getByPlaceholderText("New Secure Password");
+    const confirmInput = screen.getByPlaceholderText("Confirm New Password");
+    
+    expect(passwordInput).toHaveAttribute("type", "password");
+    expect(confirmInput).toHaveAttribute("type", "password");
+
+    // The buttons have no specific aria-label, but we can query by their container or icons
+    // However, they are just buttons. We can find them by querying the closest button to the inputs or simply getting all buttons in the input groups.
+    // Better yet, let's just find the buttons by querying the lucide-react eye icons
+    // We can get them by their parent buttons
+    const toggleBtns = screen.getAllByRole("button").filter(btn => !btn.textContent?.includes("Update Password"));
+    
+    // First toggle is for password
+    fireEvent.click(toggleBtns[0]);
+    expect(passwordInput).toHaveAttribute("type", "text");
+    fireEvent.click(toggleBtns[0]);
+    expect(passwordInput).toHaveAttribute("type", "password");
+
+    // Second toggle is for confirm password
+    fireEvent.click(toggleBtns[1]);
+    expect(confirmInput).toHaveAttribute("type", "text");
+    fireEvent.click(toggleBtns[1]);
+    expect(confirmInput).toHaveAttribute("type", "password");
+  });
+
+  it("redirects after successful update", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.mocked(requestJson).mockResolvedValue({ success: true });
+    
+    render(<ResetPasswordPage />);
+    
+    fireEvent.change(screen.getByPlaceholderText("New Secure Password"), { target: { value: "StrongPass123!" } });
+    fireEvent.change(screen.getByPlaceholderText("Confirm New Password"), { target: { value: "StrongPass123!" } });
+    fireEvent.click(screen.getByRole("button", { name: /update password/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Password updated successfully/i)).toBeInTheDocument();
+    });
+
+    vi.advanceTimersByTime(2000);
+    expect(mockRouter.push).toHaveBeenCalledWith("/");
+    expect(mockRouter.refresh).toHaveBeenCalled();
+    vi.useRealTimers();
+  });
 });
