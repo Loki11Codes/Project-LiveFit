@@ -171,11 +171,7 @@ describe('WorkoutSession Component', () => {
     expect(onUpdate).toHaveBeenCalled();
   });
 
-  it('adds an exercise without an ID (fallback)', async () => {
-    // This tests handleAddExercise when exercise.id is missing but we want to trigger the branch
-    // We can't easily trigger the "return early" branch without modifying the component or using a very specific mock
-    // But we can test the general addition flow.
-  });
+
 
   it('renders set inputs for each set', () => {
     renderSession();

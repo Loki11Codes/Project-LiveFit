@@ -137,6 +137,7 @@ describe("Sidebar Component", () => {
     render(<Sidebar {...defaultProps} />);
     const waterMetric = screen.getByText("Water").closest("button");
     if (waterMetric) fireEvent.click(waterMetric);
+    expect(screen.getByText("Water Trend")).toBeInTheDocument();
   });
 
   it("renders WorkoutLiveAssistant when a session is active", () => {
