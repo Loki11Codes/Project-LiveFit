@@ -121,7 +121,7 @@ describe('WorkoutSession Component', () => {
           exerciseId: 'e-1',
           name: 'Bench Press',
           sets: [
-            { id: 'set-1', weight: '80', reps: '8', isCompleted: false, suggestion: { weight: 85, reps: 5, reason: 'progressive overload' } },
+            { id: 'set-1', weight: '80', reps: '8', isCompleted: false, suggestion: { weight: '85', reps: '5', reason: 'progressive overload' } },
           ],
         },
       ],
@@ -165,7 +165,7 @@ describe('WorkoutSession Component', () => {
         ]
       }]
     });
-    const { container } = renderSession(sessionWithMultipleSets);
+    renderSession(sessionWithMultipleSets);
     const checkboxes = screen.getAllByTestId('toggle-set');
     fireEvent.click(checkboxes[0]);
     expect(onUpdate).toHaveBeenCalled();
@@ -553,7 +553,7 @@ describe('WorkoutSession Component', () => {
         }
       ]
     });
-    render(<WorkoutSession session={multiExSession as any} onUpdate={vi.fn()} onFinish={vi.fn()} />);
+    render(<WorkoutSession session={multiExSession as any} onUpdate={vi.fn()} onFinish={vi.fn()} onDiscard={vi.fn()} />);
     
     // Toggle set on the second exercise
     const toggles = screen.getAllByTestId('toggle-set');

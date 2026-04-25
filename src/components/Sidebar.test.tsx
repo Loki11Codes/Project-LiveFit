@@ -1,5 +1,5 @@
  
-import { render, screen, fireEvent, cleanup, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import Sidebar from "./Sidebar";
 
@@ -116,7 +116,7 @@ describe("Sidebar Component", () => {
   });
 
   it("renders empty state when no activities recorded", () => {
-    render(<Sidebar {...defaultProps} logs={null} />);
+    render(<Sidebar {...defaultProps} logs={undefined as any} />);
     expect(screen.getByText(/No activity yet/i)).toBeInTheDocument();
   });
 
