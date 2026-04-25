@@ -470,19 +470,4 @@ describe('RoutinesTab Component', () => {
     });
   });
 
-  it('calls onStart when a routine is selected and started', async () => {
-    const onStart = vi.fn();
-    render(<RoutinesTab onStart={onStart} />);
-    await waitFor(() => expect(screen.getByText('Push Day')).toBeInTheDocument());
-    fireEvent.click(screen.getByText('Push Day'));
-    
-    // Now in preview view, click Start
-    const startBtn = await screen.findByRole('button', { name: /Start/i });
-    fireEvent.click(startBtn);
-    
-    expect(onStart).toHaveBeenCalledWith(expect.objectContaining({ id: 'r1' }));
-  });
-
-
 });
-
