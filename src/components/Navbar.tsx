@@ -32,7 +32,6 @@ type NavbarTab = {
 };
 
 export default function Navbar({ activeTab, setActiveTab }: NavbarProps) {
-  if (activeTab === null) return null;
   const { data: session } = useSession();
   const { theme, toggleTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -41,6 +40,8 @@ export default function Navbar({ activeTab, setActiveTab }: NavbarProps) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
+
+  if (activeTab === null) return null;
   
   // Suppression for React 19 hydration pattern if necessary, 
   // but here we just ensure it's used safely.
