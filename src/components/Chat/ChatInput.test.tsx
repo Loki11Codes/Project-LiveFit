@@ -118,16 +118,65 @@ describe("ChatInput Component", () => {
     expect(screen.getByText("audio.mp3")).toBeDefined();
   });
 
-  it("handles speech recognition error", async () => {
+  it("handles speech recognition error and onend", async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    
+    // Captured instance to trigger events
+    let capturedInstance: any;
+    const OriginalSpeechRecognition = (globalThis as any).SpeechRecognition;
+    
+    (globalThis as any).SpeechRecognition = function() {
+      const mock = new MockSpeechRecognition();
+      capturedInstance = mock;
+      return mock;
+    };
+    
     render(<ChatInput {...defaultProps} />);
     fireEvent.click(screen.getByLabelText("Start recording"));
     
-    // Branch coverage for getSecureRandom when crypto is missing
-    vi.stubGlobal('crypto', undefined);
-    render(<ChatInput {...defaultProps} />);
-    expect(screen.getAllByTestId("chat-input")[0]).toBeDefined();
+    await act(async () => {
+      capturedInstance.onresult({
+        results: [
+          [{ transcript: 'Hello ' }],
+          [{ transcript: 'world' }]
+        ]
+      });
+    });
+    expect(defaultProps.setInput).toHaveBeenCalledWith('Hello world');
     
+    // Trigger error
+    await act(async () => {
+      capturedInstance.onerror({ error: 'not-allowed' });
+    });
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Speech recognition error"), "not-allowed");
+    
+    // Trigger onend
+    fireEvent.click(screen.getByLabelText("Start recording"));
+    await act(async () => {
+      capturedInstance.onend();
+    });
+    expect(screen.getByLabelText("Start recording")).toBeDefined();
+    
+    // Restore
+    (globalThis as any).SpeechRecognition = OriginalSpeechRecognition;
+    consoleSpy.mockRestore();
+  });
+
+  it("handles recording start failure", () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const OriginalSpeechRecognition = (globalThis as any).SpeechRecognition;
+    
+    (globalThis as any).SpeechRecognition = function() {
+      const mock = new MockSpeechRecognition();
+      mock.start = () => { throw new Error('Start failed'); };
+      return mock;
+    };
+    
+    render(<ChatInput {...defaultProps} />);
+    fireEvent.click(screen.getByLabelText("Start recording"));
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("could not start"), expect.any(Error));
+    
+    (globalThis as any).SpeechRecognition = OriginalSpeechRecognition;
     consoleSpy.mockRestore();
   });
 });

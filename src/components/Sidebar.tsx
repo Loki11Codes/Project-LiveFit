@@ -138,7 +138,7 @@ function RecentActivity({ logs }: Readonly<{ logs: LogsResponse }>) {
   }> = [];
   
   if (logs?.food) {
-    logs.food.slice(-2).forEach((f: FoodLog) => activities.push({ 
+    logs.food?.slice(-2).forEach((f: FoodLog) => activities.push({ 
       id: f.id, 
       type: "food", 
       label: f.name, 
@@ -147,7 +147,7 @@ function RecentActivity({ logs }: Readonly<{ logs: LogsResponse }>) {
     }));
   }
   if (logs?.workouts) {
-    logs.workouts.slice(-1).forEach((w: WorkoutLogWithRelations) => activities.push({ 
+    logs.workouts?.slice(-1).forEach((w: WorkoutLogWithRelations) => activities.push({ 
       id: w.id, 
       type: "workout", 
       label: w.focus, 
@@ -155,7 +155,7 @@ function RecentActivity({ logs }: Readonly<{ logs: LogsResponse }>) {
       icon: Flame 
     }));
   }
-  if (logs.water && logs.water.length > 0) {
+  if (logs?.water && logs.water.length > 0) {
      activities.push({ 
        id: "water-latest", 
        type: "water", 
@@ -167,7 +167,9 @@ function RecentActivity({ logs }: Readonly<{ logs: LogsResponse }>) {
 
   const sorted = activities.toSorted((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 3);
 
-  if (sorted.length === 0) return null;
+  if (sorted.length === 0) {
+    return <div className="h-40 flex items-center justify-center opacity-40 italic text-xs">No activity yet</div>;
+  }
 
   return (
     <div className="flex flex-col gap-2 py-2.5">
@@ -562,6 +564,7 @@ export default function Sidebar({
             nudge={caloriePct < 50}
             iconColor="var(--amber)"
             onClick={() => setActiveMetric("Calories")}
+            data-testid="metric-calories"
           />
         </div>
 

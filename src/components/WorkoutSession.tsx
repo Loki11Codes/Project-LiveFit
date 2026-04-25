@@ -344,6 +344,7 @@ export function WorkoutSession({
                 </div>
                 <button
                   onClick={() => removeExercise(ex.id)}
+                  aria-label={`Remove ${ex.name}`}
                   className="p-2 text-[var(--foreground-muted)] hover:text-[var(--energy-coral)] hover:bg-[var(--energy-coral)]/10 rounded-[var(--radius-sm)] transition-all opacity-0 group-hover:opacity-100"
                 >
                   <X className="w-5 h-5" />

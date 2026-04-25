@@ -166,6 +166,43 @@ describe("Chat Components", () => {
       await waitForHistoryLoad();
       expect(screen.getByText(/Good morning/i)).toBeDefined();
     });
+
+    it("auto-sends initialMessage when provided", async () => {
+      mockHistory([]);
+      const onMessageSent = vi.fn();
+      const setInput = vi.fn();
+      const requestJsonMock = vi.mocked(clientApi.requestJson).mockResolvedValue({ text: "Hello response" });
+
+      // We need to provide a non-empty input prop because handleSend uses it
+      // In a real app, setInput would update the parent state which updates the input prop
+      const { rerender } = render(
+        <Chat
+          {...makeProps({
+            initialMessage: "Log 50kg bench",
+            onMessageSent,
+            setInput,
+            input: "Log 50kg bench" 
+          })}
+        />,
+      );
+
+      await waitForHistoryLoad();
+      await waitFor(() => expect(onMessageSent).toHaveBeenCalled());
+      
+      // rerender to simulate parent state update if needed, but handleSend uses current prop
+      await waitFor(() => expect(requestJsonMock).toHaveBeenCalled());
+    });
+
+    it("handles quick chip selection", async () => {
+      mockHistory([]);
+      const setInput = vi.fn();
+      render(<Chat {...makeProps({ setInput })} />);
+      await waitForHistoryLoad();
+
+      const chip = screen.getByRole("button", { name: /Breakfast/i });
+      fireEvent.click(chip);
+      expect(setInput).toHaveBeenCalledWith(expect.stringContaining("Log my breakfast"));
+    });
   });
 
   // ── Proactive nudge logic ─────────────────────────────────────────────────

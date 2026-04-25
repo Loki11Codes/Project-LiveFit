@@ -16,6 +16,7 @@ interface GlassMetricProps {
   readonly iconColor?: string;
   readonly onClick?: () => void;
   readonly className?: string;
+  readonly "data-testid"?: string;
 }
 
 export function GlassMetric({
@@ -29,12 +30,14 @@ export function GlassMetric({
   iconColor,
   onClick,
   className = '',
+  "data-testid": testId,
 }: GlassMetricProps) {
   return (
     <motion.div 
       whileHover={onClick ? { scale: 1.01 } : {}}
       whileTap={onClick ? { scale: 0.99 } : {}}
       onClick={onClick}
+      data-testid={testId}
       className={`relative flex flex-col gap-2 p-2 rounded-2xl transition-all ${onClick ? 'cursor-pointer' : ''} ${
         nudge ? 'bg-[rgba(59,130,246,0.03)] shadow-[0_0_20px_rgba(59,130,246,0.15)] ring-1 ring-[#3b82f6]/20' : ''
       } ${className}`}

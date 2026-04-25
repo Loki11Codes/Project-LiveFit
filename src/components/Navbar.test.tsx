@@ -124,4 +124,15 @@ describe('Navbar Component', () => {
     
     expect(mockToggleTheme).toHaveBeenCalled();
   });
+
+  it('renders nothing when activeTab is invalid or null', () => {
+    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as any);
+    const { container } = render(
+      <Navbar 
+        activeTab={null as any} 
+        setActiveTab={mockSetActiveTab} 
+      />
+    );
+    expect(container.firstChild).toBeNull();
+  });
 });

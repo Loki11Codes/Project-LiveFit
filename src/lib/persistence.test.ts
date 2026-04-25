@@ -19,6 +19,7 @@ describe('persistence utility', () => {
     workoutLog: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn(), delete: vi.fn(), deleteMany: vi.fn(), count: vi.fn().mockResolvedValue(0) },
     sleepLog: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() },
     bodyMeasurement: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() },
+    waterLog: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() },
     userProfile: { findUnique: vi.fn(), upsert: vi.fn(), findFirst: vi.fn() },
     goal: { upsert: vi.fn(), findUnique: vi.fn() },
     dayTypeEntry: { upsert: vi.fn() },
@@ -161,14 +162,20 @@ describe('persistence utility', () => {
         }));
     });
 
-    it('persists meal plan', async () => {
+    it('persists meal plan with full fallbacks', async () => {
         const mealPlanData = {
-            name: 'Test Plan',
-            entries: [{ dayIndex: 0, title: 'Breakfast', kcal: 500 }]
+            entries: [{ mealType: null, kcal: 500 }]
         };
         await persistLogData([{ category: 'meal_plan', data: mealPlanData }], userId);
         expect(mockTx.mealPlan.create).toHaveBeenCalledWith(expect.objectContaining({
-            data: expect.objectContaining({ name: 'Test Plan' })
+            data: expect.objectContaining({ 
+                name: "AI Generated Plan",
+                entries: expect.objectContaining({
+                    create: expect.arrayContaining([
+                        expect.objectContaining({ title: 'Untitled Meal', mealType: 'Meal', dayIndex: 0 })
+                    ])
+                })
+            })
         }));
     });
   });
@@ -214,10 +221,18 @@ describe('persistence utility', () => {
         expect(mockTx.workoutLog.deleteMany).toHaveBeenCalled();
     });
 
-    it('deletes specific knowledge entry', async () => {
+    it('deletes specific knowledge entry and handles edge cases', async () => {
         mockTx.userKnowledge.findFirst.mockResolvedValue({ id: 'k1' });
         await persistLogData([{ category: 'delete', data: { target: 'knowledge', key: 'Focus' } }], userId);
         expect(mockTx.userKnowledge.delete).toHaveBeenCalledWith({ where: { id: 'k1' } });
+
+        // Missing key
+        await persistLogData([{ category: 'delete', data: { target: 'knowledge' } }], userId);
+        
+        // Not found
+        mockTx.userKnowledge.findFirst.mockResolvedValue(null);
+        await persistLogData([{ category: 'delete', data: { target: 'knowledge', key: 'NonExistent' } }], userId);
+        expect(mockTx.userKnowledge.delete).toHaveBeenCalledTimes(1); // Still only 1 from before
     });
   });
 
@@ -261,12 +276,24 @@ describe('persistence utility', () => {
         warnSpy.mockRestore();
     });
 
-    it('deletes all entries for a day when target is missing name/focus', async () => {
+    it('deletes all entries for various targets', async () => {
+        mockTx.sleepLog.findFirst.mockResolvedValue({ id: 's1' });
+        mockTx.bodyMeasurement.findFirst.mockResolvedValue({ id: 'm1' });
+        
         await persistLogData([{ category: 'delete', data: { target: 'food' } }], userId);
         expect(mockTx.foodLog.deleteMany).toHaveBeenCalled();
 
         await persistLogData([{ category: 'delete', data: { target: 'workout' } }], userId);
         expect(mockTx.workoutLog.deleteMany).toHaveBeenCalled();
+
+        await persistLogData([{ category: 'delete', data: { target: 'sleep' } }], userId);
+        expect(mockTx.sleepLog.delete).toHaveBeenCalled();
+
+        await persistLogData([{ category: 'delete', data: { target: 'water' } }], userId);
+        expect(mockTx.waterLog.deleteMany).toHaveBeenCalled();
+
+        await persistLogData([{ category: 'delete', data: { target: 'measurement' } }], userId);
+        expect(mockTx.bodyMeasurement.delete).toHaveBeenCalled();
     });
 
     it('handles syncUserGoals with missing data', async () => {
@@ -404,6 +431,36 @@ describe('persistence utility', () => {
         await syncUserGoals(txClient, userId);
         expect(mockTx.goal.upsert).toHaveBeenCalledWith(expect.objectContaining({
             update: expect.any(Object)
+        }));
+    });
+    it('handles deleteKnowledgeEntry when entry does not exist', async () => {
+        mockTx.userKnowledge.findFirst.mockResolvedValue(null);
+        await persistLogData([{ category: 'delete', data: { target: 'knowledge', key: 'missing' } }], userId);
+        expect(mockTx.userKnowledge.delete).not.toHaveBeenCalled();
+    });
+
+    it('handles persistKnowledgeEntry with missing key or value', async () => {
+        await persistLogData([{ category: 'knowledge', data: { key: '', value: 'test' } }], userId);
+        expect(mockTx.userKnowledge.upsert).not.toHaveBeenCalled();
+        
+        await persistLogData([{ category: 'knowledge', data: { key: 'test', value: '' } }], userId);
+        expect(mockTx.userKnowledge.upsert).not.toHaveBeenCalled();
+    });
+    it('persists knowledge entries successfully', async () => {
+        const data = { key: 'favorite_food', value: 'Pizza' };
+        await persistLogData([{ category: 'knowledge', data }], userId);
+        expect(mockTx.userKnowledge.upsert).toHaveBeenCalledWith(expect.objectContaining({
+            create: expect.objectContaining({ key: 'favorite_food', value: 'Pizza' })
+        }));
+    });
+
+    it('handles persistMealPlan with missing weekStarting', async () => {
+        const data = { entries: [{ dayIndex: 1, mealType: 'Breakfast' }] };
+        await persistLogData([{ category: 'meal_plan', data }], userId);
+        expect(mockTx.mealPlan.create).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.objectContaining({
+                weekStarting: expect.any(Date)
+            })
         }));
     });
   });

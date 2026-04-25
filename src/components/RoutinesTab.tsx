@@ -820,8 +820,8 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                   <Search className="w-4 h-4 text-[var(--foreground-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    autoFocus
                     placeholder="Search exercises..."
+                    data-testid="exercise-search-input"
                     className="w-full pl-9 pr-4 py-2 bg-[var(--surface2)] rounded-xl outline-none font-medium text-[15px] placeholder:text-[var(--foreground-muted)]/60 h-11 border border-transparent focus:border-[var(--accent)]/30 transition-all"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}

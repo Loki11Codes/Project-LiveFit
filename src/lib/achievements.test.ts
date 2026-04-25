@@ -141,4 +141,12 @@ describe('syncAchievements', () => {
       ]),
     });
   });
+
+  it('unlocks protein-power when workout count ≥ 1', async () => {
+    const tx = makeTx({
+      workoutCount: 1,
+    });
+    const result = await syncAchievements(tx, 'user-1');
+    expect(result.map((b) => b.badgeId)).toContain('protein-power');
+  });
 });

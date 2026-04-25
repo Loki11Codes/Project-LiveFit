@@ -155,15 +155,15 @@ export async function syncAchievements(tx: PrismaTx, userId: string) {
     for (const m of milestones) {
       if (benchPR.maxWeight >= m.weight && !existingIds.has(m.id)) {
         const badge = getBadgeById(m.id);
-        if (badge) newlyUnlocked.push(badge);
+        newlyUnlocked.push(badge!);
       }
     }
   }
 
   // 2. Check Workout Count (Consistency)
   if (workoutCount >= 1 && !existingIds.has('protein-power')) {
-     // Overloading 'protein-power' as 'First Workout' for test
-     // In real app, we'd have a 'first-workout' badge
+    const badge = getBadgeById('protein-power');
+    newlyUnlocked.push(badge!);
   }
 
   // 3. Persist NEW achievements

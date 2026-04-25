@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import HistoryTab from './HistoryTab';
 
@@ -112,5 +112,64 @@ describe('HistoryTab Component', () => {
     const zeros = screen.getAllByText('0');
     expect(zeros.length).toBeGreaterThanOrEqual(2); // protein=0, kcal=0
   });
+
+  it('toggles between table and performance views', () => {
+    render(<HistoryTab {...defaultProps} />);
+    const performanceBtn = screen.getByRole('button', { name: /Performance/i });
+    fireEvent.click(performanceBtn);
+    expect(screen.getByText('Performance Insights Mock')).toBeInTheDocument();
+    
+    const tableBtn = screen.getByRole('button', { name: /Table/i });
+    fireEvent.click(tableBtn);
+    expect(screen.getByText(/Activity Logs/i)).toBeInTheDocument();
+  });
+
+  it('renders workout details and volume in table', () => {
+    const detailedHistory = [
+      { 
+        day: 'Mon', 
+        date: '2026-03-16', 
+        type: 'Training', 
+        protein: 100, 
+        kcal: 2000, 
+        workout: 'Squat', 
+        workoutDetail: 'Legs Day', 
+        totalVolume: 5000 
+      }
+    ];
+    render(<HistoryTab {...defaultProps} history={detailedHistory as any} />);
+    expect(screen.getByText('Legs Day')).toBeInTheDocument();
+    expect(screen.getByText('5000 kg')).toBeInTheDocument();
+  });
+
+  it('handles negative or zero weight delta', () => {
+    const neutralProps = {
+      ...defaultProps,
+      analytics: {
+        ...defaultProps.analytics,
+        weightTrend: [
+          { day: 'Mon', weight: 75, date: '2026-03-18' },
+          { day: 'Tue', weight: 75, date: '2026-03-19' },
+        ]
+      }
+    } as any;
+    render(<HistoryTab {...neutralProps} />);
+    expect(screen.getByText('0 kg')).toBeDefined();
+  });
+
+  it('handles missing sleep data in table row', () => {
+    const noSleepHistory = [
+      { day: 'Mon', date: '2026-03-16', type: 'Rest', protein: 100, kcal: 2000, workout: '--', sleep: '--' }
+    ];
+    render(<HistoryTab {...defaultProps} history={noSleepHistory as any} />);
+    // Should render "--" instead of "h"
+    const cells = screen.getAllByRole('cell');
+    expect(cells.find(c => c.textContent === '--')).toBeDefined();
+  });
 });
+
+// Mock PerformanceInsights since it's a separate component
+vi.mock('@/components/Analytics/PerformanceInsights', () => ({
+  default: () => <div>Performance Insights Mock</div>
+}));
 

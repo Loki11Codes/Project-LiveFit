@@ -88,3 +88,20 @@ test('parseJsonBody returns badRequest on schema mismatch', async () => {
   expect(result.success).toBe(false);
 });
 
+test('badRequest returns default message', async () => {
+  const response = badRequest();
+  const body = await response.json();
+  expect(body.error).toBe('Invalid request');
+});
+
+test('conflict returns default message', async () => {
+  const response = conflict();
+  const body = await response.json();
+  expect(body.error).toBe('Conflict');
+});
+
+test('internalError returns default message', async () => {
+  const response = internalError();
+  const body = await response.json();
+  expect(body.error).toBe('Internal Server Error');
+});

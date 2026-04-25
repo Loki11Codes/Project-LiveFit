@@ -621,6 +621,7 @@ async function persistDeleteAction(
     workout: () => deleteWorkoutEntry(tx, userId, dateRange, focus),
     sleep: () => deleteSingleEntry(tx.sleepLog, userId, dateRange),
     measurement: () => deleteSingleEntry(tx.bodyMeasurement, userId, dateRange),
+    water: () => tx.waterLog.deleteMany({ where: { userId, time: dateRange } }),
     knowledge: () => deleteKnowledgeEntry(tx, raw, userId),
     all: async () => {
       await Promise.all([
@@ -628,6 +629,7 @@ async function persistDeleteAction(
         tx.workoutLog.deleteMany({ where: { userId, time: dateRange } }),
         tx.sleepLog.deleteMany({ where: { userId, time: dateRange } }),
         tx.bodyMeasurement.deleteMany({ where: { userId, time: dateRange } }),
+        tx.waterLog.deleteMany({ where: { userId, time: dateRange } }),
       ]);
     },
   };

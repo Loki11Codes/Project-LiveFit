@@ -32,6 +32,7 @@ type NavbarTab = {
 };
 
 export default function Navbar({ activeTab, setActiveTab }: NavbarProps) {
+  if (activeTab === null) return null;
   const { data: session } = useSession();
   const { theme, toggleTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
