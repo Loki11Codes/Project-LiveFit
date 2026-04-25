@@ -5,7 +5,7 @@ import { MessageBubble } from './MessageBubble';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, style, ...props }: { children: React.ReactNode; style?: React.CSSProperties }) => <div {...props} style={style}>{children}</div>,
+    div: ({ children, style, layout, initial, animate, exit, transition, ...props }: any) => <div {...props} style={style}>{children}</div>,
   },
 }));
 

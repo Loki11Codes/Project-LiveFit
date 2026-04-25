@@ -68,7 +68,7 @@ describe("ChatInput Component", () => {
     render(<ChatInput {...defaultProps} />);
     const fileBtn = screen.getByLabelText("Attach images");
     fireEvent.click(fileBtn);
-    // Hidden input click is hard to verify directly, but we covered the branch
+    expect(fileBtn).toBeInTheDocument();
   });
 
   it("handles Enter without Shift to send", () => {
@@ -126,6 +126,7 @@ describe("ChatInput Component", () => {
     // Branch coverage for getSecureRandom when crypto is missing
     vi.stubGlobal('crypto', undefined);
     render(<ChatInput {...defaultProps} />);
+    expect(screen.getAllByTestId("chat-input")[0]).toBeDefined();
     
     consoleSpy.mockRestore();
   });

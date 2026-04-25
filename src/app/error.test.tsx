@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import AppError from './error';
 import { useRouter } from 'next/navigation';
 
@@ -21,6 +21,14 @@ vi.mock('next/navigation', () => ({
 describe('AppError', () => {
   const mockReset = vi.fn();
   const mockError = new Error('Test error message');
+
+  beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
   it('renders error message and UI elements', () => {
     render(<AppError error={mockError} reset={mockReset} />);

@@ -207,6 +207,7 @@ describe("Home Orchestration Definitive", () => {
     await act(async () => { render(<Home />); });
     await act(async () => { fireEvent.click(await screen.findByText(/StartRWithSets/i)); });
     await act(async () => { fireEvent.click(screen.getByText(/StartRWithTarget/i)); });
+    expect(screen.getByTestId("workout-session-overlay")).toBeInTheDocument();
   });
 
   it("covers all tabs (lines 639, 674, etc.)", async () => {
@@ -215,7 +216,8 @@ describe("Home Orchestration Definitive", () => {
     await act(async () => { fireEvent.click(screen.getByText(/MealsLink/i)); });
     await act(async () => { fireEvent.click(screen.getByText(/RoutinesLink/i)); });
     await act(async () => { fireEvent.click(screen.getByText(/ProfileLink/i)); });
-    await act(async () => { fireEvent.click(screen.getByText(/ChatLink/i)); });
+    await act(async () => { fireEvent.click(screen.getAllByText(/ChatLink/i)[0]); });
+    expect(screen.getByTestId("chat-component")).toBeInTheDocument();
   });
 
   it("covers line 512: successful storage load", async () => {
@@ -235,7 +237,8 @@ describe("Home Orchestration Definitive", () => {
 
   it("covers line 337: handleTabChange for same tab", async () => {
     await act(async () => { render(<Home />); });
-    await act(async () => { fireEvent.click(screen.getByText(/ChatLink/i)); });
+    await act(async () => { fireEvent.click(screen.getAllByText(/ChatLink/i)[0]); });
+    expect(screen.getByTestId("chat-component")).toBeInTheDocument();
   });
 
   it("covers deletions and errors", async () => {

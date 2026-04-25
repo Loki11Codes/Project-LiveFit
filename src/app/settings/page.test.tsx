@@ -150,7 +150,11 @@ describe("SettingsPage", () => {
   });
 
   it("switches tabs and interacts with sub-panels", async () => {
-    render(<SettingsPage />);
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true });
+    
+    await act(async () => {
+      render(<SettingsPage />);
+    });
     
     // Fitness Tab
     fireEvent.click(screen.getByText(/Fitness & Goals/i));
@@ -239,13 +243,23 @@ describe("SettingsPage", () => {
 
     // Save
     const saveBtn = screen.getByText(/Save Changes/i);
-    fireEvent.click(saveBtn);
+    await act(async () => {
+      fireEvent.click(saveBtn);
+    });
+    
+    await waitFor(() => {
+      expect(globalThis.fetch).toHaveBeenCalled();
+    });
   });
 
   it("handles loading error", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     vi.mocked(requestJson).mockRejectedValueOnce(new Error("Failed"));
-    render(<SettingsPage />);
-    // console.error is called
+    await act(async () => {
+      render(<SettingsPage />);
+    });
+    expect(vi.mocked(requestJson)).toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 });
 
