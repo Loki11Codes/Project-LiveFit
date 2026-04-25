@@ -236,7 +236,7 @@ describe('RoutinesTab Component', () => {
     fireEvent.click(screen.getByText('New Routine'));
     
     // Back button
-    const backBtn = document.querySelector('button.p-2\\.5');
+    const backBtn = document.querySelector(String.raw`button.p-2\.5`);
     if (backBtn) fireEvent.click(backBtn);
     
     await waitFor(() => expect(screen.getByText('My Routines')).toBeDefined());
@@ -320,7 +320,7 @@ describe('RoutinesTab Component', () => {
     });
 
     it('handles failed routine saving', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.spyOn(console, 'error').mockImplementation(() => {});
       globalThis.fetch = vi.fn((url, options: any) => {
         if (url === '/api/routines' && options?.method === 'POST') {
           return Promise.resolve({ ok: false });
