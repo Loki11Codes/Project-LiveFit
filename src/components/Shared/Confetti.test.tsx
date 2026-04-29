@@ -8,8 +8,8 @@ describe('ConfettiCanvas', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock window dimensions
-    Object.defineProperty(window, 'innerWidth', { value: 1024 });
-    Object.defineProperty(window, 'innerHeight', { value: 768 });
+    Object.defineProperty(globalThis, 'innerWidth', { value: 1024 });
+    Object.defineProperty(globalThis, 'innerHeight', { value: 768 });
     
     // Mock requestAnimationFrame
     vi.stubGlobal('requestAnimationFrame', vi.fn((cb) => setTimeout(cb, 16)));

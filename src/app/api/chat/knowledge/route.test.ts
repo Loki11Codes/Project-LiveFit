@@ -65,7 +65,7 @@ describe('Knowledge API Route', () => {
       vi.mocked(prisma.userKnowledge.upsert).mockResolvedValue({ key: 'k', value: 'v' } as any);
       const req = new Request('http://localhost', { method: 'POST', body: JSON.stringify({ key: 'K', value: 'v' }) });
       const res = await POST(req);
-      const data = await res.json();
+      await res.json();
       expect(res.status).toBe(200);
       expect(prisma.userKnowledge.upsert).toHaveBeenCalledWith(expect.objectContaining({
         where: { userId_key: { userId: 'u1', key: 'k' } }

@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import VerifyEmailPage from './page';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { requestJson, getClientErrorMessage } from '@/lib/client-api';
+import { requestJson } from '@/lib/client-api';
 
 // Mock dependencies
 vi.mock('next-auth/react', () => ({

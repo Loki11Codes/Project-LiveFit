@@ -137,7 +137,7 @@ describe("OnboardingPage", () => {
     });
 
     it("handles completion failure", async () => {
-        const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+        const alertSpy = vi.spyOn(globalThis, 'alert').mockImplementation(() => {});
         vi.mocked(requestJson).mockRejectedValue(new Error("Fail"));
         render(<OnboardingPage />);
         
