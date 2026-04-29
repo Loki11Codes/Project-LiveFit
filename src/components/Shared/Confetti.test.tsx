@@ -59,10 +59,8 @@ describe('ConfettiCanvas', () => {
   });
 
   it('renders even if ref is null initially (branch coverage)', () => {
-     // This is tricky as ref is assigned by React, but we can test the effect's guard
-     // Line 21: if (!canvas) return;
-     // We can't easily force ref to be null while rendering, but we can verify it doesn't crash
-     render(<ConfettiCanvas />);
+     const { container } = render(<ConfettiCanvas />);
+     expect(container).toBeDefined();
   });
 
   it('handles null ref guard in effect', () => {
