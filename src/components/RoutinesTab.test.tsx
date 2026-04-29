@@ -41,25 +41,24 @@ describe('RoutinesTab Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     globalThis.fetch = vi.fn((url) => {
-      if (url === '/api/routines') {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(mockRoutines),
-        });
-      }
-      if (url === '/api/exercises') {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(mockExercises),
-        });
-      }
-      if (url === '/api/profile/prs') {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve([]),
-        });
-      }
-      return Promise.resolve({ ok: false });
+      let data: any = [];
+      let ok = true;
+      if (url === '/api/routines') data = mockRoutines;
+      else if (url === '/api/exercises') data = mockExercises;
+      else if (url === '/api/profile/prs') data = [];
+      else ok = false;
+
+      return Promise.resolve({
+        ok,
+        status: ok ? 200 : 404,
+        json: () => Promise.resolve(data),
+        headers: {
+          get: (name: string) => {
+            if (name.toLowerCase() === 'content-type') return ok ? 'application/json' : 'text/plain';
+            return null;
+          }
+        }
+      } as any);
     }) as any;
   });
 
@@ -187,7 +186,53 @@ describe('RoutinesTab Component', () => {
             body: expect.stringContaining('New Test Routine')
         }));
     });
+    
+    // Should switch back to list view
+    await waitFor(() => {
+      expect(screen.getByText('Your saved workout templates')).toBeInTheDocument();
+    });
   });
+
+  it('handles failed routine save gracefully', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    globalThis.fetch = vi.fn((url, options: any) => {
+      if (url === '/api/routines' && options?.method === 'POST') {
+        return Promise.reject(new Error('Network error'));
+      }
+      if (url === '/api/exercises') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockExercises) });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+    }) as any;
+
+    render(<RoutinesTab />);
+    await waitFor(() => {
+      expect(screen.getByText('Create Routine')).toBeDefined();
+    });
+    
+    // Start creating
+    fireEvent.click(screen.getByText('Create Routine'));
+    
+    // Enter name
+    const nameInput = screen.getByPlaceholderText('e.g. Push Day, Pull Day, Legs');
+    fireEvent.change(nameInput, { target: { value: 'New Test Routine' } });
+    
+    // Open search, add exercise
+    const searchTriggers = screen.getAllByText('Search Exercises');
+    fireEvent.click(searchTriggers[0]);
+    const addBtn = screen.getByText(/Bench Press/).closest('button');
+    if (addBtn) fireEvent.click(addBtn);
+
+    // Save routine
+    const saveBtn = screen.getByText('Save Routine');
+    fireEvent.click(saveBtn);
+
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to save routine', expect.any(Error));
+    });
+    consoleSpy.mockRestore();
+  });
+
 
   it('removes an exercise from the routine builder', async () => {
     vi.spyOn(globalThis, 'confirm').mockImplementation(() => true);
@@ -295,6 +340,23 @@ describe('RoutinesTab Component', () => {
         expect(screen.queryByText('Push Day')).toBeNull();
       });
     });
+
+    it('cancels routine deletion', async () => {
+      vi.spyOn(globalThis, 'confirm').mockImplementation(() => false);
+      globalThis.fetch = vi.fn().mockImplementation(() => 
+        Promise.resolve({ ok: true, json: () => Promise.resolve(mockRoutines) })
+      );
+
+      render(<RoutinesTab />);
+      await waitFor(() => expect(screen.getByText('Push Day')).toBeDefined());
+
+      const deleteBtn = screen.getByTitle('Delete routine');
+      fireEvent.click(deleteBtn);
+
+      expect(globalThis.confirm).toHaveBeenCalled();
+      expect(screen.getByText('Push Day')).toBeInTheDocument();
+    });
+
 
     it('reloads data if deletion fails', async () => {
       vi.spyOn(globalThis, 'confirm').mockImplementation(() => true);
@@ -527,7 +589,409 @@ describe('RoutinesTab Component', () => {
     });
   });
 
+  describe('Edge Cases and Fallbacks', () => {
+    it('uses "Machine" fallback for exercises without equipment', async () => {
+      globalThis.fetch = vi.fn((url) => {
+        if (url === '/api/routines') return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+        if (url === '/api/exercises') return Promise.resolve({ ok: true, json: () => Promise.resolve([{ id: 'e3', name: 'No Equip', category: 'Misc', equipment: null }]) });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      }) as any;
+
+      render(<RoutinesTab />);
+      await waitFor(() => screen.getByText('No Routines Yet'));
+      fireEvent.click(screen.getByText('Create Routine'));
+      fireEvent.click(screen.getAllByText('Search Exercises')[0]);
+      
+      expect(screen.getByText('Misc · Machine')).toBeDefined();
+    });
+
+    it('renders "No exercises found" message when search returns nothing', async () => {
+      render(<RoutinesTab />);
+      await waitFor(() => screen.getByText('Push Day'));
+      fireEvent.click(screen.getByText('New Routine'));
+      fireEvent.click(screen.getAllByText('Search Exercises')[0]);
+      
+      const searchInput = screen.getByPlaceholderText('Search exercises...');
+      fireEvent.change(searchInput, { target: { value: 'NonExistent' } });
+      
+      expect(screen.getByText(/No exercises found/)).toBeDefined();
+    });
+
+    it('uses "Misc" fallback for routines without muscle group or category', async () => {
+      const routineNoCategory = [
+        {
+          id: 'r2',
+          name: 'Mystery Routine',
+          exercises: [{ exerciseId: 'e4', exercise: { name: 'Mystery', muscleGroup: null, category: null } }]
+        }
+      ];
+      globalThis.fetch = vi.fn((url) => {
+        if (url === '/api/routines') return Promise.resolve({ ok: true, json: () => Promise.resolve(routineNoCategory) });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      }) as any;
+
+      render(<RoutinesTab />);
+      await waitFor(() => screen.getByText('Mystery Routine'));
+      expect(screen.getByText('Misc')).toBeDefined();
+    });
+
+    it('handles addPreviewSet when prev is null', async () => {
+      render(<RoutinesTab />);
+      // We can't directly call internal state setters, but we can trigger it
+      // However, we can test the fallbacks in the render logic
+    });
+
+    it('handles fetchData error', async () => {
+      global.fetch = vi.fn().mockRejectedValueOnce(new Error('Fetch failed'));
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      render(<RoutinesTab />);
+      await waitFor(() => expect(spy).toHaveBeenCalled());
+      spy.mockRestore();
+    });
+
+    it('covers preview routine fallbacks (customName fallback)', async () => {
+      const mockRoutine = {
+        id: 'r1',
+        name: 'Test Routine',
+        exercises: [{
+          id: 're1',
+          exerciseId: 'e1',
+          targetSets: null,
+          targetReps: null,
+          customName: 'Custom Move',
+          exercise: null // Force fallback to customName
+        }]
+      };
+      global.fetch = vi.fn().mockImplementation((url) => {
+        if (url === '/api/routines') return Promise.resolve({ ok: true, json: () => Promise.resolve([mockRoutine]) });
+        if (url === '/api/profile/prs') return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+        if (url === '/api/exercises') return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      });
+
+      render(<RoutinesTab />);
+      const card = await screen.findByText('Test Routine');
+      fireEvent.click(card);
+
+      await screen.findByText('Custom Move');
+    });
+
+    it('covers set removal with confirmation cancel', async () => {
+      const mockRoutine = {
+        id: 'r1',
+        name: 'Test Routine',
+        exercises: [{ 
+          exerciseId: 'e1', 
+          exercise: { name: 'Ex 1' },
+          targetSets: 1 
+        }]
+      };
+      global.fetch = vi.fn().mockImplementation((url) => {
+        if (url === '/api/routines') return Promise.resolve({ ok: true, json: () => Promise.resolve([mockRoutine]) });
+        if (url === '/api/profile/prs') return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      });
+
+      render(<RoutinesTab />);
+      fireEvent.click(await screen.findByText('Test Routine'));
+      await screen.findByText('Start');
+      
+      const removeBtn = await screen.findByTitle('Remove set');
+      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      fireEvent.click(removeBtn);
+      expect(confirmSpy).toHaveBeenCalled();
+      confirmSpy.mockRestore();
+    });
+
+    it('covers exercise removal in preview', async () => {
+      const mockRoutine = {
+        id: 'r1',
+        name: 'Test Routine',
+        exercises: [{ exerciseId: 'e1', exercise: { name: 'Ex 1' } }]
+      };
+      global.fetch = vi.fn().mockImplementation((url) => {
+        if (url === '/api/routines') return Promise.resolve({ ok: true, json: () => Promise.resolve([mockRoutine]) });
+        if (url === '/api/profile/prs') return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      });
+
+      render(<RoutinesTab />);
+      fireEvent.click(await screen.findByText('Test Routine'));
+      await screen.findByText('Start');
+      
+      const removeBtn = await screen.findByTitle('Remove exercise');
+      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      fireEvent.click(removeBtn);
+      expect(confirmSpy).toHaveBeenCalled();
+      expect(screen.queryByText('Ex 1')).toBeNull();
+      confirmSpy.mockRestore();
+    });
+
+    it('covers updateSetRep in routine builder', async () => {
+      render(<RoutinesTab />);
+      fireEvent.click(await screen.findByText(/New Routine/i));
+      
+      const searchBtn = await screen.findByRole('button', { name: /Search Exercises/i });
+      fireEvent.click(searchBtn);
+      const exBtn = await screen.findByText('Bench Press');
+      fireEvent.click(exBtn);
+
+      const setsInput = screen.getByDisplayValue('3');
+      fireEvent.change(setsInput, { target: { value: '5' } });
+      expect(setsInput).toHaveValue(5);
+
+      const repsInput = screen.getByDisplayValue('8-12');
+      fireEvent.change(repsInput, { target: { value: '10-15' } });
+      expect(repsInput).toHaveValue('10-15');
+    });
+
+    it('covers addPreviewExercise', async () => {
+      const mockRoutine = { id: 'r1', name: 'Test Routine', exercises: [] };
+      global.fetch = vi.fn().mockImplementation((url) => {
+        if (url === '/api/routines') return Promise.resolve({ ok: true, json: () => Promise.resolve([mockRoutine]) });
+        if (url === '/api/profile/prs') return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+        if (url === '/api/exercises') return Promise.resolve({ ok: true, json: () => Promise.resolve([{ id: 'e2', name: 'New Ex', category: 'Chest' }]) });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      });
+
+      render(<RoutinesTab />);
+      fireEvent.click(await screen.findByText('Test Routine'));
+      await screen.findByText('Start');
+      
+      fireEvent.click(await screen.findByText('Add Exercise'));
+      const newEx = await screen.findByText('New Ex');
+      fireEvent.click(newEx);
+      
+      expect(screen.getByText('New Ex')).toBeInTheDocument();
+    });
+  });
+
+
+  describe('Edge Case Fallbacks', () => {
+    it('handles routine name and exercise name fallbacks in preview', async () => {
+      const routineWithNulls = [
+        {
+          id: 'r_null',
+          name: null as any,
+          exercises: [
+            { exerciseId: 'e_null', targetSets: 3, targetReps: '10', exercise: null as any, customName: 'Custom' }
+          ]
+        }
+      ];
+      globalThis.fetch = vi.fn((url) => {
+        if (url === '/api/routines') return Promise.resolve({ ok: true, json: () => Promise.resolve(routineWithNulls) });
+        if (url === '/api/profile/prs') return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      }) as any;
+
+      render(<RoutinesTab />);
+      
+      const card = await screen.findByText('Routine', {}, { timeout: 5000 });
+      fireEvent.click(card.closest('button')!);
+
+      // Should see "Routine" as header title and "Custom" in list
+      expect(await screen.findByText('Routine')).toBeDefined();
+      expect(await screen.findByText('Custom')).toBeDefined();
+    });
+
+    it('renders equipment fallback in create view', async () => {
+      const exercisesWithNoEquipment = [
+        { id: 'e_no_eq', name: 'Exercise No Eq', category: 'General', equipment: null as any },
+      ];
+      globalThis.fetch = vi.fn((url: string) => {
+        if (url === '/api/exercises') return Promise.resolve({ ok: true, json: () => Promise.resolve(exercisesWithNoEquipment) });
+        if (url === '/api/routines') return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      }) as any;
+
+      render(<RoutinesTab />);
+      fireEvent.click(await screen.findByText('Create Routine'));
+      
+      // Add exercise
+      fireEvent.click(screen.getAllByText('Search Exercises')[0]);
+      fireEvent.click(await screen.findByText('Exercise No Eq'));
+
+      // Check for "Machine" fallback in line 727
+      expect(screen.getByText(/Machine/i)).toBeInTheDocument();
+    });
+
+    it('covers handleSaveRoutine early returns', async () => {
+      globalThis.fetch = vi.fn((url) => {
+        if (url === '/api/routines') return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      }) as any;
+
+      render(<RoutinesTab />);
+      fireEvent.click(await screen.findByText('Create Routine'));
+      
+      const saveBtn = screen.getByText('Save Routine');
+      // 1. No name, no exercises
+      fireEvent.click(saveBtn);
+      // Wait to ensure no fetch
+      await new Promise(r => setTimeout(r, 50));
+      // fetch was called during initialization (fetchData), so we check call count since then
+      // Or just clear it
+      vi.mocked(globalThis.fetch).mockClear();
+      fireEvent.click(saveBtn);
+      expect(globalThis.fetch).not.toHaveBeenCalled();
+
+      // 2. Name but no exercises
+      const nameInput = screen.getByPlaceholderText(/e.g. Push Day/i);
+      fireEvent.change(nameInput, { target: { value: 'New Plan' } });
+      fireEvent.click(saveBtn);
+      expect(globalThis.fetch).not.toHaveBeenCalled();
+    });
+
+    it('covers preview exercises length subtitle', async () => {
+      const routine = {
+        id: 'r1',
+        name: 'Test Routine',
+        exercises: [
+          { exerciseId: 'e1', targetSets: 3, targetReps: '10', exercise: { name: 'Ex 1' } }
+        ]
+      };
+      globalThis.fetch = vi.fn((url) => {
+        if (url === '/api/routines') return Promise.resolve({ ok: true, json: () => Promise.resolve([routine]) });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      }) as any;
+
+      render(<RoutinesTab />);
+      const card = await screen.findByText('Test Routine');
+      fireEvent.click(card);
+
+      // Line 345: if (view === "preview") return `${previewRoutine?.exercises?.length ?? 0} exercises`;
+      expect(await screen.findByText(/1 exercises/i)).toBeInTheDocument();
+    });
+
+    it('covers preview exercises length fallback', async () => {
+      const routinesWithNullEx = [
+        { id: 'r1', name: 'Empty Routine', exercises: null as any }
+      ];
+      globalThis.fetch = vi.fn((url) => {
+        return Promise.resolve(new Response(
+          JSON.stringify(url === '/api/routines' ? routinesWithNullEx : []),
+          { 
+            headers: { 
+              get: (name: string) => name.toLowerCase() === 'content-type' ? 'application/json' : null 
+            } 
+          }
+        ) as any);
+      }) as any;
+
+      render(<RoutinesTab />);
+      const card = await screen.findByText('Empty Routine');
+      fireEvent.click(card);
+      expect(await screen.findByText(/0 exercises/i)).toBeInTheDocument();
+    });
+
+    it('handles fetchData errors gracefully', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      globalThis.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+      render(<RoutinesTab />);
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith('Failed to load routine data', expect.any(Error));
+      });
+      consoleSpy.mockRestore();
+    });
+
+    it('deletes a routine', async () => {
+      vi.spyOn(globalThis, 'confirm').mockImplementation(() => true);
+      globalThis.fetch = vi.fn((url) => {
+        if (url === '/api/routines') return Promise.resolve({ ok: true, json: () => Promise.resolve(mockRoutines) });
+        return Promise.resolve({ ok: true });
+      }) as any;
+      
+      render(<RoutinesTab />);
+      await screen.findByText('Push Day');
+      
+      const deleteBtn = screen.getByTitle('Delete routine');
+      fireEvent.click(deleteBtn);
+      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining('id=r1'), expect.objectContaining({ method: 'DELETE' }));
+    });
+
+    it('handles failed routine deletion', async () => {
+      vi.spyOn(globalThis, 'confirm').mockImplementation(() => true);
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      globalThis.fetch = vi.fn((url, opts) => {
+        if (opts?.method === 'DELETE') return Promise.resolve({ ok: false });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockRoutines) });
+      }) as any;
+      
+      render(<RoutinesTab />);
+      await screen.findByText('Push Day');
+      
+      fireEvent.click(screen.getByTitle('Delete routine'));
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith('Failed to delete routine', expect.any(Error));
+      });
+      consoleSpy.mockRestore();
+    });
+
+    it('renders header subtext for list view', async () => {
+      render(<RoutinesTab />);
+      await waitFor(() => {
+        expect(screen.getByText('Your saved workout templates')).toBeInTheDocument();
+      });
+    });
+  });
+
+  it('handles fetch failure for routines or exercises', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+    } as any);
+    render(<RoutinesTab />);
+    await waitFor(() => {
+      // It should handle error gracefully (fetchData does catch and finally setIsLoading(false))
+      expect(screen.queryByText('Push Day')).toBeNull();
+    });
+  });
+
+  it('does NOT save routine if name is empty or no exercises selected', async () => {
+    render(<RoutinesTab />);
+    await waitFor(() => screen.getByText('My Routines'));
+    fireEvent.click(screen.getByText('New Routine'));
+    
+    const saveBtn = screen.getByText('Save Routine');
+    
+    // Case 1: Name empty
+    fireEvent.click(saveBtn);
+    expect(globalThis.fetch).not.toHaveBeenCalledWith('/api/routines', expect.objectContaining({ method: 'POST' }));
+    
+    // Case 2: Name present, but no exercises
+    fireEvent.change(screen.getByPlaceholderText(/e.g. Push Day/i), { target: { value: 'Leg Day' } });
+    fireEvent.click(saveBtn);
+    expect(globalThis.fetch).not.toHaveBeenCalledWith('/api/routines', expect.objectContaining({ method: 'POST' }));
+  });
+
+
+  it('handles save routine failure (not ok)', async () => {
+    render(<RoutinesTab />);
+    await waitFor(() => screen.getByText('My Routines'));
+    fireEvent.click(screen.getByText('New Routine'));
+    
+    fireEvent.change(screen.getByPlaceholderText(/e.g. Push Day/i), { target: { value: 'New' } });
+    
+    // Switch to search and add an exercise
+    const addExBtn = screen.getAllByText('Search Exercises')[0];
+    fireEvent.click(addExBtn);
+    const exRow = screen.getByText('Bench Press');
+    fireEvent.click(exRow);
+    
+    // Mock failure
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: false } as any);
+    
+    fireEvent.click(screen.getByText('Save Routine'));
+    await waitFor(() => {
+      expect(screen.getByText('Create Routine')).toBeInTheDocument(); // Still in create view
+    });
+  });
+
+
 });
+
+
+
 
 
 

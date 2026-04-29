@@ -23,6 +23,16 @@ vi.mock("bcryptjs", () => ({
   },
 }));
 
+vi.mock("@/lib/email", () => ({
+  generateVerificationData: vi.fn(() => ({
+    otp: "123456",
+    token: "test-token",
+    expires: new Date(),
+  })),
+  sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
+  storeVerificationToken: vi.fn().mockResolvedValue(undefined),
+}));
+
 const testAuthSecret = "SecurePass123!";
 const mismatchSecret = "MismatchPass456!";
 const mockHash = "HASHED_DATA_BLOB_01";
@@ -139,6 +149,19 @@ describe("Signup API Route", () => {
 
     const res = await POST(req);
     expect(res.status).toBe(500);
+  });
+
+  it("returns 400 for invalid JSON body", async () => {
+    const req = new NextRequest("http://localhost/api/auth/signup", {
+      method: "POST",
+      body: "invalid-json",
+    });
+
+    const res = await POST(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toBe("Request body must be valid JSON");
   });
 });
 

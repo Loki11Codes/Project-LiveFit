@@ -7,6 +7,9 @@ import {
   SignupSchema,
   ChatRequestSchema,
   FoodItemSchema,
+  fallbackNumber,
+  optionalFiniteNumber,
+  optionalNullableFiniteNumber,
 } from './validation';
 
 describe('Validation Schemas', () => {
@@ -129,6 +132,26 @@ describe('Validation Schemas', () => {
       expect(result.fats).toBeUndefined();
     });
 
+    it('handles non-finite numbers in optionalNullableFiniteNumber fields', () => {
+      const result = MeasurementSchema.parse({ 
+        weight: Infinity,
+        waist: NaN
+      });
+      expect(result.weight).toBeNull();
+      expect(result.waist).toBeNull();
+    });
+
+    it('handles fallbackNumber with empty/undefined inputs', () => {
+      const result = GoalSchema.parse({ proteinTarget: "", kcalTarget: undefined });
+      expect(result.proteinTarget).toBe(0);
+      expect(result.kcalTarget).toBe(0);
+    });
+
+    it('handles optionalFiniteNumber with Infinity', () => {
+      const result = FoodItemSchema.parse({ name: 'Test', protein: 10, kcal: 100, carbs: Infinity });
+      expect(result.carbs).toBeUndefined();
+    });
+
     it('rejects disposable email domains in SignupSchema', () => {
       const data = {
         name: 'John Doe',
@@ -137,6 +160,20 @@ describe('Validation Schemas', () => {
         confirmPassword: 'SecurePass123!',
       };
       expect(() => SignupSchema.parse(data)).toThrow(/disposable/i);
+    });
+
+    it('covers fallbackNumber with no constraints', () => {
+      const schema = fallbackNumber();
+      expect(schema.parse(100)).toBe(100);
+      expect(schema.parse(null)).toBe(0);
+    });
+
+    it('covers optionalFiniteNumber with valid input', () => {
+       expect(optionalFiniteNumber.parse(50)).toBe(50);
+    });
+
+    it('covers optionalNullableFiniteNumber with empty string', () => {
+       expect(optionalNullableFiniteNumber.parse('')).toBeNull();
     });
   });
 });

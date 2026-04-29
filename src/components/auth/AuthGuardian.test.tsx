@@ -88,4 +88,38 @@ describe('AuthGuardian Component', () => {
       expect(mockPush).not.toHaveBeenCalled();
     });
   });
+
+  it('does NOT redirect to reset-password if already on that path', async () => {
+    vi.mocked(useSession).mockReturnValue({
+      data: { user: { id: 'u1', requirePasswordChange: true } },
+      status: 'authenticated',
+      update: vi.fn(),
+    } as any);
+    vi.mocked(usePathname).mockReturnValue('/auth/reset-password');
+    render(<AuthGuardian />);
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('does NOT redirect to verify if already on that path', async () => {
+    vi.mocked(useSession).mockReturnValue({
+      data: { user: { id: 'u1', emailVerified: null } },
+      status: 'authenticated',
+      update: vi.fn(),
+    } as any);
+    vi.mocked(usePathname).mockReturnValue('/auth/verify');
+    render(<AuthGuardian />);
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('does NOT redirect to onboarding if already on that path', async () => {
+    vi.mocked(useSession).mockReturnValue({
+      data: { user: { id: 'u1', emailVerified: new Date(), onboarded: false } },
+      status: 'authenticated',
+      update: vi.fn(),
+    } as any);
+    vi.mocked(usePathname).mockReturnValue('/onboarding');
+    render(<AuthGuardian />);
+    expect(mockPush).not.toHaveBeenCalled();
+  });
 });
+

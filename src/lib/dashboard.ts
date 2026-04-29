@@ -267,11 +267,11 @@ function formatHistoryDay(value: Date): string {
   });
 }
 
-function round(value: number): number {
+export function round(value: number): number {
   return Number((value ?? 0).toFixed(1));
 }
 
-function formatNumber(value: number): string {
+export function formatNumber(value: number): string {
   if (value === undefined || value === null) return "0";
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }

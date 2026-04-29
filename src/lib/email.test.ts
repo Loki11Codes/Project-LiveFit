@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { generateVerificationData, sendVerificationEmail, storeVerificationToken } from './email';
+import { generateVerificationData, sendVerificationEmail, storeVerificationToken, sendPasswordChangedEmail } from './email';
 import nodemailer from 'nodemailer';
 import prisma from '@/lib/prisma';
 
@@ -76,6 +76,35 @@ describe('Email Utility', () => {
       // Second call for OTP
       expect(prisma.verificationToken.upsert).toHaveBeenCalledWith(expect.objectContaining({
         where: { identifier_token: { identifier: 'otp:test@example.com', token: '123456' } }
+      }));
+    });
+  });
+
+  describe('sendPasswordChangedEmail', () => {
+    it('logs to console if SMTP is not configured', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      delete process.env.SMTP_HOST;
+      
+      await sendPasswordChangedEmail('test@example.com', 'Test User');
+      
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('[EMAIL LOG] Password changed notification for test@example.com'));
+      consoleSpy.mockRestore();
+    });
+
+    it('sends email if SMTP is configured', async () => {
+      process.env.SMTP_HOST = 'smtp.test.com';
+      process.env.SMTP_USER = 'user';
+      process.env.SMTP_PASS = 'pass';
+      
+      const sendMailMock = vi.fn().mockResolvedValue({});
+      vi.mocked(nodemailer.createTransport).mockReturnValue({ sendMail: sendMailMock } as unknown as ReturnType<typeof nodemailer.createTransport>);
+
+      await sendPasswordChangedEmail('test@example.com', 'Test User');
+
+      expect(nodemailer.createTransport).toHaveBeenCalled();
+      expect(sendMailMock).toHaveBeenCalledWith(expect.objectContaining({
+        to: 'test@example.com',
+        subject: expect.stringContaining('password has been changed'),
       }));
     });
   });

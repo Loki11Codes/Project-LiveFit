@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const fallbackNumber = (min?: number, max?: number) => {
+export const fallbackNumber = (min?: number, max?: number) => {
   let schema = z.number();
   if (min !== undefined) schema = schema.min(min);
   if (max !== undefined) schema = schema.max(max);
@@ -11,13 +11,13 @@ const fallbackNumber = (min?: number, max?: number) => {
   }, schema);
 };
 
-const optionalFiniteNumber = z.preprocess((val) => {
+export const optionalFiniteNumber = z.preprocess((val) => {
   if (val === null || val === undefined || val === "") return undefined;
   const n = Number(val);
   return Number.isFinite(n) ? n : undefined;
 }, z.number().optional());
 
-const optionalNullableFiniteNumber = z.preprocess((val) => {
+export const optionalNullableFiniteNumber = z.preprocess((val) => {
   if (val === null || val === undefined || val === "") return null;
   const n = Number(val);
   return Number.isFinite(n) ? n : null;

@@ -193,5 +193,26 @@ describe('extractAndCleanLogData', () => {
     const result = extractAndCleanLogData(input);
     expect(result.hasData).toBe(false);
   });
+
+  it('covers unwrapping fallbacks (d.data ?? d, etc)', () => {
+    // 1. d.data is missing
+    const wrapped1 = { data: { category: 'food', name: 'Apple' }, date: '2024-01-01' };
+    const input1 = `|||DATA${JSON.stringify(wrapped1)}|||`;
+    const result1 = extractAndCleanLogData(input1);
+    expect(result1.logs[0].data).toEqual(wrapped1.data);
+    expect(result1.logs[0].date).toBe('2024-01-01');
+
+    // 2. d.date/update is missing but p.date/update exists
+    const wrapped2 = { 
+      data: { category: 'food', data: { name: 'Apple' } }, 
+      date: '2024-02-02',
+      update: true
+    };
+    const input2 = `|||DATA${JSON.stringify(wrapped2)}|||`;
+    const result2 = extractAndCleanLogData(input2);
+    expect(result2.logs[0].date).toBe('2024-02-02');
+    expect(result2.logs[0].update).toBe(true);
+  });
 });
+
 

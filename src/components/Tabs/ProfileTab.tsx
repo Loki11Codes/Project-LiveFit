@@ -405,6 +405,69 @@ export default function ProfileTab({
           </div>
         )}
       </motion.div>
+      
+      {/* Personal Records Section */}
+      <motion.div
+        className="glass-premium p-6 rounded-[var(--radius-lg)] relative overflow-hidden group hover-glow"
+        variants={cardVariants}
+        initial="hidden"
+        animate="visible"
+        custom={5}
+      >
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-black/[0.03] dark:bg-white/[0.03] rounded-xl group-hover:bg-[var(--energy-coral)]/10 transition-colors">
+              <Dumbbell className="w-5 h-5 text-[var(--energy-coral)]" />
+            </div>
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Performance</div>
+              <h2 className="text-sm font-black tracking-tight uppercase">Personal Records</h2>
+            </div>
+          </div>
+        </div>
+
+        {p.prs && p.prs.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {p.prs.map((pr) => (
+              <div 
+                key={pr.id} 
+                className="p-4 bg-black/[0.02] dark:bg-white/[0.02] rounded-2xl border border-black/5 dark:border-white/5 hover:border-[var(--energy-coral)]/30 transition-all group/pr"
+              >
+                <div className="text-[10px] font-black uppercase tracking-widest opacity-30 mb-1">
+                  {pr.exercise.category}
+                </div>
+                <h4 className="font-black text-sm mb-3 truncate">{pr.exercise.name}</h4>
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold opacity-30 uppercase">Max Weight</span>
+                    <span className="text-lg font-black text-[var(--energy-coral)]">
+                      {pr.maxWeight}<span className="text-[10px] ml-0.5 opacity-40">KG</span>
+                    </span>
+                  </div>
+                  {pr.max1RM && (
+                    <div className="flex flex-col items-end">
+                      <span className="text-[10px] font-bold opacity-30 uppercase">Est. 1RM</span>
+                      <span className="text-lg font-black text-[var(--iq-blue)]">
+                        {Math.round(pr.max1RM)}<span className="text-[10px] ml-0.5 opacity-40">KG</span>
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-12 flex flex-col items-center text-center gap-4 bg-black/5 rounded-[var(--radius-md)] border border-dashed border-black/10">
+            <div className="w-12 h-12 rounded-full bg-black/5 flex items-center justify-center">
+               <Dumbbell className="w-6 h-6 opacity-10" />
+            </div>
+            <div className="max-w-[200px]">
+               <h4 className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">No Records Yet</h4>
+               <p className="text-[9px] font-medium opacity-30">Log your first workout with sets and reps to automatically track your PRs.</p>
+            </div>
+          </div>
+        )}
+      </motion.div>
     </div>
   );
 }

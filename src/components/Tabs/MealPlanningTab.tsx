@@ -165,7 +165,7 @@ export default function MealPlanningTab() {
           <button 
             className="flex items-center gap-2 px-4 py-2.5 bg-black/5 hover:bg-black/10 text-[var(--foreground)] rounded-[var(--radius-md)] border border-black/5 transition-all text-[10px] font-black uppercase tracking-widest"
             onClick={() => {
-              const date = activePlan ? new Date(activePlan.weekStarting).toLocaleDateString() : "this";
+              const date = new Date(activePlan!.weekStarting).toLocaleDateString();
               globalThis.dispatchEvent(new CustomEvent('ai-chat-prompt', { 
                 detail: `I have a meal plan for the week of ${date}. Please generate a consolidated, categorized shopping list for all these meals, organized by supermarket aisle.` 
               }));

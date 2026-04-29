@@ -119,3 +119,50 @@ export async function storeVerificationToken(email: string, token: string, otp: 
     },
   });
 }
+
+function getPasswordChangedHtml(name: string) {
+  return `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #1f2937;">
+      <h2 style="color: #185fa5;">Security Notification: Password Changed</h2>
+      <p>Hello ${name},</p>
+      <p>This is a confirmation that the password for your Caloriq account has been successfully changed.</p>
+      <div style="margin: 32px 0; padding: 24px; background-color: #fef2f2; border-radius: 16px; border: 1px solid #fee2e2;">
+        <p style="margin: 0; color: #991b1b; font-size: 14px; font-weight: bold;">If you did not perform this action, please secure your account immediately or contact support.</p>
+      </div>
+      <p style="font-size: 12px; color: #9ca3af; margin-top: 48px;">
+        This is an automated security notification. You don't need to reply to this email.
+      </p>
+    </div>
+  `;
+}
+
+/**
+ * Sends a notification email after a successful password change.
+ */
+export async function sendPasswordChangedEmail(email: string, name: string) {
+  const html = getPasswordChangedHtml(name);
+
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
+    console.log("------------------------------------------");
+    console.log(`[EMAIL LOG] Password changed notification for ${email}`);
+    console.log("------------------------------------------");
+    return;
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number.parseInt(process.env.SMTP_PORT || "587", 10),
+    secure: process.env.SMTP_SECURE === "true",
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+
+  await transporter.sendMail({
+    from: `"Caloriq Security" <${process.env.SMTP_FROM || "security@resend.dev"}>`,
+    to: email,
+    subject: "Your Caloriq password has been changed",
+    html,
+  });
+}

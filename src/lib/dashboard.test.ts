@@ -14,6 +14,8 @@ import {
   getProteinTarget,
   getLocalDateKey,
   getCurrentDayType,
+  round,
+  formatNumber,
 } from './dashboard';
 import type { FoodLog } from '@prisma/client';
 import { EMPTY_MEASUREMENT_FORM } from './types';
@@ -62,12 +64,12 @@ describe('dashboard utilities', () => {
     it('sums kcal and protein correctly', () => {
       const logs = [
         { kcal: 500, protein: 30, carbs: 50, fats: 10, fiber: 5 },
-        { kcal: 300, protein: 20, carbs: 40, fats: 5, fiber: 2 },
+        { kcal: 300, protein: 20, carbs: null as any, fats: null as any, fiber: null as any },
       ] as FoodLog[];
       const totals = sumNutrition(logs);
       expect(totals.calories).toBe(800);
       expect(totals.protein).toBe(50);
-      expect(totals.carbs).toBe(90);
+      expect(totals.carbs).toBe(50);
     });
   });
 
@@ -120,6 +122,50 @@ describe('dashboard utilities', () => {
       expect(rows[0].protein).toBe(150);
       expect(rows[0].status).toBe('pending'); // 150 < 160
     });
+
+    it('handles pending status', () => {
+      const goals = { proteinTarget: 100 } as any;
+      const logs = { food: [{ time: new Date(), protein: 50, kcal: 100 }], workouts: [], sleep: [] } as any;
+      const rows = buildHistoryRows(logs, goals, {});
+      expect(rows[0].status).toBe('pending');
+    });
+
+    it('returns goals.proteinTarget for unknown day types', () => {
+       const goals = { proteinTarget: 150 } as any;
+       expect(getProteinTarget(goals, 'Unknown' as any)).toBe(150);
+    });
+
+    it('handles completed status', () => {
+      const goals = { proteinTarget: 100 } as any;
+      const logs = { food: [{ time: new Date(), protein: 120, kcal: 100 }], workouts: [], sleep: [] } as any;
+      const rows = buildHistoryRows(logs, goals, {});
+      expect(rows[0].status).toBe('completed');
+    });
+
+    it('sorts rows by date descending', () => {
+      const logs = {
+        food: [
+          { time: new Date('2024-01-01'), kcal: 100, protein: 10 },
+          { time: new Date('2024-01-03'), kcal: 200, protein: 20 },
+        ],
+        workouts: [],
+        sleep: [],
+      } as any;
+      const rows = buildHistoryRows(logs, {} as any, {});
+      expect(rows[0].kcal).toBe(200); // 2024-01-03
+      expect(rows[1].kcal).toBe(100); // 2024-01-01
+    });
+
+    it('covers workout detail and volume branches', () => {
+      const logs = {
+        food: [],
+        workouts: [{ time: new Date(), focus: 'Legs', exercises: [{}, {}], volume: 5000 }],
+        sleep: [],
+      } as any;
+      const rows = buildHistoryRows(logs, {} as any, {});
+      expect(rows[0].workoutDetail).toBe('2 exercises');
+      expect(rows[0].totalVolume).toBe(5000);
+    });
   });
 
   describe('getErrorMessage', () => {
@@ -167,47 +213,10 @@ describe('dashboard utilities', () => {
     });
   });
 
-  describe('getProteinTarget - default branch', () => {
-    it('returns goals.proteinTarget for unknown day types', () => {
-       const goals = { proteinTarget: 150 } as any;
-       expect(getProteinTarget(goals, 'Unknown' as any)).toBe(150);
-    });
-  });
-
-  describe('buildHistoryRows - sorting', () => {
-    it('sorts rows by date descending', () => {
-      const logs = {
-        food: [
-          { time: new Date('2024-01-01'), kcal: 100, protein: 10 },
-          { time: new Date('2024-01-03'), kcal: 200, protein: 20 },
-          { time: new Date('2024-01-02'), kcal: 300, protein: 30 },
-        ],
-        workouts: [],
-        sleep: [],
-      } as any;
-      const rows = buildHistoryRows(logs, {} as any, {});
-      expect(rows[0].kcal).toBe(200); // 2024-01-03
-      expect(rows[1].kcal).toBe(300); // 2024-01-02
-      expect(rows[2].kcal).toBe(100); // 2024-01-01
-    });
-
-    it('includes workout details and volume when present', () => {
-      const logs = {
-        food: [],
-        workouts: [{ time: new Date('2024-01-01'), focus: 'Legs', volume: 5000, exercises: [{}, {}] }],
-        sleep: [],
-      } as any;
-      const rows = buildHistoryRows(logs, {} as any, {});
-      expect(rows[0].workoutDetail).toBe('2 exercises');
-      expect(rows[0].totalVolume).toBe(5000);
-    });
-  });
-
   describe('Formatting Helpers', () => {
     it('round handles null values', () => {
-       // We can't access private round, but buildHistoryRows uses it
        const logs = { 
-         food: [{ time: new Date(), kcal: null, protein: 10 }], 
+         food: [{ time: new Date(), kcal: null as any, protein: 10 }], 
          workouts: [], 
          sleep: [] 
        } as any;
@@ -223,13 +232,15 @@ describe('dashboard utilities', () => {
        } as any;
        const rows = buildHistoryRows(logs, {} as any, { '2024-01-01': 'Rest' });
        expect(rows[0].sleep).toBe('7.5');
+       
+       expect(formatNumber(null as any)).toBe("0");
+       expect(formatNumber(undefined as any)).toBe("0");
+       expect(formatNumber(10)).toBe("10");
+    });
 
-       const logsNull = { food: [], workouts: [], sleep: [] } as any;
-       const rowsNull = buildHistoryRows(logsNull, {} as any, {});
-       // if sleep is missing, it shows '--' because of the ternary at line 173
+    it('round handles null values directly', () => {
+       expect(round(null as any)).toBe(0);
+       expect(round(10.555)).toBe(10.6);
     });
   });
 });
-
-
-

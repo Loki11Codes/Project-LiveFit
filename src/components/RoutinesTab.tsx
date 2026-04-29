@@ -106,7 +106,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
     // Preview state — a local working copy of the routine being previewed/edited
     setPreviewRoutine({
       ...routine,
-      exercises: routine.exercises.map((e) => {
+      exercises: (routine.exercises || []).map((e) => {
         const currentPr = userPrs?.find((p) => p.exerciseId === e.exerciseId);
         const suggestion = calculateSuggestedTarget({
           exerciseName: e.exercise?.name || "Exercise",
@@ -438,9 +438,8 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
               ) : (
                 routines.map((routine, rIdx) => {
                   const muscleGroups = Array.from(new Set(
-                    routine.exercises
-                      .map((e) => e.exercise?.muscleGroup || e.exercise?.category || "Misc")
-                      .filter(Boolean)
+                    routine.exercises?.map((e) => e.exercise?.muscleGroup || e.exercise?.category || "Misc")
+                      .filter(Boolean) || []
                   )).slice(0, 3);
 
                   return (
@@ -459,7 +458,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                       >
                         <div className="flex flex-col gap-2 flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-black tracking-tight">{routine.name}</h3>
+                            <h3 className="text-lg font-black tracking-tight">{routine.name || "Routine"}</h3>
                             <div className="flex gap-1">
                               {muscleGroups.map((mg) => (
                                 <span key={mg} className="muscle-tag">{mg}</span>
@@ -467,12 +466,12 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                             </div>
                           </div>
                           <p className="text-[10px] font-black text-[var(--accent)] uppercase tracking-[0.2em] opacity-60">
-                            {routine.exercises.length} Exercises • Intensive
+                            {routine.exercises?.length ?? 0} Exercises • Intensive
                           </p>
                           <div className="text-[11px] font-bold text-[var(--foreground-muted)] leading-relaxed truncate opacity-40">
                             {routine.exercises
-                              .map((e) => e.exercise.name)
-                              .join(", ")}
+                              ?.map((e) => e.exercise?.name || e.customName)
+                              .join(", ") || "No exercises"}
                           </div>
                         </div>
                         <div className="w-8 h-8 rounded-full bg-[var(--accent)]/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
@@ -523,7 +522,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                 Customize before you start — changes only apply to this session.
               </p>
 
-              {previewRoutine.exercises.map((ex, idx: number) => (
+              {previewRoutine?.exercises?.map((ex, idx: number) => (
                 <motion.div
                   layout
                   key={ex._localId}
@@ -633,7 +632,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
               <div className="pb-12">
                 <button
                   onClick={handleStartPreview}
-                  disabled={!previewRoutine.exercises.length}
+                  disabled={!previewRoutine?.exercises?.length}
                   className="w-full py-5 rounded-2xl font-black tracking-wide text-[16px] bg-[var(--accent)] text-white shadow-[0_8px_30px_rgba(123,94,167,0.35)] active:scale-[0.98] transition-all disabled:opacity-40 flex items-center justify-center gap-3"
                 >
                   <Play className="w-5 h-5 fill-white" />

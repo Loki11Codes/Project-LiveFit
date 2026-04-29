@@ -3,6 +3,7 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import Navbar from './Navbar';
 import { useSession } from 'next-auth/react';
+import { useTheme } from '@/components/Theme/ThemeProvider';
 
 // Mock next-auth/react
 vi.mock('next-auth/react', () => ({
@@ -165,4 +166,28 @@ describe('Navbar Component', () => {
     );
     expect(screen.getByText('USER')).toBeDefined();
   });
+
+  it('renders Sun icon when theme is dark', () => {
+    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as any);
+    
+    // Override the useTheme mock just for this test
+    vi.mocked(useTheme).mockReturnValue({
+      theme: 'dark',
+      accentColor: '#000000',
+      setTheme: vi.fn(),
+      setAccentColor: vi.fn(),
+      toggleTheme: mockToggleTheme,
+    });
+
+    render(
+      <Navbar 
+        activeTab="chat" 
+        setActiveTab={mockSetActiveTab} 
+      />
+    );
+    // Since mounted becomes true and theme is dark, Sun icon is rendered.
+    const toggleBtn = screen.getByLabelText('Toggle theme');
+    expect(toggleBtn).toBeDefined();
+  });
 });
+

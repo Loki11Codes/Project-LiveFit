@@ -148,12 +148,46 @@ describe('LogTab Component', () => {
   it('handles missing data fields gracefully', async () => {
     const sparseProps = {
         ...defaultProps,
-        foodLog: [{ id: 'f3', name: 'Water', protein: 0, kcal: null, carbs: null, fats: null, fiber: null, time: new Date() } as any],
-        workouts: [{ id: 'w2', focus: 'Empty', volume: null, time: new Date(), exercises: [] } as any]
+        foodLog: [{ id: 'f3', name: 'Water', protein: 0, kcal: null, carbs: null, fats: null, fiber: null, time: new Date(), userId: 'u1' } as any],
+        workouts: [{ 
+          id: 'w2', 
+          focus: 'Empty', 
+          volume: null, 
+          time: new Date(), 
+          userId: 'u1',
+          exercises: [
+            {
+              id: 'we2',
+              workoutLogId: 'w2',
+              exerciseId: null,
+              customName: 'Custom Exercise',
+              order: 0,
+              exercise: null,
+              sets: [{ id: 's2', setNumber: 1, weight: null, reps: null }]
+            }
+          ] 
+        } as any],
+        sleepLogs: [
+          { id: 'sl2', hours: 7, time: new Date(), userId: 'u1', bedTime: '22:00', wakeTime: null },
+          { id: 'sl3', hours: 6, time: new Date(), userId: 'u1', bedTime: null, wakeTime: '06:00' }
+        ]
     };
     await act(async () => {
       render(<LogTab {...sparseProps} />);
     });
+    
+    // Check custom exercise name
+    const workoutBtn = screen.getByText('Empty').closest('button')!;
+    fireEvent.click(workoutBtn);
+    expect(screen.getByText('Custom Exercise')).toBeDefined();
+    
+    // Check null weights/reps fallbacks
+    expect(screen.getAllByText('--kg x --').length).toBeGreaterThan(0);
+    
+    // Check partial sleep times
+    expect(screen.getByText(/22:00 to --/)).toBeDefined();
+    expect(screen.getByText(/-- to 06:00/)).toBeDefined();
+
     expect(screen.getAllByText('? kcal').length).toBeGreaterThan(0);
     expect(screen.getByText('-- kg')).toBeDefined();
   });

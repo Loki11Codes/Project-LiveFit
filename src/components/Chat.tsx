@@ -86,14 +86,10 @@ export default function Chat({
       messages.length === 1 &&
       messages[0].id === "welcome-msg"
     ) {
-      const alreadyHasNudge = messages.some((m) => m.id === "protein-nudge");
-      if (alreadyHasNudge) return;
-
       const proteinPct =
         (nudgeStatus.protein / nudgeStatus.proteinTarget) * 100;
       if (proteinPct < 50) {
         setMessages((prev) => {
-          if (prev.some((m) => m.id === "protein-nudge")) return prev;
           return [
             ...prev,
             {

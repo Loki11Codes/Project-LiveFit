@@ -98,6 +98,7 @@ export type UserProfile = {
   day4?: string | null;
   day5?: string | null;
   day6?: string | null;
+  prs?: PersonalRecord[];
   achievements?: {
     id: string;
     type: string;
@@ -107,6 +108,18 @@ export type UserProfile = {
     description: string;
     unlockedAt: string | Date;
   }[];
+};
+
+export type PersonalRecord = {
+  id: string;
+  exerciseId: string;
+  maxWeight: number | null;
+  max1RM: number | null;
+  updatedAt: string | Date;
+  exercise: {
+    name: string;
+    category: string;
+  };
 };
 
 export type MeasurementFormField =

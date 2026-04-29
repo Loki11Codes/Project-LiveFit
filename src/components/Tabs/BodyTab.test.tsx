@@ -214,7 +214,7 @@ describe('BodyTab Component', () => {
 
   it('renders null fields in history table as dashes', async () => {
     const nullData = [
-      { ...defaultProps.latestMeasurement, id: 'm1', weight: null, waist: null }
+      { ...defaultProps.latestMeasurement, id: 'm1', weight: null, waist: null, chest: null, arms: null, thighs: null, hips: null, bodyFat: null }
     ];
     mockFetch.mockResolvedValueOnce({ json: () => Promise.resolve(nullData) });
     render(<BodyTab {...defaultProps} />);

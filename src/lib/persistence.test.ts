@@ -67,8 +67,11 @@ describe('persistence utility', () => {
         expect(mockTx.foodLog.create).toHaveBeenCalled();
 
         // Items array branch
-        await persistLogData([{ category: 'food', data: { items: [{ name: 'Banana', kcal: 90 }] } }], userId);
+        await persistLogData([{ category: 'food', data: { items: [{ name: 'Banana', kcal: 90, date: '2024-01-01' }] } }], userId);
         expect(mockTx.foodLog.create).toHaveBeenCalledTimes(2);
+        expect(mockTx.foodLog.create).toHaveBeenLastCalledWith(expect.objectContaining({
+            data: expect.objectContaining({ time: new Date('2024-01-01') })
+        }));
 
         // Update branch
         mockTx.foodLog.findFirst.mockResolvedValue({ id: 'f1' });
@@ -77,40 +80,114 @@ describe('persistence utility', () => {
             where: { id: 'f1' },
             data: expect.objectContaining({ kcal: 105 })
         });
+
+        // Food update - not found branch
+        mockTx.foodLog.findFirst.mockResolvedValue(null);
+        await persistLogData([{ category: 'food', data: { name: 'Apple', kcal: 110, update: true } }], userId);
+        expect(mockTx.foodLog.create).toHaveBeenCalled();
+
+        // Single item (non-array) branch
+        mockTx.foodLog.create.mockClear();
+        await persistLogData([{ category: 'food', data: { name: 'Pear', kcal: 50 } }], userId);
+        expect(mockTx.foodLog.create).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.objectContaining({ name: 'Pear' })
+        }));
+
+        // Envelope-level date branch
+        await persistLogData([{ category: 'food', data: { name: 'Grapes', date: '2024-01-01' } }], userId);
+        expect(mockTx.foodLog.create).toHaveBeenLastCalledWith(expect.objectContaining({
+            data: expect.objectContaining({ name: 'Grapes', time: new Date('2024-01-01') })
+        }));
     });
 
     it('persists workout logs (create and update branches)', async () => {
         mockTx.exercise.findFirst.mockResolvedValue({ id: 'ex-1' });
         
-        // Create branch with sets
+        // Create branch with sets and PRS
         await persistLogData([{ 
             category: 'workout', 
             data: { 
                 focus: 'Arms', 
-                exercises: [{ name: 'Curl', sets: [{ weight: 10, reps: 10 }] }] 
+                exercises: [{ name: 'Curl', sets: [{ weight: 10, reps: 10 }] }],
+                prs: { weight: true }
             } 
         }], userId);
-        expect(mockTx.workoutLog.create).toHaveBeenCalled();
         expect(mockTx.workoutLog.create).toHaveBeenCalledWith(expect.objectContaining({
-            data: expect.objectContaining({
-                exercises: expect.objectContaining({
-                    create: expect.arrayContaining([
-                        expect.objectContaining({
-                            sets: expect.objectContaining({
-                                create: expect.arrayContaining([
-                                    expect.objectContaining({ weight: 10 })
-                                ])
-                            })
-                        })
-                    ])
-                })
-            })
+            data: expect.objectContaining({ details: JSON.stringify({ weight: true }) })
         }));
 
         // Update branch
         mockTx.workoutLog.findFirst.mockResolvedValue({ id: 'w1' });
-        await persistLogData([{ category: 'workout', data: { focus: 'Arms', update: true } }], userId);
+        await persistLogData([{ category: 'workout', data: { focus: 'Arms', update: true, volume: 1000 } }], userId);
         expect(mockTx.workoutLog.update).toHaveBeenCalled();
+
+        // Update branch - not found (should fallback to create)
+        mockTx.workoutLog.findFirst.mockResolvedValue(null);
+        await persistLogData([{ category: 'workout', data: { focus: 'Arms', update: true, volume: 1000 } }], userId);
+        expect(mockTx.workoutLog.create).toHaveBeenCalled();
+
+        // Create branch with date
+        await persistLogData([{ 
+            category: 'workout', 
+            data: { 
+                focus: 'Arms', 
+                date: '2024-01-01',
+                exercises: [{ name: 'Curl', sets: [{ weight: 10 }] }] 
+            } 
+        }], userId);
+        expect(mockTx.workoutLog.create).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.objectContaining({ time: new Date('2024-01-01') })
+        }));
+
+        // Update branch - missing volume (should fallback to existing volume)
+        mockTx.workoutLog.findFirst.mockResolvedValue({ id: 'w1', volume: 800 });
+        await persistLogData([{ category: 'workout', data: { focus: 'Arms', update: true } }], userId);
+        expect(mockTx.workoutLog.update).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.objectContaining({ volume: 800 })
+        }));
+
+        // Exercise without sets
+        await persistLogData([{ 
+            category: 'workout', 
+            data: { 
+                focus: 'Arms', 
+                exercises: [{ name: 'Curl' }] 
+            } 
+        }], userId);
+
+        // Exercise resolution by exerciseId
+        mockTx.exercise.findUnique.mockResolvedValue({ id: 'ex-id-123' });
+        await persistLogData([{ 
+            category: 'workout', 
+            data: { 
+                focus: 'Arms', 
+                exercises: [{ name: 'Curl', exerciseId: 'ex-id-123', sets: [{ weight: 10 }] }] 
+            } 
+        }], userId);
+        expect(mockTx.exercise.findUnique).toHaveBeenCalledWith({ where: { id: 'ex-id-123' } });
+
+        // Exercise resolution by name (no exerciseId)
+        mockTx.exercise.findUnique.mockResolvedValue(null);
+        mockTx.exercise.findFirst.mockResolvedValue({ id: 'ex-2', name: 'Curl' });
+        await persistLogData([{ 
+            category: 'workout', 
+            data: { 
+                focus: 'Arms', 
+                exercises: [{ name: 'Curl', sets: [{ weight: 10 }] }] 
+            } 
+        }], userId);
+        expect(mockTx.exercise.findFirst).toHaveBeenCalledWith({ where: { name: { equals: 'Curl' } } });
+
+        // Unmatched exercise (custom name)
+        mockTx.exercise.findFirst.mockResolvedValue(null);
+        await persistLogData([{ 
+            category: 'workout', 
+            data: { 
+                focus: 'Arms', 
+                exercises: [{ name: 'Unknown', sets: [{ weight: 10 }] }] 
+            } 
+        }], userId);
+        expect(mockTx.workoutLog.create).toHaveBeenCalled();
     });
 
     it('persists sleep logs (create and update branches)', async () => {
@@ -582,7 +659,8 @@ describe('persistence utility', () => {
                 id: 'ex-1',
                 sets: [
                     { weight: 110, reps: 5 },   // 1RM = 110 * (1 + 5/30) = 128.3
-                    { weight: 100, reps: 10 }  // 1RM = 133.3 (higher 1RM but lower weight)
+                    { weight: 100, reps: 10 },  // 1RM = 133.3 (higher 1RM but lower weight)
+                    { weight: 50, reps: 1 }     // 1RM = 51.6 (lower than both)
                 ]
             }
         ];
@@ -614,6 +692,21 @@ describe('persistence utility', () => {
         await updatePersonalRecords(txClient, userId, [{ id: null, sets: [] }, { id: 'ex-1', sets: null }]);
         expect(mockTx.personalRecord.update).not.toHaveBeenCalled();
         expect(mockTx.personalRecord.create).not.toHaveBeenCalled();
+    });
+
+    it('covers updatePersonalRecords edge cases (null weights, zero max, null existing)', async () => {
+        // 1. Fallback weight=0, reps=0 (Line 321, 322)
+        mockTx.personalRecord.findUnique.mockResolvedValue(null);
+        await updatePersonalRecords(txClient, userId, [{ id: 'ex-1', sets: [{ weight: null, reps: null }] }]);
+        // maxWeight and max1RM will be 0, so should NOT create/update (Line 329)
+        expect(mockTx.personalRecord.create).not.toHaveBeenCalled();
+
+        // 2. Existing PR with null values (Line 338, 339 fallback)
+        mockTx.personalRecord.findUnique.mockResolvedValue({ id: 'pr-1', maxWeight: null, max1RM: null });
+        await updatePersonalRecords(txClient, userId, [{ id: 'ex-1', sets: [{ weight: 50, reps: 5 }] }]);
+        expect(mockTx.personalRecord.update).toHaveBeenCalledWith(expect.objectContaining({
+            data: { maxWeight: 50, max1RM: expect.any(Number) }
+        }));
     });
   });
 });

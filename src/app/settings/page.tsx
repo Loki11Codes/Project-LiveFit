@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { requestJson } from "@/lib/client-api";
 import type { UserProfile, GoalsState } from "@/lib/types";
 import { useRouter } from "next/navigation";
@@ -191,11 +191,15 @@ export default function SettingsPage() {
             })}
 
             <div className="mt-6 pt-6 border-t border-black/5 ">
-              <button className="flex w-full items-center gap-3 px-4 py-3 rounded-2xl text-[14px] font-semibold text-rose-500 transition-all hover:bg-rose-50 dark:hover:bg-rose-500/10">
+              <button 
+                onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+                className="flex w-full items-center gap-3 px-4 py-3 rounded-2xl text-[14px] font-semibold text-rose-500 transition-all hover:bg-rose-50 dark:hover:bg-rose-500/10"
+              >
                 <LogOut size={18} />
                 Sign Out
               </button>
             </div>
+
           </div>
 
           {/* Configuration Panel */}

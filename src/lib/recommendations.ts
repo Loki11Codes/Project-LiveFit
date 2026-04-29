@@ -66,7 +66,7 @@ export function calculateDailyTargets(stats: ProfileStats): RecommendedTargets |
     proteinMultiplier = 1.8; // Sufficient for growth
   }
 
-  const proteinTarget = Math.round((stats.weight || 0) * proteinMultiplier);
+  const proteinTarget = Math.round(stats.weight * proteinMultiplier);
   const proteinKcal = proteinTarget * 4;
   const remainingKcal = Math.max(0, kcalTarget - proteinKcal);
 

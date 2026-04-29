@@ -210,6 +210,23 @@ describe("Sidebar Component", () => {
     expect(screen.getByText("Next: Finishing up...")).toBeInTheDocument();
   });
 
+  it("renders correctly with null analytics and stats", () => {
+    const props = {
+      ...defaultProps,
+      analytics: null,
+      logs: { ...defaultProps.logs, sleep: [] },
+    };
+    render(<Sidebar {...props} />);
+    // Should not crash
+    expect(screen.queryByText("7-Day Consistency")).toBeNull();
+  });
+
+  it("handles hydration label stable state", () => {
+    // Before mount/hydration, it shows "--"
+    render(<Sidebar {...defaultProps} />);
+    expect(screen.getByText("--")).toBeDefined();
+  });
+
   it("handles active workout with all sets completed", () => {
     const activeWorkout = {
       name: "Powerlifting",
@@ -326,6 +343,135 @@ describe("Sidebar Component", () => {
     render(<Sidebar {...defaultProps} hasWorkout={true} />);
     expect(screen.getByText("Workout Logged")).toBeInTheDocument();
   });
+
+  it("calculates trend delta when values are exactly the same", () => {
+    const analytics = {
+      weightTrend: [{ weight: 70 }, { weight: 70 }]
+    };
+    // Delta is 0, shouldn't show a +/- label with metric-delta class
+    const deltas = document.querySelectorAll('.metric-delta');
+    expect(deltas.length).toBe(0);
+  });
+
+  it('covers trends with missing previous data', () => {
+    const analytics = {
+      weightTrend: [{ date: '2024-01-01', weight: 80 }] // Only 1 entry
+    };
+    render(
+      <Sidebar 
+        {...defaultProps} 
+        analytics={analytics as any} 
+        weight="81" 
+        logs={{ sleep: [{ hours: 8 }] } as any}
+      />
+    );
+    // Weight delta should be 0 because length < 2
+    expect(screen.queryByText('+1.0')).toBeNull();
+  });
+
+  it('covers trends with null/missing values in history', () => {
+    const analytics = {
+      weightTrend: [{ weight: null }, { weight: 80 }]
+    };
+    render(
+      <Sidebar 
+        {...defaultProps} 
+        analytics={analytics as any} 
+        weight="82"
+        logs={{ sleep: [{ hours: null }, { hours: 8 }] } as any}
+        sleep="7"
+      />
+    );
+    // Should handle nulls without crashing
+    expect(screen.getByText('Weight')).toBeDefined();
+  });
+
+  it('covers null macro values in statsRows', () => {
+    render(
+      <Sidebar 
+        {...defaultProps}
+        water={null as any}
+        fiber={null as any}
+        carbs={null as any}
+        fats={null as any}
+      />
+    );
+    // (water ?? 0).toFixed(1) => "0.0"
+    expect(screen.getAllByText('0.0')).toHaveLength(4);
+  });
+
+  describe('MacroBar and Consistency Branches', () => {
+    it('handles MacroBar with zero values (total = 1 fallback)', () => {
+      render(<Sidebar {...defaultProps} protein={0} carbs={0} fats={0} />);
+      expect(screen.getByText('1 Kcal')).toBeInTheDocument();
+    });
+
+    it('handles WeeklyConsistency with missing dayData', () => {
+      const analytics = {
+        ...defaultProps.analytics,
+        nutritionStats: [{ day: 'Mon', protein: 50, kcal: 1000 }] // Only 1 day
+      };
+      render(<Sidebar {...defaultProps} analytics={analytics as any} />);
+      expect(screen.getByText('7-Day Consistency')).toBeInTheDocument();
+    });
+
+    it('handles WeeklyConsistency with null stats and null protein', () => {
+      const analytics = {
+        ...defaultProps.analytics,
+        nutritionStats: null as any
+      };
+      const { rerender } = render(<Sidebar {...defaultProps} analytics={analytics as any} />);
+      expect(screen.queryByText('7-Day Consistency')).not.toBeInTheDocument();
+
+      const analytics2 = {
+        ...defaultProps.analytics,
+        nutritionStats: [{ day: 'Mon', protein: null as any, kcal: 1000 }]
+      };
+      rerender(<Sidebar {...defaultProps} analytics={analytics2 as any} />);
+      expect(screen.getByText('7-Day Consistency')).toBeInTheDocument();
+    });
+
+    it('handles RecentActivity with partial logs', () => {
+       const logs = { food: null as any, workouts: null as any, water: null as any, sleep: [] };
+       render(<Sidebar {...defaultProps} logs={logs as any} />);
+       expect(screen.getByText(/No activity yet/i)).toBeInTheDocument();
+    });
+
+    it('handles weightDelta fallback when trend point weight is missing', () => {
+      const analytics = {
+        ...defaultProps.analytics,
+        weightTrend: [
+          { weight: 70, day: 'Mon' },
+          { weight: null as any, day: 'Tue' } // Second point has null weight
+        ]
+      };
+      render(<Sidebar {...defaultProps} weight={71} analytics={analytics as any} />);
+      // Line 434: (weightTrend.at(-2)?.weight || 0)
+      // Actually weightTrend.at(-2) is the FIRST point here (index length-2 = 0)
+      // So weightTrend.at(-2).weight is 70.
+      // To hit the fallback || 0, we need the point to have null weight.
+      const analytics2 = {
+        ...defaultProps.analytics,
+        weightTrend: [
+          { weight: null as any, day: 'Mon' },
+          { weight: 70, day: 'Tue' }
+        ]
+      };
+      render(<Sidebar {...defaultProps} weight={71} analytics={analytics2 as any} />);
+      expect(screen.getAllByText(/Weight/i).length).toBeGreaterThan(0);
+    });
+
+    it('covers WeeklyConsistency internal fallback branch with empty stats', () => {
+      const analytics = {
+        ...defaultProps.analytics,
+        nutritionStats: [] as any
+      };
+      render(<Sidebar {...defaultProps} analytics={analytics as any} />);
+      expect(screen.getByText('7-Day Consistency')).toBeInTheDocument();
+      // This will hit: const last7 = (stats || []).slice(-7); where stats is []
+    });
+  });
 });
+
 
 

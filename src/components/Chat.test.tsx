@@ -234,6 +234,23 @@ describe("Chat Components", () => {
         screen.queryAllByText(/noticed you're a bit behind on your protein/i),
       ).toHaveLength(1);
     });
+
+    it("handles nudge when protein-nudge message already exists", async () => {
+      mockHistory([{ id: "protein-nudge", role: "model", text: "Nudge" }]);
+      const nudgeStatus = { protein: 10, proteinTarget: 100, calories: 1000, calorieTarget: 2000 };
+      render(<Chat {...makeProps({ nudgeStatus })} />);
+      await waitForHistoryLoad();
+      // Should NOT add another nudge (line 90 or 96)
+      expect(screen.queryAllByText(/noticed you're a bit behind/i)).toHaveLength(0);
+    });
+
+    it("covers roundNumber with float in nudge", async () => {
+      const nudgeStatus = { protein: 12.5, proteinTarget: 100, calories: 100, calorieTarget: 2000 };
+      render(<Chat {...makeProps({ nudgeStatus })} />);
+      await waitFor(() => {
+        expect(screen.getByText(/13g \/ 100g/i)).toBeDefined();
+      });
+    });
   });
 
   // ── Message sending ───────────────────────────────────────────────────────
@@ -351,6 +368,21 @@ describe("Chat Components", () => {
       });
     });
 
+    it("handles response with warning but no text", async () => {
+      vi.mocked(clientApi.requestJson).mockResolvedValue({
+        warning: "Empty text warning",
+      });
+
+      render(<Chat {...makeProps({ input: "log empty", onLogParsed: vi.fn() })} />);
+      await waitForHistoryLoad();
+
+      fireEvent.keyDown(screen.getByTestId("chat-input"), { key: "Enter", shiftKey: false });
+
+      await waitFor(() => {
+        expect(screen.getByText("Empty text warning")).toBeDefined();
+      });
+    });
+
     it("does not send when input is empty (empty string is trimmed)", async () => {
       render(<Chat {...makeProps({ input: "", onLogParsed: vi.fn() })} />);
       await waitForHistoryLoad();
@@ -408,6 +440,23 @@ describe("Chat Components", () => {
       });
     });
 
+    it("scrolls to bottom when the button is clicked", async () => {
+      render(<Chat {...makeProps()} />);
+      await waitForHistoryLoad();
+
+      const viewport = screen.getByRole("log").querySelector(".chat-viewport")!;
+      Object.defineProperty(viewport, "scrollTop", { value: 0, writable: true });
+      Object.defineProperty(viewport, "scrollHeight", { value: 2000, writable: true });
+      Object.defineProperty(viewport, "clientHeight", { value: 500, writable: true });
+
+      fireEvent.scroll(viewport);
+
+      const scrollBtn = await screen.findByLabelText("Scroll to bottom");
+      fireEvent.click(scrollBtn);
+
+      expect(globalThis.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth" });
+    });
+
     it("handles initialMessage prop by triggering handleSend", async () => {
       vi.mocked(clientApi.requestJson).mockResolvedValue({ text: "Auto-reply" });
       const setInput = vi.fn();
@@ -455,6 +504,34 @@ describe("Chat Components", () => {
             body: expect.stringContaining('Delete the log for: \\"Delete me\\"'),
           }),
         );
+      });
+    });
+
+    it("ignores delete requests if currently typing", async () => {
+      mockHistory([
+        { id: "msg-to-delete", role: "user", text: "Delete me", timestamp: "10:00" },
+      ]);
+      // Make requestJson hang so isTyping stays true
+      let resolveFirst!: (v: unknown) => void;
+      vi.mocked(clientApi.requestJson).mockReturnValue(
+        new Promise((resolve) => { resolveFirst = resolve; }),
+      );
+      
+      render(<Chat {...makeProps({ input: "Sending" })} />);
+      await waitForHistoryLoad();
+
+      // Trigger a send to set isTyping = true
+      fireEvent.keyDown(screen.getByTestId("chat-input"), { key: "Enter", shiftKey: false });
+      
+      // Now try to delete a message
+      const deleteBtn = screen.getByTestId("delete-msg-msg-to-delete");
+      fireEvent.click(deleteBtn);
+
+      // requestJson should have been called ONCE for the send, not twice for the delete
+      expect(clientApi.requestJson).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        resolveFirst({ text: "Done" });
       });
     });
   });
@@ -551,6 +628,15 @@ describe("Chat Components", () => {
       expect(screen.queryByText(/Unable to read selected file/i)).toBeNull();
     });
 
+    it("handles null file selection", async () => {
+      render(<Chat {...makeProps()} />);
+      await waitForHistoryLoad();
+      const fileInput = getFileInput();
+      // Force files to be null to cover the fallback `event.target.files ?? []`
+      fireEvent.change(fileInput, { target: { files: null } });
+      expect(screen.queryByText(/Unable to read selected file/i)).toBeNull();
+    });
+
     it("handles unexpected FileReader result", async () => {
       vi.stubGlobal("FileReader", class {
         readAsDataURL() {
@@ -590,6 +676,75 @@ describe("Chat Components", () => {
             body: expect.stringContaining("image/jpeg"),
           })
         );
+      });
+    });
+
+    it("covers getMediaTypeFromDataUrl fallback", async () => {
+      stubFileReader("data:;base64,abc"); // Missing type in data URL
+      render(<Chat {...makeProps()} />);
+      await waitForHistoryLoad();
+      
+      const fileInput = getFileInput();
+      // File with no type
+      await act(async () => {
+        fireEvent.change(fileInput, { target: { files: [new File([], "test.no-ext", { type: "" })] } });
+      });
+      
+      fireEvent.change(screen.getByTestId("chat-input"), { target: { value: "Send file" } });
+      fireEvent.keyDown(screen.getByTestId("chat-input"), { key: "Enter" });
+      
+      await waitFor(() => {
+        expect(clientApi.requestJson).toHaveBeenCalledWith(
+          "/api/chat",
+          expect.objectContaining({
+            body: expect.stringContaining("application/octet-stream"),
+          })
+        );
+      });
+    });
+
+    it("covers missing comma in data URL and missing base64 marker", async () => {
+      // No comma means base64 fallback "" is used.
+      // "data:image/png" doesn't match the regex (missing ";base64$"), so match is null.
+      stubFileReader("data:image/png"); 
+      render(<Chat {...makeProps()} />);
+      await waitForHistoryLoad();
+      
+      const fileInput = getFileInput();
+      // Provide a file without type so it relies on data URL parsing
+      await act(async () => {
+        fireEvent.change(fileInput, { target: { files: [new File([], "test.png", { type: "" })] } });
+      });
+      
+      fireEvent.change(screen.getByTestId("chat-input"), { target: { value: "Send file" } });
+      fireEvent.keyDown(screen.getByTestId("chat-input"), { key: "Enter" });
+      
+      await waitFor(() => {
+        expect(clientApi.requestJson).toHaveBeenCalledWith(
+          "/api/chat",
+          expect.objectContaining({
+            body: expect.stringContaining("application/octet-stream"),
+          })
+        );
+      });
+    });
+
+    it("uses 'Audio message' fallback text for audio attachments", async () => {
+      stubFileReader("data:audio/mp3;base64,abc");
+      render(<Chat {...makeProps()} />);
+      await waitForHistoryLoad();
+      
+      const fileInput = getFileInput();
+      await act(async () => {
+        fireEvent.change(fileInput, { target: { files: [new File([], "test.mp3", { type: "audio/mp3" })] } });
+      });
+      
+      // Send without text
+      fireEvent.keyDown(screen.getByTestId("chat-input"), { key: "Enter" });
+      
+      // Wait for the UI to update with the message bubble
+      await waitFor(() => {
+        expect(screen.getByText("Audio message")).toBeInTheDocument();
       });
     });
   });

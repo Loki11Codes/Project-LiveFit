@@ -140,5 +140,16 @@ describe('recommendation utility', () => {
     // That's impossible because calculateBMR needs weight.
     // Wait! calculateBMR checks !weight. 0 is !weight.
   });
+
+  it('handles null primaryGoal and dietaryPreference', () => {
+    const targets = calculateDailyTargets({
+      ...maleProfile,
+      primaryGoal: null as any,
+      dietaryPreference: null as any,
+    });
+    expect(targets).not.toBeNull();
+    expect(targets?.kcalTarget).toBe(2798); // maintenance
+    expect(targets?.carbsTarget).toBe(286); // balanced
+  });
 });
 

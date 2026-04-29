@@ -148,6 +148,17 @@ describe('Chat API Route', () => {
     expect(res.status).toBe(200);
   });
 
+  it('covers knowledge and PR context in prompt (PR without exercise name)', async () => {
+    (prisma.userKnowledge.findMany as any).mockResolvedValue([{ key: 'k1', value: 'v1' }]);
+    (prisma.personalRecord.findMany as any).mockResolvedValue([{ maxWeight: 100, name: 'Bench' }]);
+    const req = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ prompt: 'Context', history: [], images: [] }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+  });
+
   it('covers Gemini succeed but OR also configured (branch 489)', async () => {
     const req = new Request('http://localhost/api/chat', {
       method: 'POST',
@@ -186,16 +197,30 @@ describe('Chat API Route', () => {
     expect(res.status).toBe(500);
   });
 
-  it('covers appendFileSync failure line', async () => {
+  it('covers appendFileSync success and failure', async () => {
+    // Failure branch
     mockFsShouldFail = true;
     (persistLogData as any).mockRejectedValueOnce(new Error('Persistence failed'));
-    const req = new Request('http://localhost/api/chat', {
+    let req = new Request('http://localhost/api/chat', {
       method: 'POST',
       body: JSON.stringify({ prompt: 'Bad data', history: [], images: [] }),
     });
-    const res = await POST(req);
+    let res = await POST(req);
+    let data = await res.json();
     expect(res.status).toBe(200);
+    expect(data.warning).toBeDefined();
+
+    // Success branch
     mockFsShouldFail = false;
+    (persistLogData as any).mockRejectedValueOnce(new Error('Persistence failed again'));
+    req = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ prompt: 'Bad data 2', history: [], images: [] }),
+    });
+    res = await POST(req);
+    data = await res.json();
+    expect(res.status).toBe(200);
+    expect(data.warning).toBeDefined();
   });
 
   it('handles database saving errors during session', async () => {
@@ -243,6 +268,19 @@ describe('Chat API Route', () => {
     expect(res.status).toBe(500);
   });
 
+  it('handles chat when both API keys are missing', async () => {
+    process.env.GEMINI_API_KEY = '';
+    process.env.OPENROUTER_API_KEY = '';
+    const req = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ prompt: 'Hello', history: [], images: [] }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toMatch(/not configured/i);
+  });
+
   it('covers Gemini 404 retry logic', async () => {
     mockGeminiShould404Once = true;
     const req = new Request('http://localhost/api/chat', {
@@ -271,9 +309,10 @@ describe('Chat API Route', () => {
       body: JSON.stringify({ 
         prompt: 'Hello', 
         history: [
-            { role: 'model', parts: [{ text: 'M1' }] },
+            { role: 'model', parts: [{ text: 'M0' }] }, // Should be skipped by sanitize
+            { role: 'model', parts: [{ text: 'M1' }] }, // Should be combined if it was after user, but here it's still at start
             { role: 'user', parts: [{ text: 'U1' }] },
-            { role: 'user', parts: [{ text: 'U2' }] }
+            { role: 'user', parts: [{ text: 'U2' }] }  // Should be combined with U1
         ], 
         images: [] 
       }),
@@ -292,4 +331,75 @@ describe('Chat API Route', () => {
     const res = await POST(req);
     expect(res.status).toBe(500);
   });
+
+  it('handles saveUserMessage failure during POST', async () => {
+    (prisma.chatMessage.create as any).mockRejectedValueOnce(new Error('Save failed'));
+    const req = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ prompt: 'Log', history: [], images: [] }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+  });
+
+  it('handles fetchFullUserContext failure', async () => {
+    (prisma.routine.findMany as any).mockRejectedValueOnce(new Error('Fetch failed'));
+    const req = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ prompt: 'Hello', history: [], images: [] }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(500);
+  });
+
+  it('covers fallback prompt and images branches (line 441)', async () => {
+    // 1. prompt is empty, images present
+    let req = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({
+        prompt: '',
+        history: [],
+        images: [{ base64: 'b64', mediaType: 'image/png', name: 'img.png' }]
+      }),
+    });
+    let res = await POST(req);
+    expect(res.status).toBe(200);
+
+    // 2. prompt is empty, no images (should fail validation 400, but we want to check the logic if it got past)
+    // Actually validation 400 happens first.
+  });
+
+  it('covers getSystemPrompt fallbacks for date and time', async () => {
+    // Missing clientDate and clientTime
+    const req = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ prompt: 'Hello', history: [], images: [] }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+  });
+
+  it('covers handleUserResponse error not being an instance of Error', async () => {
+    (persistLogData as any).mockRejectedValueOnce("String Error");
+    const req = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ prompt: 'Fail with string', history: [], images: [] }),
+    });
+    const res = await POST(req);
+    const data = await res.json();
+    expect(data.warning).toBeDefined();
+  });
+
+  it('covers userContext default assignment when session exists but context missing', async () => {
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'u1' } } as any);
+    const req = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ prompt: 'Test fallback', history: [], images: [] }), // userContext is missing here
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+  });
 });
+
+
+

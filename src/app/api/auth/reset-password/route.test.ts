@@ -82,4 +82,28 @@ describe('Auth Reset Password API Route', () => {
     const res = await POST(req);
     expect(res.status).toBe(500);
   });
+
+  it('returns 500 if JSON body is malformed', async () => {
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } } as any);
+    const req = new Request('http://localhost/api/auth/reset-password', {
+      method: 'POST',
+      body: 'invalid-json',
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(500);
+  });
+
+  it('updates password successfully even if email is missing', async () => {
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-no-email', name: 'NoEmail' } } as any);
+    // Explicitly reset the db mock to succeed (override any lingering rejection from prior tests)
+    vi.mocked(prisma.user.update).mockResolvedValue({} as any);
+    const req = new Request('http://localhost/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ password: 'StrongPassword123!' }),
+    });
+    
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    expect(prisma.user.update).toHaveBeenCalled();
+  });
 });

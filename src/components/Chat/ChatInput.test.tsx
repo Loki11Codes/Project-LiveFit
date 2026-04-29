@@ -179,4 +179,41 @@ describe("ChatInput Component", () => {
     (globalThis as any).SpeechRecognition = OriginalSpeechRecognition;
     consoleSpy.mockRestore();
   });
+
+  it("handles successful recording start", async () => {
+    let capturedInstance: any = null;
+    const OriginalSpeechRecognition = (globalThis as any).SpeechRecognition;
+    
+    (globalThis as any).SpeechRecognition = function() {
+      const mock = new MockSpeechRecognition();
+      capturedInstance = mock;
+      return mock;
+    };
+    
+    render(<ChatInput {...defaultProps} />);
+    fireEvent.click(screen.getByLabelText("Start recording"));
+    
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/Listening\.\.\./i)).toBeInTheDocument();
+    });
+    
+    (globalThis as any).SpeechRecognition = OriginalSpeechRecognition;
+  });
+
+
+  it("handles getSecureRandom crypto fallback when crypto is missing", () => {
+    // Save current crypto
+    const originalCrypto = globalThis.crypto;
+    // Force crypto to be undefined by deleting it or using stubGlobal
+    vi.stubGlobal('crypto', undefined);
+    
+    // Render component - SpeechWaveform uses getSecureRandom in useEffect
+    render(<ChatInput {...defaultProps} />);
+    
+    // Check it doesn't crash
+    expect(screen.getByTestId("chat-input")).toBeInTheDocument();
+    
+  });
 });
+
+

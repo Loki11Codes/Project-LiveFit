@@ -51,6 +51,19 @@ describe('Auth Verify API Route', () => {
       expect(res.status).toBe(400);
     });
 
+    it('returns 400 if token is expired in database', async () => {
+      vi.mocked(prisma.verificationToken.findUnique).mockResolvedValue({
+        identifier: 'test@example.com',
+        token: 'expired',
+        expires: new Date(Date.now() - 10000), // expired
+      } as any);
+      const req = new Request('http://localhost/api/auth/verify?token=expired&email=test@example.com');
+      const res = await GET(req);
+      expect(res.status).toBe(400);
+      const data = await res.json();
+      expect(data.error).toMatch(/expired/i);
+    });
+
     it('verifies user and redirects on valid token', async () => {
       const email = 'test@example.com';
       const token = 'valid-token';
@@ -132,6 +145,15 @@ describe('Auth Verify API Route', () => {
       const req = new Request('http://localhost/api/auth/verify', {
         method: 'POST',
         body: JSON.stringify({ email: 'e', code: 'c' }),
+      });
+      const res = await POST(req);
+      expect(res.status).toBe(500);
+    });
+
+    it('returns 500 if JSON is malformed in POST', async () => {
+      const req = new Request('http://localhost/api/auth/verify', {
+        method: 'POST',
+        body: 'invalid-json',
       });
       const res = await POST(req);
       expect(res.status).toBe(500);

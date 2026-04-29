@@ -1,4 +1,6 @@
+import React from 'react';
 import { render, cleanup } from '@testing-library/react';
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ConfettiCanvas } from './Confetti';
 
@@ -62,4 +64,22 @@ describe('ConfettiCanvas', () => {
      // We can't easily force ref to be null while rendering, but we can verify it doesn't crash
      render(<ConfettiCanvas />);
   });
+
+  it('handles null ref guard in effect', () => {
+    // To hit line 21 (if (!canvas) return;), we need the ref to be null during useEffect.
+    // We can't easily mock the internal ref of the component, but we can mock React.useRef globally.
+    const originalUseRef = React.useRef;
+    // @ts-ignore
+    vi.spyOn(React, 'useRef').mockReturnValue({ current: null });
+    
+    render(<ConfettiCanvas />);
+    // Should not start animation
+    expect(globalThis.requestAnimationFrame).not.toHaveBeenCalled();
+    
+    // Restore
+    // @ts-ignore
+    React.useRef = originalUseRef;
+  });
 });
+
+

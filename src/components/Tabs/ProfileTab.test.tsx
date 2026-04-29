@@ -158,6 +158,28 @@ describe("ProfileTab Component", () => {
     expect(screen.getByText(/No Trophies Yet/i)).toBeDefined();
   });
 
+  it("renders personal records when present", () => {
+    const profileWithPRs = {
+      ...defaultProps.profile,
+      prs: [
+        {
+          id: "pr-1",
+          exerciseId: "ex-1",
+          maxWeight: 100,
+          max1RM: 110,
+          updatedAt: new Date().toISOString(),
+          exercise: { name: "Deadlift", category: "Back" }
+        }
+      ]
+    };
+    render(<ProfileTab {...defaultProps} profile={profileWithPRs as any} />);
+    expect(screen.getByText("Deadlift")).toBeDefined();
+    // One for goal, one for PR
+    expect(screen.getAllByText(/100/).length).toBeGreaterThan(1);
+    expect(screen.getByText(/110/)).toBeDefined();
+    expect(screen.getByText(/Back/i)).toBeDefined();
+  });
+
   it("handles null goal values gracefully", () => {
     const nullGoals = {
       proteinTraining: null,

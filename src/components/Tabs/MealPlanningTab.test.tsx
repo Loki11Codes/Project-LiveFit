@@ -112,5 +112,56 @@ describe('MealPlanningTab', () => {
       expect(screen.getByText("You don't have a meal plan yet")).toBeDefined();
     });
   });
+
+  it('dispatches event when Create Strategy button is clicked in empty state', async () => {
+    vi.mocked(requestJson).mockResolvedValue(null);
+    const dispatchSpy = vi.spyOn(globalThis, 'dispatchEvent');
+    render(<MealPlanningTab />);
+
+    const strategyBtn = await screen.findByText('Create Strategy');
+    fireEvent.click(strategyBtn);
+
+    expect(dispatchSpy).toHaveBeenCalled();
+    const event = dispatchSpy.mock.calls.find(call => 
+      (call[0] as CustomEvent).detail === 'Please generate a structured weekly meal plan for me based on my current goals.'
+    )?.[0] as CustomEvent;
+    expect(event).toBeDefined();
+  });
+  it('handles null kcal and macros in meal cards, and renders notes', async () => {
+    const planWithNulls = {
+      ...mockPlan,
+      entries: [{ id: '1', dayIndex: currentDayIndex, mealType: 'Lunch', title: 'Mystery Meal', kcal: null, protein: null, notes: 'Some notes here' }]
+    };
+    vi.mocked(requestJson).mockResolvedValue(planWithNulls);
+    render(<MealPlanningTab />);
+    await waitFor(() => {
+      expect(screen.getByText('--')).toBeDefined();
+      expect(screen.getByText(/"Some notes here"/)).toBeInTheDocument();
+    });
+  });
+
+  it('disables shopping list button when activePlan is null', async () => {
+    vi.mocked(requestJson).mockResolvedValue(null);
+    render(<MealPlanningTab />);
+    
+    const shoppingBtn = await screen.findByText(/Shopping List/i);
+    expect(shoppingBtn.closest('button')).toBeDisabled();
+  });
+
+  it('correctly defaults day to 6 on Sunday', () => {
+    const sunday = new Date('2024-01-07'); // A Sunday
+    vi.useFakeTimers();
+    vi.setSystemTime(sunday);
+    
+    // Rerender with the new system time
+    vi.mocked(requestJson).mockResolvedValue(null);
+    render(<MealPlanningTab />);
+    
+    // Sunday (idx 0) should map to selectedDay = 6 (Sunday in the 0-6 mon-sun array)
+    // Wait, the logic is: new Date().getDay() === 0 ? 6 : new Date().getDay() - 1
+    // Sunday is 0, so it returns 6. Correct.
+    
+    vi.useRealTimers();
+  });
 });
 

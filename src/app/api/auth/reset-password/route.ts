@@ -7,6 +7,7 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { badRequest, internalError, success } from "@/lib/api";
+import { sendPasswordChangedEmail } from "@/lib/email";
 
 const ResetPasswordSchema = z.object({
   password: z
@@ -38,6 +39,11 @@ export async function POST(req: Request) {
         requirePasswordChange: false,
       },
     });
+
+    // Notify user of security change
+    if (session.user.email) {
+      await sendPasswordChangedEmail(session.user.email, session.user.name || "User");
+    }
 
     return success("Password updated successfully");
   } catch (error) {
