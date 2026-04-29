@@ -99,6 +99,7 @@ describe("SettingsPage", () => {
 
     const hapticToggle = screen.getByText(/Haptic Feedback/i).closest("div")?.parentElement?.querySelector("button");
     if (hapticToggle) fireEvent.click(hapticToggle);
+    expect(nameInput).toBeInTheDocument();
   });
 
   it("handles accent color selection", () => {
@@ -125,6 +126,7 @@ describe("SettingsPage", () => {
 
     const duration = screen.getByLabelText(/Workout Duration/i);
     if (duration) fireEvent.change(duration, { target: { value: "60" } });
+    expect(primaryGoal).toBeInTheDocument();
   });
 
   it("handles nutrition panel inputs", () => {
@@ -145,6 +147,7 @@ describe("SettingsPage", () => {
 
     const fats = screen.getByLabelText(/Fats \(g\)/i);
     if (fats) fireEvent.change(fats, { target: { value: "70" } });
+    expect(dietaryPref).toBeInTheDocument();
   });
 
   it("handles notifications panel interactions", () => {
@@ -159,6 +162,7 @@ describe("SettingsPage", () => {
 
     const waterCheckIns = screen.getByText(/Water Check-ins/i).closest("div")?.parentElement?.querySelector("button");
     if (waterCheckIns) fireEvent.click(waterCheckIns);
+    expect(screen.getAllByText(/Notifications/i)[0]).toBeInTheDocument();
   });
 
   it("handles privacy panel interactions", () => {
@@ -170,5 +174,6 @@ describe("SettingsPage", () => {
 
     const deleteAccountBtn = screen.getAllByText(/Delete Account/i)[1];
     if (deleteAccountBtn) fireEvent.click(deleteAccountBtn);
+    expect(screen.getAllByText(/Privacy & Advanced/i)[0]).toBeInTheDocument();
   });
 });

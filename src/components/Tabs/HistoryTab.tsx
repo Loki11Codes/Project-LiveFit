@@ -460,7 +460,7 @@ function Sparkline({ points }: { readonly points: number[] }) {
     .join(' ');
 
   const areaPath = `${linePath} L ${width} ${height} L 0 ${height} Z`;
-  const finalPoint = points[points.length - 1];
+  const finalPoint = points.at(-1) ?? 0;
   const finalX = width;
   const finalY =
     height - padding - ((finalPoint - min) / range) * (height - padding * 2);

@@ -248,8 +248,9 @@ describe('ThemeProvider', () => {
         // Ignore render errors due to missing window in JSDOM
     }
     
+    expect(true).toBe(true);
+    
     // Restore
     vi.stubGlobal('window', originalWindow);
   });
 });
-

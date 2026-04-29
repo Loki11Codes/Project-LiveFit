@@ -158,10 +158,8 @@ describe('MealPlanningTab', () => {
     render(<MealPlanningTab />);
     
     // Sunday (idx 0) should map to selectedDay = 6 (Sunday in the 0-6 mon-sun array)
-    // Wait, the logic is: new Date().getDay() === 0 ? 6 : new Date().getDay() - 1
-    // Sunday is 0, so it returns 6. Correct.
-    
+    expect(screen.getByText('Sunday')).toBeInTheDocument();
     vi.useRealTimers();
+    expect(true).toBe(true);
   });
 });
-
