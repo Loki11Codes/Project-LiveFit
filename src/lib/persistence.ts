@@ -18,11 +18,8 @@ import { getErrorMessage, getLocalDateKey } from './dashboard';
 import { calculateDailyTargets } from './recommendations';
 import { syncAchievements, type AchievementBadge } from './achievements';
 
-
-export type ParsedLogEnvelope = {
-  category?: string;
-  data?: unknown;
-};
+import { type ParsedLogEnvelope } from './types';
+export type { ParsedLogEnvelope };
 
 /**
  * Orchestrates the persistence of multiple log envelopes within a single transaction 
@@ -621,7 +618,6 @@ async function persistDeleteAction(
     workout: () => deleteWorkoutEntry(tx, userId, dateRange, focus),
     sleep: () => deleteSingleEntry(tx.sleepLog, userId, dateRange),
     measurement: () => deleteSingleEntry(tx.bodyMeasurement, userId, dateRange),
-    water: () => tx.waterLog.deleteMany({ where: { userId, time: dateRange } }),
     knowledge: () => deleteKnowledgeEntry(tx, raw, userId),
     all: async () => {
       await Promise.all([
@@ -629,7 +625,6 @@ async function persistDeleteAction(
         tx.workoutLog.deleteMany({ where: { userId, time: dateRange } }),
         tx.sleepLog.deleteMany({ where: { userId, time: dateRange } }),
         tx.bodyMeasurement.deleteMany({ where: { userId, time: dateRange } }),
-        tx.waterLog.deleteMany({ where: { userId, time: dateRange } }),
       ]);
     },
   };

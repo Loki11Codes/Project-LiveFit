@@ -32,7 +32,9 @@ interface SidebarProps {
   readonly calories: number;
   readonly calorieTarget: number;
   readonly carbs: number;
+  readonly carbsTarget?: number | null;
   readonly fats: number;
+  readonly fatsTarget?: number | null;
   readonly fiber: number;
   readonly weight: number | string;
   readonly sleep: number | string;
@@ -392,7 +394,9 @@ export default function Sidebar({
   calories,
   calorieTarget,
   carbs,
+  carbsTarget,
   fats,
+  fatsTarget,
   fiber,
   weight,
   sleep,

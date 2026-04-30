@@ -29,6 +29,9 @@ interface RoutineExercise {
   targetReps: string;
   order: number;
   exercise: Exercise;
+  customName?: string;
+  category?: string;
+  equipment?: string;
   sets?: Set[];
 }
 
@@ -46,8 +49,8 @@ interface Set {
   reps: string | number;
   isCompleted: boolean;
   suggestion?: {
-    weight: number;
-    reps: number;
+    weight: string;
+    reps: string;
     reason: string;
   };
 }
@@ -546,7 +549,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                       </p>
                     </div>
                     <button
-                      onClick={() => removePreviewExercise(ex._localId)}
+                      onClick={() => removePreviewExercise(ex._localId!)}
                       className="p-1.5 text-[var(--foreground-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                       title="Remove exercise"
                     >
@@ -583,7 +586,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                               placeholder="0"
                               value={set.weight}
                               onChange={(e) =>
-                                updatePreviewSet(ex._localId, set.id, "weight", e.target.value)
+                                updatePreviewSet(ex._localId!, set.id, "weight", e.target.value)
                               }
                               className="w-full bg-black/5 border border-transparent rounded-xl py-2.5 text-center font-black text-sm outline-none focus:border-[var(--accent)]/30 focus:bg-white/50 transition-all"
                             />
@@ -592,13 +595,13 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                               placeholder="0"
                               value={set.reps}
                               onChange={(e) =>
-                                updatePreviewSet(ex._localId, set.id, "reps", e.target.value)
+                                updatePreviewSet(ex._localId!, set.id, "reps", e.target.value)
                               }
                               className="w-full bg-black/5 border border-transparent rounded-xl py-2.5 text-center font-black text-sm outline-none focus:border-[var(--accent)]/30 focus:bg-white/50 transition-all"
                             />
                             {/* Delete set */}
                             <button
-                              onClick={() => removePreviewSet(ex._localId, set.id)}
+                              onClick={() => removePreviewSet(ex._localId!, set.id)}
                               className="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--foreground-muted)] hover:text-red-500 hover:bg-red-500/10 transition-all"
                               title="Remove set"
                             >
@@ -610,7 +613,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                     </div>
 
                     <button
-                      onClick={() => addPreviewSet(ex._localId)}
+                      onClick={() => addPreviewSet(ex._localId!)}
                       className="w-full mt-4 py-2.5 border-2 border-dashed border-[var(--border)] rounded-xl text-[var(--foreground-muted)] font-bold text-sm hover:border-[var(--accent)]/30 hover:text-[var(--accent)] transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
                       title="Add set"
                     >

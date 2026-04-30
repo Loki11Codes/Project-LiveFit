@@ -65,9 +65,27 @@ const INITIAL_DASHBOARD_STATE: DashboardState = {
 };
 
 export default function Home() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/signin");
+    }
+  }, [status, router]);
+
+  if (status === "loading") {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[var(--bg)]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#185fa5]"></div>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
+    return null; // Let the useEffect handle redirection
+  }
 
   const initialTab = parseTab(searchParams.get("tab"));
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
@@ -90,7 +108,15 @@ export default function Home() {
           exerciseId: (ex.exerciseId as string) || (ex.id as string),
           name: ((ex.exercise as Record<string, unknown>)?.name as string) || (ex.name as string), 
           sets: ex.sets
-            ? (ex.sets as unknown[]).map((s: unknown) => ({ ...(s as Record<string, unknown>), isCompleted: false }))
+            ? (ex.sets as unknown[]).map((s: unknown) => {
+                const set = s as Record<string, unknown>;
+                return {
+                  id: (set.id as string) || crypto.randomUUID(),
+                  weight: String(set.weight ?? ""),
+                  reps: String(set.reps ?? ""),
+                  isCompleted: false,
+                };
+              })
             : Array.from({ length: Number(ex.targetSets) || 3 }).map(() => ({
                 id: crypto.randomUUID(),
                 weight: "",
@@ -147,7 +173,7 @@ export default function Home() {
       analytics: isAnalyticsResponse(analyticsResponse)
         ? analyticsResponse
         : EMPTY_ANALYTICS,
-      dayType: ((profileResponse as Record<string, unknown>)?.dayType as string) || "Rest",
+      dayType: ((profileResponse as Record<string, unknown>)?.dayType as DayType) || "Rest",
       dayTypesByDay: isDayTypeEntryRecordArray(dayTypesResponse)
         ? buildDayTypeMap(dayTypesResponse)
         : EMPTY_DAY_TYPES_BY_DAY,
@@ -381,6 +407,7 @@ export default function Home() {
       ]);
       
       const logsToPersist = envelopes.filter(e => 
+        e.category && 
         persistableCategories.has(e.category) && 
         !(e.category === "workout" && e.action === "start")
       );
@@ -420,9 +447,9 @@ export default function Home() {
 
       const workoutAction = envelopes.find(e => e.category === 'workout' && e.action === 'start');
       if (workoutAction) {
-        const name = workoutAction.name || workoutAction.focus || workoutAction.data?.name || "Fresh Workout";
+        const name = (workoutAction.name as string) || (workoutAction.focus as string) || (workoutAction.data?.name as string) || "Fresh Workout";
         if (workoutAction.routineId) {
-            void handleStartWorkoutById(workoutAction.routineId, name);
+            void handleStartWorkoutById(workoutAction.routineId as string, name);
         } else {
            handleStartWorkout({ name, exercises: [] });
         }
