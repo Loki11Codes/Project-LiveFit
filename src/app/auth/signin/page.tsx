@@ -86,6 +86,7 @@ export default function SignIn() {
             aria-label="Email"
             autoFocus
             required
+            autoComplete="email"
             suppressHydrationWarning
             className="h-10 w-full rounded-2xl border-2 border-auth-input-border bg-auth-input-bg pl-11 pr-4 text-[14px] font-medium text-auth-input-text outline-none transition placeholder:text-zinc-500 focus:border-[#185fa5] focus:ring-4 focus:ring-[#185fa5]/10"
           />
@@ -107,6 +108,7 @@ export default function SignIn() {
             placeholder="Password"
             aria-label="Password"
             required
+            autoComplete="current-password"
             suppressHydrationWarning
             className="h-10 w-full rounded-2xl border-2 border-auth-input-border bg-auth-input-bg pl-11 pr-12 text-[14px] font-medium text-auth-input-text outline-none transition placeholder:text-zinc-500 focus:border-[#185fa5] focus:ring-4 focus:ring-[#185fa5]/10"
           />

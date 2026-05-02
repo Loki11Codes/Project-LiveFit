@@ -129,6 +129,7 @@ function SignUpForm() {
           aria-label="Full Name"
           autoFocus
           required
+          autoComplete="name"
           suppressHydrationWarning
         />
 
@@ -144,6 +145,7 @@ function SignUpForm() {
           placeholder="Email Address"
           aria-label="Email"
           required
+          autoComplete="email"
           suppressHydrationWarning
         />
       </div>
@@ -162,6 +164,7 @@ function SignUpForm() {
           aria-label="Password"
           minLength={6}
           required
+          autoComplete="new-password"
           suppressHydrationWarning
           rightElement={
             <button
@@ -187,6 +190,7 @@ function SignUpForm() {
           placeholder="Confirm Password"
           aria-label="Confirm Password"
           required
+          autoComplete="new-password"
           suppressHydrationWarning
           error={passwordMatch === false}
           rightElement={
