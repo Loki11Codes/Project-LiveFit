@@ -66,12 +66,21 @@ export async function sendVerificationEmail(email: string, name: string, otp: st
     },
   });
 
-  await transporter.sendMail({
-    from: `"Caloriq" <${process.env.SMTP_FROM || "onboarding@resend.dev"}>`,
-    to: email,
-    subject: "Verify your Caloriq Account",
-    html,
-  });
+  try {
+    await transporter.sendMail({
+      from: `"Caloriq" <${process.env.SMTP_FROM || "onboarding@resend.dev"}>`,
+      to: email,
+      subject: "Verify your Caloriq Account",
+      html,
+    });
+  } catch (err) {
+    console.error("Failed to send verification email via SMTP:", err);
+    console.log("------------------------------------------");
+    console.log(`[FALLBACK LOG] Verification for ${email}`);
+    console.log(`[OTP] ${otp}`);
+    console.log(`[LINK] ${verifyUrl}`);
+    console.log("------------------------------------------");
+  }
 }
 
 /**
