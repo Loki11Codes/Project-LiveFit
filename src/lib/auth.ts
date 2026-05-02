@@ -69,6 +69,19 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        // Automatically verify Google users if not already verified
+        if (!user.emailVerified) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { emailVerified: new Date() }
+          });
+          user.emailVerified = new Date();
+        }
+      }
+      return true;
+    },
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;

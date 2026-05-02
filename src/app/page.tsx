@@ -99,8 +99,8 @@ export default function Home() {
                 const set = s as Record<string, unknown>;
                 return {
                   id: (set.id as string) || crypto.randomUUID(),
-                  weight: String(set.weight ?? ""),
-                  reps: String(set.reps ?? ""),
+                  weight: (typeof set.weight === "string" || typeof set.weight === "number") ? String(set.weight) : "",
+                  reps: (typeof set.reps === "string" || typeof set.reps === "number") ? String(set.reps) : "",
                   isCompleted: false,
                 };
               })
@@ -436,7 +436,7 @@ export default function Home() {
       if (workoutAction) {
         const name = (workoutAction.name as string) || (workoutAction.focus as string) || (workoutAction.data?.name as string) || "Fresh Workout";
         if (workoutAction.routineId) {
-            void handleStartWorkoutById(workoutAction.routineId as string, name);
+            void handleStartWorkoutById(workoutAction.routineId, name);
         } else {
            handleStartWorkout({ name, exercises: [] });
         }
