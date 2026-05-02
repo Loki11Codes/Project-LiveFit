@@ -59,7 +59,7 @@ export async function sendVerificationEmail(email: string, name: string, otp: st
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number.parseInt(process.env.SMTP_PORT || "587", 10),
-    secure: process.env.SMTP_SECURE === "true",
+    secure: process.env.SMTP_PORT === "465", // Port 465 is always secure (SSL)
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
