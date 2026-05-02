@@ -85,17 +85,21 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user, account, trigger, session }) {
       if (user) {
         token.id = user.id;
-        // On initial sign in, use the values from the user object
         token.requirePasswordChange = user.requirePasswordChange;
         token.onboarded = user.onboarded;
         token.hasSeenTutorial = user.hasSeenTutorial;
         token.emailVerified = user.emailVerified;
       }
 
-      // Handle session update to clear security/onboarding flags without logout
+      // Special handling for Google: always trust the verification
+      if (account?.provider === "google") {
+        token.emailVerified = token.emailVerified || new Date();
+      }
+
+      // Handle session update
       if (trigger === "update" && session) {
         if (typeof session.requirePasswordChange === 'boolean') {
           token.requirePasswordChange = session.requirePasswordChange;
@@ -115,7 +119,6 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user && token.id) {
-        // Source of Truth: Fetch latest flags from the database
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id },
           select: { 
@@ -123,7 +126,10 @@ export const authOptions: NextAuthOptions = {
             requirePasswordChange: true,
             onboarded: true,
             hasSeenTutorial: true,
-            emailVerified: true 
+            emailVerified: true,
+            accounts: {
+              select: { provider: true }
+            }
           }
         });
         
@@ -135,7 +141,10 @@ export const authOptions: NextAuthOptions = {
         session.user.requirePasswordChange = dbUser.requirePasswordChange;
         session.user.onboarded = dbUser.onboarded;
         session.user.hasSeenTutorial = dbUser.hasSeenTutorial;
-        session.user.emailVerified = dbUser.emailVerified;
+        
+        // Final fallback: If DB says not verified but user has a Google account, mark as verified
+        const isGoogleUser = dbUser.accounts.some(acc => acc.provider === "google");
+        session.user.emailVerified = dbUser.emailVerified || (isGoogleUser ? new Date() : null);
       }
       return session;
     },
