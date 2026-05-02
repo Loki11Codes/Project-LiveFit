@@ -69,7 +69,7 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.requirePasswordChange = user.requirePasswordChange;
@@ -81,6 +81,13 @@ export const authOptions: NextAuthOptions = {
       // If logging in via Google, always ensure emailVerified is set in the token
       if (account?.provider === "google") {
         token.emailVerified = token.emailVerified || new Date();
+      }
+
+      // Handle manual session updates (like finishing onboarding)
+      if (trigger === "update" && session) {
+        if (typeof session.onboarded === 'boolean') token.onboarded = session.onboarded;
+        if (typeof session.hasSeenTutorial === 'boolean') token.hasSeenTutorial = session.hasSeenTutorial;
+        if (session.emailVerified) token.emailVerified = session.emailVerified;
       }
 
       return token;
