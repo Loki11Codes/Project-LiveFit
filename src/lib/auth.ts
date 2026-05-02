@@ -69,23 +69,7 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async signIn({ user, account }) {
-      if (account?.provider === "google" && user.email) {
-        // Check if user exists before updating (avoids race conditions on first login)
-        const existingUser = await prisma.user.findUnique({
-          where: { email: user.email }
-        });
-
-        if (existingUser && !existingUser.emailVerified) {
-          await prisma.user.update({
-            where: { id: existingUser.id },
-            data: { emailVerified: new Date() }
-          });
-        }
-      }
-      return true;
-    },
-    async jwt({ token, user, account, trigger, session }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
         token.requirePasswordChange = user.requirePasswordChange;
@@ -94,57 +78,20 @@ export const authOptions: NextAuthOptions = {
         token.emailVerified = user.emailVerified;
       }
 
-      // Special handling for Google: always trust the verification
+      // If logging in via Google, always ensure emailVerified is set in the token
       if (account?.provider === "google") {
         token.emailVerified = token.emailVerified || new Date();
-      }
-
-      // Handle session update
-      if (trigger === "update" && session) {
-        if (typeof session.requirePasswordChange === 'boolean') {
-          token.requirePasswordChange = session.requirePasswordChange;
-        }
-        if (typeof session.onboarded === 'boolean') {
-          token.onboarded = session.onboarded;
-        }
-        if (typeof session.hasSeenTutorial === 'boolean') {
-          token.hasSeenTutorial = session.hasSeenTutorial;
-        }
-        if (session.emailVerified !== undefined) {
-          token.emailVerified = session.emailVerified;
-        }
       }
 
       return token;
     },
     async session({ session, token }) {
-      if (session.user && token.id) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id },
-          select: { 
-            id: true, 
-            requirePasswordChange: true,
-            onboarded: true,
-            hasSeenTutorial: true,
-            emailVerified: true,
-            accounts: {
-              select: { provider: true }
-            }
-          }
-        });
-        
-        if (!dbUser) {
-          throw new Error("Session invalidated: User no longer exists in the database.");
-        }
-        
-        session.user.id = token.id;
-        session.user.requirePasswordChange = dbUser.requirePasswordChange;
-        session.user.onboarded = dbUser.onboarded;
-        session.user.hasSeenTutorial = dbUser.hasSeenTutorial;
-        
-        // Final fallback: If DB says not verified but user has a Google account, mark as verified
-        const isGoogleUser = dbUser.accounts.some(acc => acc.provider === "google");
-        session.user.emailVerified = dbUser.emailVerified || (isGoogleUser ? new Date() : null);
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.requirePasswordChange = token.requirePasswordChange as boolean;
+        session.user.onboarded = token.onboarded as boolean;
+        session.user.hasSeenTutorial = token.hasSeenTutorial as boolean;
+        session.user.emailVerified = token.emailVerified as Date | null;
       }
       return session;
     },
