@@ -75,18 +75,6 @@ export default function Home() {
     }
   }, [status, router]);
 
-  if (status === "loading") {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[var(--bg)]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#185fa5]"></div>
-      </div>
-    );
-  }
-
-  if (status === "unauthenticated") {
-    return null; // Let the useEffect handle redirection
-  }
-
   const initialTab = parseTab(searchParams.get("tab"));
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
   const [dashboard, setDashboard] = useState<DashboardState>(
@@ -96,7 +84,6 @@ export default function Home() {
   const [chatInput, setChatInput] = useState("");
   const [newAchievements, setNewAchievements] = useState<AchievementBadge[]>([]);
 
-  // ...
   const handleStartWorkout = useCallback((routine: { name: string; exercises: unknown[] }) => {
     const workoutSession = {
       name: routine.name,
@@ -571,6 +558,18 @@ export default function Home() {
 
   const containerClassName = `flex flex-col items-center bg-[var(--bg)] w-full overflow-x-hidden ${activeTab === "chat" ? "h-screen overflow-hidden" : "min-h-screen"}`;
   const mainLayoutClassName = `flex-1 min-h-0 w-full main-layout transition-all duration-500 ${activeTab === "chat" ? "single-screen-layout" : "page-top-offset pb-32 md:pb-12"}`;
+
+  if (status === "loading") {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[var(--bg)]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#185fa5]"></div>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
+    return null;
+  }
 
   return (
     <main className={containerClassName}>
