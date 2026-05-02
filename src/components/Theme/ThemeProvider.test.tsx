@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ThemeProvider, useTheme, BRAND_COLORS } from './ThemeProvider';
@@ -157,7 +156,7 @@ describe('ThemeProvider', () => {
   });
 
   it('falls back to system dark preference when no saved theme', async () => {
-    (globalThis.matchMedia as any).mockReturnValue({ matches: true }); // system dark
+    vi.mocked(globalThis.matchMedia).mockReturnValue({ matches: true } as unknown as MediaQueryList); // system dark
     await act(async () => {
       render(
         <ThemeProvider>
@@ -170,11 +169,11 @@ describe('ThemeProvider', () => {
 
   it('uses startViewTransition when available and toggles theme with animation', async () => {
     // Mock matchMedia to avoid prefers-reduced-motion
-    (globalThis.matchMedia as any).mockImplementation((query: string) => {
+    vi.mocked(globalThis.matchMedia).mockImplementation((query: string) => {
       if (query === '(prefers-reduced-motion: reduce)') {
-        return { matches: false };
+        return { matches: false } as unknown as MediaQueryList;
       }
-      return { matches: false };
+      return { matches: false } as unknown as MediaQueryList;
     });
 
     let transitionCallback: () => void = () => {};
@@ -186,13 +185,13 @@ describe('ThemeProvider', () => {
       }
     });
 
-    document.documentElement.animate = mockAnimate as any;
+    document.documentElement.animate = mockAnimate as unknown as typeof document.documentElement.animate;
 
     document.startViewTransition = vi.fn((cb: () => void) => {
       transitionCallback = cb;
       return {
         ready: Promise.resolve(),
-      } as any;
+      } as unknown as ViewTransition;
     });
 
     await act(async () => {
@@ -244,7 +243,7 @@ describe('ThemeProvider', () => {
             <div />
           </ThemeProvider>
         );
-    } catch (e) {
+    } catch {
         // Ignore render errors due to missing window in JSDOM
     }
     

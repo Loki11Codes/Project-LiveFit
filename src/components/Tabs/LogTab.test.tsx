@@ -1,12 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import React from 'react';
 import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import LogTab from './LogTab';
+import type { FoodLog, WorkoutLogWithRelations, SleepLog } from '@/lib/types';
 
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({ children, ...props }: React.ComponentPropsWithoutRef<'div'>) => <div {...props}>{children}</div>,
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
@@ -14,8 +15,8 @@ vi.mock('framer-motion', () => ({
 describe('LogTab Component', () => {
   const defaultProps = {
     foodLog: [
-      { id: 'f1', name: 'Chicken Breast', protein: 30, kcal: 165, carbs: 0, fats: 3, fiber: 0, water: 0, time: new Date('2026-03-18T12:00:00Z'), userId: 'u1' },
-      { id: 'f2', name: 'Rice', protein: 5, kcal: 200, carbs: 45, fats: 1, fiber: 2, water: 0, time: new Date('2026-03-18T12:30:00Z'), userId: 'u1' },
+      { id: 'f1', name: 'Chicken Breast', protein: 30, kcal: 165, carbs: 0, fats: 3, fiber: 0, water: 0, time: new Date('2026-03-18T12:00:00Z'), userId: 'u1' } as FoodLog,
+      { id: 'f2', name: 'Rice', protein: 5, kcal: 200, carbs: 45, fats: 1, fiber: 2, water: 0, time: new Date('2026-03-18T12:30:00Z'), userId: 'u1' } as FoodLog,
     ],
     protein: 35,
     workouts: [
@@ -40,10 +41,10 @@ describe('LogTab Component', () => {
             ],
           },
         ],
-      },
+      } as unknown as WorkoutLogWithRelations,
     ],
     sleepLogs: [
-      { id: 's1', hours: 8, time: new Date('2026-03-18T07:00:00Z'), userId: 'u1', bedTime: '23:00', wakeTime: '07:00', quality: null },
+      { id: 's1', hours: 8, time: new Date('2026-03-18T07:00:00Z'), userId: 'u1', bedTime: '23:00', wakeTime: '07:00', quality: null } as SleepLog,
     ],
   };
 
@@ -128,7 +129,8 @@ describe('LogTab Component', () => {
     });
     
     // Deleting food
-    const foodRow = screen.getByText('Chicken Breast').closest('div')?.parentElement!;
+    const foodRow = screen.getByText('Chicken Breast').closest('div')?.parentElement;
+    if (!foodRow) throw new Error('Could not find food row');
     fireEvent.mouseEnter(foodRow); 
     const deleteFoodBtns = screen.getAllByTitle('Delete food log');
     fireEvent.click(deleteFoodBtns[0]);
@@ -148,7 +150,7 @@ describe('LogTab Component', () => {
   it('handles missing data fields gracefully', async () => {
     const sparseProps = {
         ...defaultProps,
-        foodLog: [{ id: 'f3', name: 'Water', protein: 0, kcal: null, carbs: null, fats: null, fiber: null, time: new Date(), userId: 'u1' } as any],
+        foodLog: [{ id: 'f3', name: 'Water', protein: 0, kcal: null, carbs: null, fats: null, fiber: null, time: new Date(), userId: 'u1' } as unknown as FoodLog],
         workouts: [{ 
           id: 'w2', 
           focus: 'Empty', 
@@ -166,10 +168,10 @@ describe('LogTab Component', () => {
               sets: [{ id: 's2', setNumber: 1, weight: null, reps: null }]
             }
           ] 
-        } as any],
+        } as unknown as WorkoutLogWithRelations],
         sleepLogs: [
-          { id: 'sl2', hours: 7, time: new Date(), userId: 'u1', bedTime: '22:00', wakeTime: null },
-          { id: 'sl3', hours: 6, time: new Date(), userId: 'u1', bedTime: null, wakeTime: '06:00' }
+          { id: 'sl2', hours: 7, time: new Date(), userId: 'u1', bedTime: '22:00', wakeTime: null } as SleepLog,
+          { id: 'sl3', hours: 6, time: new Date(), userId: 'u1', bedTime: null, wakeTime: '06:00' } as SleepLog
         ]
     };
     await act(async () => {
@@ -192,5 +194,3 @@ describe('LogTab Component', () => {
     expect(screen.getByText('-- kg')).toBeDefined();
   });
 });
-
-

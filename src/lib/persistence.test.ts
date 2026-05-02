@@ -348,7 +348,7 @@ describe('persistence utility', () => {
 
     it('handles non-object delete action', async () => {
         const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        await persistLogData([{ category: 'delete', data: 'not-an-object' as any }], userId);
+        await persistLogData([{ category: 'delete', data: 'not-an-object' as unknown as Record<string, unknown> }], userId);
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('non-object data'));
         warnSpy.mockRestore();
     });

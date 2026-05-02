@@ -12,7 +12,7 @@ vi.mock('next/font/google', () => ({
 
 // Mock components
 vi.mock('@/components/Providers', () => ({
-  Providers: ({ children }: any) => <div data-testid="providers">{children}</div>,
+  Providers: ({ children }: { children: React.ReactNode }) => <div data-testid="providers">{children}</div>,
 }));
 
 vi.mock('@/components/Shared/CloudBackground', () => ({

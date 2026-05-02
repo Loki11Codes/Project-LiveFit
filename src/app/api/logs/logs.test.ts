@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, DELETE, POST } from './route';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
+import type { Session } from 'next-auth';
 
 vi.mock('next-auth', () => ({
   getServerSession: vi.fn(),
@@ -43,9 +43,9 @@ describe('Logs API Route', () => {
       const mockWorkouts = [{ id: 'w1', focus: 'Legs' }];
       const mockSleep = [{ id: 's1', hours: 8 }];
 
-      vi.mocked(prisma.foodLog.findMany).mockResolvedValue(mockFood as any);
-      vi.mocked(prisma.workoutLog.findMany).mockResolvedValue(mockWorkouts as any);
-      vi.mocked(prisma.sleepLog.findMany).mockResolvedValue(mockSleep as any);
+      vi.mocked(prisma.foodLog.findMany).mockResolvedValue(mockFood as unknown as Awaited<ReturnType<typeof prisma.foodLog.findMany>>);
+      vi.mocked(prisma.workoutLog.findMany).mockResolvedValue(mockWorkouts as unknown as Awaited<ReturnType<typeof prisma.workoutLog.findMany>>);
+      vi.mocked(prisma.sleepLog.findMany).mockResolvedValue(mockSleep as unknown as Awaited<ReturnType<typeof prisma.sleepLog.findMany>>);
 
       const res = await GET();
       const data = await res.json();
@@ -94,15 +94,15 @@ describe('Logs API Route', () => {
     });
 
     it('returns 400 for invalid category', async () => {
-      vi.mocked(getServerSession).mockResolvedValue(mockSession);
+      vi.mocked(getServerSession).mockResolvedValue(mockSession as unknown as Session);
       const res = await DELETE(makeDeleteReq({ category: 'invalid', id: 'x1' }));
       expect(res.status).toBe(400);
     });
 
     it('deletes food log when found', async () => {
-      vi.mocked(getServerSession).mockResolvedValue(mockSession);
-      vi.mocked(prisma.foodLog.findFirst).mockResolvedValue({ id: 'f1' } as any);
-      vi.mocked(prisma.foodLog.delete).mockResolvedValue({} as any);
+      vi.mocked(getServerSession).mockResolvedValue(mockSession as unknown as Session);
+      vi.mocked(prisma.foodLog.findFirst).mockResolvedValue({ id: 'f1', userId: 'user-1' } as unknown as Awaited<ReturnType<typeof prisma.foodLog.findFirst>>);
+      vi.mocked(prisma.foodLog.delete).mockResolvedValue({ id: 'f1' } as unknown as Awaited<ReturnType<typeof prisma.foodLog.delete>>);
 
       const res = await DELETE(makeDeleteReq({ category: 'food', id: 'f1' }));
       const data = await res.json();
@@ -112,7 +112,7 @@ describe('Logs API Route', () => {
     });
 
     it('returns 400 when food log not found for user', async () => {
-      vi.mocked(getServerSession).mockResolvedValue(mockSession);
+      vi.mocked(getServerSession).mockResolvedValue(mockSession as unknown as Session);
       vi.mocked(prisma.foodLog.findFirst).mockResolvedValue(null);
 
       const res = await DELETE(makeDeleteReq({ category: 'food', id: 'nonexistent' }));
@@ -120,9 +120,9 @@ describe('Logs API Route', () => {
     });
 
     it('deletes workout log when found', async () => {
-      vi.mocked(getServerSession).mockResolvedValue(mockSession);
-      vi.mocked(prisma.workoutLog.findFirst).mockResolvedValue({ id: 'w1' } as any);
-      vi.mocked(prisma.workoutLog.delete).mockResolvedValue({} as any);
+      vi.mocked(getServerSession).mockResolvedValue(mockSession as unknown as Session);
+      vi.mocked(prisma.workoutLog.findFirst).mockResolvedValue({ id: 'w1', userId: 'user-1' } as unknown as Awaited<ReturnType<typeof prisma.workoutLog.findFirst>>);
+      vi.mocked(prisma.workoutLog.delete).mockResolvedValue({ id: 'w1' } as unknown as Awaited<ReturnType<typeof prisma.workoutLog.delete>>);
 
       const res = await DELETE(makeDeleteReq({ category: 'workout', id: 'w1' }));
       const data = await res.json();
@@ -131,7 +131,7 @@ describe('Logs API Route', () => {
     });
 
     it('returns 400 when workout log not found for user', async () => {
-      vi.mocked(getServerSession).mockResolvedValue(mockSession);
+      vi.mocked(getServerSession).mockResolvedValue(mockSession as unknown as Session);
       vi.mocked(prisma.workoutLog.findFirst).mockResolvedValue(null);
 
       const res = await DELETE(makeDeleteReq({ category: 'workout', id: 'nonexistent' }));
@@ -139,9 +139,9 @@ describe('Logs API Route', () => {
     });
 
     it('deletes sleep log when found', async () => {
-      vi.mocked(getServerSession).mockResolvedValue(mockSession);
-      vi.mocked(prisma.sleepLog.findFirst).mockResolvedValue({ id: 's1' } as any);
-      vi.mocked(prisma.sleepLog.delete).mockResolvedValue({} as any);
+      vi.mocked(getServerSession).mockResolvedValue(mockSession as unknown as Session);
+      vi.mocked(prisma.sleepLog.findFirst).mockResolvedValue({ id: 's1', userId: 'user-1' } as unknown as Awaited<ReturnType<typeof prisma.sleepLog.findFirst>>);
+      vi.mocked(prisma.sleepLog.delete).mockResolvedValue({ id: 's1' } as unknown as Awaited<ReturnType<typeof prisma.sleepLog.delete>>);
 
       const res = await DELETE(makeDeleteReq({ category: 'sleep', id: 's1' }));
       const data = await res.json();
@@ -150,7 +150,7 @@ describe('Logs API Route', () => {
     });
 
     it('returns 400 when sleep log not found for user', async () => {
-      vi.mocked(getServerSession).mockResolvedValue(mockSession);
+      vi.mocked(getServerSession).mockResolvedValue(mockSession as unknown as Session);
       vi.mocked(prisma.sleepLog.findFirst).mockResolvedValue(null);
 
       const res = await DELETE(makeDeleteReq({ category: 'sleep', id: 'nonexistent' }));
@@ -158,9 +158,9 @@ describe('Logs API Route', () => {
     });
 
     it('deletes body measurement when found', async () => {
-      vi.mocked(getServerSession).mockResolvedValue(mockSession);
-      vi.mocked(prisma.bodyMeasurement.findFirst).mockResolvedValue({ id: 'm1' } as any);
-      vi.mocked(prisma.bodyMeasurement.delete).mockResolvedValue({} as any);
+      vi.mocked(getServerSession).mockResolvedValue(mockSession as unknown as Session);
+      vi.mocked(prisma.bodyMeasurement.findFirst).mockResolvedValue({ id: 'b1', userId: 'user-1' } as unknown as Awaited<ReturnType<typeof prisma.bodyMeasurement.findFirst>>);
+      vi.mocked(prisma.bodyMeasurement.delete).mockResolvedValue({ id: 'b1' } as unknown as Awaited<ReturnType<typeof prisma.bodyMeasurement.delete>>);
 
       const res = await DELETE(makeDeleteReq({ category: 'measurement', id: 'm1' }));
       const data = await res.json();
@@ -177,8 +177,8 @@ describe('Logs API Route', () => {
     });
 
     it('returns 500 on database error during delete', async () => {
-      vi.mocked(getServerSession).mockResolvedValue(mockSession);
-      vi.mocked(prisma.foodLog.findFirst).mockResolvedValue({ id: 'f1' } as any);
+      vi.mocked(getServerSession).mockResolvedValue(mockSession as unknown as Session);
+      vi.mocked(prisma.foodLog.findFirst).mockResolvedValue({ id: 'f1', userId: 'user-1' } as unknown as Awaited<ReturnType<typeof prisma.foodLog.findFirst>>);
       vi.mocked(prisma.foodLog.delete).mockRejectedValue(new Error('DB Error'));
 
       const res = await DELETE(makeDeleteReq({ category: 'food', id: 'f1' }));

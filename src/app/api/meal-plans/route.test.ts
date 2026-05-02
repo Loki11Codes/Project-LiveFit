@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from './route';
 import { getServerSession } from 'next-auth';
@@ -34,7 +33,7 @@ describe('Meal Plans API', () => {
       vi.mocked(prisma.mealPlan.findFirst).mockResolvedValue({
         id: 'plan-1',
         entries: [{ id: 'e1', title: 'Oats' }]
-      } as any);
+      } as unknown as Awaited<ReturnType<typeof prisma.mealPlan.findFirst>>);
 
       const res = await GET();
       const data = await res.json();
@@ -80,7 +79,7 @@ describe('Meal Plans API', () => {
         body: JSON.stringify({ name: 'Bulk Plan', entries, weekStarting: '2026-01-01' })
       });
 
-      vi.mocked(prisma.mealPlan.create).mockResolvedValue({ id: 'new-plan', entries } as any);
+      vi.mocked(prisma.mealPlan.create).mockResolvedValue({ id: 'new-plan', entries } as unknown as Awaited<ReturnType<typeof prisma.mealPlan.create>>);
 
       const res = await POST(req);
       const data = await res.json();
@@ -98,7 +97,7 @@ describe('Meal Plans API', () => {
         body: JSON.stringify({ entries })
       });
 
-      vi.mocked(prisma.mealPlan.create).mockResolvedValue({ id: 'new-plan', name: 'My AI Meal Plan', entries } as any);
+      vi.mocked(prisma.mealPlan.create).mockResolvedValue({ id: 'new-plan', name: 'My AI Meal Plan', entries } as unknown as Awaited<ReturnType<typeof prisma.mealPlan.create>>);
 
       const res = await POST(req);
       const data = await res.json();

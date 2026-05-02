@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from './route';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
+import type { Session } from 'next-auth';
 
 vi.mock('next-auth', () => ({
   getServerSession: vi.fn(),
@@ -29,8 +30,8 @@ describe('Knowledge API Route', () => {
     });
 
     it('returns knowledge entries on success', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'u1' } } as any);
-      vi.mocked(prisma.userKnowledge.findMany).mockResolvedValue([{ key: 'k', value: 'v' }] as any);
+      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'u1' } } as unknown as Session);
+      vi.mocked(prisma.userKnowledge.findMany).mockResolvedValue([{ key: 'k', value: 'v' }] as unknown as Awaited<ReturnType<typeof prisma.userKnowledge.findMany>>);
       const res = await GET();
       const data = await res.json();
       expect(res.status).toBe(200);
@@ -38,7 +39,7 @@ describe('Knowledge API Route', () => {
     });
 
     it('returns 500 on error', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'u1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'u1' } } as unknown as Session);
       vi.mocked(prisma.userKnowledge.findMany).mockRejectedValue(new Error('Fail'));
       const res = await GET();
       expect(res.status).toBe(500);
@@ -54,15 +55,15 @@ describe('Knowledge API Route', () => {
     });
 
     it('returns 400 on missing data', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'u1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'u1' } } as unknown as Session);
       const req = new Request('http://localhost', { method: 'POST', body: JSON.stringify({ key: 'k' }) });
       const res = await POST(req);
       expect(res.status).toBe(400);
     });
 
     it('upserts knowledge entry on success', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'u1' } } as any);
-      vi.mocked(prisma.userKnowledge.upsert).mockResolvedValue({ key: 'k', value: 'v' } as any);
+      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'u1' } } as unknown as Session);
+      vi.mocked(prisma.userKnowledge.upsert).mockResolvedValue({ key: 'k', value: 'v' } as unknown as Awaited<ReturnType<typeof prisma.userKnowledge.upsert>>);
       const req = new Request('http://localhost', { method: 'POST', body: JSON.stringify({ key: 'K', value: 'v' }) });
       const res = await POST(req);
       await res.json();
@@ -73,7 +74,7 @@ describe('Knowledge API Route', () => {
     });
 
     it('returns 500 on error', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'u1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'u1' } } as unknown as Session);
       vi.mocked(prisma.userKnowledge.upsert).mockRejectedValue(new Error('Fail'));
       const req = new Request('http://localhost', { method: 'POST', body: JSON.stringify({ key: 'k', value: 'v' }) });
       const res = await POST(req);

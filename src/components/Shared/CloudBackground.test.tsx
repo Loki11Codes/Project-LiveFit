@@ -6,11 +6,11 @@ import React from 'react';
 // Mock framer-motion to avoid animation issues in tests
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, animate, transition, initial, style, ...props }: any) => {
-      // Handle framer-motion scale shorthand for JSDOM style testing
-      const finalStyle = { ...style };
-      if (style?.scale !== undefined && !style.transform) {
-        finalStyle.transform = `scale(${style.scale})`;
+    div: ({ children, animate, transition, initial, style, ...props }: React.ComponentPropsWithoutRef<'div'> & { animate?: unknown; transition?: unknown; initial?: unknown }) => {
+      const finalStyle = { ...style } as React.CSSProperties;
+      const s = style as Record<string, unknown>;
+      if (s?.scale !== undefined && !s.transform) {
+        finalStyle.transform = `scale(${s.scale})`;
       }
       return (
         <div 

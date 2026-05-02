@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from './route';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
+import type { Session } from 'next-auth';
 import { NextRequest } from 'next/server';
 
 vi.mock('@/lib/prisma', () => ({
@@ -23,7 +23,7 @@ describe('Goals API Route', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getServerSession).mockResolvedValue(mockSession);
+    vi.mocked(getServerSession).mockResolvedValue(mockSession as unknown as Session);
   });
 
   describe('GET', () => {
@@ -35,7 +35,7 @@ describe('Goals API Route', () => {
 
     it('returns goals for the current user', async () => {
       const mockGoal = { proteinTarget: 150, kcalTarget: 2500 };
-      vi.mocked(prisma.goal.findUnique).mockResolvedValueOnce(mockGoal as any);
+      vi.mocked(prisma.goal.findUnique).mockResolvedValueOnce(mockGoal as unknown as Awaited<ReturnType<typeof prisma.goal.findUnique>>);
       const res = await GET();
       const data = await res.json();
       expect(res.status).toBe(200);
@@ -67,7 +67,7 @@ describe('Goals API Route', () => {
 
     it('creates or updates goals on POST', async () => {
       const goalData = { proteinTarget: 160, kcalTarget: 2600 };
-      vi.mocked(prisma.goal.upsert).mockResolvedValueOnce(goalData as any);
+      vi.mocked(prisma.goal.upsert).mockResolvedValueOnce(goalData as unknown as Awaited<ReturnType<typeof prisma.goal.upsert>>);
       const req = new NextRequest('http://localhost/api/goals', {
         method: 'POST',
         body: JSON.stringify(goalData),

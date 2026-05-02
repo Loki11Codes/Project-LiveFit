@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { MessageBubble } from './MessageBubble';
@@ -5,7 +6,7 @@ import { MessageBubble } from './MessageBubble';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, style, layout, initial, animate, exit, transition, ...props }: any) => <div {...props} style={style}>{children}</div>,
+    div: ({ children, style, ...props }: React.ComponentPropsWithoutRef<'div'>) => <div {...props} style={style}>{children}</div>,
   },
 }));
 

@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { GET, POST } from "./route";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
+import type { Session } from "next-auth";
 
 vi.mock("next-auth", () => ({
   getServerSession: vi.fn(),
@@ -49,7 +49,7 @@ describe("Profile API Route", () => {
 
     it("returns profile data for authenticated user", async () => {
       const mockSession = { user: { id: "user-1", email: "test@example.com" } };
-      vi.mocked(getServerSession).mockResolvedValue(mockSession as any);
+      vi.mocked(getServerSession).mockResolvedValue(mockSession as unknown as Session);
 
       const mockProfile = { userId: "user-1", age: 30, gender: "Male" };
       const mockUser = {
@@ -59,9 +59,9 @@ describe("Profile API Route", () => {
         username: null,
       };
       vi.mocked(prisma.userProfile.findUnique).mockResolvedValue(
-        mockProfile as any,
+        mockProfile as unknown as Awaited<ReturnType<typeof prisma.userProfile.findUnique>>,
       );  
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as unknown as Awaited<ReturnType<typeof prisma.user.findUnique>>);
 
       const req = new Request("http://localhost/api/profile");
       const res = await GET(req);
@@ -83,7 +83,7 @@ describe("Profile API Route", () => {
       vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
 
       const mockGoal = { userId: "user-1", proteinTarget: 150 };
-      vi.mocked(prisma.goal.findUnique).mockResolvedValue(mockGoal as any);  
+      vi.mocked(prisma.goal.findUnique).mockResolvedValue(mockGoal as unknown as Awaited<ReturnType<typeof prisma.goal.findUnique>>);  
 
       const req = new Request("http://localhost/api/profile?type=goals");
       const res = await GET(req);
@@ -116,7 +116,7 @@ describe("Profile API Route", () => {
       vi.mocked(prisma.userProfile.upsert).mockResolvedValue({
         userId: "user-1",
         ...updateData,
-      } as any);  
+      } as unknown as Awaited<ReturnType<typeof prisma.userProfile.upsert>>);  
 
       const req = new Request("http://localhost/api/profile", {
         method: "POST",
@@ -141,7 +141,7 @@ describe("Profile API Route", () => {
       vi.mocked(prisma.goal.upsert).mockResolvedValue({
         userId: "user-1",
         ...goalData,
-      } as any);  
+      } as unknown as Awaited<ReturnType<typeof prisma.goal.upsert>>);  
 
       const req = new Request("http://localhost/api/profile", {
         method: "POST",

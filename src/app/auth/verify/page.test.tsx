@@ -37,9 +37,9 @@ describe('VerifyEmailPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useRouter as any).mockReturnValue({ push: mockPush, refresh: vi.fn() });
-    (useSearchParams as any).mockReturnValue({ get: mockGet });
-    (useSession as any).mockReturnValue({ 
+    (useRouter as unknown).mockReturnValue({ push: mockPush, refresh: vi.fn() });
+    (useSearchParams as unknown).mockReturnValue({ get: mockGet });
+    (useSession as unknown).mockReturnValue({ 
       data: { user: { email: 'test@example.com' } }, 
       status: 'authenticated',
       update: mockUpdate

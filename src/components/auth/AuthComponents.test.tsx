@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import React from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { AuthInput } from './AuthInput';
@@ -10,14 +10,14 @@ import { NutritionIllustration } from './NutritionIllustration';
 // Mock framer-motion to avoid animation issues in tests
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    section: ({ children, ...props }: any) => <section {...props}>{children}</section>,
-    path: (props: any) => <path {...props} />,
-    circle: (props: any) => <circle {...props} />,
-    g: ({ children, ...props }: any) => <g {...props}>{children}</g>,
-    rect: (props: any) => <rect {...props} />,
+    div: ({ children, ...props }: React.ComponentPropsWithoutRef<'div'>) => <div {...props}>{children}</div>,
+    section: ({ children, ...props }: React.ComponentPropsWithoutRef<'section'>) => <section {...props}>{children}</section>,
+    path: (props: React.SVGProps<SVGPathElement>) => <path {...props} />,
+    circle: (props: React.SVGProps<SVGCircleElement>) => <circle {...props} />,
+    g: ({ children, ...props }: React.ComponentPropsWithoutRef<'g'>) => <g {...props}>{children}</g>,
+    rect: (props: React.SVGProps<SVGRectElement>) => <rect {...props} />,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 describe('Auth Utility Components', () => {

@@ -7,10 +7,10 @@ import React from "react";
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+    div: ({ children, ...props }: React.ComponentPropsWithoutRef<'div'>) => <div {...props}>{children}</div>,
+    button: ({ children, ...props }: React.ComponentPropsWithoutRef<'button'>) => <button {...props}>{children}</button>,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 // Mock SpeechRecognition
@@ -20,19 +20,19 @@ class MockSpeechRecognition {
   abort = vi.fn();
   continuous = false;
   interimResults = false;
-  onresult: any = null;
-  onerror: any = null;
-  onend: any = null;
+  onresult: ((ev: { results: { transcript: string }[][] }) => void) | null = null;
+  onerror: ((ev: { error: string }) => void) | null = null;
+  onend: (() => void) | null = null;
 }
 
 if (typeof globalThis !== "undefined") {
-  (globalThis as any).SpeechRecognition = MockSpeechRecognition;
-  (globalThis as any).webkitSpeechRecognition = MockSpeechRecognition;
+  (globalThis as unknown as Record<string, unknown>).SpeechRecognition = MockSpeechRecognition;
+  (globalThis as unknown as Record<string, unknown>).webkitSpeechRecognition = MockSpeechRecognition;
 }
 
 // Mock next/image
 vi.mock("next/image", () => ({
-  default: ({ src, alt }: any) => <img src={src} alt={alt} data-testid="mock-image" />,
+  default: ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} data-testid="mock-image" />,
 }));
 
 describe("ChatInput Component", () => {
@@ -44,13 +44,13 @@ describe("ChatInput Component", () => {
     onSend: vi.fn(),
     onFileSelect: vi.fn(),
     onRemoveAttachment: vi.fn(),
-    textInputRef: { current: null } as any,
+    textInputRef: { current: null } as unknown as React.RefObject<HTMLTextAreaElement>,
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubGlobal('crypto', {
-        getRandomValues: (arr: any) => arr.fill(1)
+        getRandomValues: (arr: Uint32Array) => arr.fill(1)
     });
   });
 
@@ -95,9 +95,6 @@ describe("ChatInput Component", () => {
     
     expect(screen.getByLabelText("Stop recording")).toBeDefined();
     
-    // Simulate speech result
-    // We can't easily get the instance unless we expose it or use a spy on the constructor
-    // For coverage, just clicking the stop button
     fireEvent.click(screen.getByLabelText("Stop recording"));
     expect(screen.getByLabelText("Start recording")).toBeDefined();
   });
@@ -121,11 +118,11 @@ describe("ChatInput Component", () => {
   it("handles speech recognition error and onend", async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     
-    // Captured instance to trigger events
-    let capturedInstance: any;
-    const OriginalSpeechRecognition = (globalThis as any).SpeechRecognition;
+    let capturedInstance: MockSpeechRecognition | null = null;
+    const globalRec = globalThis as unknown as Record<string, unknown>;
+    const OriginalSpeechRecognition = globalRec.SpeechRecognition;
     
-    (globalThis as any).SpeechRecognition = function() {
+    globalRec.SpeechRecognition = function() {
       const mock = new MockSpeechRecognition();
       capturedInstance = mock;
       return mock;
@@ -134,39 +131,39 @@ describe("ChatInput Component", () => {
     render(<ChatInput {...defaultProps} />);
     fireEvent.click(screen.getByLabelText("Start recording"));
     
-    await act(async () => {
-      capturedInstance.onresult({
-        results: [
-          [{ transcript: 'Hello ' }],
-          [{ transcript: 'world' }]
-        ]
+    if (capturedInstance) {
+      await act(async () => {
+        (capturedInstance as MockSpeechRecognition).onresult!({
+          results: [
+            [{ transcript: 'Hello ' }],
+            [{ transcript: 'world' }]
+          ]
+        } as unknown as { results: { transcript: string }[][] });
       });
-    });
-    expect(defaultProps.setInput).toHaveBeenCalledWith('Hello world');
+      expect(defaultProps.setInput).toHaveBeenCalledWith('Hello world');
+      
+      await act(async () => {
+        (capturedInstance as MockSpeechRecognition).onerror!({ error: 'not-allowed' });
+      });
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Speech recognition error"), "not-allowed");
+      
+      fireEvent.click(screen.getByLabelText("Start recording"));
+      await act(async () => {
+        (capturedInstance as MockSpeechRecognition).onend!();
+      });
+      expect(screen.getByLabelText("Start recording")).toBeDefined();
+    }
     
-    // Trigger error
-    await act(async () => {
-      capturedInstance.onerror({ error: 'not-allowed' });
-    });
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Speech recognition error"), "not-allowed");
-    
-    // Trigger onend
-    fireEvent.click(screen.getByLabelText("Start recording"));
-    await act(async () => {
-      capturedInstance.onend();
-    });
-    expect(screen.getByLabelText("Start recording")).toBeDefined();
-    
-    // Restore
-    (globalThis as any).SpeechRecognition = OriginalSpeechRecognition;
+    globalRec.SpeechRecognition = OriginalSpeechRecognition;
     consoleSpy.mockRestore();
   });
 
   it("handles recording start failure", () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const OriginalSpeechRecognition = (globalThis as any).SpeechRecognition;
+    const globalRec = globalThis as unknown as Record<string, unknown>;
+    const OriginalSpeechRecognition = globalRec.SpeechRecognition;
     
-    (globalThis as any).SpeechRecognition = function() {
+    globalRec.SpeechRecognition = function() {
       const mock = new MockSpeechRecognition();
       mock.start = () => { throw new Error('Start failed'); };
       return mock;
@@ -176,18 +173,16 @@ describe("ChatInput Component", () => {
     fireEvent.click(screen.getByLabelText("Start recording"));
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("could not start"), expect.any(Error));
     
-    (globalThis as any).SpeechRecognition = OriginalSpeechRecognition;
+    globalRec.SpeechRecognition = OriginalSpeechRecognition;
     consoleSpy.mockRestore();
   });
 
   it("handles successful recording start", async () => {
-    let capturedInstance: any = null;
-    const OriginalSpeechRecognition = (globalThis as any).SpeechRecognition;
+    const globalRec = globalThis as unknown as Record<string, unknown>;
+    const OriginalSpeechRecognition = globalRec.SpeechRecognition;
     
-    (globalThis as any).SpeechRecognition = function() {
-      const mock = new MockSpeechRecognition();
-      capturedInstance = mock;
-      return mock;
+    globalRec.SpeechRecognition = function() {
+      return new MockSpeechRecognition();
     };
     
     render(<ChatInput {...defaultProps} />);
@@ -197,23 +192,12 @@ describe("ChatInput Component", () => {
       expect(screen.getByPlaceholderText(/Listening\.\.\./i)).toBeInTheDocument();
     });
     
-    (globalThis as any).SpeechRecognition = OriginalSpeechRecognition;
+    globalRec.SpeechRecognition = OriginalSpeechRecognition;
   });
-
 
   it("handles getSecureRandom crypto fallback when crypto is missing", () => {
-    // Save current crypto
-    const originalCrypto = globalThis.crypto;
-    // Force crypto to be undefined by deleting it or using stubGlobal
     vi.stubGlobal('crypto', undefined);
-    
-    // Render component - SpeechWaveform uses getSecureRandom in useEffect
     render(<ChatInput {...defaultProps} />);
-    
-    // Check it doesn't crash
     expect(screen.getByTestId("chat-input")).toBeInTheDocument();
-    
   });
 });
-
-

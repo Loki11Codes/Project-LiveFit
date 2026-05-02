@@ -1,4 +1,3 @@
- 
 import {
   render,
   screen,
@@ -13,6 +12,7 @@ import { QuickChips } from "./Chat/QuickChips";
 import * as clientApi from "@/lib/client-api";
 import * as chatUtils from "@/lib/chat-utils";
 import type { ParsedLogEnvelope } from "@/lib/types";
+import React from "react";
 
 // ─── Module mocks ────────────────────────────────────────────────────────────
 
@@ -31,15 +31,13 @@ vi.mock("@/lib/chat-utils", () => ({
   })),
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 vi.mock("framer-motion", () => {
   const motionProps = new Set([
     "initial", "animate", "exit", "variants", "custom",
     "whileHover", "whileTap", "whileInView", "whileFocus", "whileDrag",
     "transition", "layout", "layoutId", "suppressHydrationWarning",
   ]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const filterProps = (props: Record<string, any>) => {
+  const filterProps = (props: Record<string, unknown>) => {
     const filtered: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(props)) {
       if (!motionProps.has(k)) filtered[k] = v;
@@ -48,19 +46,15 @@ vi.mock("framer-motion", () => {
   };
   return {
     motion: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      div: ({ children, ...props }: any) => <div {...filterProps(props)}>{children}</div>,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      button: ({ children, ...props }: any) => <button {...filterProps(props)}>{children}</button>,
+      div: ({ children, ...props }: React.ComponentPropsWithoutRef<'div'>) => <div {...(filterProps(props as Record<string, unknown>))}>{children}</div>,
+      button: ({ children, ...props }: React.ComponentPropsWithoutRef<'button'>) => <button {...(filterProps(props as Record<string, unknown>))}>{children}</button>,
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    AnimatePresence: ({ children }: any) => <>{children}</>,
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   };
 });
 
 vi.mock("next/image", () => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  default: (props: any) => <img {...props} />,
+  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => <img {...props} />,
 }));
 
 // scrollIntoView is not implemented in JSDOM
@@ -74,7 +68,6 @@ globalThis.crypto.randomUUID = vi.fn(
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Default props matching Chat's required interface */
 const makeProps = (overrides: Partial<Parameters<typeof Chat>[0]> = {}) => ({
   onLogParsed: vi.fn(),
   input: "",
@@ -86,10 +79,9 @@ function mockHistory(messages: unknown[] = []) {
   globalThis.fetch = vi.fn().mockResolvedValue({
     ok: true,
     json: () => Promise.resolve(messages),
-  });
+  } as unknown as Response);
 }
 
-/** Wait for the history loader to disappear (history fetch complete). */
 async function waitForHistoryLoad() {
   await waitFor(() => expect(screen.queryByTestId("chat-loader")).toBeNull());
 }
@@ -103,8 +95,6 @@ describe("Chat Components", () => {
   });
 
   afterEach(cleanup);
-
-  // ── Initial render / history loading ──────────────────────────────────────
 
   describe("Chat Main Component", () => {
     it("renders welcome message for existing user", async () => {
@@ -156,12 +146,11 @@ describe("Chat Components", () => {
       globalThis.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
       render(<Chat {...makeProps()} />);
       await waitForHistoryLoad();
-      // Should not crash — welcome message still shows
       expect(screen.getByText(/Good morning/i)).toBeDefined();
     });
 
     it("handles fetch non-ok response gracefully", async () => {
-      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, json: vi.fn() });
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, json: vi.fn() } as unknown as Response);
       render(<Chat {...makeProps()} />);
       await waitForHistoryLoad();
       expect(screen.getByText(/Good morning/i)).toBeDefined();
@@ -173,9 +162,7 @@ describe("Chat Components", () => {
       const setInput = vi.fn();
       const requestJsonMock = vi.mocked(clientApi.requestJson).mockResolvedValue({ text: "Hello response" });
 
-      // We need to provide a non-empty input prop because handleSend uses it
-      // In a real app, setInput would update the parent state which updates the input prop
-      const { rerender } = render(
+      render(
         <Chat
           {...makeProps({
             initialMessage: "Log 50kg bench",
@@ -188,8 +175,6 @@ describe("Chat Components", () => {
 
       await waitForHistoryLoad();
       await waitFor(() => expect(onMessageSent).toHaveBeenCalled());
-      
-      // rerender to simulate parent state update if needed, but handleSend uses current prop
       await waitFor(() => expect(requestJsonMock).toHaveBeenCalled());
     });
 
@@ -204,8 +189,6 @@ describe("Chat Components", () => {
       expect(setInput).toHaveBeenCalledWith(expect.stringContaining("Log my breakfast"));
     });
   });
-
-  // ── Proactive nudge logic ─────────────────────────────────────────────────
 
   describe("Protein Nudge", () => {
     it("shows protein nudge when protein < 50% of target", async () => {
@@ -240,7 +223,6 @@ describe("Chat Components", () => {
       const nudgeStatus = { protein: 10, proteinTarget: 100, calories: 1000, calorieTarget: 2000 };
       render(<Chat {...makeProps({ nudgeStatus })} />);
       await waitForHistoryLoad();
-      // Should NOT add another nudge (line 90 or 96)
       expect(screen.queryAllByText(/noticed you're a bit behind/i)).toHaveLength(0);
     });
 
@@ -252,10 +234,6 @@ describe("Chat Components", () => {
       });
     });
   });
-
-  // ── Message sending ───────────────────────────────────────────────────────
-  // Chat is a CONTROLLED component: `input` is a prop managed by the parent.
-  // Tests must render with a non-empty `input` prop to successfully trigger handleSend.
 
   describe("Chat Send Behaviour", () => {
     it("sends a message and renders the AI response text", async () => {
@@ -387,14 +365,12 @@ describe("Chat Components", () => {
       render(<Chat {...makeProps({ input: "", onLogParsed: vi.fn() })} />);
       await waitForHistoryLoad();
 
-      // Firing Enter with an empty input should not call requestJson
       fireEvent.keyDown(screen.getByTestId("chat-input"), { key: "Enter", shiftKey: false });
 
       expect(clientApi.requestJson).not.toHaveBeenCalled();
     });
 
     it("blocks a second send while the first is still in flight (isTyping guard)", async () => {
-      // Keep requestJson pending so isTyping stays true
       let resolveFirst!: (v: unknown) => void;
       vi.mocked(clientApi.requestJson).mockReturnValue(
         new Promise((resolve) => { resolveFirst = resolve; }),
@@ -405,22 +381,17 @@ describe("Chat Components", () => {
 
       const chatInput = screen.getByTestId("chat-input");
 
-      // First send — triggers the pending requestJson
       fireEvent.keyDown(chatInput, { key: "Enter", shiftKey: false });
       expect(clientApi.requestJson).toHaveBeenCalledTimes(1);
 
-      // Second send while still typing — should be blocked
       fireEvent.keyDown(chatInput, { key: "Enter", shiftKey: false });
       expect(clientApi.requestJson).toHaveBeenCalledTimes(1);
 
-      // Resolve to let component clean up
       await act(async () => {
         resolveFirst({ text: "Done" });
       });
     });
   });
-
-  // ── Scroll & UI Behavior ──────────────────────────────────────────────────
 
   describe("Chat UI Behavior", () => {
     it("shows scroll-to-bottom button when scrolled up", async () => {
@@ -428,7 +399,6 @@ describe("Chat Components", () => {
       await waitForHistoryLoad();
 
       const viewport = screen.getByRole("log").querySelector(".chat-viewport")!;
-      // JSDOM doesn't support real layout, so we must stub the properties
       Object.defineProperty(viewport, "scrollTop", { value: 0, writable: true });
       Object.defineProperty(viewport, "scrollHeight", { value: 2000, writable: true });
       Object.defineProperty(viewport, "clientHeight", { value: 500, writable: true });
@@ -470,17 +440,12 @@ describe("Chat Components", () => {
 
       render(<Chat {...props} />);
       
-      // The initialMessage effect calls setInput and onMessageSent synchronously,
-      // then schedules handleSend after 100ms. Since input is controlled and stays "",
-      // handleSend will not fire requestJson, but setInput and onMessageSent are called.
       await waitFor(() => {
         expect(setInput).toHaveBeenCalledWith("Seed message");
         expect(onMessageSent).toHaveBeenCalled();
       }, { timeout: 1000 });
     });
   });
-
-  // ── Message Deletion ──────────────────────────────────────────────────────
 
   describe("Message Deletion", () => {
     it("calls submitChat with a delete command when onDelete is triggered", async () => {
@@ -492,8 +457,6 @@ describe("Chat Components", () => {
       render(<Chat {...makeProps()} />);
       await waitForHistoryLoad();
 
-      // MessageBubble renders a delete button if onDelete is provided
-      // The test-id is based on msg.id
       const deleteBtn = screen.getByTestId("delete-msg-msg-to-delete");
       fireEvent.click(deleteBtn);
 
@@ -511,7 +474,6 @@ describe("Chat Components", () => {
       mockHistory([
         { id: "msg-to-delete", role: "user", text: "Delete me", timestamp: "10:00" },
       ]);
-      // Make requestJson hang so isTyping stays true
       let resolveFirst!: (v: unknown) => void;
       vi.mocked(clientApi.requestJson).mockReturnValue(
         new Promise((resolve) => { resolveFirst = resolve; }),
@@ -520,14 +482,11 @@ describe("Chat Components", () => {
       render(<Chat {...makeProps({ input: "Sending" })} />);
       await waitForHistoryLoad();
 
-      // Trigger a send to set isTyping = true
       fireEvent.keyDown(screen.getByTestId("chat-input"), { key: "Enter", shiftKey: false });
       
-      // Now try to delete a message
       const deleteBtn = screen.getByTestId("delete-msg-msg-to-delete");
       fireEvent.click(deleteBtn);
 
-      // requestJson should have been called ONCE for the send, not twice for the delete
       expect(clientApi.requestJson).toHaveBeenCalledTimes(1);
 
       await act(async () => {
@@ -536,12 +495,9 @@ describe("Chat Components", () => {
     });
   });
 
-  // ── File Attachments ──────────────────────────────────────────────────────
-
   describe("File Attachments", () => {
     const dummyDataUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
 
-    /** Create a FileReader mock that properly sets this.result before calling onload */
     function stubFileReader(dataUrl: string) {
       class MockFileReader {
         result: string | null = null;
@@ -557,7 +513,6 @@ describe("Chat Components", () => {
       vi.stubGlobal("FileReader", MockFileReader);
     }
 
-    /** Get the hidden file input rendered by ChatInput */
     function getFileInput(): HTMLInputElement {
       return document.querySelector('input[type="file"]') as HTMLInputElement;
     }
@@ -605,8 +560,9 @@ describe("Chat Components", () => {
 
     it("handles file selection errors", async () => {
       vi.stubGlobal("FileReader", class {
+        onerror: ((ev: ProgressEvent<FileReader>) => void) | null = null;
         readAsDataURL() {
-          if (this.onerror) this.onerror(new ProgressEvent('error'));
+          if (this.onerror) this.onerror(new ProgressEvent('error') as unknown as ProgressEvent<FileReader>);
         }
       });
       render(<Chat {...makeProps()} />);
@@ -632,16 +588,17 @@ describe("Chat Components", () => {
       render(<Chat {...makeProps()} />);
       await waitForHistoryLoad();
       const fileInput = getFileInput();
-      // Force files to be null to cover the fallback `event.target.files ?? []`
       fireEvent.change(fileInput, { target: { files: null } });
       expect(screen.queryByText(/Unable to read selected file/i)).toBeNull();
     });
 
     it("handles unexpected FileReader result", async () => {
       vi.stubGlobal("FileReader", class {
+        result: unknown = null;
+        onload: ((ev: ProgressEvent<FileReader>) => void) | null = null;
         readAsDataURL() {
           this.result = 123; // Not a string
-          if (this.onload) this.onload({} as any);
+          if (this.onload) this.onload({} as unknown as ProgressEvent<FileReader>);
         }
       });
       render(<Chat {...makeProps()} />);
@@ -654,7 +611,6 @@ describe("Chat Components", () => {
     });
 
     it("extracts media type from data URL correctly", async () => {
-      // This is hit during send. We need to mock requestJson to succeed.
       vi.mocked(clientApi.requestJson).mockResolvedValue({ text: "Received" });
       stubFileReader("data:image/jpeg;base64,abc");
       
@@ -685,7 +641,6 @@ describe("Chat Components", () => {
       await waitForHistoryLoad();
       
       const fileInput = getFileInput();
-      // File with no type
       await act(async () => {
         fireEvent.change(fileInput, { target: { files: [new File([], "test.no-ext", { type: "" })] } });
       });
@@ -704,14 +659,11 @@ describe("Chat Components", () => {
     });
 
     it("covers missing comma in data URL and missing base64 marker", async () => {
-      // No comma means base64 fallback "" is used.
-      // "data:image/png" doesn't match the regex (missing ";base64$"), so match is null.
       stubFileReader("data:image/png"); 
       render(<Chat {...makeProps()} />);
       await waitForHistoryLoad();
       
       const fileInput = getFileInput();
-      // Provide a file without type so it relies on data URL parsing
       await act(async () => {
         fireEvent.change(fileInput, { target: { files: [new File([], "test.png", { type: "" })] } });
       });
@@ -739,17 +691,13 @@ describe("Chat Components", () => {
         fireEvent.change(fileInput, { target: { files: [new File([], "test.mp3", { type: "audio/mp3" })] } });
       });
       
-      // Send without text
       fireEvent.keyDown(screen.getByTestId("chat-input"), { key: "Enter" });
       
-      // Wait for the UI to update with the message bubble
       await waitFor(() => {
         expect(screen.getByText("Audio message")).toBeInTheDocument();
       });
     });
   });
-
-  // ── QuickChips ────────────────────────────────────────────────────────────
 
   describe("QuickChips", () => {
     it("renders chips correctly", () => {
@@ -779,4 +727,3 @@ describe("Chat Components", () => {
     });
   });
 });
-

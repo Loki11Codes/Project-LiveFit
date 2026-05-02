@@ -37,7 +37,7 @@ describe('ConfettiCanvas', () => {
       stroke: vi.fn(),
     };
     
-    const getContextSpy = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(mockContext as any);
+    const getContextSpy = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(mockContext as unknown as CanvasRenderingContext2D);
     
     const { unmount } = render(<ConfettiCanvas />);
     
@@ -67,7 +67,7 @@ describe('ConfettiCanvas', () => {
     // To hit line 21 (if (!canvas) return;), we need the ref to be null during useEffect.
     // We can't easily mock the internal ref of the component, but we can mock React.useRef globally.
     const originalUseRef = React.useRef;
-    // @ts-ignore
+    // @ts-expect-error - Mocking internal React hooks for coverage
     vi.spyOn(React, 'useRef').mockReturnValue({ current: null });
     
     render(<ConfettiCanvas />);
@@ -75,7 +75,7 @@ describe('ConfettiCanvas', () => {
     expect(globalThis.requestAnimationFrame).not.toHaveBeenCalled();
     
     // Restore
-    // @ts-ignore
+    // @ts-expect-error - Restoring internal React hooks
     React.useRef = originalUseRef;
   });
 });

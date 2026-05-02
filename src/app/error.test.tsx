@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({ children, ...props }: React.ComponentPropsWithoutRef<'div'>) => <div {...props}>{children}</div>,
   },
 }));
 
@@ -45,7 +45,7 @@ describe('AppError', () => {
 
   it('navigates to home when Back to Home is clicked', () => {
     const push = vi.fn();
-    (useRouter as any).mockReturnValue({ push });
+    vi.mocked(useRouter).mockReturnValue({ push } as unknown as ReturnType<typeof useRouter>);
     
     render(<AppError error={mockError} reset={mockReset} />);
     const backHomeBtn = screen.getByText(/Back to Home/i);

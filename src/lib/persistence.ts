@@ -21,6 +21,22 @@ import { syncAchievements, type AchievementBadge } from './achievements';
 import { type ParsedLogEnvelope } from './types';
 export type { ParsedLogEnvelope };
 
+interface ResolvedSet {
+  setNumber?: number;
+  reps?: number;
+  weight?: number;
+  distance?: number;
+  duration?: number;
+}
+
+interface ResolvedExercise {
+  id: string | null;
+  name: string;
+  order: number;
+  sets?: ResolvedSet[];
+  matchedExercise?: unknown;
+}
+
 /**
  * Orchestrates the persistence of multiple log envelopes within a single transaction 
  * per envelope to ensure partial successes don't fail the entire set.
@@ -234,7 +250,7 @@ async function resolveWorkoutExercises(tx: Prisma.TransactionClient, exercises?:
   );
 }
 
-function createExercisesConfig(resolvedExercises: any[]) {
+function createExercisesConfig(resolvedExercises: ResolvedExercise[]) {
   return {
     create: resolvedExercises.map((ex) => ({
       exerciseId: ex.id,
@@ -242,7 +258,7 @@ function createExercisesConfig(resolvedExercises: any[]) {
       order: ex.order,
       sets: ex.sets
         ? {
-            create: ex.sets.map((set: any, setIdx: number) => ({
+            create: ex.sets.map((set: ResolvedSet, setIdx: number) => ({
               setNumber: set.setNumber ?? setIdx + 1,
               reps: set.reps,
               weight: set.weight,
@@ -257,10 +273,25 @@ function createExercisesConfig(resolvedExercises: any[]) {
 
 async function upsertWorkoutLog(tx: Prisma.TransactionClient, params: {
   userId: string;
-  validated: any;
+  validated: WorkoutLogInput;
   logDate: Date;
   detailsFallback?: string;
-  exercisesConfig: any;
+  exercisesConfig: {
+    create: {
+      exerciseId: string | null;
+      customName: string | null;
+      order: number;
+      sets: {
+        create: {
+          setNumber: number;
+          reps: number | undefined;
+          weight: number | undefined;
+          distance: number | undefined;
+          duration: number | undefined;
+        }[];
+      } | undefined;
+    }[];
+  };
 }) {
   const { userId, validated, logDate, detailsFallback, exercisesConfig } = params;
 
@@ -307,14 +338,14 @@ async function upsertWorkoutLog(tx: Prisma.TransactionClient, params: {
   });
 }
 
-export async function updatePersonalRecords(tx: Prisma.TransactionClient, userId: string, resolvedExercises: any[]) {
+export async function updatePersonalRecords(tx: Prisma.TransactionClient, userId: string, resolvedExercises: ResolvedExercise[]) {
   for (const ex of resolvedExercises) {
     if (!ex.id || !ex.sets) continue;
 
     let maxWeight = 0;
     let max1RM = 0;
 
-    ex.sets.forEach((set: any) => {
+    ex.sets.forEach((set: ResolvedSet) => {
       const w = set.weight || 0;
       const r = set.reps || 0;
       const rm = w * (1 + r / 30);

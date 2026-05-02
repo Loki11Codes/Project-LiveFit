@@ -266,7 +266,7 @@ async function callOpenRouter(
   params: ChatParams & { openRouterKey: string }
 ) {
   const { prompt, history, images, clientDate, clientTime, routinesList, userContext, openRouterKey } = params;
-  let lastError: any = null;
+  let lastError: unknown = null;
   const freeModels = [
     "openrouter/free",
     "google/gemini-2.0-flash-lite-preview-02-05:free",
@@ -471,7 +471,7 @@ async function getAIResponse(
   userContext?: z.infer<typeof ChatRequestSchema>["userContext"]
 ) {
   let text = "";
-  let lastError: any = null;
+  let lastError: unknown = null;
   const { prompt, history, images, clientDate, clientTime } = body;
 
   if (geminiKey) {

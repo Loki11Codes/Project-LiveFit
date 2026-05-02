@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import ProfileTab from "./ProfileTab";
+import { UserProfile, GoalsState } from "@/lib/types";
 import { signOut, signIn } from "next-auth/react";
 import React from "react";
 
@@ -22,11 +22,11 @@ vi.mock("next/navigation", () => ({
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: Record<string, any>) => (
-      <div {...props}>{children as React.ReactNode}</div>
+    div: ({ children, ...props }: React.ComponentPropsWithoutRef<'div'>) => (
+      <div {...props}>{children}</div>
     ),
-    button: ({ children, ...props }: Record<string, any>) => (
-      <button {...props}>{children as React.ReactNode}</button>
+    button: ({ children, ...props }: React.ComponentPropsWithoutRef<'button'>) => (
+      <button {...props}>{children}</button>
     ),
   },
 }));
@@ -130,7 +130,7 @@ describe("ProfileTab Component", () => {
       ]
     };
     
-    render(<ProfileTab {...defaultProps} profile={profileWithAchievements as any} />);
+    render(<ProfileTab {...defaultProps} profile={profileWithAchievements as unknown as UserProfile} />);
     expect(screen.getByText("First Workout")).toBeDefined();
     expect(screen.getByText("Completed your first workout")).toBeDefined();
   });
@@ -140,13 +140,13 @@ describe("ProfileTab Component", () => {
       ...defaultProps.session,
       user: { ...defaultProps.session.user, image: null }
     };
-    render(<ProfileTab {...defaultProps} session={noImageSession as any} />);
+    render(<ProfileTab {...defaultProps} session={noImageSession as unknown as SessionContextValue} />);
     // The placeholder User icon should be rendered
     expect(document.querySelector('svg.lucide-user')).toBeDefined();
   });
 
   it("handles missing profile data safely", () => {
-    render(<ProfileTab {...defaultProps} profile={null as any} />);
+    render(<ProfileTab {...defaultProps} profile={null as unknown as UserProfile} />);
     // Should show "--" for age, etc.
     const dashes = screen.getAllByText("--");
     expect(dashes.length).toBeGreaterThan(0);
@@ -154,7 +154,7 @@ describe("ProfileTab Component", () => {
 
   it("renders empty trophy case", () => {
     const profileNoAch = { ...defaultProps.profile, achievements: [] };
-    render(<ProfileTab {...defaultProps} profile={profileNoAch as any} />);
+    render(<ProfileTab {...defaultProps} profile={profileNoAch as unknown as UserProfile} />);
     expect(screen.getByText(/No Trophies Yet/i)).toBeDefined();
   });
 
@@ -172,7 +172,7 @@ describe("ProfileTab Component", () => {
         }
       ]
     };
-    render(<ProfileTab {...defaultProps} profile={profileWithPRs as any} />);
+    render(<ProfileTab {...defaultProps} profile={profileWithPRs as unknown as UserProfile} />);
     expect(screen.getByText("Deadlift")).toBeDefined();
     // One for goal, one for PR
     expect(screen.getAllByText(/100/).length).toBeGreaterThan(1);
@@ -188,7 +188,7 @@ describe("ProfileTab Component", () => {
       waterTarget: null,
       sleepTarget: null
     };
-    render(<ProfileTab {...defaultProps} goals={nullGoals as any} />);
+    render(<ProfileTab {...defaultProps} goals={nullGoals as unknown as GoalsState} />);
     
     // Should show "--" fallbacks for protein targets, water, sleep
     const placeholders = screen.getAllByText("--");

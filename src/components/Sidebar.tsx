@@ -26,15 +26,13 @@ import { GlassMetric } from "./Shared/GlassMetric";
 import { GlassPopover } from "./Shared/GlassPopover";
 import { AIInsightCard } from "./Dashboard/AIInsightCard";
 
-interface SidebarProps {
+export interface SidebarProps {
   readonly protein: number;
   readonly proteinTarget: number;
   readonly calories: number;
   readonly calorieTarget: number;
   readonly carbs: number;
-  readonly carbsTarget?: number | null;
   readonly fats: number;
-  readonly fatsTarget?: number | null;
   readonly fiber: number;
   readonly weight: number | string;
   readonly sleep: number | string;
@@ -394,9 +392,7 @@ export default function Sidebar({
   calories,
   calorieTarget,
   carbs,
-  carbsTarget,
   fats,
-  fatsTarget,
   fiber,
   weight,
   sleep,

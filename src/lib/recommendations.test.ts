@@ -144,8 +144,8 @@ describe('recommendation utility', () => {
   it('handles null primaryGoal and dietaryPreference', () => {
     const targets = calculateDailyTargets({
       ...maleProfile,
-      primaryGoal: null as any,
-      dietaryPreference: null as any,
+      primaryGoal: null as unknown as string,
+      dietaryPreference: null as unknown as string,
     });
     expect(targets).not.toBeNull();
     expect(targets?.kcalTarget).toBe(2798); // maintenance

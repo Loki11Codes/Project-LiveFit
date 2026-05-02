@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from 'vitest';
 import {
   parseTab,
@@ -17,8 +16,8 @@ import {
   round,
   formatNumber,
 } from './dashboard';
-import type { FoodLog } from '@prisma/client';
-import { EMPTY_MEASUREMENT_FORM } from './types';
+import type { FoodLog, BodyMeasurement } from '@prisma/client';
+import { EMPTY_MEASUREMENT_FORM, DashboardState, GoalsState, DayTypeMap, MeasurementForm, DayTypeEntryRecord } from './types';
 
 describe('dashboard utilities', () => {
   describe('parseTab', () => {
@@ -39,7 +38,7 @@ describe('dashboard utilities', () => {
     });
 
     it('converts measurement to form strings', () => {
-      const m = { weight: 75.5, waist: 80 } as any;
+      const m = { weight: 75.5, waist: 80 } as unknown as BodyMeasurement;
       const form = toMeasurementForm(m);
       expect(form.weight).toBe('75.5');
       expect(form.waist).toBe('80');
@@ -49,11 +48,11 @@ describe('dashboard utilities', () => {
 
   describe('toMeasurementPayload', () => {
     it('converts form strings back to numbers or null', () => {
-      const form: any = { 
+      const form = { 
         weight: '75.5', waist: '', chest: 'abc',
         arms: '', thighs: '', hips: '', calves: '', neck: '', bodyFat: ''
-      };
-      const payload = toMeasurementPayload(form);
+      } as unknown as Record<string, string>;
+      const payload = toMeasurementPayload(form as unknown as MeasurementForm);
       expect(payload.weight).toBe(75.5);
       expect(payload.waist).toBeNull();
       expect(payload.chest).toBeNull();
@@ -64,7 +63,7 @@ describe('dashboard utilities', () => {
     it('sums kcal and protein correctly', () => {
       const logs = [
         { kcal: 500, protein: 30, carbs: 50, fats: 10, fiber: 5 },
-        { kcal: 300, protein: 20, carbs: null as any, fats: null as any, fiber: null as any },
+        { kcal: 300, protein: 20, carbs: null as unknown as number, fats: null as unknown as number, fiber: null as unknown as number },
       ] as FoodLog[];
       const totals = sumNutrition(logs);
       expect(totals.calories).toBe(800);
@@ -79,17 +78,17 @@ describe('dashboard utilities', () => {
         food: [{ time: new Date('2024-01-01T10:00:00Z') }],
         workouts: [{ time: new Date('2024-01-01T15:00:00Z') }, { time: new Date('2024-01-02T10:00:00Z') }],
         sleep: [{ time: new Date('2024-01-03T10:00:00Z') }],
-      } as any;
+      } as unknown as DashboardState['logs'];
       expect(getTrackedDayCount(logs)).toBe(3);
     });
   });
 
   describe('getProteinTarget', () => {
-    const goals = { proteinTarget: 150, proteinTraining: 180, proteinRest: 120 } as any;
+    const goals = { proteinTarget: 150, proteinTraining: 180, proteinRest: 120 } as unknown as GoalsState;
     it('returns correct target for day type', () => {
       expect(getProteinTarget(goals, 'Training')).toBe(180);
       expect(getProteinTarget(goals, 'Rest')).toBe(120);
-      expect(getProteinTarget(goals, 'Lite' as any)).toBe(150); // Fallback to proteinTarget if lite not set
+      expect(getProteinTarget(goals, 'Lite' as unknown as "Lite")).toBe(150); // Fallback to proteinTarget if lite not set
     });
   });
 
@@ -98,7 +97,7 @@ describe('dashboard utilities', () => {
       const entries = [
         { dayKey: '2024-01-01', dayType: 'Training' },
         { dayKey: '2024-01-02', dayType: 'Rest' },
-      ] as any;
+      ] as unknown as DayTypeEntryRecord[];
       const map = buildDayTypeMap(entries);
       expect(map['2024-01-01']).toBe('Training');
       expect(map['2024-01-02']).toBe('Rest');
@@ -111,9 +110,9 @@ describe('dashboard utilities', () => {
         food: [{ time: new Date('2024-01-01'), kcal: 2000, protein: 150, carbs: 200, fats: 70, fiber: 30 }],
         workouts: [{ time: new Date('2024-01-01'), focus: 'Legs' }],
         sleep: [{ time: new Date('2024-01-01'), hours: 8 }],
-      } as any;
-      const goals = { proteinTarget: 160 } as any;
-      const map = { '2024-01-01': 'Training' } as any;
+      } as unknown as DashboardState['logs'];
+      const goals = { proteinTarget: 160 } as unknown as GoalsState;
+      const map = { '2024-01-01': 'Training' } as DayTypeMap;
       
       const rows = buildHistoryRows(logs, goals, map);
       expect(rows).toHaveLength(1);
@@ -124,20 +123,20 @@ describe('dashboard utilities', () => {
     });
 
     it('handles pending status', () => {
-      const goals = { proteinTarget: 100 } as any;
-      const logs = { food: [{ time: new Date(), protein: 50, kcal: 100 }], workouts: [], sleep: [] } as any;
+      const goals = { proteinTarget: 100 } as unknown as GoalsState;
+      const logs = { food: [{ time: new Date(), protein: 50, kcal: 100 }], workouts: [], sleep: [] } as unknown as DashboardState['logs'];
       const rows = buildHistoryRows(logs, goals, {});
       expect(rows[0].status).toBe('pending');
     });
 
     it('returns goals.proteinTarget for unknown day types', () => {
-       const goals = { proteinTarget: 150 } as any;
-       expect(getProteinTarget(goals, 'Unknown' as any)).toBe(150);
+       const goals = { proteinTarget: 150 } as unknown as GoalsState;
+       expect(getProteinTarget(goals, 'Unknown' as unknown as "Training")).toBe(150);
     });
 
     it('handles completed status', () => {
-      const goals = { proteinTarget: 100 } as any;
-      const logs = { food: [{ time: new Date(), protein: 120, kcal: 100 }], workouts: [], sleep: [] } as any;
+      const goals = { proteinTarget: 100 } as unknown as GoalsState;
+      const logs = { food: [{ time: new Date(), protein: 120, kcal: 100 }], workouts: [], sleep: [] } as unknown as DashboardState['logs'];
       const rows = buildHistoryRows(logs, goals, {});
       expect(rows[0].status).toBe('completed');
     });
@@ -150,8 +149,8 @@ describe('dashboard utilities', () => {
         ],
         workouts: [],
         sleep: [],
-      } as any;
-      const rows = buildHistoryRows(logs, {} as any, {});
+      } as unknown as DashboardState['logs'];
+      const rows = buildHistoryRows(logs, {} as unknown as GoalsState, {});
       expect(rows[0].kcal).toBe(200); // 2024-01-03
       expect(rows[1].kcal).toBe(100); // 2024-01-01
     });
@@ -161,8 +160,8 @@ describe('dashboard utilities', () => {
         food: [],
         workouts: [{ time: new Date(), focus: 'Legs', exercises: [{}, {}], volume: 5000 }],
         sleep: [],
-      } as any;
-      const rows = buildHistoryRows(logs, {} as any, {});
+      } as unknown as DashboardState['logs'];
+      const rows = buildHistoryRows(logs, {} as unknown as GoalsState, {});
       expect(rows[0].workoutDetail).toBe('2 exercises');
       expect(rows[0].totalVolume).toBe(5000);
     });
@@ -197,7 +196,7 @@ describe('dashboard utilities', () => {
 
   describe('getLatestSleepLog', () => {
     it('returns first log if exists', () => {
-      expect(getLatestSleepLog([{ hours: 8 }] as any)).toEqual({ hours: 8 });
+      expect(getLatestSleepLog([{ hours: 8 }] as unknown as SleepLog[])).toEqual({ hours: 8 });
       expect(getLatestSleepLog([])).toBeNull();
     });
   });
@@ -205,7 +204,7 @@ describe('dashboard utilities', () => {
   describe('getCurrentDayType', () => {
     it('returns type for today if exists', () => {
       const today = getLocalDateKey(new Date());
-      const map = { [today]: 'Training' } as any;
+      const map = { [today]: 'Training' } as DayTypeMap;
       expect(getCurrentDayType(map)).toBe('Training');
     });
     it('returns Rest as fallback', () => {
@@ -216,11 +215,11 @@ describe('dashboard utilities', () => {
   describe('Formatting Helpers', () => {
     it('round handles null values', () => {
        const logs = { 
-         food: [{ time: new Date(), kcal: null as any, protein: 10 }], 
+         food: [{ time: new Date(), kcal: 0, protein: 10 }], 
          workouts: [], 
          sleep: [] 
-       } as any;
-       const rows = buildHistoryRows(logs, {} as any, {});
+       } as unknown as DashboardState['logs'];
+       const rows = buildHistoryRows(logs, {} as unknown as GoalsState, {});
        expect(rows[0].kcal).toBe(0);
     });
 
@@ -229,17 +228,17 @@ describe('dashboard utilities', () => {
          food: [], 
          workouts: [], 
          sleep: [{ time: new Date('2024-01-01'), hours: 7.5 }] 
-       } as any;
-       const rows = buildHistoryRows(logs, {} as any, { '2024-01-01': 'Rest' });
+       } as unknown as DashboardState['logs'];
+       const rows = buildHistoryRows(logs, {} as unknown as GoalsState, { '2024-01-01': 'Rest' });
        expect(rows[0].sleep).toBe('7.5');
        
-       expect(formatNumber(null as any)).toBe("0");
-       expect(formatNumber(undefined as any)).toBe("0");
+       expect(formatNumber(null as unknown as number)).toBe("0");
+       expect(formatNumber(undefined as unknown as number)).toBe("0");
        expect(formatNumber(10)).toBe("10");
     });
 
     it('round handles null values directly', () => {
-       expect(round(null as any)).toBe(0);
+       expect(round(null as unknown as number)).toBe(0);
        expect(round(10.555)).toBe(10.6);
     });
   });

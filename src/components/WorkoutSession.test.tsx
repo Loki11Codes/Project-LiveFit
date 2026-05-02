@@ -1,3 +1,4 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, waitFor, act } from '@testing-library/react';
 import { WorkoutSession } from './WorkoutSession';
@@ -7,11 +8,11 @@ import type { ActiveWorkoutSession } from '@/lib/types';
 
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, className, style, ...rest }: any) => (
+    div: ({ children, className, style, ...rest }: React.ComponentPropsWithoutRef<'div'>) => (
       <div className={className} style={style} {...rest}>{children}</div>
     ),
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 vi.mock('./Shared/Confetti', () => ({
@@ -355,9 +356,7 @@ describe('WorkoutSession Component', () => {
     });
 
     // Click the X in the rest banner to dismiss
-    const dismissBtn = screen.getByTitle
-      ? screen.queryByTitle('dismiss-rest')
-      : null;
+
 
     // The X button inside the rest banner has no title/label,
     // find it by its parent context: it's inside the "Rest Active" banner

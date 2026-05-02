@@ -7,11 +7,11 @@ import type { HistoryRow } from '@/lib/types';
 // Mock framer-motion to avoid animation issues in tests
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    path: (props: any) => <path {...props} />,
-    circle: (props: any) => <circle {...props} />,
+    div: ({ children, ...props }: React.ComponentPropsWithoutRef<'div'>) => <div {...props}>{children}</div>,
+    path: (props: React.SVGProps<SVGPathElement>) => <path {...props} />,
+    circle: (props: React.SVGProps<SVGCircleElement>) => <circle {...props} />,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 describe('PerformanceInsights', () => {

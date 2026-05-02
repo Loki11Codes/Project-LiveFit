@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import SettingsPage from "./page";
 import { signOut } from "next-auth/react";
@@ -42,7 +42,7 @@ describe("SettingsPage", () => {
       headers: new Headers({ 'content-type': 'application/json' })
     });
     
-    vi.mocked(requestJson).mockResolvedValue({ name: "Test User" } as any);
+    vi.mocked(requestJson).mockResolvedValue({ name: "Test User" });
   });
 
   it("handles core flows", async () => {

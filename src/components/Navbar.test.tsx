@@ -1,9 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import Navbar from './Navbar';
 import { useSession } from 'next-auth/react';
+import type { SessionContextValue } from 'next-auth/react';
 import { useTheme } from '@/components/Theme/ThemeProvider';
+import type { TabId } from '@/lib/types';
 
 // Mock next-auth/react
 vi.mock('next-auth/react', () => ({
@@ -31,9 +33,9 @@ if (typeof document !== 'undefined') {
 // Mock framer-motion to avoid animation issues in tests
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,  
+    div: ({ children, ...props }: React.ComponentPropsWithoutRef<'div'>) => <div {...props}>{children}</div>,  
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,  
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,  
 }));
 
 describe('Navbar Component', () => {
@@ -48,7 +50,7 @@ describe('Navbar Component', () => {
   });
 
   it('renders all navigation tabs', () => {
-    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as any);  
+    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as unknown as SessionContextValue);
     
     render(
       <Navbar 
@@ -65,7 +67,7 @@ describe('Navbar Component', () => {
   });
 
   it('calls setActiveTab when a tab is clicked', () => {
-    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as any);  
+    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as unknown as SessionContextValue);
     
     render(
       <Navbar 
@@ -84,7 +86,7 @@ describe('Navbar Component', () => {
     vi.mocked(useSession).mockReturnValue({
       data: { user: { name: 'Akash' } },
       status: 'authenticated',
-    } as any);  
+    } as unknown as SessionContextValue);
 
     render(
       <Navbar 
@@ -98,7 +100,7 @@ describe('Navbar Component', () => {
   });
 
   it('shows Sign In button when unauthenticated', () => {
-    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as any);  
+    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as unknown as SessionContextValue);
 
     render(
       <Navbar 
@@ -111,7 +113,7 @@ describe('Navbar Component', () => {
   });
 
   it('calls toggleTheme when theme button is clicked', () => {
-    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as any);  
+    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as unknown as SessionContextValue);
 
     render(
       <Navbar 
@@ -127,10 +129,10 @@ describe('Navbar Component', () => {
   });
 
   it('renders nothing when activeTab is invalid or null', () => {
-    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as any);
+    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as unknown as SessionContextValue);
     const { container } = render(
       <Navbar 
-        activeTab={null as any} 
+        activeTab={null as unknown as TabId} 
         setActiveTab={mockSetActiveTab} 
       />
     );
@@ -138,7 +140,7 @@ describe('Navbar Component', () => {
   });
 
   it('calls setActiveTab when mobile bottom nav tab is clicked', () => {
-    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as any);
+    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as unknown as SessionContextValue);
     render(
       <Navbar 
         activeTab="chat" 
@@ -157,7 +159,7 @@ describe('Navbar Component', () => {
     vi.mocked(useSession).mockReturnValue({
       data: { user: { name: null } },
       status: 'authenticated',
-    } as any);
+    } as unknown as SessionContextValue);
     render(
       <Navbar 
         activeTab="chat" 
@@ -168,7 +170,7 @@ describe('Navbar Component', () => {
   });
 
   it('renders Sun icon when theme is dark', () => {
-    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as any);
+    vi.mocked(useSession).mockReturnValue({ data: null, status: 'unauthenticated' } as unknown as SessionContextValue);
     
     // Override the useTheme mock just for this test
     vi.mocked(useTheme).mockReturnValue({

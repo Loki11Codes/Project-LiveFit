@@ -3,6 +3,7 @@ import { render, waitFor } from '@testing-library/react';
 import { AuthGuardian } from './AuthGuardian';
 import { useSession } from 'next-auth/react';
 import { usePathname, useRouter } from 'next/navigation';
+import type { SessionContextValue } from 'next-auth/react';
 
 vi.mock('next-auth/react', () => ({
   useSession: vi.fn(),
@@ -24,7 +25,7 @@ describe('AuthGuardian Component', () => {
   });
 
   it('does nothing if status is loading', () => {
-    vi.mocked(useSession).mockReturnValue({ data: null, status: 'loading', update: vi.fn() } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    vi.mocked(useSession).mockReturnValue({ data: null, status: 'loading', update: vi.fn() } as unknown as SessionContextValue);
     render(<AuthGuardian />);
     expect(mockPush).not.toHaveBeenCalled();
   });
@@ -34,7 +35,7 @@ describe('AuthGuardian Component', () => {
       data: { user: { id: 'u1', requirePasswordChange: true } },
       status: 'authenticated',
       update: vi.fn(),
-    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    } as unknown as SessionContextValue);
     vi.mocked(usePathname).mockReturnValue('/');
 
     render(<AuthGuardian />);
@@ -49,7 +50,7 @@ describe('AuthGuardian Component', () => {
       data: { user: { id: 'u1', emailVerified: null } },
       status: 'authenticated',
       update: vi.fn(),
-    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    } as unknown as SessionContextValue);
     vi.mocked(usePathname).mockReturnValue('/');
 
     render(<AuthGuardian />);
@@ -64,7 +65,7 @@ describe('AuthGuardian Component', () => {
       data: { user: { id: 'u1', emailVerified: new Date(), onboarded: false } },
       status: 'authenticated',
       update: vi.fn(),
-    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    } as unknown as SessionContextValue);
     vi.mocked(usePathname).mockReturnValue('/');
 
     render(<AuthGuardian />);
@@ -79,7 +80,7 @@ describe('AuthGuardian Component', () => {
       data: { user: { id: 'u1', emailVerified: new Date(), onboarded: true, requirePasswordChange: false } },
       status: 'authenticated',
       update: vi.fn(),
-    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    } as unknown as SessionContextValue);
     vi.mocked(usePathname).mockReturnValue('/');
 
     render(<AuthGuardian />);
@@ -94,7 +95,7 @@ describe('AuthGuardian Component', () => {
       data: { user: { id: 'u1', requirePasswordChange: true } },
       status: 'authenticated',
       update: vi.fn(),
-    } as any);
+    } as unknown as SessionContextValue);
     vi.mocked(usePathname).mockReturnValue('/auth/reset-password');
     render(<AuthGuardian />);
     expect(mockPush).not.toHaveBeenCalled();
@@ -105,7 +106,7 @@ describe('AuthGuardian Component', () => {
       data: { user: { id: 'u1', emailVerified: null } },
       status: 'authenticated',
       update: vi.fn(),
-    } as any);
+    } as unknown as SessionContextValue);
     vi.mocked(usePathname).mockReturnValue('/auth/verify');
     render(<AuthGuardian />);
     expect(mockPush).not.toHaveBeenCalled();
@@ -116,10 +117,9 @@ describe('AuthGuardian Component', () => {
       data: { user: { id: 'u1', emailVerified: new Date(), onboarded: false } },
       status: 'authenticated',
       update: vi.fn(),
-    } as any);
+    } as unknown as SessionContextValue);
     vi.mocked(usePathname).mockReturnValue('/onboarding');
     render(<AuthGuardian />);
     expect(mockPush).not.toHaveBeenCalled();
   });
 });
-

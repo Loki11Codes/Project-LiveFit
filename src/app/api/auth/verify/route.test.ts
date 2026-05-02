@@ -56,7 +56,7 @@ describe('Auth Verify API Route', () => {
         identifier: 'test@example.com',
         token: 'expired',
         expires: new Date(Date.now() - 10000), // expired
-      } as any);
+      } as unknown as Awaited<ReturnType<typeof prisma.verificationToken.findUnique>>);
       const req = new Request('http://localhost/api/auth/verify?token=expired&email=test@example.com');
       const res = await GET(req);
       expect(res.status).toBe(400);

@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from './route';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
+import type { Session } from 'next-auth';
 import { NextRequest } from 'next/server';
 
 vi.mock('@/lib/prisma', () => ({
@@ -29,7 +29,7 @@ describe('Measurements API Route', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getServerSession).mockResolvedValue(mockSession as any);
+    vi.mocked(getServerSession).mockResolvedValue(mockSession as unknown as Session);
   });
 
   describe('GET', () => {
@@ -42,7 +42,7 @@ describe('Measurements API Route', () => {
 
     it('returns latest measurement by default', async () => {
       const mockMeasurement = { weight: 80 };
-      vi.mocked(prisma.bodyMeasurement.findFirst).mockResolvedValueOnce(mockMeasurement as any);
+      vi.mocked(prisma.bodyMeasurement.findFirst).mockResolvedValueOnce(mockMeasurement as unknown as Awaited<ReturnType<typeof prisma.bodyMeasurement.findFirst>>);
       const req = new NextRequest('http://localhost');
       const res = await GET(req);
       const data = await res.json();
@@ -51,7 +51,7 @@ describe('Measurements API Route', () => {
     });
 
     it('returns all measurements if all=true', async () => {
-      vi.mocked(prisma.bodyMeasurement.findMany).mockResolvedValueOnce([{ weight: 80 }] as any);
+      vi.mocked(prisma.bodyMeasurement.findMany).mockResolvedValueOnce([{ weight: 80 }] as unknown as Awaited<ReturnType<typeof prisma.bodyMeasurement.findMany>>);
       const req = new NextRequest('http://localhost?all=true');
       const res = await GET(req);
       const data = await res.json();
@@ -85,8 +85,8 @@ describe('Measurements API Route', () => {
     });
 
     it('creates a new measurement', async () => {
-      vi.mocked(prisma.$transaction).mockImplementation(async (cb: any) => cb(prisma));
-      vi.mocked(prisma.bodyMeasurement.create).mockResolvedValueOnce({ id: 'm1' } as any);
+      vi.mocked(prisma.$transaction).mockImplementation(async (cb: (p: typeof prisma) => Promise<unknown>) => cb(prisma));
+      vi.mocked(prisma.bodyMeasurement.create).mockResolvedValueOnce({ id: 'm1' } as unknown as Awaited<ReturnType<typeof prisma.bodyMeasurement.create>>);
       
       const req = new NextRequest('http://localhost', {
         method: 'POST',
@@ -99,8 +99,8 @@ describe('Measurements API Route', () => {
     });
 
     it('handles null values for optional fields', async () => {
-      vi.mocked(prisma.$transaction).mockImplementation(async (cb: any) => cb(prisma));
-      vi.mocked(prisma.bodyMeasurement.create).mockResolvedValueOnce({ id: 'm1' } as any);
+      vi.mocked(prisma.$transaction).mockImplementation(async (cb: (p: typeof prisma) => Promise<unknown>) => cb(prisma));
+      vi.mocked(prisma.bodyMeasurement.create).mockResolvedValueOnce({ id: 'm1' } as unknown as Awaited<ReturnType<typeof prisma.bodyMeasurement.create>>);
       
       const req = new NextRequest('http://localhost', {
         method: 'POST',

@@ -1,8 +1,8 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from './route';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
+import type { Session } from 'next-auth';
 
 vi.mock('next-auth', () => ({
   getServerSession: vi.fn(),
@@ -30,11 +30,10 @@ describe('DayTypes API Route', () => {
     });
 
     it('returns entries for authenticated user', async () => {
-      const mockUser = { id: 'user-1' };
-      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
+      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as unknown as Session);
       
       const mockEntries = [{ dayKey: '2026-03-18', dayType: 'Training' }];
-      vi.mocked(prisma.dayTypeEntry.findMany).mockResolvedValue(mockEntries as any);  
+      vi.mocked(prisma.dayTypeEntry.findMany).mockResolvedValue(mockEntries as unknown as Awaited<ReturnType<typeof prisma.dayTypeEntry.findMany>>);  
 
       const res = await GET();
       const data = await res.json();
@@ -53,11 +52,10 @@ describe('DayTypes API Route', () => {
     });
 
     it('upserts a day type entry', async () => {
-      const mockUser = { id: 'user-1' };
-      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser });
+      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as unknown as Session);
       
       const payload = { dayKey: '2026-03-18', dayType: 'Rest' };
-      vi.mocked(prisma.dayTypeEntry.upsert).mockResolvedValue(payload as any);  
+      vi.mocked(prisma.dayTypeEntry.upsert).mockResolvedValue(payload as unknown as Awaited<ReturnType<typeof prisma.dayTypeEntry.upsert>>);  
 
       const req = new Request('http://localhost/api/day-types', {
         method: 'POST',

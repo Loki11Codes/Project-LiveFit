@@ -1,7 +1,8 @@
- 
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import Sidebar from "./Sidebar";
+import Sidebar, { SidebarProps } from "./Sidebar";
+import type { AnalyticsResponse, LogsResponse, AIInsight, ActiveWorkoutSession } from "@/lib/types";
+import React from "react";
 
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
@@ -20,7 +21,7 @@ vi.mock("framer-motion", () => ({
 }));
 
 describe("Sidebar Component", () => {
-  const defaultProps = {
+  const defaultProps: SidebarProps = {
     protein: 50,
     proteinTarget: 100,
     calories: 1500,
@@ -105,6 +106,7 @@ describe("Sidebar Component", () => {
       expect(screen.getByText("Protein Trend")).toBeInTheDocument();
       const closeBtn = screen.getByRole("button", { name: /Close/i });
       fireEvent.click(closeBtn);
+      expect(screen.queryByText("Protein Trend")).not.toBeInTheDocument();
     }
   });
 
@@ -116,7 +118,7 @@ describe("Sidebar Component", () => {
   });
 
   it("renders empty state when no activities recorded", () => {
-    render(<Sidebar {...defaultProps} logs={undefined as any} />);
+    render(<Sidebar {...defaultProps} logs={undefined as unknown as LogsResponse} />);
     expect(screen.getByText(/No activity yet/i)).toBeInTheDocument();
   });
 
@@ -127,7 +129,7 @@ describe("Sidebar Component", () => {
       water: [{ id: "w1", amount: 250, time: new Date().toISOString() }],
       workouts: [{ id: "wk1", focus: "Push Day", time: new Date().toISOString() }]
     };
-    render(<Sidebar {...defaultProps} logs={logsWithData as any} />);
+    render(<Sidebar {...defaultProps} logs={logsWithData as unknown as LogsResponse} />);
     expect(screen.getByText("Apple")).toBeInTheDocument();
     expect(screen.getByText("Hydration logged")).toBeInTheDocument();
     expect(screen.getByText("Push Day")).toBeInTheDocument();
@@ -156,7 +158,7 @@ describe("Sidebar Component", () => {
         }
       ]
     };
-    render(<Sidebar {...defaultProps} activeWorkout={activeWorkout} />);
+    render(<Sidebar {...defaultProps} activeWorkout={activeWorkout as unknown as ActiveWorkoutSession} />);
     
     expect(screen.getByText("Live Session")).toBeInTheDocument();
     expect(screen.getByText("Upper Body Power")).toBeInTheDocument();
@@ -185,7 +187,7 @@ describe("Sidebar Component", () => {
     
     // weight prop=72, previous (at(-2))=71 → weightDelta = +1.0
     // sleep prop=8, previous (at(-2)).hours=7 → sleepDelta = +1.0
-    render(<Sidebar {...defaultProps} weight={72} sleep={8} analytics={analytics as any} logs={logs as any} />);
+    render(<Sidebar {...defaultProps} weight={72} sleep={8} analytics={analytics as unknown as AnalyticsResponse} logs={logs as unknown as LogsResponse} />);
     
     // Both weight and sleep deltas should be +1.0
     const plusOneLabels = screen.getAllByText("+1.0");
@@ -205,7 +207,7 @@ describe("Sidebar Component", () => {
       startTime: Date.now(),
       exercises: [] // No exercises → currentEx is undefined → "Finishing up..."
     };
-    render(<Sidebar {...defaultProps} activeWorkout={activeWorkout as any} />);
+    render(<Sidebar {...defaultProps} activeWorkout={activeWorkout as unknown as ActiveWorkoutSession} />);
     expect(screen.getByText("Active Workout")).toBeInTheDocument();
     expect(screen.getByText("Next: Finishing up...")).toBeInTheDocument();
   });
@@ -239,7 +241,7 @@ describe("Sidebar Component", () => {
         }
       ]
     };
-    render(<Sidebar {...defaultProps} activeWorkout={activeWorkout as any} />);
+    render(<Sidebar {...defaultProps} activeWorkout={activeWorkout as unknown as ActiveWorkoutSession} />);
     // currentEx will be session.exercises.at(-1) which is Deadlift
     expect(screen.getByText("Next: Deadlift")).toBeInTheDocument();
   });
@@ -269,7 +271,7 @@ describe("Sidebar Component", () => {
         { id: "s2", hours: 8, time: "2024-01-02T00:00:00Z" },
       ]
     };
-    render(<Sidebar {...defaultProps} weight={72} sleep={8} analytics={analytics as any} logs={logs as any} />);
+    render(<Sidebar {...defaultProps} weight={72} sleep={8} analytics={analytics as unknown as AnalyticsResponse} logs={logs as unknown as LogsResponse} />);
     
     const minusOneLabels = screen.getAllByText("-1.0");
     expect(minusOneLabels.length).toBeGreaterThanOrEqual(2);
@@ -295,10 +297,10 @@ describe("Sidebar Component", () => {
 
   it("renders AI insights and handles onTabChange", () => {
     const aiInsights = [
-      { id: "insight-1", title: "Boost Fiber", content: "Eat more veggies", type: "NUTRITION", priority: "MEDIUM" }
+      { id: "insight-1", title: "Boost Fiber", content: "Eat more veggies", type: "NUTRITION" as const, priority: "MEDIUM" as const }
     ];
     const onTabChange = vi.fn();
-    render(<Sidebar {...defaultProps} aiInsights={aiInsights as any} onTabChange={onTabChange} />);
+    render(<Sidebar {...defaultProps} aiInsights={aiInsights as unknown as AIInsight[]} onTabChange={onTabChange} />);
     
     expect(screen.getByText("Boost Fiber")).toBeInTheDocument();
     
@@ -309,7 +311,7 @@ describe("Sidebar Component", () => {
   });
 
   it("handles missing logs safely in RecentActivity", () => {
-    render(<Sidebar {...defaultProps} logs={null as any} />);
+    render(<Sidebar {...defaultProps} logs={null as unknown as LogsResponse} />);
     expect(screen.getByText("Weight")).toBeInTheDocument();
   });
 
@@ -318,7 +320,7 @@ describe("Sidebar Component", () => {
       ...defaultProps.logs,
       sleep: [{ id: "s1", hours: 8, time: new Date().toISOString() }]
     };
-    render(<Sidebar {...defaultProps} sleep={8} logs={logs as any} />);
+    render(<Sidebar {...defaultProps} sleep={8} logs={logs as unknown as LogsResponse} />);
     // delta should be 0, no trend label should be rendered for sleep
     const deltaLabels = screen.queryAllByText(/[\+\-]\d+\.\d+/);
     expect(deltaLabels.length).toBe(0);
@@ -328,8 +330,8 @@ describe("Sidebar Component", () => {
     render(<Sidebar {...defaultProps} fiber={30} carbs={200} fats={60} />);
     
     const fiberBtn = screen.getByText("Fiber").closest("button");
-    const carbsBtn = screen.getByText("Carbs").closest("button");
-    const fatsBtn = screen.getByText("Fats").closest("button");
+    screen.getByText("Carbs").closest("button");
+    screen.getByText("Fats").closest("button");
     
     expect(screen.getByText("30.0")).toBeInTheDocument();
     expect(screen.getByText("200.0")).toBeInTheDocument();
@@ -345,9 +347,6 @@ describe("Sidebar Component", () => {
   });
 
   it("calculates trend delta when values are exactly the same", () => {
-    const analytics = {
-      weightTrend: [{ weight: 70 }, { weight: 70 }]
-    };
     // Delta is 0, shouldn't show a +/- label with metric-delta class
     const deltas = document.querySelectorAll('.metric-delta');
     expect(deltas.length).toBe(0);
@@ -360,9 +359,9 @@ describe("Sidebar Component", () => {
     render(
       <Sidebar 
         {...defaultProps} 
-        analytics={analytics as any} 
+        analytics={analytics as unknown as AnalyticsResponse} 
         weight="81" 
-        logs={{ sleep: [{ hours: 8 }] } as any}
+        logs={{ sleep: [{ hours: 8 }] } as unknown as LogsResponse}
       />
     );
     // Weight delta should be 0 because length < 2
@@ -376,9 +375,9 @@ describe("Sidebar Component", () => {
     render(
       <Sidebar 
         {...defaultProps} 
-        analytics={analytics as any} 
+        analytics={analytics as unknown as AnalyticsResponse} 
         weight="82"
-        logs={{ sleep: [{ hours: null }, { hours: 8 }] } as any}
+        logs={{ sleep: [{ hours: null }, { hours: 8 }] } as unknown as LogsResponse}
         sleep="7"
       />
     );
@@ -390,10 +389,10 @@ describe("Sidebar Component", () => {
     render(
       <Sidebar 
         {...defaultProps}
-        water={null as any}
-        fiber={null as any}
-        carbs={null as any}
-        fats={null as any}
+        water={null as unknown as number}
+        fiber={null as unknown as number}
+        carbs={null as unknown as number}
+        fats={null as unknown as number}
       />
     );
     // (water ?? 0).toFixed(1) => "0.0"
@@ -411,29 +410,29 @@ describe("Sidebar Component", () => {
         ...defaultProps.analytics,
         nutritionStats: [{ day: 'Mon', protein: 50, kcal: 1000 }] // Only 1 day
       };
-      render(<Sidebar {...defaultProps} analytics={analytics as any} />);
+      render(<Sidebar {...defaultProps} analytics={analytics as unknown as AnalyticsResponse} />);
       expect(screen.getByText('7-Day Consistency')).toBeInTheDocument();
     });
 
     it('handles WeeklyConsistency with null stats and null protein', () => {
       const analytics = {
         ...defaultProps.analytics,
-        nutritionStats: null as any
+        nutritionStats: null
       };
-      const { rerender } = render(<Sidebar {...defaultProps} analytics={analytics as any} />);
+      const { rerender } = render(<Sidebar {...defaultProps} analytics={analytics as unknown as AnalyticsResponse} />);
       expect(screen.queryByText('7-Day Consistency')).not.toBeInTheDocument();
 
       const analytics2 = {
         ...defaultProps.analytics,
-        nutritionStats: [{ day: 'Mon', protein: null as any, kcal: 1000 }]
+        nutritionStats: [{ day: 'Mon', protein: null, kcal: 1000 }]
       };
-      rerender(<Sidebar {...defaultProps} analytics={analytics2 as any} />);
+      rerender(<Sidebar {...defaultProps} analytics={analytics2 as unknown as AnalyticsResponse} />);
       expect(screen.getByText('7-Day Consistency')).toBeInTheDocument();
     });
 
     it('handles RecentActivity with partial logs', () => {
-       const logs = { food: null as any, workouts: null as any, water: null as any, sleep: [] };
-       render(<Sidebar {...defaultProps} logs={logs as any} />);
+       const logs = { food: null, workouts: null, water: null, sleep: [] };
+       render(<Sidebar {...defaultProps} logs={logs as unknown as LogsResponse} />);
        expect(screen.getByText(/No activity yet/i)).toBeInTheDocument();
     });
 
@@ -442,10 +441,10 @@ describe("Sidebar Component", () => {
         ...defaultProps.analytics,
         weightTrend: [
           { weight: 70, day: 'Mon' },
-          { weight: null as any, day: 'Tue' } // Second point has null weight
+          { weight: null, day: 'Tue' } // Second point has null weight
         ]
       };
-      render(<Sidebar {...defaultProps} weight={71} analytics={analytics as any} />);
+      render(<Sidebar {...defaultProps} weight={71} analytics={analytics as unknown as AnalyticsResponse} />);
       // Line 434: (weightTrend.at(-2)?.weight || 0)
       // Actually weightTrend.at(-2) is the FIRST point here (index length-2 = 0)
       // So weightTrend.at(-2).weight is 70.
@@ -453,25 +452,22 @@ describe("Sidebar Component", () => {
       const analytics2 = {
         ...defaultProps.analytics,
         weightTrend: [
-          { weight: null as any, day: 'Mon' },
+          { weight: null, day: 'Mon' },
           { weight: 70, day: 'Tue' }
         ]
       };
-      render(<Sidebar {...defaultProps} weight={71} analytics={analytics2 as any} />);
+      render(<Sidebar {...defaultProps} weight={71} analytics={analytics2 as unknown as AnalyticsResponse} />);
       expect(screen.getAllByText(/Weight/i).length).toBeGreaterThan(0);
     });
 
     it('covers WeeklyConsistency internal fallback branch with empty stats', () => {
       const analytics = {
         ...defaultProps.analytics,
-        nutritionStats: [] as any
+        nutritionStats: []
       };
-      render(<Sidebar {...defaultProps} analytics={analytics as any} />);
+      render(<Sidebar {...defaultProps} analytics={analytics as unknown as AnalyticsResponse} />);
       expect(screen.getByText('7-Day Consistency')).toBeInTheDocument();
       // This will hit: const last7 = (stats || []).slice(-7); where stats is []
     });
   });
 });
-
-
-

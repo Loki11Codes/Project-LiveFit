@@ -86,19 +86,6 @@ export function VerifyEmailForm() {
   }
 
   return (
-    <AuthShell
-      badge="Security"
-      title="Verify your identity"
-      subtitle="Confirm your email to unlock your Caloriq workspace and start your fitness journey."
-      panelTitle="Authentication Guard"
-      panelDescription="We enforce real email verification to maintain a secure and high-quality environment for all our athletes."
-      panelPoints={[
-        "Secure 256-bit encryption",
-        "Instant magic link verification",
-        "Multi-factor identity check"
-      ]}
-      illustration={<div className="flex justify-center p-8 opacity-20"><ShieldCheck size={120} /></div>}
-    >
       <div className="space-y-6">
         <div className="flex flex-col items-center justify-center space-y-4 text-center">
           <div className="p-4 rounded-3xl bg-auth-surface2 border border-auth-border text-[#185fa5]">
@@ -162,6 +149,5 @@ export function VerifyEmailForm() {
           </button>
         </div>
       </div>
-    </AuthShell>
   );
 }

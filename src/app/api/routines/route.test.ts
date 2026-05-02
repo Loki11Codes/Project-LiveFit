@@ -1,5 +1,6 @@
 import { GET, POST, DELETE } from './route';
 import { getServerSession } from 'next-auth';
+import type { Session } from 'next-auth';
 import prisma from '@/lib/prisma';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -36,10 +37,10 @@ describe('Routines API', () => {
     });
 
     it('returns routines for authenticated user', async () => {
-      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as unknown as Session);
       
       const mockRoutines = [{ id: 'r1', name: 'Push' }];
-      vi.mocked(prisma.routine.findMany).mockResolvedValueOnce(mockRoutines as any);
+      vi.mocked(prisma.routine.findMany).mockResolvedValueOnce(mockRoutines as unknown as Awaited<ReturnType<typeof prisma.routine.findMany>>);
 
       const req = new Request('http://localhost/api/routines');
       const res = await GET(req);
@@ -49,9 +50,9 @@ describe('Routines API', () => {
     });
 
     it('returns a single routine if id is provided', async () => {
-      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as unknown as Session);
       const mockRoutine = { id: 'r1', name: 'Push' };
-      vi.mocked(prisma.routine.findUnique).mockResolvedValueOnce(mockRoutine as any);
+      vi.mocked(prisma.routine.findUnique).mockResolvedValueOnce(mockRoutine as unknown as Awaited<ReturnType<typeof prisma.routine.findUnique>>);
 
       const req = new Request('http://localhost/api/routines?id=r1');
       const res = await GET(req);
@@ -60,7 +61,7 @@ describe('Routines API', () => {
     });
 
     it('returns 404 if single routine not found', async () => {
-      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as unknown as Session);
       vi.mocked(prisma.routine.findUnique).mockResolvedValueOnce(null);
 
       const req = new Request('http://localhost/api/routines?id=nonexistent');
@@ -69,7 +70,7 @@ describe('Routines API', () => {
     });
 
     it('returns 500 on db error', async () => {
-      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as unknown as Session);
       vi.mocked(prisma.routine.findMany).mockRejectedValueOnce(new Error('DB Error'));
 
       const req = new Request('http://localhost/api/routines');
@@ -88,7 +89,7 @@ describe('Routines API', () => {
     });
 
     it('returns 400 for invalid data', async () => {
-      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as unknown as Session);
       const req = new Request('http://localhost/api/routines', { 
         method: 'POST', 
         body: JSON.stringify({ name: '' }) 
@@ -99,7 +100,7 @@ describe('Routines API', () => {
     });
 
     it('creates a new routine successfully', async () => {
-      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as unknown as Session);
       
       const reqBody = {
         name: 'New Routine',
@@ -111,7 +112,7 @@ describe('Routines API', () => {
       });
 
       const mockCreated = { id: 'r2', name: 'New Routine' };
-      vi.mocked(prisma.routine.create).mockResolvedValueOnce(mockCreated as any);
+      vi.mocked(prisma.routine.create).mockResolvedValueOnce(mockCreated as unknown as Awaited<ReturnType<typeof prisma.routine.create>>);
 
       const res = await POST(req);
       expect(res.status).toBe(201);
@@ -119,7 +120,7 @@ describe('Routines API', () => {
     });
 
     it('creates a new routine with missing target reps', async () => {
-      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as unknown as Session);
       
       const reqBody = {
         name: 'New Routine',
@@ -131,7 +132,7 @@ describe('Routines API', () => {
       });
 
       const mockCreated = { id: 'r2', name: 'New Routine' };
-      vi.mocked(prisma.routine.create).mockResolvedValueOnce(mockCreated as any);
+      vi.mocked(prisma.routine.create).mockResolvedValueOnce(mockCreated as unknown as Awaited<ReturnType<typeof prisma.routine.create>>);
 
       const res = await POST(req);
       expect(res.status).toBe(201);
@@ -145,7 +146,7 @@ describe('Routines API', () => {
     });
 
     it('returns 500 on db error', async () => {
-      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'user-1' } } as unknown as Session);
       const req = new Request('http://localhost/api/routines', { 
         method: 'POST', 
         body: JSON.stringify({ name: 'n', exercises: [] }) 
@@ -166,14 +167,14 @@ describe('Routines API', () => {
     });
 
     it('returns 400 if id is missing', async () => {
-      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'u1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'u1' } } as unknown as Session);
       const req = new Request('http://localhost/api/routines', { method: 'DELETE' });
       const res = await DELETE(req);
       expect(res.status).toBe(400);
     });
 
     it('returns 404 if routine not found or not owned', async () => {
-      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'u1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'u1' } } as unknown as Session);
       vi.mocked(prisma.routine.findFirst).mockResolvedValueOnce(null);
       
       const req = new Request('http://localhost/api/routines?id=r1', { method: 'DELETE' });
@@ -182,9 +183,9 @@ describe('Routines API', () => {
     });
 
     it('deletes routine successfully', async () => {
-      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'u1' } } as any);
-      vi.mocked(prisma.routine.findFirst).mockResolvedValueOnce({ id: 'r1', userId: 'u1' } as any);
-      vi.mocked(prisma.routine.delete).mockResolvedValueOnce({} as any);
+      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'u1' } } as unknown as Session);
+      vi.mocked(prisma.routine.findFirst).mockResolvedValueOnce({ id: 'r1', userId: 'u1' } as unknown as Awaited<ReturnType<typeof prisma.routine.findFirst>>);
+      vi.mocked(prisma.routine.delete).mockResolvedValueOnce({} as unknown as Awaited<ReturnType<typeof prisma.routine.delete>>);
 
       const req = new Request('http://localhost/api/routines?id=r1', { method: 'DELETE' });
       const res = await DELETE(req);
@@ -193,7 +194,7 @@ describe('Routines API', () => {
     });
 
     it('returns 500 on db error during delete', async () => {
-      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'u1' } } as any);
+      vi.mocked(getServerSession).mockResolvedValueOnce({ user: { id: 'u1' } } as unknown as Session);
       vi.mocked(prisma.routine.findFirst).mockRejectedValueOnce(new Error('fail'));
 
       const req = new Request('http://localhost/api/routines?id=r1', { method: 'DELETE' });
