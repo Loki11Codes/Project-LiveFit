@@ -70,14 +70,17 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ user, account }) {
-      if (account?.provider === "google") {
-        // Automatically verify Google users if not already verified
-        if (!user.emailVerified) {
+      if (account?.provider === "google" && user.email) {
+        // Check if user exists before updating (avoids race conditions on first login)
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email }
+        });
+
+        if (existingUser && !existingUser.emailVerified) {
           await prisma.user.update({
-            where: { id: user.id },
+            where: { id: existingUser.id },
             data: { emailVerified: new Date() }
           });
-          user.emailVerified = new Date();
         }
       }
       return true;
