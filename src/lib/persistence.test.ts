@@ -19,7 +19,6 @@ describe('persistence utility', () => {
     workoutLog: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn(), delete: vi.fn(), deleteMany: vi.fn(), count: vi.fn().mockResolvedValue(0) },
     sleepLog: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() },
     bodyMeasurement: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() },
-    waterLog: { findFirst: vi.fn(), update: vi.fn(), create: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() },
     userProfile: { findUnique: vi.fn(), upsert: vi.fn(), findFirst: vi.fn() },
     goal: { upsert: vi.fn(), findUnique: vi.fn() },
     dayTypeEntry: { upsert: vi.fn() },
@@ -327,7 +326,8 @@ describe('persistence utility', () => {
 
     it('guards against malformed data in helpers', async () => {
         // Test persistLogData fallback when data is missing
-        await persistLogData([{ category: 'sleep', hours: 8 } as unknown as { category: string; data: unknown }], userId);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await persistLogData([{ category: 'sleep', hours: 8 } as any], userId);
         expect(mockTx.sleepLog.create).toHaveBeenCalled();
 
         // Test validation failure
@@ -367,7 +367,9 @@ describe('persistence utility', () => {
         expect(mockTx.sleepLog.delete).toHaveBeenCalled();
 
         await persistLogData([{ category: 'delete', data: { target: 'water' } }], userId);
-        expect(mockTx.waterLog.deleteMany).toHaveBeenCalled();
+        expect(mockTx.foodLog.deleteMany).toHaveBeenCalledWith(expect.objectContaining({
+            where: expect.objectContaining({ NOT: { water: null } })
+        }));
 
         await persistLogData([{ category: 'delete', data: { target: 'measurement' } }], userId);
         expect(mockTx.bodyMeasurement.delete).toHaveBeenCalled();
@@ -465,9 +467,9 @@ describe('persistence utility', () => {
     it('updates personal records correctly', async () => {
         const userId = 'user-123';
         const exercises = [
-            { id: 'ex-1', sets: [{ weight: 100, reps: 5 }] }, // RM = 116.6
-            { id: null, sets: [{ weight: 50, reps: 10 }] }, // should skip (no id)
-            { id: 'ex-2' } // should skip (no sets)
+            { id: 'ex-1', name: 'Ex 1', order: 0, sets: [{ weight: 100, reps: 5 }] }, // RM = 116.6
+            { id: null, name: 'Ex Null', order: 1, sets: [{ weight: 50, reps: 10 }] }, // should skip (no id)
+            { id: 'ex-2', name: 'Ex 2', order: 2 } // should skip (no sets)
         ];
 
         // New PR branch
@@ -479,7 +481,7 @@ describe('persistence utility', () => {
 
         // Existing PR branch (update)
         mockTx.personalRecord.findUnique.mockResolvedValue({ id: 'pr-1', maxWeight: 80, max1RM: 90 });
-        await updatePersonalRecords(txClient, userId, [{ id: 'ex-1', sets: [{ weight: 110, reps: 5 }] }]);
+        await updatePersonalRecords(txClient, userId, [{ id: 'ex-1', name: 'Ex 1', order: 0, sets: [{ weight: 110, reps: 5 }] }]);
         expect(mockTx.personalRecord.update).toHaveBeenCalledWith(expect.objectContaining({
             where: { id: 'pr-1' },
             data: expect.objectContaining({ maxWeight: 110 })
@@ -628,11 +630,15 @@ describe('persistence utility', () => {
     it('covers persistDeleteAction fallbacks', async () => {
         // Line 603 clientDate fallback
         await persistLogData([{ category: 'delete', data: { target: 'water' } }], userId, '2024-01-02');
-        expect(mockTx.waterLog.deleteMany).toHaveBeenCalled();
+        expect(mockTx.foodLog.deleteMany).toHaveBeenCalledWith(expect.objectContaining({
+            where: expect.objectContaining({ NOT: { water: null } })
+        }));
 
         // Line 610 new Date() fallback
         await persistLogData([{ category: 'delete', data: { target: 'water' } }], userId);
-        expect(mockTx.waterLog.deleteMany).toHaveBeenCalled();
+        expect(mockTx.foodLog.deleteMany).toHaveBeenCalledWith(expect.objectContaining({
+            where: expect.objectContaining({ NOT: { water: null } })
+        }));
     });
 
     it('covers bodyMeasurement update requested but not existing', async () => {
@@ -657,6 +663,8 @@ describe('persistence utility', () => {
         const resolvedExercises = [
             {
                 id: 'ex-1',
+                name: 'Ex 1',
+                order: 0,
                 sets: [
                     { weight: 110, reps: 5 },   // 1RM = 110 * (1 + 5/30) = 128.3
                     { weight: 100, reps: 10 },  // 1RM = 133.3 (higher 1RM but lower weight)
@@ -678,7 +686,7 @@ describe('persistence utility', () => {
 
     it('covers updatePersonalRecords new higher values', async () => {
         mockTx.personalRecord.findUnique.mockResolvedValue({ id: 'pr-1', maxWeight: 50, max1RM: 60 });
-        const resolvedExercises = [{ id: 'ex-1', sets: [{ weight: 100, reps: 10 }] }];
+        const resolvedExercises = [{ id: 'ex-1', name: 'Ex 1', order: 0, sets: [{ weight: 100, reps: 10 }] }];
         await updatePersonalRecords(txClient, userId, resolvedExercises);
         expect(mockTx.personalRecord.update).toHaveBeenCalledWith(expect.objectContaining({
             data: expect.objectContaining({ maxWeight: 100, max1RM: expect.any(Number) })
@@ -689,7 +697,10 @@ describe('persistence utility', () => {
 
     it('covers updatePersonalRecords skipping when id or sets missing', async () => {
         // Line 315 continue branch
-        await updatePersonalRecords(txClient, userId, [{ id: null, sets: [] }, { id: 'ex-1', sets: null }]);
+        await updatePersonalRecords(txClient, userId, [
+            { id: null, name: 'Ex 1', order: 0, sets: [] }, 
+            { id: 'ex-1', name: 'Ex 2', order: 1, sets: undefined }
+        ]);
         expect(mockTx.personalRecord.update).not.toHaveBeenCalled();
         expect(mockTx.personalRecord.create).not.toHaveBeenCalled();
     });
@@ -697,13 +708,13 @@ describe('persistence utility', () => {
     it('covers updatePersonalRecords edge cases (null weights, zero max, null existing)', async () => {
         // 1. Fallback weight=0, reps=0 (Line 321, 322)
         mockTx.personalRecord.findUnique.mockResolvedValue(null);
-        await updatePersonalRecords(txClient, userId, [{ id: 'ex-1', sets: [{ weight: null, reps: null }] }]);
+        await updatePersonalRecords(txClient, userId, [{ id: 'ex-1', name: 'Ex 1', order: 0, sets: [{ weight: undefined, reps: undefined }] }]);
         // maxWeight and max1RM will be 0, so should NOT create/update (Line 329)
         expect(mockTx.personalRecord.create).not.toHaveBeenCalled();
 
         // 2. Existing PR with null values (Line 338, 339 fallback)
         mockTx.personalRecord.findUnique.mockResolvedValue({ id: 'pr-1', maxWeight: null, max1RM: null });
-        await updatePersonalRecords(txClient, userId, [{ id: 'ex-1', sets: [{ weight: 50, reps: 5 }] }]);
+        await updatePersonalRecords(txClient, userId, [{ id: 'ex-1', name: 'Ex 1', order: 0, sets: [{ weight: 50, reps: 5 }] }]);
         expect(mockTx.personalRecord.update).toHaveBeenCalledWith(expect.objectContaining({
             data: { maxWeight: 50, max1RM: expect.any(Number) }
         }));

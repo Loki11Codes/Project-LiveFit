@@ -650,6 +650,7 @@ async function persistDeleteAction(
     sleep: () => deleteSingleEntry(tx.sleepLog, userId, dateRange),
     measurement: () => deleteSingleEntry(tx.bodyMeasurement, userId, dateRange),
     knowledge: () => deleteKnowledgeEntry(tx, raw, userId),
+    water: async () => { await tx.foodLog.deleteMany({ where: { userId, time: dateRange, NOT: { water: null } } }); },
     all: async () => {
       await Promise.all([
         tx.foodLog.deleteMany({ where: { userId, time: dateRange } }),

@@ -17,6 +17,7 @@ const eslintConfig = defineConfig([
     "seed-test-user.js",
     "debug-*.js",
     "fetch-issues.js",
+    "coverage/**",
   ]),
 ]);
 

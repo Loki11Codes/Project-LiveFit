@@ -4,6 +4,8 @@ import type {
   WorkoutLog,
   WorkoutExercise,
   WorkoutSet,
+  Routine,
+  RoutineExercise,
   Exercise,
 } from "@prisma/client";
 
@@ -13,8 +15,16 @@ export type {
   WorkoutLog,
   WorkoutExercise,
   WorkoutSet,
+  Routine,
+  RoutineExercise,
   Exercise,
 } from "@prisma/client";
+
+export type RoutineWithExercises = Routine & {
+  exercises: (RoutineExercise & {
+    exercise: Exercise | null;
+  })[];
+};
 
 export type WorkoutLogWithRelations = WorkoutLog & {
   exercises: (WorkoutExercise & {
@@ -237,6 +247,7 @@ export type ParsedLogEnvelope = {
 
 export type HistoryRow = {
   day: string;
+  date: string;
   type: string;
   sleep: string;
   protein: number;

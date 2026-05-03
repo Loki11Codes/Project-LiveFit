@@ -84,7 +84,11 @@ describe('Auth Options', () => {
         id: 'u1',
         email: 'test@test.com',
         name: 'Test',
-        image: 'img.png'
+        image: 'img.png',
+        requirePasswordChange: false,
+        onboarded: false,
+        hasSeenTutorial: false,
+        emailVerified: undefined
       });
     });
   });
@@ -125,12 +129,14 @@ describe('Auth Options', () => {
 
     it('session handles emailVerified and image in token', async () => {
        const sessionCb = authOptions.callbacks?.session as (args: { session: Session, token: JWT }) => Awaitable<Session>;
-       const result = await sessionCb({
-         session: { user: {} } as Session,
-         token: { id: 'u1', emailVerified: '2024-01-01', picture: 'new-img.png' } as JWT
-       });
-       const user = result.user as AuthUser & { emailVerified: string };
-       expect(user.emailVerified).toBe('2024-01-01');
+        const result = await sessionCb({
+          session: { user: {} } as Session,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          token: { id: 'u1', emailVerified: '2024-01-01', picture: 'new-img.png' } as any
+        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const user = result.user as any;
+        expect(user.emailVerified).toBe('2024-01-01');
        expect(result.user?.image).toBe('new-img.png');
     });
   });

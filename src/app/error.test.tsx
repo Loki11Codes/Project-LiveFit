@@ -54,12 +54,11 @@ describe('AppError', () => {
   });
 
   it('shows error details in development mode', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    vi.stubEnv('NODE_ENV', 'development');
     
     render(<AppError error={mockError} reset={mockReset} />);
     expect(screen.getByText('Test error message')).toBeInTheDocument();
     
-    process.env.NODE_ENV = originalEnv;
+    vi.unstubAllEnvs();
   });
 });

@@ -80,7 +80,7 @@ export default function Home() {
   const [dashboard, setDashboard] = useState<DashboardState>(
     INITIAL_DASHBOARD_STATE,
   );
-  const [chatDraft, setChatDraft] = useState<string | null>(null);
+  const [chatDraft, setChatDraft] = useState<string | null>(() => searchParams.get("msg"));
   const [chatInput, setChatInput] = useState("");
   const [newAchievements, setNewAchievements] = useState<AchievementBadge[]>([]);
 
@@ -331,7 +331,7 @@ export default function Home() {
     const nut = sumNutrition(food);
     const sleep = getLatestSleepLog(dashboard.logs.sleep);
     const count = getTrackedDayCount(dashboard.logs);
-    const workedOut = dashboard.logs.workouts.some(w => getLocalDateKey(w.time) === getLocalDateKey(new Date()));
+    const workedOut = (dashboard.logs.workouts || []).some(w => getLocalDateKey(w.time) === getLocalDateKey(new Date()));
     const rows = buildHistoryRows(dashboard.logs, dashboard.goals, dashboard.dayTypesByDay);
     
     return {
@@ -627,9 +627,9 @@ export default function Home() {
                     calories={nutrition.calories}
                     calorieTarget={dashboard.goals.kcalTarget}
                     carbs={nutrition.carbs}
-                    carbsTarget={dashboard.goals.carbsTarget}
+                    carbsTarget={dashboard.goals.carbsTarget ?? 0}
                     fats={nutrition.fats}
-                    fatsTarget={dashboard.goals.fatsTarget}
+                    fatsTarget={dashboard.goals.fatsTarget ?? 0}
                     fiber={nutrition.fiber}
                     water={nutrition.water}
                     waterTarget={dashboard.goals.waterTarget ?? 3}

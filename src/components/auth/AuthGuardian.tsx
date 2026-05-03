@@ -21,7 +21,7 @@ export function AuthGuardian() {
     const isVerifyPath = pathname === "/auth/verify";
 
     // 1. Mandatory Password Reset (Highest Priority)
-    if (session.user.requirePasswordChange === true) {
+    if (session?.user?.requirePasswordChange === true) {
       if (!isResetPath) {
         console.warn("Security: Mandatory password reset detected. Redirecting...");
         router.push("/auth/reset-password");
@@ -30,7 +30,7 @@ export function AuthGuardian() {
     }
 
     // 2. Mandatory Email Verification
-    if (!session.user.emailVerified) {
+    if (session?.user && !session.user.emailVerified) {
       if (!isVerifyPath && !isResetPath) {
         console.warn("Security: Email not verified. Redirecting to verification...");
         router.push("/auth/verify");
@@ -40,7 +40,7 @@ export function AuthGuardian() {
 
 
     // 3. Mandatory Onboarding
-    if (session.user.onboarded === false) {
+    if (session?.user?.onboarded === false) {
       if (!isOnboardingPath && !isResetPath && !isVerifyPath) {
         console.log("Onboarding: New user detected. Redirecting to tutorial...");
         router.push("/onboarding");

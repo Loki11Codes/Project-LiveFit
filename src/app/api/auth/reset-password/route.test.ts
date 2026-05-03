@@ -13,6 +13,11 @@ vi.mock('bcryptjs', () => ({
   default: {
     hash: vi.fn().mockResolvedValue('hashed-password'),
   },
+  hash: vi.fn().mockResolvedValue('hashed-password'),
+}));
+
+vi.mock('@/lib/email', () => ({
+  sendPasswordChangedEmail: vi.fn().mockResolvedValue(true),
 }));
 
 vi.mock('@/lib/prisma', () => ({

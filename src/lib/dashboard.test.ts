@@ -16,7 +16,7 @@ import {
   round,
   formatNumber,
 } from './dashboard';
-import type { FoodLog, BodyMeasurement } from '@prisma/client';
+import type { FoodLog, BodyMeasurement, SleepLog } from '@prisma/client';
 import { EMPTY_MEASUREMENT_FORM, DashboardState, GoalsState, DayTypeMap, MeasurementForm, DayTypeEntryRecord } from './types';
 
 describe('dashboard utilities', () => {

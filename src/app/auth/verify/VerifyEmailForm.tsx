@@ -11,7 +11,6 @@ import {
   RefreshCcw,
   AlertCircle
 } from "lucide-react";
-import { AuthShell } from "@/components/auth/AuthShell";
 import { requestJson, getClientErrorMessage } from "@/lib/client-api";
 
 export function VerifyEmailForm() {

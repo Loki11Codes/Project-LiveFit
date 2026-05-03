@@ -44,7 +44,7 @@ describe("ChatInput Component", () => {
     onSend: vi.fn(),
     onFileSelect: vi.fn(),
     onRemoveAttachment: vi.fn(),
-    textInputRef: { current: null } as unknown as React.RefObject<HTMLTextAreaElement>,
+    textInputRef: { current: null } as unknown as React.RefObject<HTMLInputElement>,
   };
 
   beforeEach(() => {
@@ -165,7 +165,7 @@ describe("ChatInput Component", () => {
     
     globalRec.SpeechRecognition = function() {
       const mock = new MockSpeechRecognition();
-      mock.start = () => { throw new Error('Start failed'); };
+      mock.start = vi.fn().mockImplementation(() => { throw new Error('Start failed'); });
       return mock;
     };
     

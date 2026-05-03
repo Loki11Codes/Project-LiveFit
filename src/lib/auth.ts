@@ -50,9 +50,9 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             name: user.name,
             image: user.image,
-            requirePasswordChange: user.requirePasswordChange,
-            onboarded: user.onboarded,
-            hasSeenTutorial: user.hasSeenTutorial,
+            requirePasswordChange: user.requirePasswordChange ?? false,
+            onboarded: user.onboarded ?? false,
+            hasSeenTutorial: user.hasSeenTutorial ?? false,
             emailVerified: user.emailVerified,
           };
         } catch (error) {
@@ -70,6 +70,7 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user, account, trigger, session }) {
+      // Initial sign in: user object is available
       if (user) {
         token.id = user.id;
         token.requirePasswordChange = user.requirePasswordChange;
@@ -85,20 +86,24 @@ export const authOptions: NextAuthOptions = {
 
       // Handle manual session updates (like finishing onboarding)
       if (trigger === "update" && session) {
+        if (typeof session.requirePasswordChange === 'boolean') token.requirePasswordChange = session.requirePasswordChange;
         if (typeof session.onboarded === 'boolean') token.onboarded = session.onboarded;
         if (typeof session.hasSeenTutorial === 'boolean') token.hasSeenTutorial = session.hasSeenTutorial;
-        if (session.emailVerified) token.emailVerified = session.emailVerified;
+        if (session.emailVerified !== undefined) token.emailVerified = session.emailVerified;
       }
 
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.requirePasswordChange = token.requirePasswordChange as boolean;
-        session.user.onboarded = token.onboarded as boolean;
-        session.user.hasSeenTutorial = token.hasSeenTutorial as boolean;
+      if (session.user && token) {
+        session.user.id = (token.id as string) || (token.sub as string) || "";
+        session.user.requirePasswordChange = !!token.requirePasswordChange;
+        session.user.onboarded = !!token.onboarded;
+        session.user.hasSeenTutorial = !!token.hasSeenTutorial;
         session.user.emailVerified = token.emailVerified as Date | null;
+        if (token.picture) {
+          session.user.image = token.picture as string;
+        }
       }
       return session;
     },

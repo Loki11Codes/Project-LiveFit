@@ -37,8 +37,8 @@ describe('Analytics API Route', () => {
       { id: 'm1', time: new Date('2026-03-18T08:00:00Z'), weight: 70 },
     ];
 
-    vi.mocked(prisma.foodLog.findMany).mockResolvedValue(mockFood as unknown as Record<string, unknown>[]);
-    vi.mocked(prisma.bodyMeasurement.findMany).mockResolvedValue(mockMeasurements as unknown as Record<string, unknown>[]);
+    vi.mocked(prisma.foodLog.findMany).mockResolvedValue(mockFood as unknown as Awaited<ReturnType<typeof prisma.foodLog.findMany>>);
+    vi.mocked(prisma.bodyMeasurement.findMany).mockResolvedValue(mockMeasurements as unknown as Awaited<ReturnType<typeof prisma.bodyMeasurement.findMany>>);
 
     const res = await GET();
     const data = await res.json();

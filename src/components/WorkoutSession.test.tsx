@@ -304,7 +304,7 @@ describe('WorkoutSession Component', () => {
           weight: '80',
           reps: '8',
           isCompleted: false,
-          suggestion: { weight: 85, reps: 8, reason: 'Progressive overload' },
+          suggestion: { weight: '85', reps: '8', reason: 'Progressive overload' },
         }],
       }],
     });
@@ -324,7 +324,7 @@ describe('WorkoutSession Component', () => {
           weight: '80',
           reps: '8',
           isCompleted: false,
-          suggestion: { weight: 85, reps: 8 },
+          suggestion: { weight: '85', reps: '8' },
         }],
       }],
     });

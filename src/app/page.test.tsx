@@ -1,15 +1,52 @@
-import { render, screen, fireEvent, cleanup, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import Dashboard from "./page";
-import { useSession } from "next-auth/react";
-import React from "react";
-import type { SessionContextValue } from "next-auth/react";
-import type { ActiveWorkoutSession, TabId } from "@/lib/types";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Mock framer-motion
+vi.mock("framer-motion", () => ({
+  motion: {
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    main: ({ children, ...props }: any) => <main {...props}>{children}</main>,
+    nav: ({ children, ...props }: any) => <nav {...props}>{children}</nav>,
+    button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  },
+  AnimatePresence: ({ children }: any) => <>{children}</>,
+}));
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 // Mock next-auth/react
 vi.mock("next-auth/react", () => ({
   useSession: vi.fn(),
 }));
+
+// Mock next/navigation
+const mockSearchParamsGet = vi.fn().mockReturnValue(null);
+// Mock next/navigation
+let currentParams = new URLSearchParams();
+export const setSearchParams = (params: Record<string, string>) => {
+  currentParams = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => currentParams.set(k, v));
+};
+
+vi.mock("next/navigation", () => ({
+  useRouter: vi.fn(() => ({
+    push: vi.fn((url: string) => {
+      const urlObj = new URL(url, "http://localhost");
+      currentParams = urlObj.searchParams;
+    }),
+    replace: vi.fn(),
+    refresh: vi.fn(),
+  })),
+  useSearchParams: vi.fn(() => ({
+    get: (key: string) => currentParams.get(key),
+    toString: () => currentParams.toString(),
+  })),
+}));
+
+import { render, screen, fireEvent, cleanup, waitFor, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import Dashboard from "./page";
+import { useSession } from "next-auth/react";
+import React from "react";
+import type { SessionContextValue } from "next-auth/react";
+import type { ActiveWorkoutSession } from "@/lib/types";
 
 // Mock components
 vi.mock("../components/Navbar", () => ({
@@ -51,7 +88,7 @@ vi.mock("../components/Tabs/BodyTab", () => ({
   default: () => <div data-testid="body-tab">Body Tab Content</div>,
 }));
 
-vi.mock("../components/Tabs/MealsTab", () => ({
+vi.mock("../components/Tabs/MealPlanningTab", () => ({
   default: () => <div data-testid="meals-tab">Meals Tab Content</div>,
 }));
 
@@ -82,6 +119,9 @@ vi.mock("../components/Shared/CloudBackground", () => ({
 globalThis.fetch = vi.fn().mockResolvedValue({
   ok: true,
   json: () => Promise.resolve({}),
+  headers: {
+    get: vi.fn().mockReturnValue("application/json"),
+  },
 } as unknown as Response);
 
 describe("Dashboard (Main Page)", () => {
@@ -92,6 +132,8 @@ describe("Dashboard (Main Page)", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
+    currentParams = new URLSearchParams();
     vi.mocked(useSession).mockReturnValue({
       data: mockSession,
       status: "authenticated",
@@ -108,23 +150,29 @@ describe("Dashboard (Main Page)", () => {
   });
 
   it("switches tabs via Navbar", () => {
+    mockSearchParamsGet.mockReturnValue("log");
     render(<Dashboard />);
     const logBtn = screen.getByText("LogTabBtn");
     fireEvent.click(logBtn);
     expect(screen.getByTestId("log-tab")).toBeInTheDocument();
   });
 
-  it("switches tabs via Sidebar", () => {
+  it("switches tabs via Sidebar", async () => {
+    mockSearchParamsGet.mockImplementation((key) => (key === "tab" ? "chat" : null));
     render(<Dashboard />);
-    const mealsBtn = screen.getByText("MealsTabBtn");
-    fireEvent.click(mealsBtn);
-    expect(screen.getByTestId("meals-tab")).toBeInTheDocument();
+    const mealsBtn = await screen.findByText("MealsTabBtn");
+    await act(async () => {
+      fireEvent.click(mealsBtn);
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("meals-tab")).toBeInTheDocument();
+    });
   });
 
   it("starts a workout session from RoutinesTab", () => {
     render(<Dashboard />);
     // Switch to routines first
-    const navbar = screen.getByTestId("navbar");
+    screen.getByTestId("navbar");
     // We don't have a direct routines button in our simple mock navbar,
     // so we simulate the state change by clicking a button that doesn't exist in mock but we'll add it or use tab change logic.
     // Actually, RoutinesTab is part of the Body tab or similar? No, it's a sub-component.
@@ -152,27 +200,23 @@ describe("Dashboard (Main Page)", () => {
 
 // Re-writing the test with more comprehensive mocks to cover the workout flow
 describe("Dashboard Workout Flow", () => {
-    beforeEach(() => {
+    beforeEach(async () => {
         vi.mocked(useSession).mockReturnValue({
           data: { user: { id: "u1" } },
           status: "authenticated",
         } as unknown as SessionContextValue);
         
-        // Mock search params
-        vi.mock("next/navigation", () => ({
-            useSearchParams: () => ({
-                get: (key: string) => key === 'msg' ? 'Start my workout' : null
-            })
-        }));
+        mockSearchParamsGet.mockImplementation((key: string) => key === 'msg' ? 'Start my workout' : null);
     });
 
     it("handles initial message and tab transitions", async () => {
+        setSearchParams({ msg: "Start my workout" });
         render(<Dashboard />);
         expect(screen.getByText("Chat: Start my workout")).toBeInTheDocument();
     });
 
     it("handles workout session lifecycle", async () => {
-        const { rerender } = render(<Dashboard />);
+        render(<Dashboard />);
         
         // Simulate switching to routines tab via navbar
         // Since we can't easily click a button in the real Navbar (it's mocked),

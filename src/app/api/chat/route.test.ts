@@ -6,34 +6,51 @@ import type { UserKnowledge, PersonalRecord, Routine } from '@prisma/client';
 vi.mock('@/lib/prisma', () => ({
   default: {
     userKnowledge: {
-      findMany: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
     },
     personalRecord: {
-      findMany: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
     },
     routine: {
-      findMany: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
     },
+    user: {
+        findUnique: vi.fn().mockResolvedValue({ id: 'u1' }),
+    },
+    chatMessage: {
+        create: vi.fn().mockResolvedValue({}),
+    }
   },
 }));
 
 vi.mock('next-auth', () => ({
-  getServerSession: vi.fn(() => Promise.resolve({ user: { id: 'u1' } })),
+  getServerSession: vi.fn(),
 }));
+import { getServerSession } from 'next-auth';
+
+// Global fetch mock
+globalThis.fetch = vi.fn();
 
 describe('Chat API Route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.OPENROUTER_API_KEY = 'test_key';
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'u1' } });
+    vi.mocked(globalThis.fetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: 'AI response' } }] }),
+      text: async () => 'AI response',
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' })
+    } as unknown as Response);
   });
 
   it('returns 401 if not authenticated', async () => {
-    const nextAuth = await import('next-auth');
-    vi.mocked(nextAuth.getServerSession).mockResolvedValueOnce(null);
+    vi.mocked(getServerSession).mockResolvedValueOnce(null);
     
     const req = new Request('http://localhost/api/chat', {
       method: 'POST',
-      body: JSON.stringify({ prompt: 'Hello' }),
+      body: JSON.stringify({ prompt: 'Hello', history: [], images: [] }),
     });
     const res = await POST(req);
     expect(res.status).toBe(401);
@@ -49,16 +66,17 @@ describe('Chat API Route', () => {
   });
 
   it('calls OpenRouter and returns response', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
+    vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({
         choices: [{ message: { content: 'AI Response' } }]
-      })
+      }),
+      headers: new Headers({ 'content-type': 'application/json' })
     } as unknown as Response);
 
     const req = new Request('http://localhost/api/chat', {
       method: 'POST',
-      body: JSON.stringify({ prompt: 'Hello', history: [] }),
+      body: JSON.stringify({ prompt: 'Hello', history: [], images: [] }),
     });
     const res = await POST(req);
     const data = await res.json();
@@ -68,15 +86,18 @@ describe('Chat API Route', () => {
   });
 
   it('handles OpenRouter failure', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
+    vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: false,
       status: 500,
-      statusText: 'Internal Error'
+      statusText: 'Internal Error',
+      text: async () => 'Internal Error',
+      json: async () => ({ error: 'Internal Error' }),
+      headers: new Headers({ 'content-type': 'application/json' })
     } as unknown as Response);
 
     const req = new Request('http://localhost/api/chat', {
       method: 'POST',
-      body: JSON.stringify({ prompt: 'Hello' }),
+      body: JSON.stringify({ prompt: 'Hello', history: [], images: [] }),
     });
     const res = await POST(req);
     expect(res.status).toBe(500);
@@ -87,7 +108,7 @@ describe('Chat API Route', () => {
 
     const req = new Request('http://localhost/api/chat', {
       method: 'POST',
-      body: JSON.stringify({ prompt: 'Hello' }),
+      body: JSON.stringify({ prompt: 'Hello', history: [], images: [] }),
     });
     const res = await POST(req);
     expect(res.status).toBe(500);
@@ -98,7 +119,7 @@ describe('Chat API Route', () => {
     vi.mocked(prisma.personalRecord.findMany).mockResolvedValue([{ maxWeight: 100, exercise: { name: 'Bench' } }] as unknown as PersonalRecord[]);
     vi.mocked(prisma.routine.findMany).mockResolvedValue([{ id: 'r1', name: 'R1' }] as unknown as Routine[]);
     
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({
         choices: [{ message: { content: 'Context response' } }]
@@ -114,28 +135,30 @@ describe('Chat API Route', () => {
   });
 
   it('handles empty choices from OpenRouter', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
+    vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ choices: [] })
+      json: async () => ({ choices: [] }),
+      text: async () => JSON.stringify({ choices: [] }),
+      headers: new Headers({ 'content-type': 'application/json' })
     } as unknown as Response);
 
     const req = new Request('http://localhost/api/chat', {
       method: 'POST',
-      body: JSON.stringify({ prompt: 'Hello' }),
+      body: JSON.stringify({ prompt: 'Hello', history: [], images: [] }),
     });
     const res = await POST(req);
     expect(res.status).toBe(500);
   });
 
   it('handles missing images safely', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({ choices: [{ message: { content: 'OK' } }] })
     } as unknown as Response);
 
     const req = new Request('http://localhost/api/chat', {
       method: 'POST',
-      body: JSON.stringify({ prompt: 'Image', history: [], images: null }),
+      body: JSON.stringify({ prompt: 'Image', history: [], images: [] }),
     });
     const res = await POST(req);
     expect(res.status).toBe(200);

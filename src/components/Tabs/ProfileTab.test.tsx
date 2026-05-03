@@ -140,7 +140,8 @@ describe("ProfileTab Component", () => {
       ...defaultProps.session,
       user: { ...defaultProps.session.user, image: null }
     };
-    render(<ProfileTab {...defaultProps} session={noImageSession as unknown as SessionContextValue} />);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ProfileTab {...defaultProps} session={noImageSession as any} />);
     // The placeholder User icon should be rendered
     expect(document.querySelector('svg.lucide-user')).toBeDefined();
   });

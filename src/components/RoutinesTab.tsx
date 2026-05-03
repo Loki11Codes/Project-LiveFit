@@ -373,6 +373,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                 setPreviewRoutine(null);
                 setSearchQuery("");
               }}
+              data-testid="back-to-list"
               className="p-2.5 bg-[var(--surface)] rounded-xl border border-[var(--border)] text-[var(--foreground-muted)] hover:text-[var(--foreground)] transition-colors active:scale-95"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -499,6 +500,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                             e.stopPropagation();
                             handleDeleteRoutine(routine.id);
                           }}
+                          data-testid={`delete-routine-${rIdx}`}
                           className="p-2.5 text-[var(--foreground-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all active:scale-95"
                           title="Delete routine"
                         >
@@ -550,6 +552,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                     </div>
                     <button
                       onClick={() => removePreviewExercise(ex._localId!)}
+                      data-testid={`remove-preview-exercise-${idx}`}
                       className="p-1.5 text-[var(--foreground-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                       title="Remove exercise"
                     >
@@ -711,6 +714,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                           onClick={() =>
                             handleRemoveExercise(e.routineExerciseId)
                           }
+                          data-testid={`remove-exercise-${idx}`}
                           className="absolute top-3 right-3 p-1.5 text-[var(--foreground-muted)] bg-[var(--surface2)] rounded-full hover:bg-red-500/10 hover:text-red-500 transition-colors"
                         >
                           <X className="w-4 h-4" />
@@ -742,6 +746,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                             <input
                               id={`sets-${e.routineExerciseId}`}
                               type="number"
+                              data-testid={`exercise-${idx}-sets`}
                               value={e.targetSets}
                               onChange={(ev) =>
                                 updateSetRep(
@@ -763,6 +768,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                             <input
                               id={`reps-${e.routineExerciseId}`}
                               type="text"
+                              data-testid={`exercise-${idx}-reps`}
                               placeholder="e.g. 8-12"
                               value={e.targetReps}
                               onChange={(ev) =>
@@ -790,7 +796,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                   }
                   className="w-full py-4 rounded-2xl font-bold tracking-wide text-[15px] disabled:opacity-50 transition-all bg-[var(--accent)] text-white shadow-lg active:scale-[0.98]"
                 >
-                  Save Routine
+                  Save Template
                 </button>
               </div>
             </motion.div>
@@ -814,6 +820,7 @@ export function RoutinesTab({ onStart }: RoutinesTabProps) {
                     setIsSearching(false);
                     setSearchQuery("");
                   }}
+                  data-testid="close-search"
                   className="p-2.5 bg-[var(--surface2)] rounded-full text-[var(--foreground)] hover:bg-[var(--surface2)]/80 transition-colors"
                 >
                   <X className="w-5 h-5" />

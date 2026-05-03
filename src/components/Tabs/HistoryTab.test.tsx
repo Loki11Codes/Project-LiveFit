@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import HistoryTab from './HistoryTab';
-import type { AnalyticsResponse, HistoryEntry } from '@/lib/types';
+import type { AnalyticsResponse, HistoryRow } from '@/lib/types';
 
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
@@ -20,7 +20,7 @@ describe('HistoryTab Component', () => {
     history: [
       { day: 'Mon', date: '2026-03-16', type: 'Training', sleep: '8', protein: 120, target: 100, status: 'completed' as const, kcal: 2500, carbs: 300, fats: 80, fiber: 35, water: 2, workout: 'Push' },
       { day: 'Tue', date: '2026-03-17', type: 'Rest', sleep: '7.5', protein: 85, target: 80, status: 'completed' as const, kcal: 2000, carbs: 200, fats: 70, fiber: 30, water: 1.5, workout: '--' },
-    ] as HistoryEntry[],
+    ] as HistoryRow[],
     analytics: {
       averages: { protein: 102.5, kcal: 2250 },
       nutritionStats: [
@@ -136,7 +136,7 @@ describe('HistoryTab Component', () => {
         totalVolume: 5000 
       }
     ];
-    render(<HistoryTab {...defaultProps} history={detailedHistory as unknown as HistoryEntry[]} />);
+    render(<HistoryTab {...defaultProps} history={detailedHistory as unknown as HistoryRow[]} />);
     expect(screen.getByText('Legs Day')).toBeInTheDocument();
     expect(screen.getByText('5000 kg')).toBeInTheDocument();
   });
@@ -160,7 +160,7 @@ describe('HistoryTab Component', () => {
     const noSleepHistory = [
       { day: 'Mon', date: '2026-03-16', type: 'Rest', protein: 100, kcal: 2000, workout: '--', sleep: '--' }
     ];
-    render(<HistoryTab {...defaultProps} history={noSleepHistory as unknown as HistoryEntry[]} />);
+    render(<HistoryTab {...defaultProps} history={noSleepHistory as unknown as HistoryRow[]} />);
     const cells = screen.getAllByRole('cell');
     expect(cells.find(c => c.textContent === '--')).toBeDefined();
   });

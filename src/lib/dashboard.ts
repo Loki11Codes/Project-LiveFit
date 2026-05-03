@@ -72,7 +72,8 @@ export function toMeasurementPayload(form: MeasurementForm): MeasurementPayload 
   };
 }
 
-export function getTodayFoodLogs(foodLogs: FoodLog[]): FoodLog[] {
+export function getTodayFoodLogs(foodLogs: FoodLog[] = []): FoodLog[] {
+  if (!foodLogs) return [];
   // Use local midnight (local browser date) as the anchor
   const now = new Date();
   const dateStr = getLocalDateKey(now);
@@ -104,23 +105,30 @@ export function sumNutrition(foodLogs: FoodLog[]) {
   );
 }
 
-export function getLatestSleepLog(sleepLogs: SleepLog[]): SleepLog | null {
+export function getLatestSleepLog(sleepLogs: SleepLog[] = []): SleepLog | null {
+  if (!sleepLogs) return null;
   return sleepLogs[0] ?? null;
 }
 
 export function getTrackedDayCount(logs: LogsResponse): number {
   const trackedDays = new Set<string>();
 
-  for (const log of logs.food) {
-    trackedDays.add(getLocalDateKey(log.time));
+  if (logs.food) {
+    for (const log of logs.food) {
+      trackedDays.add(getLocalDateKey(log.time));
+    }
   }
 
-  for (const log of logs.workouts) {
-    trackedDays.add(getLocalDateKey(log.time));
+  if (logs.workouts) {
+    for (const log of logs.workouts) {
+      trackedDays.add(getLocalDateKey(log.time));
+    }
   }
 
-  for (const log of logs.sleep) {
-    trackedDays.add(getLocalDateKey(log.time));
+  if (logs.sleep) {
+    for (const log of logs.sleep) {
+      trackedDays.add(getLocalDateKey(log.time));
+    }
   }
 
   return trackedDays.size;
@@ -134,41 +142,48 @@ export function buildHistoryRows(
 
   const grouped = new Map<string, DailySummary>();
 
-  for (const log of logs.food) {
-    const key = getLocalDateKey(log.time);
-    const entry = grouped.get(key) ?? createDailySummary(log.time);
+  if (logs.food) {
+    for (const log of logs.food) {
+      const key = getLocalDateKey(log.time);
+      const entry = grouped.get(key) ?? createDailySummary(log.time);
 
-    entry.protein += log.protein;
-    entry.kcal += log.kcal;
-    entry.carbs += log.carbs ?? 0;
-    entry.fats += log.fats ?? 0;
-    entry.fiber += log.fiber ?? 0;
-    entry.water += log.water ?? 0;
-    grouped.set(key, entry);
+      entry.protein += log.protein;
+      entry.kcal += log.kcal;
+      entry.carbs += log.carbs ?? 0;
+      entry.fats += log.fats ?? 0;
+      entry.fiber += log.fiber ?? 0;
+      entry.water += log.water ?? 0;
+      grouped.set(key, entry);
+    }
   }
 
-  for (const log of logs.workouts) {
-    const key = getLocalDateKey(log.time);
-    const entry = grouped.get(key) ?? createDailySummary(log.time);
+  if (logs.workouts) {
+    for (const log of logs.workouts) {
+      const key = getLocalDateKey(log.time);
+      const entry = grouped.get(key) ?? createDailySummary(log.time);
 
-    entry.workoutFocuses.add(log.focus);
-    entry.exerciseCount += log.exercises?.length ?? 0;
-    entry.totalVolume += log.volume ?? 0;
-    grouped.set(key, entry);
+      entry.workoutFocuses.add(log.focus);
+      entry.exerciseCount += log.exercises?.length ?? 0;
+      entry.totalVolume += log.volume ?? 0;
+      grouped.set(key, entry);
+    }
   }
 
-  for (const log of logs.sleep) {
-    const key = getLocalDateKey(log.time);
-    const entry = grouped.get(key) ?? createDailySummary(log.time);
+  if (logs.sleep) {
+    for (const log of logs.sleep) {
+      const key = getLocalDateKey(log.time);
+      const entry = grouped.get(key) ?? createDailySummary(log.time);
 
-    entry.sleep = log.hours;
-    grouped.set(key, entry);
+      entry.sleep = log.hours;
+      grouped.set(key, entry);
+    }
   }
 
   return Array.from(grouped.values())
     .sort((left, right) => right.date.getTime() - left.date.getTime())
     .map((entry) => ({
       day: formatHistoryDay(entry.date),
+      date: entry.dayKey,
       type: dayTypesByDay[entry.dayKey] ?? '--',
       sleep: entry.sleep === null ? '--' : formatNumber(entry.sleep),
       protein: round(entry.protein),

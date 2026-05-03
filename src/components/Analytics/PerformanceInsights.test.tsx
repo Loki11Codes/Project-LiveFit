@@ -18,6 +18,7 @@ describe('PerformanceInsights', () => {
   const mockHistory: HistoryRow[] = [
     {
       day: '2023-01-01',
+      date: '2023-01-01',
       type: 'Training',
       sleep: '8h',
       protein: 150,
@@ -33,6 +34,7 @@ describe('PerformanceInsights', () => {
     },
     {
       day: '2023-01-02',
+      date: '2023-01-02',
       type: 'Rest',
       sleep: '7h',
       protein: 100,

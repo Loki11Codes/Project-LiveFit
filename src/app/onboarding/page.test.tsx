@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, cleanup, act } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import OnboardingPage from "./page";
 import { useRouter } from "next/navigation";
@@ -19,8 +19,12 @@ vi.mock("@/components/Shared/CloudBackground", () => ({
   CloudBackground: () => <div data-testid="cloud-bg" />,
 }));
 
-vi.mock("@/components/Shared/Confetti", () => ({
-  ConfettiCanvas: () => <div data-testid="confetti" />,
+vi.mock("@/components/auth/AuthShell", () => ({
+  AuthShell: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-shell">{children}</div>,
+}));
+
+vi.mock("@/lib/client-api", () => ({
+  requestJson: vi.fn().mockResolvedValue({ success: true }),
 }));
 
 // Mock framer-motion
@@ -53,8 +57,8 @@ describe("OnboardingPage", () => {
   describe("Tutorial Phase", () => {
     it("renders the first tutorial slide", () => {
       render(<OnboardingPage />);
-      expect(screen.getByText(/Your AI-Powered Fitness Journey Begins/i)).toBeInTheDocument();
-      expect(screen.getByTestId("cloud-bg")).toBeInTheDocument();
+      expect(screen.getByText(/Real-time Metrics/i)).toBeInTheDocument();
+      expect(screen.getByTestId("auth-shell")).toBeInTheDocument();
     });
 
     it("navigates through tutorial slides", async () => {
@@ -62,15 +66,15 @@ describe("OnboardingPage", () => {
       
       // Slide 1 -> 2
       fireEvent.click(screen.getByText(/Next/i));
-      expect(screen.getByText(/Smart Meal Tracking/i)).toBeInTheDocument();
+      expect(screen.getByText(/AI Fitness Coach/i)).toBeInTheDocument();
 
       // Slide 2 -> 3
       fireEvent.click(screen.getByText(/Next/i));
-      expect(screen.getByText(/Workout Smarter/i)).toBeInTheDocument();
+      expect(screen.getByText(/Simplified Logging/i)).toBeInTheDocument();
 
       // Slide 3 -> Final (Setup Phase)
-      fireEvent.click(screen.getByText(/Get Started/i));
-      expect(screen.getByText(/Let's get to know you/i)).toBeInTheDocument();
+      fireEvent.click(screen.getByText(/Start Setup/i));
+      expect(screen.getByText(/Step 1: Bio-Data/i)).toBeInTheDocument();
     });
   });
 
@@ -80,45 +84,40 @@ describe("OnboardingPage", () => {
         render(<OnboardingPage />);
         fireEvent.click(screen.getByText(/Next/i));
         fireEvent.click(screen.getByText(/Next/i));
-        fireEvent.click(screen.getByText(/Get Started/i));
+        fireEvent.click(screen.getByText(/Start Setup/i));
     });
 
-    it("handles basic info form submission", async () => {
-        fireEvent.change(screen.getByLabelText(/Full Name/i), { target: { value: "John Doe" } });
+    it("handles bio-data form submission", async () => {
         fireEvent.change(screen.getByLabelText(/Age/i), { target: { value: "25" } });
-        fireEvent.click(screen.getByText(/Male/i));
-        
-        fireEvent.click(screen.getByText(/Continue/i));
-        expect(screen.getByText(/Your Physical Stats/i)).toBeInTheDocument();
-    });
-
-    it("handles physical stats submission", async () => {
-        // Advance to stats
-        fireEvent.change(screen.getByLabelText(/Full Name/i), { target: { value: "John Doe" } });
-        fireEvent.change(screen.getByLabelText(/Age/i), { target: { value: "25" } });
-        fireEvent.click(screen.getByText(/Male/i));
-        fireEvent.click(screen.getByText(/Continue/i));
-
         fireEvent.change(screen.getByLabelText(/Height \(cm\)/i), { target: { value: "180" } });
-        fireEvent.change(screen.getByLabelText(/Current Weight \(kg\)/i), { target: { value: "80" } });
-        fireEvent.change(screen.getByLabelText(/Target Weight \(kg\)/i), { target: { value: "75" } });
-
-        fireEvent.click(screen.getByText(/Continue/i));
-        expect(screen.getByText(/Fitness & Lifestyle/i)).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: /^male$/i }));
+        
+        fireEvent.click(screen.getByText(/Next/i));
+        expect(screen.getByText(/Step 2: Objectives/i)).toBeInTheDocument();
     });
 
-    it("handles fitness & diet submission", async () => {
-         // Advance to fitness
-         fireEvent.change(screen.getByLabelText(/Full Name/i), { target: { value: "John Doe" } });
-         fireEvent.click(screen.getByText(/Continue/i));
-         fireEvent.click(screen.getByText(/Continue/i));
+    it("handles objectives submission", async () => {
+        // Advance to objectives
+        fireEvent.change(screen.getByLabelText(/Age/i), { target: { value: "25" } });
+        fireEvent.click(screen.getByText(/Next/i));
 
-         fireEvent.change(screen.getByLabelText(/Primary Goal/i), { target: { value: "Fat Loss" } });
-         fireEvent.change(screen.getByLabelText(/Activity Level/i), { target: { value: "Moderate" } });
-         fireEvent.change(screen.getByLabelText(/Dietary Preference/i), { target: { value: "Vegan" } });
+        fireEvent.click(screen.getByText(/Weight Loss/i));
+        fireEvent.change(screen.getByLabelText(/Dietary Focus/i), { target: { value: "Vegan" } });
+
+        fireEvent.click(screen.getByText(/Next/i));
+        expect(screen.getByText(/Step 3: Baseline/i)).toBeInTheDocument();
+    });
+
+    it("handles baseline submission", async () => {
+         // Advance to baseline
+         fireEvent.change(screen.getByLabelText(/Age/i), { target: { value: "25" } });
+         fireEvent.click(screen.getByText(/Next/i));
+         fireEvent.click(screen.getByText(/Next/i));
+
+         fireEvent.change(screen.getByLabelText(/Enter Current Weight/i), { target: { value: "80" } });
 
          fireEvent.click(screen.getByText(/Complete Setup/i));
-         expect(screen.getByText(/Setting everything up/i)).toBeInTheDocument();
+         expect(screen.getByText(/Complete Setup/i)).toBeInTheDocument();
     });
   });
 

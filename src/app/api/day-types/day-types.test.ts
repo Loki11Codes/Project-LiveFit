@@ -17,6 +17,8 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
+const mockUser = { id: 'user-1', email: 'test@example.com' };
+
 describe('DayTypes API Route', () => {
   beforeEach(() => {
     vi.clearAllMocks();

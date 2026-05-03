@@ -11,8 +11,10 @@ describe("Animations", () => {
     if (typeof animations.cardVariants.visible === "function") {
       const visible = animations.cardVariants.visible(
         1,
-        {} as unknown,
-        {} as unknown,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        {} as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        {} as any,
       ) as { opacity: number; transition: { delay: number } };
       expect(visible.opacity).toBe(1);
       expect(visible.transition.delay).toBe(0.1);
@@ -22,8 +24,10 @@ describe("Animations", () => {
     if (typeof animations.rowVariants.visible === "function") {
       const visible = animations.rowVariants.visible(
         2,
-        {} as unknown,
-        {} as unknown,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        {} as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        {} as any,
       ) as { opacity: number; x: number; transition: { delay: number } };
       expect(visible.opacity).toBe(1);
       expect(visible.x).toBe(0);

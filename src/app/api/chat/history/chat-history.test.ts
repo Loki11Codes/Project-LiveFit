@@ -48,7 +48,7 @@ describe('Chat History API Route', () => {
       },
     ];
 
-    vi.mocked(prisma.chatMessage.findMany).mockResolvedValue(mockMessages as unknown as Record<string, unknown>[]);
+    vi.mocked(prisma.chatMessage.findMany).mockResolvedValue(mockMessages as unknown as Awaited<ReturnType<typeof prisma.chatMessage.findMany>>);
 
     const res = await GET();
     const data = await res.json();
@@ -75,7 +75,7 @@ describe('Chat History API Route', () => {
       },
     ];
 
-    vi.mocked(prisma.chatMessage.findMany).mockResolvedValue(mockMessages as unknown as Record<string, unknown>[]);
+    vi.mocked(prisma.chatMessage.findMany).mockResolvedValue(mockMessages as unknown as Awaited<ReturnType<typeof prisma.chatMessage.findMany>>);
 
     const res = await GET();
     const data = await res.json();

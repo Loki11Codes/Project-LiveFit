@@ -37,13 +37,16 @@ describe('VerifyEmailPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useRouter as unknown).mockReturnValue({ push: mockPush, refresh: vi.fn() });
-    (useSearchParams as unknown).mockReturnValue({ get: mockGet });
-    (useSession as unknown).mockReturnValue({ 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.mocked(useRouter).mockReturnValue({ push: mockPush, refresh: vi.fn() } as any);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.mocked(useSearchParams).mockReturnValue({ get: mockGet } as any);
+    vi.mocked(useSession).mockReturnValue({ 
       data: { user: { email: 'test@example.com' } }, 
       status: 'authenticated',
       update: mockUpdate
-    });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
   });
 
   it('renders the verification form', () => {

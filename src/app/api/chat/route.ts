@@ -5,7 +5,7 @@ import { z } from "zod";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
-import { internalError, parseJsonBody } from "@/lib/api";
+import { unauthorized, internalError, parseJsonBody } from "@/lib/api";
 import { persistLogData } from "@/lib/persistence";
 import { getErrorMessage } from "@/lib/dashboard";
 import type { ChatAttachmentPayload } from "@/lib/types";
@@ -351,6 +351,11 @@ export async function POST(req: Request) {
   try {
     const body = parsedBody.data;
     const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return unauthorized();
+    }
+
     const { geminiKey, openRouterKey } = getAIKeys();
 
     if (!geminiKey && !openRouterKey) {

@@ -32,7 +32,9 @@ export interface SidebarProps {
   readonly calories: number;
   readonly calorieTarget: number;
   readonly carbs: number;
+  readonly carbsTarget: number;
   readonly fats: number;
+  readonly fatsTarget: number;
   readonly fiber: number;
   readonly weight: number | string;
   readonly sleep: number | string;
@@ -392,7 +394,9 @@ export default function Sidebar({
   calories,
   calorieTarget,
   carbs,
+  carbsTarget,
   fats,
+  fatsTarget,
   fiber,
   weight,
   sleep,
@@ -511,7 +515,7 @@ export default function Sidebar({
       value: (carbs ?? 0).toFixed(1),
       unit: "g",
       color: "#e6ac50",
-      hit: false,
+      hit: carbs >= (carbsTarget || 0),
     },
     {
       icon: Droplets,
@@ -519,7 +523,7 @@ export default function Sidebar({
       value: (fats ?? 0).toFixed(1),
       unit: "g",
       color: "#d4a23a",
-      hit: false,
+      hit: fats >= (fatsTarget || 0),
     },
   ];
 
