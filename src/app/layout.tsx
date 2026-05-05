@@ -4,6 +4,7 @@ import './globals.css';
 import { Providers } from '@/components/Providers';
 import { CloudBackground } from '@/components/Shared/CloudBackground';
 import { AuthGuardian } from '@/components/auth/AuthGuardian';
+import { Analytics } from '@vercel/analytics/next';
 
 const workSans = Work_Sans({
   subsets: ['latin'],
@@ -46,6 +47,7 @@ export default function RootLayout({
           <CloudBackground />
           {children}
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
