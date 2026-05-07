@@ -22,12 +22,12 @@ interface MessageBubbleProps {
 }
 
 const markdownComponents = {
-  p: ({ children }: { children: React.ReactNode }) => <p className="mb-2 last:mb-0">{children}</p>,
-  ul: ({ children }: { children: React.ReactNode }) => <ul className="list-disc ml-4 mb-2">{children}</ul>,
-  ol: ({ children }: { children: React.ReactNode }) => <ol className="list-decimal ml-4 mb-2">{children}</ol>,
-  li: ({ children }: { children: React.ReactNode }) => <li className="mb-1">{children}</li>,
-  strong: ({ children }: { children: React.ReactNode }) => <span className="font-bold text-[var(--accent)]">{children}</span>,
-  code: ({ children }: { children: React.ReactNode }) => <code className="bg-[var(--surface2)] px-1 rounded text-sm">{children}</code>,
+  p: ({ children }: { children?: React.ReactNode }) => <p className="mb-2 last:mb-0">{children}</p>,
+  ul: ({ children }: { children?: React.ReactNode }) => <ul className="list-disc ml-4 mb-2">{children}</ul>,
+  ol: ({ children }: { children?: React.ReactNode }) => <ol className="list-decimal ml-4 mb-2">{children}</ol>,
+  li: ({ children }: { children?: React.ReactNode }) => <li className="mb-1">{children}</li>,
+  strong: ({ children }: { children?: React.ReactNode }) => <span className="font-bold text-[var(--accent)]">{children}</span>,
+  code: ({ children }: { children?: React.ReactNode }) => <code className="bg-[var(--surface2)] px-1 rounded text-sm">{children}</code>,
 };
 
 export function MessageBubble({ msg, isFirstInGroup, isNewUser, onDelete }: Readonly<MessageBubbleProps>) {

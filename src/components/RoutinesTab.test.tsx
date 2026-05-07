@@ -53,8 +53,9 @@ describe('RoutinesTab Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
-    globalThis.fetch = vi.fn((url: string | Request | URL) => {
+    vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
+    type FetchUrl = string | Request | URL;
+    globalThis.fetch = vi.fn((url: FetchUrl) => {
       let data: unknown[] = [];
       let ok = true;
       const urlStr = url.toString();
@@ -306,7 +307,7 @@ describe('RoutinesTab Component', () => {
 
   it('handles failed routine save gracefully', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    globalThis.fetch = vi.fn((url: string | Request | URL, options?: RequestInit) => {
+    globalThis.fetch = vi.fn((url: FetchUrl, options?: RequestInit) => {
       const urlStr = url.toString();
       if (urlStr === '/api/routines' && options?.method === 'POST') {
         return Promise.reject(new Error('Network error'));
@@ -447,11 +448,11 @@ describe('RoutinesTab Component', () => {
 
   it('handles delete routine error', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const confirmSpy = vi.spyOn(window, 'confirm').mockImplementation(() => true);
+    const confirmSpy = vi.spyOn(globalThis, 'confirm').mockImplementation(() => true);
     
     // Mock successful load but failed delete
     let deleteCalled = false;
-    globalThis.fetch = vi.fn((url: string | Request | URL, options?: RequestInit) => {
+    globalThis.fetch = vi.fn((url: FetchUrl, options?: RequestInit) => {
       const urlStr = url.toString();
       if (urlStr.includes('/api/routines?id=r1') && options?.method === 'DELETE') {
         deleteCalled = true;
