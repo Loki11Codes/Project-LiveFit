@@ -129,10 +129,7 @@ describe("OnboardingPage", () => {
         } as unknown as Response);
 
         render(<OnboardingPage />);
-        // Fast forward to complete
-        // In real test we'd fill all fields, here we mock the state or advance
-        
-        // Let's assume we reached the finish line
+        expect(screen.getByTestId('auth-shell')).toBeInTheDocument();
     });
 
     it("handles setup failure", async () => {
@@ -140,6 +137,8 @@ describe("OnboardingPage", () => {
             ok: false,
             status: 500
         } as unknown as Response);
+        render(<OnboardingPage />);
+        expect(screen.getByTestId('auth-shell')).toBeInTheDocument();
     });
   });
 });

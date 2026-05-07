@@ -18,8 +18,7 @@ import { getErrorMessage, getLocalDateKey } from './dashboard';
 import { calculateDailyTargets } from './recommendations';
 import { syncAchievements, type AchievementBadge } from './achievements';
 
-import { type ParsedLogEnvelope } from './types';
-export type { ParsedLogEnvelope };
+export type { ParsedLogEnvelope } from './types';
 
 interface ResolvedSet {
   setNumber?: number;

@@ -102,7 +102,7 @@ export const authOptions: NextAuthOptions = {
         session.user.hasSeenTutorial = !!token.hasSeenTutorial;
         session.user.emailVerified = token.emailVerified as Date | null;
         if (token.picture) {
-          session.user.image = token.picture as string;
+          session.user.image = token.picture;
         }
       }
       return session;

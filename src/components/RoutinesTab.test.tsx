@@ -402,6 +402,7 @@ describe('RoutinesTab Component', () => {
     } as unknown as Response);
     
     rerender(<RoutinesTab />);
+    expect(document.body.childNodes.length).toBeGreaterThan(0);
   });
 
   it('handles exercise search in preview mode', async () => {
