@@ -31,6 +31,7 @@ import {
   toMeasurementPayload,
 } from "@/lib/dashboard";
 import { getClientErrorMessage, requestJson } from "@/lib/client-api";
+import { triggerHaptic } from "@/lib/haptics";
 import toast from "react-hot-toast";
 import {
   DEFAULT_GOALS,
@@ -237,6 +238,8 @@ export default function Home() {
       },
     };
 
+    triggerHaptic(dashboard.profile?.hapticFeedback);
+
     // Save directly instead of waiting for AI to echo it
     fetch("/api/logs", {
       method: "POST",
@@ -274,6 +277,7 @@ export default function Home() {
 
   const handleDeleteWorkout = async (id: string) => {
     if (!confirm("Delete this workout log? This can't be undone.")) return;
+    triggerHaptic(dashboard.profile?.hapticFeedback, 20);
     // Optimistic remove from UI
     setDashboard((prev) => ({
       ...prev,
@@ -293,6 +297,7 @@ export default function Home() {
 
   const handleDeleteFood = async (id: string) => {
     if (!confirm("Delete this food entry?")) return;
+    triggerHaptic(dashboard.profile?.hapticFeedback, 20);
     setDashboard((prev) => ({
       ...prev,
       logs: { ...prev.logs, food: prev.logs.food.filter((f) => f.id !== id) },
@@ -311,6 +316,7 @@ export default function Home() {
 
   const handleDeleteSleep = async (id: string) => {
     if (!confirm("Delete this sleep entry?")) return;
+    triggerHaptic(dashboard.profile?.hapticFeedback, 20);
     setDashboard((prev) => ({
       ...prev,
       logs: { ...prev.logs, sleep: prev.logs.sleep.filter((s) => s.id !== id) },
@@ -355,6 +361,7 @@ export default function Home() {
   };
 
   const handleDayTypeChange = (nextDayType: DayType) => {
+    triggerHaptic(dashboard.profile?.hapticFeedback, 20);
     const dayKey = getLocalDateKey(new Date());
     const previousDayType = dashboard.dayType;
 
@@ -400,6 +407,7 @@ export default function Home() {
       );
 
       if (logsToPersist.length > 0) {
+        triggerHaptic(dashboard.profile?.hapticFeedback);
         void fetch("/api/logs", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -547,6 +555,7 @@ export default function Home() {
           body: JSON.stringify(toMeasurementPayload(dashboard.measurements)),
         },
       );
+      triggerHaptic(dashboard.profile?.hapticFeedback);
       toast.success("Measurements saved.");
       await refreshDashboard();
     } catch (error) {

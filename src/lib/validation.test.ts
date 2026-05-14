@@ -42,9 +42,7 @@ describe('Validation Schemas', () => {
     });
 
     it('rejects non-finite numbers', () => {
-      // Current fallback behavior returns 0 instead of throwing
-      const result = GoalSchema.parse({ proteinTarget: Infinity, kcalTarget: 2000 });
-      expect(result.proteinTarget).toBe(0);
+      expect(() => GoalSchema.parse({ proteinTarget: Infinity, kcalTarget: 2000 })).toThrow();
     });
   });
 
@@ -121,24 +119,20 @@ describe('Validation Schemas', () => {
 
   describe('Edge Cases', () => {
     it('handles non-finite numbers in optional fields', () => {
-      const result = FoodItemSchema.parse({ 
+      expect(() => FoodItemSchema.parse({ 
         name: 'Test', 
         protein: 10, 
         kcal: 100, 
         carbs: Infinity,
         fats: NaN
-      });
-      expect(result.carbs).toBeUndefined();
-      expect(result.fats).toBeUndefined();
+      })).toThrow();
     });
 
     it('handles non-finite numbers in optionalNullableFiniteNumber fields', () => {
-      const result = MeasurementSchema.parse({ 
+      expect(() => MeasurementSchema.parse({ 
         weight: Infinity,
         waist: NaN
-      });
-      expect(result.weight).toBeNull();
-      expect(result.waist).toBeNull();
+      })).toThrow();
     });
 
     it('handles fallbackNumber with empty/undefined inputs', () => {
@@ -148,8 +142,7 @@ describe('Validation Schemas', () => {
     });
 
     it('handles optionalFiniteNumber with Infinity', () => {
-      const result = FoodItemSchema.parse({ name: 'Test', protein: 10, kcal: 100, carbs: Infinity });
-      expect(result.carbs).toBeUndefined();
+      expect(() => FoodItemSchema.parse({ name: 'Test', protein: 10, kcal: 100, carbs: Infinity })).toThrow();
     });
 
     it('rejects disposable email domains in SignupSchema', () => {

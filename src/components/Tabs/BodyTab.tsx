@@ -134,6 +134,11 @@ export default function BodyTab({
                         [key]: val,
                       }));
                     }}
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-[var(--text-muted)] font-black uppercase opacity-30">
                     {unit}

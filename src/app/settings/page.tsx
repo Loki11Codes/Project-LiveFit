@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 import { requestJson } from "@/lib/client-api";
 import type { UserProfile, GoalsState } from "@/lib/types";
 import { useRouter } from "next/navigation";
@@ -21,6 +23,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { calculateDailyTargets } from "@/lib/recommendations";
 import { BRAND_COLORS, useTheme } from "@/components/Theme/ThemeProvider";
+import { triggerHaptic } from "@/lib/haptics";
 
 const SIDEBAR_TABS = [
   { id: "profile", label: "General & Profile", icon: User },
@@ -89,6 +92,7 @@ export default function SettingsPage() {
       if (!goalsRes.ok) throw new Error("Failed to save goals");
 
       setSavedStatus(true);
+      triggerHaptic(profileData.hapticFeedback ?? true);
       toast.success("Settings saved successfully!");
       setTimeout(() => setSavedStatus(false), 2500);
 
@@ -122,6 +126,7 @@ export default function SettingsPage() {
       carbsTarget: targets.carbsTarget,
       fatsTarget: targets.fatsTarget
     }));
+    triggerHaptic(profileData.hapticFeedback ?? true);
     toast.success("Macros recalculated based on your profile!");
   };
 
@@ -376,13 +381,18 @@ function ProfilePanel({
           // Email updates should typically be handled separately with auth, but we'll disable it here or just not update it.
           onChange={() => {}}
         />
-        <FormField
-          label="Phone"
-          type="tel"
-          placeholder="+1 (555) 000-0000"
-          value={data.phone || ""}
-          onChange={(v) => onChange("phone", v)}
-        />
+        <div className="flex flex-col gap-2">
+          <label className="text-[12px] font-bold uppercase tracking-widest text-(--text-muted) ml-1">
+            Phone
+          </label>
+          <PhoneInput
+            international
+            defaultCountry="US"
+            value={data.phone || ""}
+            onChange={(v) => onChange("phone", v || "")}
+            className="h-12 w-full rounded-xl border border-(--border) bg-transparent px-4 text-[15px] font-medium transition focus-within:border-(--amber) focus-within:ring-4 focus-within:ring-(--amber-bg) text-(--text) [&>input]:bg-transparent [&>input]:border-none [&>input]:outline-none [&>input]:w-full"
+          />
+        </div>
       </div>
 
       <hr className="border-black/5 " />
@@ -461,7 +471,10 @@ function ProfilePanel({
             label="Haptic Feedback"
             description="Enable vibrations for app interactions."
             checked={data.hapticFeedback ?? true}
-            onChange={(c) => onChange("hapticFeedback", c)} 
+            onChange={(c) => {
+              onChange("hapticFeedback", c);
+              if (c) triggerHaptic(true);
+            }} 
           />
         </div>
       </div>
@@ -815,6 +828,33 @@ function NotificationsPanel({
 }
 
 function PrivacyPanel() {
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      const res = await fetch("/api/export");
+      if (!res.ok) throw new Error("Failed to export data");
+      
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "caloriq-export.json";
+      document.body.appendChild(a);
+      a.click();
+      
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success("Data exported successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to export data");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-10">
       <SectionHeading
@@ -831,11 +871,15 @@ function PrivacyPanel() {
                 Export User Data
               </div>
               <div className="text-[13px] text-rose-600/80 dark:text-rose-400/80">
-                Download all your metrics, logs, and profile info as a CSV.
+                Download all your metrics, logs, and profile info as JSON.
               </div>
             </div>
-            <button className="rounded-lg border border-rose-200 bg-(--surface) px-4 py-2 text-xs font-bold text-rose-600 transition hover:bg-rose-50 dark:border-rose-800  dark:hover:bg-rose-900/30">
-              Export Data
+            <button 
+              onClick={handleExport}
+              disabled={isExporting}
+              className="rounded-lg border border-rose-200 bg-(--surface) px-4 py-2 text-xs font-bold text-rose-600 transition hover:bg-rose-50 dark:border-rose-800 dark:hover:bg-rose-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isExporting ? "Exporting..." : "Export Data"}
             </button>
           </div>
 

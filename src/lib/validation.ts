@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidPhoneNumber } from "react-phone-number-input";
 
 export const fallbackNumber = (min?: number, max?: number) => {
   let schema = z.number();
@@ -7,20 +8,20 @@ export const fallbackNumber = (min?: number, max?: number) => {
   return z.preprocess((val) => {
     if (val === null || val === undefined || val === "") return 0;
     const n = Number(val);
-    return Number.isFinite(n) ? n : 0;
+    return Number.isFinite(n) ? n : val;
   }, schema);
 };
 
 export const optionalFiniteNumber = z.preprocess((val) => {
   if (val === null || val === undefined || val === "") return undefined;
   const n = Number(val);
-  return Number.isFinite(n) ? n : undefined;
+  return Number.isFinite(n) ? n : val;
 }, z.number().optional());
 
 export const optionalNullableFiniteNumber = z.preprocess((val) => {
   if (val === null || val === undefined || val === "") return null;
   const n = Number(val);
-  return Number.isFinite(n) ? n : null;
+  return Number.isFinite(n) ? n : val;
 }, z.number().nullable().optional());
 const trimmedString = z.string().trim();
 
@@ -52,7 +53,10 @@ export type GoalInput = z.infer<typeof GoalSchema>;
 export const UserProfileSchema = z.object({
   name: z.string().max(100).nullable().optional(),
   username: z.string().max(100).nullable().optional(),
-  phone: z.string().max(20).nullable().optional(),
+  phone: z.string().max(20).nullable().optional().refine((val) => {
+    if (!val) return true;
+    return isValidPhoneNumber(val);
+  }, { message: "Invalid phone number format" }),
   age: z.coerce.number().int().min(0).max(150).nullable().optional(),
   gender: z.string().max(20).nullable().optional(),
   height: optionalNullableFiniteNumber,

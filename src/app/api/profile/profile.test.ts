@@ -217,9 +217,9 @@ describe("Profile API Route", () => {
       // phone only
       await POST(new Request("http://localhost/api/profile", {
         method: "POST",
-        body: JSON.stringify({ phone: "123" }),
+        body: JSON.stringify({ phone: "+16502530000" }),
       }));
-      expect(prisma.user.update).toHaveBeenCalledWith(expect.objectContaining({ data: { phone: "123" } }));
+      expect(prisma.user.update).toHaveBeenCalledWith(expect.objectContaining({ data: { phone: "+16502530000" } }));
 
       // username only
       await POST(new Request("http://localhost/api/profile", {
