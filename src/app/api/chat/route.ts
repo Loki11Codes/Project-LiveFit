@@ -133,6 +133,7 @@ ${routinesList || "No saved routines found. Suggest starting a 'Fresh Workout' o
 
 **DATA LOGGING (MANDATORY STRICT PROTOCOL):**
 You MUST emit structural JSON data whenever a user logs food, workouts, sleep, or measurements.
+- Only extract and log entities explicitly stated in the MOST RECENT user message. IGNORE all prior conversation context for logging purposes. Do not fabricate logs from older messages.
 - The data MUST be enclosed within EXACTLY these markers: |||DATA and |||
 - NEVER wrap the JSON in Markdown code blocks (e.g. \`\`\`json). The |||DATA markers are the only wrapper allowed.
 - This block is HIDDEN from the user. You must still provide a conversational reply confirming the log. 
