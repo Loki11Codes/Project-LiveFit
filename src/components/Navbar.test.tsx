@@ -150,7 +150,7 @@ describe('Navbar Component', () => {
     // All tab buttons rendered - click the 'log' button from the mobile nav (second group)
     const allLogButtons = screen.getAllByText('Log');
     // The mobile nav renders all tabs as buttons - click any Log button
-    const logBtn = allLogButtons[allLogButtons.length - 1].closest('button');
+    const logBtn = allLogButtons.at(-1)?.closest('button');
     if (logBtn) fireEvent.click(logBtn);
     expect(mockSetActiveTab).toHaveBeenCalledWith('log');
   });
