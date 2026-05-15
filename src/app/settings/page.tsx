@@ -828,7 +828,11 @@ function NotificationsPanel({
 }
 
 function PrivacyPanel() {
+  const router = useRouter();
   const [isExporting, setIsExporting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleExport = async () => {
     try {
@@ -852,6 +856,22 @@ function PrivacyPanel() {
       toast.error("Failed to export data");
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== "DELETE") return;
+    try {
+      setIsDeleting(true);
+      const res = await fetch("/api/profile/delete", { method: "DELETE" });
+      if (!res.ok) throw new Error("Deletion failed");
+      toast.success("Account deleted. Goodbye!");
+      await signOut({ redirect: false });
+      router.push("/auth/signin");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete account. Please try again.");
+      setIsDeleting(false);
     }
   };
 
@@ -892,12 +912,96 @@ function PrivacyPanel() {
                 Permanently delete your account and all associated data.
               </div>
             </div>
-            <button className="rounded-lg bg-rose-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-rose-700">
+            <button
+              id="delete-account-btn"
+              onClick={() => {
+                setDeleteConfirmText("");
+                setShowDeleteModal(true);
+              }}
+              className="rounded-lg bg-rose-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-rose-700"
+            >
               Delete Account
             </button>
           </div>
         </div>
       </div>
+
+      {/* Delete Account Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={(e) => { if (e.target === e.currentTarget) setShowDeleteModal(false); }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-md rounded-3xl border border-rose-200 bg-(--surface) p-8 shadow-2xl dark:border-rose-900/40"
+            >
+              <div className="flex flex-col gap-5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30">
+                    <svg className="h-5 w-5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-(--text)">Delete Account</h3>
+                    <p className="text-[12px] text-(--text-muted)">This action is permanent and cannot be undone.</p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-rose-50 dark:bg-rose-900/20 p-4 text-[13px] text-rose-700 dark:text-rose-300 space-y-1">
+                  <p className="font-semibold">This will permanently delete:</p>
+                  <ul className="list-disc ml-4 space-y-0.5 opacity-80">
+                    <li>All food, workout, and sleep logs</li>
+                    <li>Body measurements and progress data</li>
+                    <li>Goals, meal plans, and AI chat history</li>
+                    <li>Your profile and account credentials</li>
+                  </ul>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="delete-confirm-input" className="text-[12px] font-bold uppercase tracking-widest text-(--text-muted)">
+                    Type <span className="text-rose-500 font-black">DELETE</span> to confirm
+                  </label>
+                  <input
+                    id="delete-confirm-input"
+                    type="text"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder="DELETE"
+                    className="h-11 w-full rounded-xl border border-(--border) bg-transparent px-4 text-[15px] font-mono font-bold outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-500/10 text-(--text) placeholder:opacity-30"
+                    autoComplete="off"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-1">
+                  <button
+                    onClick={() => setShowDeleteModal(false)}
+                    className="flex-1 h-11 rounded-xl border border-(--border) bg-transparent text-[14px] font-bold text-(--text-muted) transition hover:bg-(--surface2)"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    id="confirm-delete-btn"
+                    onClick={handleDeleteAccount}
+                    disabled={deleteConfirmText !== "DELETE" || isDeleting}
+                    className="flex-1 h-11 rounded-xl bg-rose-600 text-[14px] font-bold text-white transition hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {isDeleting ? "Deleting..." : "Delete Forever"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
