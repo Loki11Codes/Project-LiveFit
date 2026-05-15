@@ -62,6 +62,8 @@ export default function Chat({
     ChatAttachment[]
   >([]);
   const [notice, setNotice] = useState<InlineNotice | null>(null);
+  const [quotaResetTime, setQuotaResetTime] = useState<number | null>(null);
+  const [quotaCountdown, setQuotaCountdown] = useState<number>(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
@@ -108,6 +110,23 @@ export default function Chat({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nudgeStatus, messages.length]);
+
+  // Quota Countdown Timer
+  useEffect(() => {
+    if (quotaResetTime === null) return;
+
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, quotaResetTime - Date.now());
+      setQuotaCountdown(remaining);
+      
+      if (remaining === 0) {
+        setQuotaResetTime(null);
+        setNotice(null);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [quotaResetTime]);
 
   useEffect(() => {
     if (initialMessage) {
@@ -263,6 +282,25 @@ export default function Chat({
   };
 
   const handleChatError = (error: unknown) => {
+    // Check for 429 Quota Exceeded with Retry-After
+    if (
+      typeof error === 'object' && 
+      error !== null && 
+      'status' in error && 
+      error.status === 429 && 
+      'details' in error && 
+      typeof error.details === 'object' && 
+      error.details !== null && 
+      'retryAfter' in error.details &&
+      typeof error.details.retryAfter === 'number'
+    ) {
+      const resetTimestamp = Date.now() + (error.details.retryAfter * 1000);
+      setQuotaResetTime(resetTimestamp);
+      setQuotaCountdown(resetTimestamp - Date.now());
+      setNotice({ tone: "error", message: "Free tier quota exceeded." });
+      return;
+    }
+
     const message = getClientErrorMessage(error);
     console.error("Chat connection error:", message);
     setNotice({ tone: "error", message });
@@ -408,16 +446,31 @@ export default function Chat({
 
         <QuickChips onSelect={handleQuickChipSelect} />
 
-        <ChatInput
-          input={input}
-          setInput={setInput}
-          isTyping={isTyping}
-          pendingAttachments={pendingAttachments}
-          onSend={handleSend}
-          onFileSelect={handleFileSelection}
-          onRemoveAttachment={removePendingAttachment}
-          textInputRef={textInputRef}
-        />
+        {quotaResetTime !== null ? (
+          <div className="flex flex-col items-center justify-center p-6 mx-4 mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 text-center animate-in fade-in slide-in-from-bottom-4">
+            <h3 className="text-[14px] font-bold text-rose-600 dark:text-rose-400 mb-1">
+              Quota Exceeded
+            </h3>
+            <p className="text-[13px] text-(--text-muted) max-w-sm">
+              You have reached your free tier limit. Try again in{' '}
+              <strong className="text-(--text)">
+                {Math.ceil(quotaCountdown / 60000)}m {Math.floor((quotaCountdown % 60000) / 1000)}s
+              </strong>
+              .
+            </p>
+          </div>
+        ) : (
+          <ChatInput
+            input={input}
+            setInput={setInput}
+            isTyping={isTyping}
+            pendingAttachments={pendingAttachments}
+            onSend={handleSend}
+            onFileSelect={handleFileSelection}
+            onRemoveAttachment={removePendingAttachment}
+            textInputRef={textInputRef}
+          />
+        )}
       </div>
     </div>
   );

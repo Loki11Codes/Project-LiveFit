@@ -341,6 +341,148 @@ function ToggleField({
 }
 
 /* --------------------------------------------------------------------------
+ * EmailField — smart email display/change component
+ * -------------------------------------------------------------------------- */
+
+function EmailField({ email, provider }: Readonly<{ email: string; provider?: string }>) {
+  const [open, setOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+  const inputId = React.useId();
+
+  const isOAuth = provider && provider !== "credentials";
+
+  const handleSend = async () => {
+    setStatus("sending");
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/user/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setErrorMsg(data.error || "Failed to send verification");
+        setStatus("error");
+        return;
+      }
+      setStatus("sent");
+      toast.success("Verification email sent!");
+    } catch {
+      setErrorMsg("Network error. Please try again.");
+      setStatus("error");
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between ml-1">
+        <label htmlFor={inputId} className="text-[12px] font-bold uppercase tracking-widest text-(--text-muted)">
+          Email
+        </label>
+        {isOAuth ? (
+          <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-50 text-blue-500 border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400">
+            Managed by {provider}
+          </span>
+        ) : (
+          !open && (
+            <button
+              type="button"
+              onClick={() => { setOpen(true); setStatus("idle"); setNewEmail(""); }}
+              className="text-[11px] font-bold uppercase tracking-wider text-(--accent) hover:underline"
+            >
+              Change
+            </button>
+          )
+        )}
+      </div>
+
+      {/* Current email display */}
+      <input
+        id={inputId}
+        type="email"
+        value={email}
+        readOnly
+        className="h-12 w-full rounded-xl border border-(--border) bg-(--surface2)/50 px-4 text-[15px] font-medium text-(--text-muted) cursor-default select-none"
+      />
+
+      {/* Inline change panel for credentials users */}
+      <AnimatePresence>
+        {open && !isOAuth && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="mt-2 rounded-xl border border-(--border) bg-(--surface2)/40 p-4 flex flex-col gap-3">
+              {status === "sent" ? (
+                <div className="flex flex-col gap-2 text-center py-2">
+                  <p className="text-[14px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    ✓ Check your inbox at <span className="font-bold">{newEmail}</span>
+                  </p>
+                  <p className="text-[12px] text-(--text-muted)">Click the link in the email to confirm the change. It expires in 1 hour.</p>
+                  <button
+                    type="button"
+                    onClick={() => { setOpen(false); setStatus("idle"); }}
+                    className="text-[12px] font-bold text-(--text-muted) hover:text-(--text) underline mt-1"
+                  >
+                    Done
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <p className="text-[12px] text-(--text-muted)">
+                    Enter your new email. We&apos;ll send a verification link to it before making any changes.
+                  </p>
+                  <input
+                    type="email"
+                    placeholder="new@example.com"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    className="h-11 w-full rounded-xl border border-(--border) bg-transparent px-4 text-[14px] font-medium outline-none transition focus:border-(--accent) focus:ring-4 focus:ring-(--accent)/10 text-(--text)"
+                    autoComplete="email"
+                  />
+                  {errorMsg && (
+                    <p className="text-[12px] text-rose-500">{errorMsg}</p>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setOpen(false)}
+                      className="flex-1 h-10 rounded-xl border border-(--border) text-[13px] font-bold text-(--text-muted) hover:bg-(--surface2)"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSend}
+                      disabled={!newEmail.includes("@") || status === "sending"}
+                      className="flex-1 h-10 rounded-xl bg-[var(--accent)] text-[13px] font-bold text-white transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {status === "sending" ? "Sending..." : "Send Verification"}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {isOAuth && (
+        <p className="text-[11px] text-(--text-muted) ml-1">
+          Your email is linked to your {provider} account and cannot be changed here.
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* --------------------------------------------------------------------------
  * PANEL COMPONENTS
  * -------------------------------------------------------------------------- */
 
@@ -373,13 +515,9 @@ function ProfilePanel({
           value={data.username || ""}
           onChange={(v) => onChange("username", v)}
         />
-        <FormField
-          label="Email (ReadOnly)"
-          type="email"
-          placeholder="you@example.com"
-          value={data.email || ""}
-          // Email updates should typically be handled separately with auth, but we'll disable it here or just not update it.
-          onChange={() => {}}
+        <EmailField
+          email={data.email || ""}
+          provider={data.provider as string | undefined}
         />
         <div className="flex flex-col gap-2">
           <label htmlFor="phone-input" className="text-[12px] font-bold uppercase tracking-widest text-(--text-muted) ml-1">

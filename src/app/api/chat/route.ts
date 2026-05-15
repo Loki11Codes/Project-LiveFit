@@ -5,7 +5,7 @@ import { z } from "zod";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
-import { unauthorized, internalError, parseJsonBody } from "@/lib/api";
+import { unauthorized, internalError, apiError, parseJsonBody } from "@/lib/api";
 import { persistLogData } from "@/lib/persistence";
 import { getErrorMessage } from "@/lib/dashboard";
 import type { ChatAttachmentPayload } from "@/lib/types";
@@ -328,9 +328,11 @@ async function callOpenRouter(
         }
       } else {
         const errorText = await res.text();
-        lastError = new Error(`${res.status} - ${errorText}`);
+        const retryAfter = res.headers.get("Retry-After");
+        const retryPrefix = retryAfter ? `[RETRY-AFTER:${retryAfter}] ` : "";
+        lastError = new Error(`${retryPrefix}${res.status} - ${errorText}`);
         console.warn(
-          `OpenRouter model ${modelId} failed: ${res.status} - ${errorText}`,
+          `OpenRouter model ${modelId} failed: ${retryPrefix}${res.status} - ${errorText}`,
         );
       }
     } catch (error) {
@@ -407,8 +409,13 @@ export async function POST(req: Request) {
     console.error("Chat Route Error:", message);
     
     if (message.includes("429") || message.includes("Too Many Requests") || message.includes("quota")) {
-      return internalError(
-        "AI Free Tier Rate Limit Exceeded: You have used up your quota. Please wait about a minute before trying your request again.",
+      const match = message.match(/\[RETRY-AFTER:(\d+)\]/);
+      const retryAfter = match ? parseInt(match[1], 10) : undefined;
+      
+      return apiError(
+        "AI Free Tier Rate Limit Exceeded: You have used up your quota.",
+        429,
+        { retryAfter }
       );
     }
     

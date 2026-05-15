@@ -175,3 +175,85 @@ export async function sendPasswordChangedEmail(email: string, name: string) {
     html,
   });
 }
+/**
+ * Sends a verification email to the NEW address during an email change request.
+ */
+export async function sendEmailChangeVerification(newEmail: string, name: string, verifyUrl: string) {
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #1f2937;">
+      <h2 style="color: #185fa5;">Confirm Your New Email Address</h2>
+      <p>Hello ${name},</p>
+      <p>A request was made to change your Caloriq account email to <strong>${newEmail}</strong>.</p>
+      <p>Click the button below to confirm this is you. This link expires in <strong>1 hour</strong>.</p>
+      <div style="margin: 32px 0; text-align: center;">
+        <a href="${verifyUrl}" style="display: inline-block; padding: 16px 32px; background-color: #185fa5; color: white; text-decoration: none; border-radius: 12px; font-weight: bold;">Confirm New Email</a>
+      </div>
+      <p style="font-size: 12px; color: #9ca3af; margin-top: 48px;">
+        If you did not request this change, you can safely ignore this email. Your current email will remain unchanged.
+      </p>
+    </div>
+  `;
+
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
+    console.log("------------------------------------------");
+    console.log(`[EMAIL LOG] Email change verification for ${newEmail}`);
+    console.log(`[LINK] ${verifyUrl}`);
+    console.log("------------------------------------------");
+    return;
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number.parseInt(process.env.SMTP_PORT || "587", 10),
+    secure: process.env.SMTP_SECURE === "true",
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+  });
+
+  await transporter.sendMail({
+    from: `"Caloriq" <${process.env.SMTP_FROM || "onboarding@resend.dev"}>`,
+    to: newEmail,
+    subject: "Confirm your new Caloriq email address",
+    html,
+  });
+}
+
+/**
+ * Sends a security notification to the OLD address after an email change completes.
+ */
+export async function sendEmailChangedNotification(oldEmail: string, name: string, newEmail: string) {
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #1f2937;">
+      <h2 style="color: #185fa5;">Security Notification: Email Address Changed</h2>
+      <p>Hello ${name},</p>
+      <p>The email address for your Caloriq account has been changed to <strong>${newEmail}</strong>.</p>
+      <div style="margin: 32px 0; padding: 24px; background-color: #fef2f2; border-radius: 16px; border: 1px solid #fee2e2;">
+        <p style="margin: 0; color: #991b1b; font-size: 14px; font-weight: bold;">If you did not make this change, please contact support immediately.</p>
+      </div>
+      <p style="font-size: 12px; color: #9ca3af; margin-top: 48px;">
+        This is an automated security notification from Caloriq.
+      </p>
+    </div>
+  `;
+
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
+    console.log("------------------------------------------");
+    console.log(`[EMAIL LOG] Email changed notification sent to old address: ${oldEmail}`);
+    console.log(`[NEW EMAIL] ${newEmail}`);
+    console.log("------------------------------------------");
+    return;
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number.parseInt(process.env.SMTP_PORT || "587", 10),
+    secure: process.env.SMTP_SECURE === "true",
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+  });
+
+  await transporter.sendMail({
+    from: `"Caloriq Security" <${process.env.SMTP_FROM || "security@resend.dev"}>`,
+    to: oldEmail,
+    subject: "Your Caloriq email address has been changed",
+    html,
+  });
+}

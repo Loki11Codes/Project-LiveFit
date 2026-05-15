@@ -114,6 +114,28 @@ describe('Chat API Route', () => {
     expect(res.status).toBe(500);
   });
 
+  it('handles OpenRouter 429 rate limit with Retry-After', async () => {
+    vi.mocked(globalThis.fetch).mockResolvedValue({
+      ok: false,
+      status: 429,
+      statusText: 'Too Many Requests',
+      text: async () => 'Rate limit exceeded',
+      json: async () => ({ error: 'Too Many Requests' }),
+      headers: new Headers({ 'Retry-After': '120', 'content-type': 'application/json' })
+    } as unknown as Response);
+
+    const req = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ prompt: 'Hello', history: [], images: [] }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(429);
+    
+    const data = await res.json();
+    expect(data.error).toContain('Rate Limit Exceeded');
+    expect(data.details.retryAfter).toBe(120);
+  });
+
   it('covers knowledge and PR context in prompt', async () => {
     vi.mocked(prisma.userKnowledge.findMany).mockResolvedValue([{ key: 'k1', value: 'v1' }] as unknown as UserKnowledge[]);
     vi.mocked(prisma.personalRecord.findMany).mockResolvedValue([{ maxWeight: 100, exercise: { name: 'Bench' } }] as unknown as PersonalRecord[]);

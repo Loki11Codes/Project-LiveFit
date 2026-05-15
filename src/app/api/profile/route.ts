@@ -23,22 +23,23 @@ export async function GET(req: Request) {
       return NextResponse.json(goal || {});
     }
 
-    const profile = await prisma.userProfile.findUnique({
-      where: { userId: session.user.id },
-    });
-
-    const user = (await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: {
-        achievements: true,
-      }
-    })) as {
-      name: string | null;
-      email: string | null;
-      phone: string | null;
-      username: string | null;
-      achievements: Record<string, unknown>[];
-    } | null;
+    const [profile, user, account] = await Promise.all([
+      prisma.userProfile.findUnique({ where: { userId: session.user.id } }),
+      prisma.user.findUnique({
+        where: { id: session.user.id },
+        include: { achievements: true },
+      }) as Promise<{
+        name: string | null;
+        email: string | null;
+        phone: string | null;
+        username: string | null;
+        achievements: Record<string, unknown>[];
+      } | null>,
+      prisma.account.findFirst({
+        where: { userId: session.user.id },
+        select: { provider: true },
+      }),
+    ]);
 
     return NextResponse.json({
       ...profile,
@@ -47,6 +48,7 @@ export async function GET(req: Request) {
       phone: user?.phone,
       username: user?.username,
       achievements: user?.achievements || [],
+      provider: account?.provider ?? "credentials",
     });
   } catch (error) {
     console.error("Failed to fetch profile/goal:", error);
