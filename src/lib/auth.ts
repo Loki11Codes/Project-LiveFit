@@ -100,7 +100,7 @@ export const authOptions: NextAuthOptions = {
         session.user.requirePasswordChange = !!token.requirePasswordChange;
         session.user.onboarded = !!token.onboarded;
         session.user.hasSeenTutorial = !!token.hasSeenTutorial;
-        session.user.emailVerified = token.emailVerified as Date | null;
+        session.user.emailVerified = token.emailVerified ?? null;
         if (token.picture) {
           session.user.image = token.picture;
         }

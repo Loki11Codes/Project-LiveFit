@@ -382,10 +382,11 @@ function ProfilePanel({
           onChange={() => {}}
         />
         <div className="flex flex-col gap-2">
-          <label className="text-[12px] font-bold uppercase tracking-widest text-(--text-muted) ml-1">
+          <label htmlFor="phone-input" className="text-[12px] font-bold uppercase tracking-widest text-(--text-muted) ml-1">
             Phone
           </label>
           <PhoneInput
+            id="phone-input"
             international
             defaultCountry="US"
             value={data.phone || ""}
@@ -841,15 +842,15 @@ function PrivacyPanel() {
       if (!res.ok) throw new Error("Failed to export data");
       
       const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = "caloriq-export.json";
       document.body.appendChild(a);
       a.click();
       
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      globalThis.URL.revokeObjectURL(url);
+      a.remove();
       toast.success("Data exported successfully");
     } catch (error) {
       console.error(error);
