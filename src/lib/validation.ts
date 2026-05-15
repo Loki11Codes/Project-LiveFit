@@ -1,5 +1,13 @@
 import { z } from "zod";
-import { isValidPhoneNumber } from "react-phone-number-input";
+
+/**
+ * Lightweight E.164 phone validation to avoid importing `react-phone-number-input`
+ * (which contains client-side class components that break Turbopack server builds).
+ */
+function isValidPhoneNumber(value: string): boolean {
+  // E.164: starts with +, 7-15 digits total
+  return /^\+[1-9]\d{6,14}$/.test(value);
+}
 
 export const fallbackNumber = (min?: number, max?: number) => {
   let schema = z.number();
