@@ -267,7 +267,7 @@ export default function Home() {
     setChatDraft(summaryText);
     setDashboard((prev) => ({ ...prev, activeWorkout: null }));
     handleTabChange("chat");
-  }, [refreshDashboard, handleTabChange]);
+  }, [refreshDashboard, handleTabChange, dashboard.profile?.hapticFeedback]);
 
   const handleDiscardWorkout = () => {
     if (confirm("Are you sure you want to discard your workout?")) {
@@ -455,7 +455,7 @@ export default function Home() {
     setTimeout(() => {
       void refreshDashboard();
     }, 1000);
-  }, [refreshDashboard, handleStartWorkoutById, handleStartWorkout]);
+  }, [refreshDashboard, handleStartWorkoutById, handleStartWorkout, dashboard.profile?.hapticFeedback]);
 
   useEffect(() => {
     const handleAiPrompt = (e: Event) => {

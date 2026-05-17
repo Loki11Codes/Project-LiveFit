@@ -49,8 +49,8 @@ describe("Export API Route", () => {
     });
 
     const mockUserData = { id: "test-user-id", name: "Test" };
-    vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUserData as any);
-    vi.mocked(prisma.userProfile.findUnique).mockResolvedValue({ userId: "test-user-id", age: 30 } as any);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUserData as unknown as NonNullable<Awaited<ReturnType<typeof prisma.user.findUnique>>>);
+    vi.mocked(prisma.userProfile.findUnique).mockResolvedValue({ userId: "test-user-id", age: 30 } as unknown as NonNullable<Awaited<ReturnType<typeof prisma.userProfile.findUnique>>>);
     vi.mocked(prisma.goal.findUnique).mockResolvedValue(null);
     vi.mocked(prisma.bodyMeasurement.findMany).mockResolvedValue([]);
     vi.mocked(prisma.foodLog.findMany).mockResolvedValue([]);

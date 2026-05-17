@@ -126,7 +126,7 @@ describe("OnboardingPage", () => {
         globalThis.fetch = vi.fn().mockResolvedValueOnce({
             ok: true,
             json: () => Promise.resolve({ success: true })
-        } as unknown as Response);
+        });
 
         render(<OnboardingPage />);
         expect(screen.getByTestId('auth-shell')).toBeInTheDocument();
@@ -136,7 +136,7 @@ describe("OnboardingPage", () => {
         globalThis.fetch = vi.fn().mockResolvedValueOnce({
             ok: false,
             status: 500
-        } as unknown as Response);
+        });
         render(<OnboardingPage />);
         expect(screen.getByTestId('auth-shell')).toBeInTheDocument();
     });

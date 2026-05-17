@@ -29,7 +29,7 @@ describe('Meal Plans API', () => {
     });
 
     it('returns the latest meal plan', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as unknown as Session);
+      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as Session);
       vi.mocked(prisma.mealPlan.findFirst).mockResolvedValue({
         id: 'plan-1',
         entries: [{ id: 'e1', title: 'Oats' }]
@@ -43,7 +43,7 @@ describe('Meal Plans API', () => {
     });
 
     it('returns 500 on db error', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as unknown as Session);
+      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as Session);
       vi.mocked(prisma.mealPlan.findFirst).mockRejectedValue(new Error('db fail'));
 
       const res = await GET();
@@ -60,7 +60,7 @@ describe('Meal Plans API', () => {
     });
 
     it('returns 400 for invalid entries', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as unknown as Session);
+      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as Session);
       const req = new Request('http://localhost', {
         method: 'POST',
         body: JSON.stringify({ name: 'Bulk Plan', entries: 'not-an-array' })
@@ -71,7 +71,7 @@ describe('Meal Plans API', () => {
     });
 
     it('creates a new meal plan', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as unknown as Session);
+      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as Session);
       const entries = [{ dayIndex: 0, mealType: 'Breakfast', title: 'Oats' }];
       
       const req = new Request('http://localhost', {
@@ -89,7 +89,7 @@ describe('Meal Plans API', () => {
     });
 
     it('creates a new meal plan with default name and date', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as unknown as Session);
+      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as Session);
       const entries = [{ dayIndex: 0, mealType: 'Breakfast', title: 'Oats' }];
       
       const req = new Request('http://localhost', {
@@ -113,7 +113,7 @@ describe('Meal Plans API', () => {
     });
 
     it('returns 500 on server error', async () => {
-      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as unknown as Session);
+      vi.mocked(getServerSession).mockResolvedValue({ user: mockUser } as Session);
       const req = new Request('http://localhost', {
         method: 'POST',
         body: JSON.stringify({ entries: [] })

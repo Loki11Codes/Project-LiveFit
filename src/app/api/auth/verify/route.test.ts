@@ -56,7 +56,7 @@ describe('Auth Verify API Route', () => {
         identifier: 'test@example.com',
         token: 'expired',
         expires: new Date(Date.now() - 10000), // expired
-      } as unknown as Awaited<ReturnType<typeof prisma.verificationToken.findUnique>>);
+      });
       const req = new Request('http://localhost/api/auth/verify?token=expired&email=test@example.com');
       const res = await GET(req);
       expect(res.status).toBe(400);
@@ -71,7 +71,7 @@ describe('Auth Verify API Route', () => {
         identifier: email,
         token: token,
         expires: new Date(Date.now() + 10000),
-      } as unknown as { identifier: string; token: string; expires: Date });
+      });
 
       vi.mocked(prisma.$transaction).mockResolvedValue([{}, {}]);
 
@@ -100,7 +100,7 @@ describe('Auth Verify API Route', () => {
         identifier: `otp:${email}`,
         token: code,
         expires: new Date(Date.now() + 10000),
-      } as unknown as { identifier: string; token: string; expires: Date });
+      });
 
       vi.mocked(prisma.$transaction).mockResolvedValue([{}, {}]);
 
@@ -123,7 +123,7 @@ describe('Auth Verify API Route', () => {
         identifier: `otp:${email}`,
         token: code,
         expires: new Date(Date.now() - 10000), // expired
-      } as unknown as { identifier: string; token: string; expires: Date });
+      });
 
       const req = new Request('http://localhost/api/auth/verify', {
         method: 'POST',

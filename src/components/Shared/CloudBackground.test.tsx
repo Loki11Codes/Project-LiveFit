@@ -7,7 +7,7 @@ import React from 'react';
 vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, animate, transition, initial, style, ...props }: React.ComponentPropsWithoutRef<'div'> & { animate?: unknown; transition?: unknown; initial?: unknown }) => {
-      const finalStyle = { ...style } as React.CSSProperties;
+      const finalStyle = { ...style };
       const s = style as Record<string, unknown>;
       if (s?.scale !== undefined && !s.transform) {
         finalStyle.transform = `scale(${s.scale})`;
@@ -43,7 +43,7 @@ describe('CloudBackground', () => {
     const cloudDiv = container.firstChild as HTMLElement;
     
     // Check that default transition duration is 40 (line 56)
-    const transition = JSON.parse(cloudDiv.getAttribute('data-transition') || '{}');
+    const transition = JSON.parse(cloudDiv.dataset.transition || '{}');
     expect(transition.duration).toBe(40);
     
     // Check default style values (lines 57-60)
@@ -57,8 +57,8 @@ describe('CloudBackground', () => {
     const cloudDiv = container.firstChild as HTMLElement;
     
     // Check initial and animate values for reverse=true
-    const initial = JSON.parse(cloudDiv.getAttribute('data-initial') || '{}');
-    const animate = JSON.parse(cloudDiv.getAttribute('data-animate') || '{}');
+    const initial = JSON.parse(cloudDiv.dataset.initial || '{}');
+    const animate = JSON.parse(cloudDiv.dataset.animate || '{}');
     
     expect(initial.x).toBe('10vw');
     expect(animate.x).toBe('-110vw');

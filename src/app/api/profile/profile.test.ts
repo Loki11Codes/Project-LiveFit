@@ -22,6 +22,9 @@ vi.mock("@/lib/prisma", () => {
       update: vi.fn(),
       findUnique: vi.fn(),
     },
+    account: {
+      findFirst: vi.fn(),
+    },
     bodyMeasurement: {
       findFirst: vi.fn().mockResolvedValue(null),
     },
@@ -68,7 +71,7 @@ describe("Profile API Route", () => {
       const data = await res.json();
 
       expect(res.status).toBe(200);
-      expect(data).toEqual({ ...mockProfile, ...mockUser, achievements: [] });
+      expect(data).toEqual({ ...mockProfile, ...mockUser, achievements: [], provider: "credentials" });
       expect(prisma.userProfile.findUnique).toHaveBeenCalledWith({
         where: { userId: "user-1" },
       });

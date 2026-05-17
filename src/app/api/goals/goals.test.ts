@@ -23,7 +23,7 @@ describe('Goals API Route', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getServerSession).mockResolvedValue(mockSession as unknown as Session);
+    vi.mocked(getServerSession).mockResolvedValue(mockSession as Session);
   });
 
   describe('GET', () => {

@@ -41,7 +41,7 @@ describe('Auth Onboarding API Route', () => {
   });
 
   it('returns 400 for invalid onboarding data', async () => {
-    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } } as unknown as Session);
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } } as Session);
     const req = new Request('http://localhost/api/auth/onboard', {
       method: 'POST',
       body: JSON.stringify({ age: 5 }), // invalid age < 10
@@ -51,7 +51,7 @@ describe('Auth Onboarding API Route', () => {
   });
 
   it('completes onboarding on valid data', async () => {
-    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } } as unknown as Session);
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } } as Session);
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(prisma.$transaction).mockImplementation(async (cb: (tx: any) => unknown) => 
@@ -87,7 +87,7 @@ describe('Auth Onboarding API Route', () => {
   });
 
   it('returns 500 if transaction fails', async () => {
-    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } } as unknown as Session);
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } } as Session);
     vi.mocked(prisma.$transaction).mockRejectedValue(new Error('Transaction Failed'));
 
     const req = new Request('http://localhost/api/auth/onboard', {

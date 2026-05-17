@@ -61,7 +61,7 @@ describe('GET /api/user/email/verify', () => {
 
   it('redirects and updates email on success', async () => {
     vi.mocked(prisma.verificationToken.findFirst).mockResolvedValue(VALID_TOKEN_RECORD);
-    vi.mocked(prisma.user.findUnique).mockResolvedValue(null as never); // no conflict
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(null); // no conflict
     vi.mocked(prisma.user.findUnique)
       .mockResolvedValueOnce({ email: 'old@example.com', name: 'Test' } as never) // user lookup
       .mockResolvedValueOnce(null); // conflict check

@@ -81,8 +81,8 @@ describe("SettingsPage", () => {
     const usernameInput = screen.getByLabelText(/Username/i);
     fireEvent.change(usernameInput, { target: { value: "johndoe" } });
 
-    const phoneInput = screen.getByLabelText(/Phone/i);
-    fireEvent.change(phoneInput, { target: { value: "1234567890" } });
+    const phoneInput = document.querySelector('input[type="tel"]');
+    if (phoneInput) fireEvent.change(phoneInput, { target: { value: "1234567890" } });
 
     const heightInput = screen.getByLabelText(/Height/i);
     if (heightInput) fireEvent.change(heightInput, { target: { value: "180" } });

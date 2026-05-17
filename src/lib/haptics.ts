@@ -11,7 +11,7 @@ export function triggerHaptic(enabled: boolean | undefined = true, pattern: numb
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       navigator.vibrate(pattern);
     }
-  } catch (error) {
+  } catch {
     // Silently fail on unsupported browsers (e.g. iOS Safari)
   }
 }

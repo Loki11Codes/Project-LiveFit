@@ -43,7 +43,7 @@ describe('Auth Reset Password API Route', () => {
   });
 
   it('returns 400 if password does not meet security requirements', async () => {
-    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1', email: 'u@e.c' } } as unknown as Session);
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1', email: 'u@e.c' } } as Session);
     const req = new Request('http://localhost/api/auth/reset-password', {
       method: 'POST',
       body: JSON.stringify({ password: 'short' }),
@@ -55,7 +55,7 @@ describe('Auth Reset Password API Route', () => {
   });
 
   it('updates password successfully on valid input', async () => {
-    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1', email: 'u@e.c' } } as unknown as Session);
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1', email: 'u@e.c' } } as Session);
     const validPassword = 'StrongPassword123!';
     
     const req = new Request('http://localhost/api/auth/reset-password', {
@@ -76,7 +76,7 @@ describe('Auth Reset Password API Route', () => {
   });
 
   it('returns 500 if database update fails', async () => {
-    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1', email: 'u@e.c' } } as unknown as Session);
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1', email: 'u@e.c' } } as Session);
     vi.mocked(prisma.user.update).mockRejectedValue(new Error('Update Failed'));
 
     const req = new Request('http://localhost/api/auth/reset-password', {
@@ -89,7 +89,7 @@ describe('Auth Reset Password API Route', () => {
   });
 
   it('returns 500 if JSON body is malformed', async () => {
-    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } } as unknown as Session);
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-1' } } as Session);
     const req = new Request('http://localhost/api/auth/reset-password', {
       method: 'POST',
       body: 'invalid-json',
@@ -99,7 +99,7 @@ describe('Auth Reset Password API Route', () => {
   });
 
   it('updates password successfully even if email is missing', async () => {
-    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-no-email', name: 'NoEmail' } } as unknown as Session);
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'user-no-email', name: 'NoEmail' } } as Session);
     // Explicitly reset the db mock to succeed (override any lingering rejection from prior tests)
     vi.mocked(prisma.user.update).mockResolvedValue({} as unknown as Awaited<ReturnType<typeof prisma.user.update>>);
     const req = new Request('http://localhost/api/auth/reset-password', {
