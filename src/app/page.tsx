@@ -154,6 +154,10 @@ export default function Home() {
       ? latestMeasurementResponse
       : null;
 
+    const dayTypesByDayMap = isDayTypeEntryRecordArray(dayTypesResponse)
+      ? buildDayTypeMap(dayTypesResponse)
+      : EMPTY_DAY_TYPES_BY_DAY;
+
     return {
       logs: logs || EMPTY_LOGS,
       latestMeasurement,
@@ -161,10 +165,8 @@ export default function Home() {
       analytics: isAnalyticsResponse(analyticsResponse)
         ? analyticsResponse
         : EMPTY_ANALYTICS,
-      dayType: ((profileResponse as Record<string, unknown>)?.dayType as DayType) || "Rest",
-      dayTypesByDay: isDayTypeEntryRecordArray(dayTypesResponse)
-        ? buildDayTypeMap(dayTypesResponse)
-        : EMPTY_DAY_TYPES_BY_DAY,
+      dayType: dayTypesByDayMap[getLocalDateKey(new Date())] ?? "Rest",
+      dayTypesByDay: dayTypesByDayMap,
       profile: isUserProfile(profileResponse) ? profileResponse : null,
       aiInsights: [],
     };

@@ -181,26 +181,30 @@ export function buildHistoryRows(
 
   return Array.from(grouped.values())
     .sort((left, right) => right.date.getTime() - left.date.getTime())
-    .map((entry) => ({
-      day: formatHistoryDay(entry.date),
-      date: entry.dayKey,
-      type: dayTypesByDay[entry.dayKey] ?? '--',
-      sleep: entry.sleep === null ? '--' : formatNumber(entry.sleep),
-      protein: round(entry.protein),
-      target: getProteinTarget(goals, dayTypesByDay[entry.dayKey] ?? 'Rest'),
-      status: entry.protein >= getProteinTarget(goals, dayTypesByDay[entry.dayKey] ?? 'Rest') ? 'completed' : 'pending',
-      kcal: round(entry.kcal),
-      carbs: round(entry.carbs),
-      fats: round(entry.fats),
-      fiber: round(entry.fiber),
-      water: round(entry.water),
-      workout:
-        entry.workoutFocuses.size > 0
-          ? Array.from(entry.workoutFocuses).join(', ')
-          : '--',
-      workoutDetail: entry.exerciseCount > 0 ? `${entry.exerciseCount} exercises` : undefined,
-      totalVolume: entry.totalVolume > 0 ? Math.round(entry.totalVolume) : undefined,
-    }));
+    .map((entry) => {
+      const dayType = dayTypesByDay[entry.dayKey] ?? (entry.workoutFocuses.size > 0 ? 'Training' : 'Rest');
+      const target = getProteinTarget(goals, dayType);
+      return {
+        day: formatHistoryDay(entry.date),
+        date: entry.dayKey,
+        type: dayType,
+        sleep: entry.sleep === null ? '--' : formatNumber(entry.sleep),
+        protein: round(entry.protein),
+        target,
+        status: entry.protein >= target ? 'completed' : 'pending',
+        kcal: round(entry.kcal),
+        carbs: round(entry.carbs),
+        fats: round(entry.fats),
+        fiber: round(entry.fiber),
+        water: round(entry.water),
+        workout:
+          entry.workoutFocuses.size > 0
+            ? Array.from(entry.workoutFocuses).join(', ')
+            : '--',
+        workoutDetail: entry.exerciseCount > 0 ? `${entry.exerciseCount} exercises` : undefined,
+        totalVolume: entry.totalVolume > 0 ? Math.round(entry.totalVolume) : undefined,
+      };
+    });
 }
 
 export function getErrorMessage(error: unknown): string {

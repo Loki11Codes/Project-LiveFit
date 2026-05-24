@@ -87,7 +87,7 @@ export default function LogTab({
                       <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] opacity-40" />
                       {food.name}
                     </div>
-                    <div className="log-row-meta flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                    <div className="log-row-meta flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 pl-3.5">
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" style={{ color: 'var(--amber)' }} />
                         {new Date(food.time).toLocaleTimeString([], {
@@ -170,7 +170,7 @@ export default function LogTab({
                         <div className="w-1.5 h-1.5 rounded-full bg-[var(--red)]" />
                         {workout.focus}
                       </div>
-                      <div className="log-row-meta flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                      <div className="log-row-meta flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 pl-3.5">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" style={{ color: 'var(--amber)' }} />
                           {new Date(workout.time).toLocaleDateString([], {
@@ -295,7 +295,7 @@ export default function LogTab({
                       <Clock className="w-4 h-4" style={{ color: 'var(--amber)' }} />
                       Duration
                     </div>
-                    <div className="log-row-meta">
+                    <div className="log-row-meta pl-6">
                       {new Date(sleep.time).toLocaleDateString([], {
                         month: 'short',
                         day: 'numeric',

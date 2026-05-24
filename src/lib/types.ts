@@ -108,6 +108,7 @@ export type UserProfile = {
   day4?: string | null;
   day5?: string | null;
   day6?: string | null;
+  unitSystem?: "metric" | "imperial";
   prs?: PersonalRecord[];
   achievements?: {
     id: string;

@@ -608,13 +608,18 @@ function ProfilePanel({
         <div className="space-y-2">
           <ToggleField
             label="Haptic Feedback"
-            description="Enable vibrations for app interactions."
+            description="Tactile responses on actions."
             checked={data.hapticFeedback ?? true}
-            onChange={(c) => {
-              onChange("hapticFeedback", c);
-              if (c) triggerHaptic(true);
-            }} 
+            onChange={(c) => onChange("hapticFeedback", c)}
           />
+          <select
+            value={data.unitSystem ?? 'metric'}
+            onChange={(e) => onChange('unitSystem', e.target.value)}
+            className="h-12 w-full rounded-xl border border-(--border) bg-transparent px-4 text-[15px] font-medium outline-none transition focus:border-(--amber) text-(--text)"
+          >
+            <option value="metric">Metric (kg, mL, kcal)</option>
+            <option value="imperial">Imperial (lb, fl oz, kcal)</option>
+          </select>
         </div>
       </div>
 

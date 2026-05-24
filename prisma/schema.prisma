@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -155,6 +155,11 @@ model Goal {
   user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+enum UnitSystem {
+  metric
+  imperial
+}
+
 model UserProfile {
   id                 String  @id @default(cuid())
   userId             String  @unique
@@ -177,6 +182,7 @@ model UserProfile {
   day4        String?
   day5        String?
   day6        String?
+  unitSystem         UnitSystem @default(metric)
   user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
