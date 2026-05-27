@@ -517,7 +517,7 @@ function ProfilePanel({
         />
         <EmailField
           email={data.email || ""}
-          provider={data.provider as string | undefined}
+          provider={data.provider}
         />
         <div className="flex flex-col gap-2">
           <label htmlFor="phone-input" className="text-[12px] font-bold uppercase tracking-widest text-(--text-muted) ml-1">
