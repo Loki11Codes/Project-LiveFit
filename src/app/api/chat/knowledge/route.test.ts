@@ -31,7 +31,7 @@ describe('Knowledge API Route', () => {
 
     it('returns knowledge entries on success', async () => {
       vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'u1' } } as Session);
-      vi.mocked(prisma.userKnowledge.findMany).mockResolvedValue([{ key: 'k', value: 'v' }]);
+      vi.mocked(prisma.userKnowledge.findMany).mockResolvedValue([{ key: 'k', value: 'v' } as any]);
       const res = await GET();
       const data = await res.json();
       expect(res.status).toBe(200);
@@ -63,7 +63,7 @@ describe('Knowledge API Route', () => {
 
     it('upserts knowledge entry on success', async () => {
       vi.mocked(getServerSession).mockResolvedValue({ user: { id: 'u1' } } as Session);
-      vi.mocked(prisma.userKnowledge.upsert).mockResolvedValue({ key: 'k', value: 'v' });
+      vi.mocked(prisma.userKnowledge.upsert).mockResolvedValue({ key: 'k', value: 'v' } as any);
       const req = new Request('http://localhost', { method: 'POST', body: JSON.stringify({ key: 'K', value: 'v' }) });
       const res = await POST(req);
       await res.json();

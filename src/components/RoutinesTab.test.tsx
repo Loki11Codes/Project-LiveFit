@@ -4,6 +4,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { RoutinesTab } from './RoutinesTab';
 import type { RoutineWithExercises, Exercise } from '@/lib/types';
 
+type FetchUrl = string | Request | URL;
+
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
@@ -54,7 +56,6 @@ describe('RoutinesTab Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
-    type FetchUrl = string | Request | URL;
     globalThis.fetch = vi.fn((url: FetchUrl) => {
       let data: unknown[] = [];
       let ok = true;

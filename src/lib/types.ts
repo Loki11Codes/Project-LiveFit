@@ -119,6 +119,7 @@ export type UserProfile = {
     description: string;
     unlockedAt: string | Date;
   }[];
+  provider?: string;
 };
 
 export type PersonalRecord = {
