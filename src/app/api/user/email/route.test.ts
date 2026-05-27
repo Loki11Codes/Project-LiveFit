@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { sendEmailChangeVerification } from '@/lib/email';
 import type { Session } from 'next-auth';
+import type { Account, User, VerificationToken } from '@prisma/client';
 
 vi.mock('next-auth/next', () => ({ getServerSession: vi.fn() }));
 vi.mock('@/lib/email', () => ({ sendEmailChangeVerification: vi.fn() }));
@@ -40,7 +41,7 @@ describe('POST /api/user/email', () => {
 
   it('returns 400 for Google OAuth users', async () => {
     vi.mocked(getServerSession).mockResolvedValue(SESSION);
-    vi.mocked(prisma.account.findFirst).mockResolvedValue({ provider: 'google' } as any);
+    vi.mocked(prisma.account.findFirst).mockResolvedValue({ provider: 'google' } as unknown as Account);
     const res = await POST(makeReq({ newEmail: 'new@example.com' }));
     expect(res.status).toBe(400);
     const data = await res.json();
@@ -64,7 +65,7 @@ describe('POST /api/user/email', () => {
   it('returns 409 if email already taken', async () => {
     vi.mocked(getServerSession).mockResolvedValue(SESSION);
     vi.mocked(prisma.account.findFirst).mockResolvedValue(null);
-    vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: 'other-user' } as any);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: 'other-user' } as unknown as User);
     const res = await POST(makeReq({ newEmail: 'taken@example.com' }));
     expect(res.status).toBe(409);
   });
@@ -74,7 +75,7 @@ describe('POST /api/user/email', () => {
     vi.mocked(prisma.account.findFirst).mockResolvedValue(null);
     vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
     vi.mocked(prisma.verificationToken.deleteMany).mockResolvedValue({ count: 0 });
-    vi.mocked(prisma.verificationToken.create).mockResolvedValue({} as any);
+    vi.mocked(prisma.verificationToken.create).mockResolvedValue({} as unknown as VerificationToken);
     vi.mocked(sendEmailChangeVerification).mockResolvedValue(undefined);
 
     const res = await POST(makeReq({ newEmail: 'new@example.com' }));
