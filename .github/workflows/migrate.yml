@@ -12,14 +12,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - name: Baseline initial migration (one-time)
-        run: npx prisma migrate resolve --applied 20240101000000_init
+        run: npx --ignore-scripts prisma@6.2.1 migrate resolve --applied 20240101000000_init
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
       - name: Deploy migrations
-        run: npx prisma migrate deploy
+        run: npx --ignore-scripts prisma@6.2.1 migrate deploy
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
